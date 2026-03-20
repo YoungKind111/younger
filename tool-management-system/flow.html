@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具流转管理 - 家庭护理工具台账管理系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background-color: #f5f7fa; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100vh; background: linear-gradient(180deg, #1e3a5f 0%, #2c4a6e 100%); z-index: 1000; overflow-y: auto; }
+        .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo h1 { font-size: 18px; color: #fff; font-weight: 500; }
+        .logo p { font-size: 12px; color: #8fb3d9; margin-top: 5px; }
+        .nav-menu { padding: 15px 0; }
+        .nav-item { display: block; padding: 12px 25px; color: #b0c9e1; text-decoration: none; font-size: 14px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left-color: #409eff; }
+        .nav-item i { margin-right: 10px; font-size: 16px; }
+        .main-content { margin-left: 220px; min-height: 100vh; padding: 20px; }
+        .header { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 20px; font-weight: 500; color: #303133; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info span { color: #606266; font-size: 14px; }
+        .content-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #ebeef5; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 500; color: #303133; }
+        .card-body { padding: 20px; }
+        .search-form { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ebeef5; }
+        .data-table th { background: #f5f7fa; font-weight: 500; color: #606266; font-size: 13px; }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table td { color: #606266; font-size: 13px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .tag-success { background: #f0f9eb; color: #67c23a; }
+        .tag-warning { background: #fdf6ec; color: #e6a23c; }
+        .tag-danger { background: #fef0f0; color: #f56c6c; }
+        .tag-info { background: #f4f4f5; color: #909399; }
+        .tag-primary { background: #ecf5ff; color: #409eff; }
+        .pagination-container { display: flex; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #ebeef5; margin-top: 20px; }
+        .flow-detail { color: #909399; font-size: 12px; margin-top: 5px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>工具台账系统</h1>
+            <p>家庭护理管理平台</p>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item"><i class="el-icon-s-home"></i><span>仪表盘</span></a>
+            <a href="orders.html" class="nav-item"><i class="el-icon-s-order"></i><span>订单管理</span></a>
+            <a href="tools.html" class="nav-item"><i class="el-icon-s-tools"></i><span>工具管理</span></a>
+            <a href="flow.html" class="nav-item active"><i class="el-icon-s-promotion"></i><span>工具流转</span></a>
+            <a href="expenses.html" class="nav-item"><i class="el-icon-money"></i><span>费用管理</span></a>
+            <a href="reports.html" class="nav-item"><i class="el-icon-s-data"></i><span>报表中心</span></a>
+            <a href="flowchart.html" class="nav-item"><i class="el-icon-share"></i><span>业务流程</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content" id="app">
+        <div class="header">
+            <div class="header-title">工具流转管理</div>
+            <div class="user-info">
+                <el-badge :value="3" class="notice-icon">
+                    <i class="el-icon-bell" style="font-size: 20px; color: #606266; cursor: pointer;"></i>
+                </el-badge>
+                <span>管理员</span>
+                <el-avatar size="small" icon="el-icon-user-solid"></el-avatar>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <span class="card-title">工具流转记录</span>
+                <div>
+                    <el-button type="primary" size="small" icon="el-icon-upload">登记出库</el-button>
+                    <el-button type="success" size="small" icon="el-icon-download" style="margin-left: 10px;">登记归还</el-button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="search-form">
+                    <el-select placeholder="流转状态" style="width: 130px;" size="small">
+                        <el-option label="全部" value=""></el-option>
+                        <el-option label="在借" value="borrowed"></el-option>
+                        <el-option label="已归还" value="returned"></el-option>
+                    </el-select>
+                    <el-input placeholder="工具名称" style="width: 150px;" size="small"></el-input>
+                    <el-input placeholder="关联订单" style="width: 150px;" size="small"></el-input>
+                    <el-button type="primary" icon="el-icon-search" size="small">搜索</el-button>
+                    <el-button icon="el-icon-refresh" size="small">重置</el-button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>流转单号</th>
+                            <th>工具信息</th>
+                            <th>关联订单</th>
+                            <th>出库日期</th>
+                            <th>归还日期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color: #409eff;">FL202403004</strong></td>
+                            <td>
+                                <div>工具包</div>
+                                <div class="flow-detail">配送: 顺丰速运 (SF1234567890)</div>
+                            </td>
+                            <td>ORD202403002</td>
+                            <td>2024-03-15</td>
+                            <td>2024-03-17</td>
+                            <td>
+                                <span class="status-badge">
+                                    <el-tag size="small" type="success">已归还</el-tag>
+                                    <el-tag size="small" type="success">完好</el-tag>
+                                </span>
+                            </td>
+                            <td>
+                                <el-button type="text" size="small">查看</el-button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #409eff;">FL202403003</strong></td>
+                            <td>
+                                <div>护理包</div>
+                                <div class="flow-detail">配送: 上门自取</div>
+                            </td>
+                            <td>ORD202403005</td>
+                            <td>2024-03-16</td>
+                            <td>2024-03-18</td>
+                            <td>
+                                <span class="status-badge">
+                                    <el-tag size="small" type="success">已归还</el-tag>
+                                    <el-tag size="small" type="danger">丢失</el-tag>
+                                </span>
+                            </td>
+                            <td>
+                                <el-button type="text" size="small">查看</el-button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #409eff;">FL202403002</strong></td>
+                            <td>
+                                <div>摄像头 (TOOL-C003)</div>
+                                <div class="flow-detail">配送: 人员携带</div>
+                            </td>
+                            <td>ORD202403003</td>
+                            <td>2024-03-15</td>
+                            <td>2024-03-20</td>
+                            <td>
+                                <span class="status-badge">
+                                    <el-tag size="small" type="success">已归还</el-tag>
+                                    <el-tag size="small" type="warning">损坏</el-tag>
+                                </span>
+                            </td>
+                            <td>
+                                <el-button type="text" size="small">查看</el-button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #409eff;">FL202403001</strong></td>
+                            <td>
+                                <div>摄像头 (TOOL-C004)</div>
+                                <div class="flow-detail">配送: 中通快递 (ZT9876543210)</div>
+                            </td>
+                            <td>ORD202403006</td>
+                            <td>2024-03-19</td>
+                            <td>-</td>
+                            <td><el-tag size="small" type="primary">在借</el-tag></td>
+                            <td>
+                                <el-button type="text" size="small">查看</el-button>
+                                <el-button type="text" size="small" style="color: #409eff;">登记归还</el-button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: #409eff;">FL202402099</strong></td>
+                            <td>
+                                <div>急救包</div>
+                                <div class="flow-detail">配送: 人员携带</div>
+                            </td>
+                            <td>ORD202403008</td>
+                            <td>2024-03-20</td>
+                            <td>-</td>
+                            <td><el-tag size="small" type="primary">在借</el-tag></td>
+                            <td>
+                                <el-button type="text" size="small">查看</el-button>
+                                <el-button type="text" size="small" style="color: #409eff;">登记归还</el-button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination-container">
+                    <el-pagination background layout="total, prev, pager, next, jumper" :total="20" :page-size="5"></el-pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        new Vue({
+            el: '.main-content'
+        });
+    </script>
+</body>
+</html>

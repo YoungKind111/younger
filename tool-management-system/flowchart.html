@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务流程图 - 家庭护理工具台账管理系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background-color: #f5f7fa; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100vh; background: linear-gradient(180deg, #1e3a5f 0%, #2c4a6e 100%); z-index: 1000; overflow-y: auto; }
+        .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo h1 { font-size: 18px; color: #fff; font-weight: 500; }
+        .logo p { font-size: 12px; color: #8fb3d9; margin-top: 5px; }
+        .nav-menu { padding: 15px 0; }
+        .nav-item { display: block; padding: 12px 25px; color: #b0c9e1; text-decoration: none; font-size: 14px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left-color: #409eff; }
+        .nav-item i { margin-right: 10px; font-size: 16px; }
+        .main-content { margin-left: 220px; min-height: 100vh; padding: 20px; }
+        .header { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 20px; font-weight: 500; color: #303133; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info span { color: #606266; font-size: 14px; }
+        .content-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #ebeef5; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 500; color: #303133; }
+        .card-body { padding: 20px; }
+        .flowchart-container { background: #fff; padding: 30px; border-radius: 8px; margin-bottom: 20px; }
+        .flowchart-container h3 { margin-bottom: 20px; color: #303133; font-size: 18px; }
+        .flowchart-box { background: #f5f7fa; padding: 30px; border-radius: 8px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>工具台账系统</h1>
+            <p>家庭护理管理平台</p>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item"><i class="el-icon-s-home"></i><span>仪表盘</span></a>
+            <a href="orders.html" class="nav-item"><i class="el-icon-s-order"></i><span>订单管理</span></a>
+            <a href="tools.html" class="nav-item"><i class="el-icon-s-tools"></i><span>工具管理</span></a>
+            <a href="flow.html" class="nav-item"><i class="el-icon-s-promotion"></i><span>工具流转</span></a>
+            <a href="expenses.html" class="nav-item"><i class="el-icon-money"></i><span>费用管理</span></a>
+            <a href="reports.html" class="nav-item"><i class="el-icon-s-data"></i><span>报表中心</span></a>
+            <a href="flowchart.html" class="nav-item active"><i class="el-icon-share"></i><span>业务流程</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content" id="app">
+        <div class="header">
+            <div class="header-title">业务流程图</div>
+            <div class="user-info">
+                <el-badge :value="3" class="notice-icon">
+                    <i class="el-icon-bell" style="font-size: 20px; color: #606266; cursor: pointer;"></i>
+                </el-badge>
+                <span>管理员</span>
+                <el-avatar size="small" icon="el-icon-user-solid"></el-avatar>
+            </div>
+        </div>
+
+        <div class="flowchart-container">
+            <h3><i class="el-icon-plus"></i> 订单创建与工具出库流程</h3>
+            <div class="flowchart-box">
+                <pre class="mermaid">
+flowchart TD
+    A[开始] --> B[创建服务订单]
+    B --> C[关联客户信息]
+    C --> D[分配服务人员]
+    D --> E[选择服务类型]
+    E --> F[根据订单需求选择工具]
+    F --> G{工具是否可用?}
+    G -->|是| H[选择配送方式]
+    G -->|否| I[通知库存不足<br/>补充库存]
+    I --> F
+    H --> J{配送方式?}
+    J -->|快递配送| K[录入快递信息]
+    K --> L[记录快递费用]
+    J -->|人员携带| M[确认人员信息]
+    J -->|上门自取| N[确认取件信息]
+    L --> O[记录出库信息]
+    M --> O
+    N --> O
+    O --> P[更新工具状态为借出]
+    P --> Q[打印出库单]
+    Q --> R[完成]
+                </pre>
+            </div>
+        </div>
+
+        <div class="flowchart-container">
+            <h3><i class="el-icon-download"></i> 工具归还与费用结算流程</h3>
+            <div class="flowchart-box">
+                <pre class="mermaid">
+flowchart TD
+    A[开始] --> B[服务完成<br/>发起归还]
+    B --> C[检查工具状态]
+    C --> D{工具状态?}
+    D -->|完好| E[确认完好归还]
+    D -->|损坏| F[记录损坏情况]
+    D -->|丢失| G[确认丢失]
+    E --> H[更新工具状态为在库]
+    F --> I[评估损坏程度]
+    I --> J{是否需要赔偿?}
+    J -->|是| K[计算赔偿金额]
+    J -->|否| L[安排维修]
+    G --> M[计算丢失赔偿]
+    K --> N[记录赔偿信息]
+    L --> O[更新工具状态为维修中]
+    M --> N
+    N --> P[更新费用记录]
+    O --> H
+    P --> Q[确认费用结算]
+    H --> R[打印入库单]
+    Q --> R
+    R --> S[完成]
+                </pre>
+            </div>
+        </div>
+
+        <div class="flowchart-container">
+            <h3><i class="el-icon-s-tools"></i> 工具全生命周期管理流程</h3>
+            <div class="flowchart-box">
+                <pre class="mermaid">
+flowchart LR
+    A[工具采购] --> B[录入系统<br/>初始状态: 在库]
+    B --> C{使用状态?}
+    C -->|借出| D[出库管理]
+    C -->|在库| E[库存盘点]
+    D --> F[服务使用]
+    F --> G[归还管理]
+    G --> H{归还状态?}
+    H -->|完好| B
+    H -->|损坏| I[维修处理]
+    H -->|丢失| J[报废处理]
+    I --> K{维修结果?}
+    K -->|修复| B
+    K -->|无法修复| J
+    E --> L{库存预警?}
+    L -->|是| M[采购补充]
+    L -->|否| C
+    M --> A
+    J --> N[工具报废]
+                </pre>
+            </div>
+        </div>
+
+        <div class="flowchart-container">
+            <h3><i class="el-icon-s-claim"></i> 费用管理与统计流程</h3>
+            <div class="flowchart-box">
+                <pre class="mermaid">
+flowchart TD
+    A[费用发生] --> B{费用类型?}
+    B -->|快递费用| C[关联出库单]
+    B -->|损坏赔偿| D[关联归还单]
+    B -->|丢失赔偿| E[关联归还单]
+    B -->|维修费用| F[关联维修记录]
+    C --> G[录入费用明细]
+    D --> G
+    E --> G
+    F --> G
+    G --> H[确认支付状态]
+    H --> I{支付状态?}
+    I -->|已支付| J[更新费用状态]
+    I -->|未支付| K[待支付处理]
+    K --> J
+    J --> L[费用统计]
+    L --> M[生成费用报表]
+    M --> N[数据分析]
+    N --> O[成本优化]
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/mermaid@9.4.3/dist/mermaid.min.js"></script>
+    
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

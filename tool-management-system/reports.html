@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表中心 - 家庭护理工具台账管理系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background-color: #f5f7fa; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100vh; background: linear-gradient(180deg, #1e3a5f 0%, #2c4a6e 100%); z-index: 1000; overflow-y: auto; }
+        .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo h1 { font-size: 18px; color: #fff; font-weight: 500; }
+        .logo p { font-size: 12px; color: #8fb3d9; margin-top: 5px; }
+        .nav-menu { padding: 15px 0; }
+        .nav-item { display: block; padding: 12px 25px; color: #b0c9e1; text-decoration: none; font-size: 14px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left-color: #409eff; }
+        .nav-item i { margin-right: 10px; font-size: 16px; }
+        .main-content { margin-left: 220px; min-height: 100vh; padding: 20px; }
+        .header { background: #fff; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 20px; font-weight: 500; color: #303133; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info span { color: #606266; font-size: 14px; }
+        .content-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #ebeef5; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 500; color: #303133; }
+        .card-body { padding: 20px; }
+        .report-tabs { margin-bottom: 20px; }
+        .chart-container { height: 350px; background: #f5f7fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #909399; margin-bottom: 20px; }
+        .report-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .summary-item { background: #f5f7fa; padding: 15px; border-radius: 6px; text-align: center; }
+        .summary-value { font-size: 24px; font-weight: 600; color: #303133; margin-bottom: 5px; }
+        .summary-label { font-size: 12px; color: #909399; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ebeef5; }
+        .data-table th { background: #f5f7fa; font-weight: 500; color: #606266; font-size: 13px; }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table td { color: #606266; font-size: 13px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .tag-success { background: #f0f9eb; color: #67c23a; }
+        .tag-primary { background: #ecf5ff; color: #409eff; }
+        .pagination-container { display: flex; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #ebeef5; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>工具台账系统</h1>
+            <p>家庭护理管理平台</p>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item"><i class="el-icon-s-home"></i><span>仪表盘</span></a>
+            <a href="orders.html" class="nav-item"><i class="el-icon-s-order"></i><span>订单管理</span></a>
+            <a href="tools.html" class="nav-item"><i class="el-icon-s-tools"></i><span>工具管理</span></a>
+            <a href="flow.html" class="nav-item"><i class="el-icon-s-promotion"></i><span>工具流转</span></a>
+            <a href="expenses.html" class="nav-item"><i class="el-icon-money"></i><span>费用管理</span></a>
+            <a href="reports.html" class="nav-item active"><i class="el-icon-s-data"></i><span>报表中心</span></a>
+            <a href="flowchart.html" class="nav-item"><i class="el-icon-share"></i><span>业务流程</span></a>
+        </nav>
+    </div>
+
+    <div class="main-content" id="app">
+        <div class="header">
+            <div class="header-title">报表中心</div>
+            <div class="user-info">
+                <el-badge :value="3" class="notice-icon">
+                    <i class="el-icon-bell" style="font-size: 20px; color: #606266; cursor: pointer;"></i>
+                </el-badge>
+                <span>管理员</span>
+                <el-avatar size="small" icon="el-icon-user-solid"></el-avatar>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-body">
+                <el-tabs class="report-tabs" v-model="activeTab">
+                    <el-tab-pane label="工具使用统计" name="tool">
+                        <div class="chart-container">
+                            <i class="el-icon-s-data" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <div>工具使用趋势图表区域</div>
+                            <div style="font-size: 14px; margin-top: 10px;">展示各类工具的使用频率、周转率等统计信息</div>
+                        </div>
+                        <div class="report-summary">
+                            <div class="summary-item">
+                                <div class="summary-value">156</div>
+                                <div class="summary-label">本月使用次数</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">89%</div>
+                                <div class="summary-label">工具周转率</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">3.2天</div>
+                                <div class="summary-label">平均使用周期</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">12</div>
+                                <div class="summary-label">闲置工具数</div>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="费用分析" name="expense">
+                        <div class="chart-container">
+                            <i class="el-icon-s-marketing" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <div>费用趋势图表区域</div>
+                            <div style="font-size: 14px; margin-top: 10px;">展示各类费用的支出趋势、占比分析等</div>
+                        </div>
+                        <div class="report-summary">
+                            <div class="summary-item">
+                                <div class="summary-value">¥12,580</div>
+                                <div class="summary-label">本月快递费用</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">¥3,200</div>
+                                <div class="summary-label">损坏赔偿</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">¥5,680</div>
+                                <div class="summary-label">丢失赔偿</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">¥21,460</div>
+                                <div class="summary-label">费用总计</div>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                    <el-tab-pane label="订单关联分析" name="order">
+                        <div class="chart-container">
+                            <i class="el-icon-s-grid" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <div>订单关联图表区域</div>
+                            <div style="font-size: 14px; margin-top: 10px;">展示订单与工具使用、费用之间的关联分析</div>
+                        </div>
+                        <div class="report-summary">
+                            <div class="summary-item">
+                                <div class="summary-value">45</div>
+                                <div class="summary-label">本月订单数</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">2.3</div>
+                                <div class="summary-label">平均每单工具数</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">¥478</div>
+                                <div class="summary-label">平均每单费用</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value">92%</div>
+                                <div class="summary-label">按时归还率</div>
+                            </div>
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ebeef5;">
+                    <h4 style="margin-bottom: 15px; color: #303133;">详细数据报表</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>报表名称</th>
+                                <th>数据周期</th>
+                                <th>生成时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>工具使用月度统计报表</td>
+                                <td>2024年3月</td>
+                                <td>2024-03-20 10:30:00</td>
+                                <td><span class="tag tag-success">已生成</span></td>
+                                <td>
+                                    <el-button type="text" size="small">查看</el-button>
+                                    <el-button type="text" size="small" style="color: #67c23a;">下载</el-button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>费用支出月度分析报表</td>
+                                <td>2024年3月</td>
+                                <td>2024-03-20 10:30:00</td>
+                                <td><span class="tag tag-success">已生成</span></td>
+                                <td>
+                                    <el-button type="text" size="small">查看</el-button>
+                                    <el-button type="text" size="small" style="color: #67c23a;">下载</el-button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>工具库存盘点报表</td>
+                                <td>2024年3月</td>
+                                <td>2024-03-15 14:20:00</td>
+                                <td><span class="tag tag-success">已生成</span></td>
+                                <td>
+                                    <el-button type="text" size="small">查看</el-button>
+                                    <el-button type="text" size="small" style="color: #67c23a;">下载</el-button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>订单服务统计报表</td>
+                                <td>2024年3月</td>
+                                <td>2024-03-20 10:30:00</td>
+                                <td><span class="tag tag-primary">生成中</span></td>
+                                <td>
+                                    <el-button type="text" size="small" disabled>查看</el-button>
+                                    <el-button type="text" size="small" disabled>下载</el-button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination-container">
+                        <el-pagination background layout="total, prev, pager, next, jumper" :total="20" :page-size="5"></el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        new Vue({
+            el: '.main-content',
+            data: {
+                activeTab: 'tool'
+            }
+        });
+    </script>
+</body>
+</html>
