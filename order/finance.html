@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务对账 - 月嫂家政服务系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .sidebar .el-menu {
+            background: transparent;
+            border-right: none;
+        }
+        .sidebar .el-menu-item {
+            color: white;
+            height: 50px;
+            line-height: 50px;
+            margin: 0 10px;
+            border-radius: 8px;
+        }
+        .sidebar .el-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .el-menu-item.is-active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 20px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-bar .el-input,
+        .search-bar .el-select {
+            width: 200px;
+        }
+        .search-bar .el-button {
+            margin-left: 10px;
+        }
+        .finance-summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .finance-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .finance-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .finance-card .amount {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .reconciliation-section {
+            margin-bottom: 30px;
+        }
+        .reconciliation-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .reconciliation-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .reconciliation-form .el-date-picker {
+            width: 200px;
+        }
+        .difference-list {
+            margin-top: 20px;
+        }
+        .difference-list .el-table {
+            margin-top: 10px;
+        }
+        .receipt-section {
+            margin-top: 30px;
+        }
+        .receipt-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .receipt-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h2>月嫂家政服务系统</h2>
+            <el-menu class="sidebar-menu" :default-active="activeMenu" @select="handleMenuSelect">
+                <el-menu-item index="order">
+                    <span>订单管理</span>
+                </el-menu-item>
+                <el-menu-item index="split">
+                    <span>分账结算</span>
+                </el-menu-item>
+                <el-menu-item index="caregiver">
+                    <span>账户管理</span>
+                </el-menu-item>
+                <el-menu-item index="withdrawal">
+                    <span>提现记录</span>
+                </el-menu-item>
+                <el-menu-item index="refund">
+                    <span>退款记录</span>
+                </el-menu-item>
+                <el-menu-item index="finance">
+                    <span>财务对账</span>
+                </el-menu-item>
+            </el-menu>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="header">
+                <h1>财务对账</h1>
+            </div>
+            
+            <!-- 财务概览 -->
+            <div class="page-card">
+                <h3>财务概览</h3>
+                <div class="finance-summary">
+                    <div class="finance-card">
+                        <h3>今日收入</h3>
+                        <div class="amount">¥15,600</div>
+                    </div>
+                    <div class="finance-card">
+                        <h3>今日支出</h3>
+                        <div class="amount">¥12,400</div>
+                    </div>
+                    <div class="finance-card">
+                        <h3>本月收入</h3>
+                        <div class="amount">¥456,800</div>
+                    </div>
+                    <div class="finance-card">
+                        <h3>本月支出</h3>
+                        <div class="amount">¥389,200</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 对账文件下载 -->
+            <div class="page-card reconciliation-section">
+                <h3>对账文件下载</h3>
+                <div class="reconciliation-form">
+                    <el-date-picker
+                        v-model="reconciliationDate"
+                        type="date"
+                        placeholder="选择对账日期"
+                        style="width: 200px"
+                    ></el-date-picker>
+                    <el-button type="primary" @click="downloadReconciliation">下载对账单</el-button>
+                    <el-button type="info" @click="checkReconciliation">核对账单</el-button>
+                </div>
+                
+                <!-- 差异列表 -->
+                <div v-if="showDifference" class="difference-list">
+                    <h4>对账差异</h4>
+                    <el-table :data="differenceList" style="width: 100%">
+                        <el-table-column prop="orderId" label="订单编号" width="180"></el-table-column>
+                        <el-table-column prop="internalAmount" label="内部金额" width="120">
+                            <template #default="scope">
+                                ¥{{ scope.row.internalAmount }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="cpcnAmount" label="中金金额" width="120">
+                            <template #default="scope">
+                                ¥{{ scope.row.cpcnAmount }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="difference" label="差异金额" width="120">
+                            <template #default="scope">
+                                <span :style="{ color: scope.row.difference > 0 ? 'green' : 'red' }">
+                                    ¥{{ scope.row.difference }}
+                                </span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="状态" width="100">
+                            <template #default="scope">
+                                <el-tag type="warning">待处理</el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="100">
+                            <template #default="scope">
+                                <el-button size="small" @click="handleDifference(scope.row)">处理</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </div>
+            
+            <!-- 电子回单下载 -->
+            <div class="page-card receipt-section">
+                <h3>电子回单下载</h3>
+                <div class="receipt-form">
+                    <el-input v-model="receiptQuery.txSN" placeholder="交易流水号" style="width: 200px;"></el-input>
+                    <el-date-picker
+                        v-model="receiptQuery.date"
+                        type="date"
+                        placeholder="选择日期"
+                        style="width: 200px"
+                    ></el-date-picker>
+                    <el-button type="primary" @click="downloadReceipt">下载回单</el-button>
+                </div>
+            </div>
+            
+            <!-- 手续费查询 -->
+            <div class="page-card">
+                <h3>手续费查询</h3>
+                <div class="reconciliation-form">
+                    <el-date-picker
+                        v-model="feeDateRange"
+                        type="daterange"
+                        range-separator="至"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        style="width: 300px"
+                    ></el-date-picker>
+                    <el-button type="primary" @click="queryFee">查询手续费</el-button>
+                </div>
+                
+                <div v-if="showFee" style="margin-top: 20px;">
+                    <h4>手续费统计</h4>
+                    <el-table :data="feeList" style="width: 100%">
+                        <el-table-column prop="date" label="日期" width="150"></el-table-column>
+                        <el-table-column prop="totalAmount" label="交易总额" width="120">
+                            <template #default="scope">
+                                ¥{{ scope.row.totalAmount }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="feeAmount" label="手续费" width="120">
+                            <template #default="scope">
+                                ¥{{ scope.row.feeAmount }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="rate" label="费率" width="100">
+                            <template #default="scope">
+                                {{ scope.row.rate }}%
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    
+                    <div style="margin-top: 20px; text-align: right;">
+                        <el-button type="info" @click="exportFeeReport">导出报表</el-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Element Plus JS -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, reactive } = Vue;
+        
+        createApp({
+            setup() {
+                const activeMenu = ref('finance');
+                
+                // 对账日期
+                const reconciliationDate = ref('');
+                // 显示差异列表
+                const showDifference = ref(false);
+                // 差异列表数据
+                const differenceList = ref([
+                    {
+                        orderId: 'ORD20240101001',
+                        internalAmount: 8800,
+                        cpcnAmount: 8800,
+                        difference: 0
+                    },
+                    {
+                        orderId: 'ORD20240102002',
+                        internalAmount: 6800,
+                        cpcnAmount: 6800,
+                        difference: 0
+                    },
+                    {
+                        orderId: 'ORD20240103003',
+                        internalAmount: 9800,
+                        cpcnAmount: 9700,
+                        difference: 100
+                    }
+                ]);
+                
+                // 回单查询
+                const receiptQuery = reactive({
+                    txSN: '',
+                    date: ''
+                });
+                
+                // 手续费查询
+                const feeDateRange = ref('');
+                const showFee = ref(false);
+                const feeList = ref([
+                    {
+                        date: '2024-01-01',
+                        totalAmount: 15600,
+                        feeAmount: 156,
+                        rate: 0.1
+                    },
+                    {
+                        date: '2024-01-02',
+                        totalAmount: 12400,
+                        feeAmount: 124,
+                        rate: 0.1
+                    },
+                    {
+                        date: '2024-01-03',
+                        totalAmount: 18900,
+                        feeAmount: 189,
+                        rate: 0.1
+                    }
+                ]);
+                
+                // 菜单选择
+                const handleMenuSelect = (key) => {
+                    if (key === 'index') {
+                        handleLogout();
+                    } else {
+                        window.location.href = key + '.html';
+                    }
+                };
+                
+                // 退出登录
+                const handleLogout = () => {
+                    window.location.href = 'index.html';
+                };
+                
+                // 下载对账单
+                const downloadReconciliation = () => {
+                    if (!reconciliationDate.value) {
+                        ElementPlus.ElMessage.warning('请选择对账日期');
+                        return;
+                    }
+                    ElementPlus.ElMessage.info('正在下载对账单...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('对账单下载成功');
+                    }, 1500);
+                };
+                
+                // 核对账单
+                const checkReconciliation = () => {
+                    if (!reconciliationDate.value) {
+                        ElementPlus.ElMessage.warning('请选择对账日期');
+                        return;
+                    }
+                    ElementPlus.ElMessage.info('正在核对账单...');
+                    setTimeout(() => {
+                        showDifference.value = true;
+                        ElementPlus.ElMessage.success('账单核对完成');
+                    }, 1500);
+                };
+                
+                // 处理差异
+                const handleDifference = (row) => {
+                    ElementPlus.ElMessage.info(`处理差异: ${row.orderId}`);
+                };
+                
+                // 下载回单
+                const downloadReceipt = () => {
+                    if (!receiptQuery.txSN) {
+                        ElementPlus.ElMessage.warning('请输入交易流水号');
+                        return;
+                    }
+                    ElementPlus.ElMessage.info('正在下载电子回单...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('电子回单下载成功');
+                    }, 1500);
+                };
+                
+                // 查询手续费
+                const queryFee = () => {
+                    if (!feeDateRange.value) {
+                        ElementPlus.ElMessage.warning('请选择日期范围');
+                        return;
+                    }
+                    ElementPlus.ElMessage.info('正在查询手续费...');
+                    setTimeout(() => {
+                        showFee.value = true;
+                        ElementPlus.ElMessage.success('手续费查询完成');
+                    }, 1500);
+                };
+                
+                // 导出报表
+                const exportFeeReport = () => {
+                    ElementPlus.ElMessage.info('正在导出报表...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('报表导出成功');
+                    }, 1500);
+                };
+                
+                return {
+                    activeMenu,
+                    reconciliationDate,
+                    showDifference,
+                    differenceList,
+                    receiptQuery,
+                    feeDateRange,
+                    showFee,
+                    feeList,
+                    handleMenuSelect,
+                    handleLogout,
+                    downloadReconciliation,
+                    checkReconciliation,
+                    handleDifference,
+                    downloadReceipt,
+                    queryFee,
+                    exportFeeReport
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的钱包 - 月嫂家政服务系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            max-width: 414px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .empty-state {
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            padding: 40px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .empty-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .empty-desc {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .empty-btn {
+            width: 200px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 414px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+        .nav-item {
+            text-align: center;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: #667eea;
+        }
+        .nav-item .icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .nav-item .text {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>我的钱包</h1>
+            <p>月嫂家政服务系统</p>
+        </div>
+        
+        <!-- 未开户状态 -->
+        <div v-if="!accountOpened" class="empty-state">
+            <div class="empty-icon">🏦</div>
+            <div class="empty-title">您还未开通电子账户</div>
+            <div class="empty-desc">
+                开通电子账户后才能接收分账收入<br>
+                请先完成实名认证和绑卡
+            </div>
+            <el-button type="primary" class="empty-btn" @click="goToAccount">去开通账户</el-button>
+        </div>
+        
+        <!-- 已开户状态 -->
+        <template v-else>
+            <!-- 余额卡片 -->
+            <div class="empty-state">
+                <div class="empty-title">电子账户可用余额</div>
+                <div class="empty-icon">💰</div>
+                <div class="empty-desc">¥{{ formatAmount(balance) }}</div>
+            </div>
+            
+            <!-- 收支明细 -->
+            <div class="empty-state">
+                <div class="empty-title">收支明细</div>
+                <div v-for="item in transactionList" :key="item.id" style="text-align: left; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="flex: 1;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #333;">{{ item.type }}</div>
+                            <div style="font-size: 12px; color: #999;">{{ item.orderId }}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div :style="{ color: item.direction === 'income' ? '#67c23a' : '#f56c6c', fontSize: '16px', fontWeight: 'bold' }">
+                                {{ item.direction === 'income' ? '+' : '-' }}¥{{ formatAmount(item.amount) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #999;">{{ item.time }}</div>
+                </div>
+            </div>
+        </template>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item" @click="goToHome">
+                <div class="icon">🏠</div>
+                <div class="text">首页</div>
+            </div>
+            <div class="nav-item active" @click="goToWallet">
+                <div class="icon">💰</div>
+                <div class="text">我的钱包</div>
+            </div>
+            <div class="nav-item" @click="goToAccount">
+                <div class="icon">⚙️</div>
+                <div class="text">账户设置</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Element Plus JS -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref } = Vue;
+        
+        createApp({
+            setup() {
+                const accountOpened = ref(false);
+                const balance = ref(7040);
+                
+                const transactionList = ref([
+                    {
+                        id: 1,
+                        type: '分账收入',
+                        orderId: 'ORD20240101001',
+                        time: '2024-01-15 10:00:00',
+                        amount: 7040,
+                        direction: 'income'
+                    },
+                    {
+                        id: 2,
+                        type: '提现支出',
+                        orderId: 'WD20240115001',
+                        time: '2024-01-15 10:30:00',
+                        amount: 7040,
+                        direction: 'expense'
+                    },
+                    {
+                        id: 3,
+                        type: '分账收入',
+                        orderId: 'ORD20240102002',
+                        time: '2024-01-10 14:30:00',
+                        amount: 5440,
+                        direction: 'income'
+                    },
+                    {
+                        id: 4,
+                        type: '分账收入',
+                        orderId: 'ORD20240103003',
+                        time: '2024-01-05 09:15:00',
+                        amount: 7840,
+                        direction: 'income'
+                    }
+                ]);
+                
+                const formatAmount = (amount) => {
+                    return amount.toFixed(2);
+                };
+                
+                const goToWallet = () => {
+                };
+                
+                const goToAccount = () => {
+                    window.location.href = 'nanny-account.html';
+                };
+                
+                const goToHome = () => {
+                    window.location.href = 'nanny-home.html';
+                };
+                
+                return {
+                    accountOpened,
+                    balance,
+                    transactionList,
+                    formatAmount,
+                    goToWallet,
+                    goToAccount,
+                    goToHome
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

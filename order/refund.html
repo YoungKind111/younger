@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退款管理 - 月嫂家政服务系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .sidebar .el-menu {
+            background: transparent;
+            border-right: none;
+        }
+        .sidebar .el-menu-item {
+            color: white;
+            height: 50px;
+            line-height: 50px;
+            margin: 0 10px;
+            border-radius: 8px;
+        }
+        .sidebar .el-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .el-menu-item.is-active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 20px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-bar .el-input,
+        .search-bar .el-select {
+            width: 200px;
+        }
+        .search-bar .el-button {
+            margin-left: 10px;
+        }
+        .refund-status {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .refund-status .el-tag {
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .refund-form {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px dashed #d9d9d9;
+            border-radius: 8px;
+        }
+        .refund-form .el-form {
+            max-width: 600px;
+        }
+        .refund-form .el-form-item {
+            margin-bottom: 15px;
+        }
+        .refund-form .el-input {
+            width: 300px;
+        }
+        .refund-form .el-select {
+            width: 300px;
+        }
+        .refund-hint {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h2>月嫂家政服务系统</h2>
+            <el-menu class="sidebar-menu" :default-active="activeMenu" @select="handleMenuSelect">
+                <el-menu-item index="order">
+                    <span>订单管理</span>
+                </el-menu-item>
+                <el-menu-item index="split">
+                    <span>分账结算</span>
+                </el-menu-item>
+                <el-menu-item index="caregiver">
+                    <span>账户管理</span>
+                </el-menu-item>
+                <el-menu-item index="withdrawal">
+                    <span>提现记录</span>
+                </el-menu-item>
+                <el-menu-item index="refund">
+                    <span>退款记录</span>
+                </el-menu-item>
+                <el-menu-item index="finance">
+                    <span>财务对账</span>
+                </el-menu-item>
+    
+           
+            </el-menu>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="header">
+                <h1>退款管理</h1>
+            </div>
+            
+            <div class="page-card">
+           
+                
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <el-input v-model="searchForm.refundId" placeholder="退款编号" style="width: 200px;"></el-input>
+                    <el-input v-model="searchForm.orderId" placeholder="订单编号" style="width: 200px;"></el-input>
+                    <el-select v-model="searchForm.status" placeholder="退款状态" style="width: 150px;">
+                        <el-option label="全部" value=""></el-option>
+                        <el-option label="处理中" value="pending"></el-option>
+                        <el-option label="退款成功" value="success"></el-option>
+                        <el-option label="退款失败" value="failed"></el-option>
+                    </el-select>
+                    <el-button type="primary" @click="search">搜索</el-button>
+                    <el-button @click="reset">重置</el-button>
+                </div>
+                
+                <!-- 退款状态统计 -->
+                <div class="refund-status">
+                    <el-tag type="info">全部记录: {{ totalRefunds }}</el-tag>
+                    <el-tag type="warning">处理中: {{ pendingRefunds }}</el-tag>
+                    <el-tag type="success">退款成功: {{ successRefunds }}</el-tag>
+                    <el-tag type="danger">退款失败: {{ failedRefunds }}</el-tag>
+                </div>
+                
+                <!-- 退款记录表格 -->
+                <el-table :data="refundList" style="width: 100%">
+                    <el-table-column prop="refundId" label="退款编号" width="180"></el-table-column>
+                    <el-table-column prop="orderId" label="订单编号" width="180"></el-table-column>
+                    <el-table-column prop="customerName" label="客户姓名" width="120"></el-table-column>
+                    <el-table-column prop="refundAmount" label="退款金额" width="100">
+                        <template #default="scope">
+                            ¥{{ scope.row.refundAmount }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="refundReason" label="退款原因" width="150">
+                        <template #default="scope">
+                            {{ getRefundReasonText(scope.row.refundReason) }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="退款状态" width="100">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.status === 'success'" type="success">退款成功</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'failed'" type="danger">退款失败</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'pending'" type="warning">处理中</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="refundTime" label="退款时间" width="180"></el-table-column>
+                 
+                </el-table>
+                
+                <!-- 分页 -->
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50, 100]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                    ></el-pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Element Plus JS -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, watch } = Vue;
+        
+        createApp({
+            setup() {
+                const activeMenu = ref('refund');
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(3);
+                
+                // 搜索表单
+                const searchForm = reactive({
+                    refundId: '',
+                    orderId: '',
+                    status: ''
+                });
+                
+                // 可用订单列表
+                const availableOrders = ref([
+                    {
+                        orderId: 'ORD20240101001',
+                        customerName: '张三',
+                        amount: 8800,
+                        status: 'completed',
+                        hasSplit: true
+                    },
+                    {
+                        orderId: 'ORD20240102002',
+                        customerName: '李四',
+                        amount: 6800,
+                        status: 'servicing',
+                        hasSplit: false
+                    },
+                    {
+                        orderId: 'ORD20240103003',
+                        customerName: '王五',
+                        amount: 9800,
+                        status: 'paid',
+                        hasSplit: true
+                    }
+                ]);
+                
+                // 退款记录列表
+                const refundList = ref([
+                    {
+                        refundId: 'REF20240101001',
+                        orderId: 'ORD20240101001',
+                        customerName: '张三',
+                        refundAmount: 1000,
+                        refundReason: 'customer_cancel',
+                        status: 'success',
+                        refundTime: '2024-01-15 10:00:00'
+                    },
+                    {
+                        refundId: 'REF20240102002',
+                        orderId: 'ORD20240102002',
+                        customerName: '李四',
+                        refundAmount: 6800,
+                        refundReason: 'service_dissatisfaction',
+                        status: 'pending',
+                        refundTime: ''
+                    },
+                    {
+                        refundId: 'REF20240103003',
+                        orderId: 'ORD20240103003',
+                        customerName: '王五',
+                        refundAmount: 2000,
+                        refundReason: 'caregiver_change',
+                        status: 'failed',
+                        refundTime: ' '
+                    }
+                ]);
+                
+                // 退款表单
+                const refundFormRef = ref(null);
+                const refundForm = reactive({
+                    orderId: '',
+                    refundAmount: 0,
+                    refundReason: '',
+                    remark: ''
+                });
+                
+                const rules = {
+                    orderId: [
+                        { required: true, message: '请选择订单', trigger: 'blur' }
+                    ],
+                    refundAmount: [
+                        { required: true, message: '请输入退款金额', trigger: 'blur' },
+                        { type: 'number', message: '请输入数字', trigger: 'blur' }
+                    ],
+                    refundReason: [
+                        { required: true, message: '请选择退款原因', trigger: 'blur' }
+                    ]
+                };
+                
+                // 计算属性
+                const selectedOrder = computed(() => {
+                    return availableOrders.value.find(order => order.orderId === refundForm.orderId);
+                });
+                
+                const refundHint = computed(() => {
+                    if (!selectedOrder.value) return '';
+                    
+                    if (selectedOrder.value.hasSplit) {
+                        return '该订单已分账，退款时需要从护理员账户扣回相应金额。请确保护理员账户余额充足。';
+                    } else {
+                        return '该订单未分账，退款将直接从公司账户退回。';
+                    }
+                });
+                
+                // 统计数据
+                const totalRefunds = computed(() => refundList.value.length);
+                const pendingRefunds = computed(() => refundList.value.filter(refund => refund.status === 'pending').length);
+                const successRefunds = computed(() => refundList.value.filter(refund => refund.status === 'success').length);
+                const failedRefunds = computed(() => refundList.value.filter(refund => refund.status === 'failed').length);
+                
+                // 菜单选择
+                const handleMenuSelect = (key) => {
+                    if (key === 'index') {
+                        handleLogout();
+                    } else {
+                        window.location.href = key + '.html';
+                    }
+                };
+                
+                // 退出登录
+                const handleLogout = () => {
+                    window.location.href = 'index.html';
+                };
+                
+                // 搜索
+                const search = () => {
+                    ElementPlus.ElMessage.info('搜索功能开发中');
+                };
+                
+                // 重置
+                const reset = () => {
+                    searchForm.refundId = '';
+                    searchForm.orderId = '';
+                    searchForm.status = '';
+                };
+                
+                // 提交退款
+                const submitRefund = () => {
+                    refundFormRef.value.validate((valid) => {
+                        if (valid) {
+                            if (selectedOrder.value && refundForm.refundAmount > selectedOrder.value.amount) {
+                                ElementPlus.ElMessage.error('退款金额不能超过订单总金额');
+                                return;
+                            }
+                            
+                            // 模拟退款操作
+                            const newRefund = {
+                                refundId: 'REF' + new Date().getTime(),
+                                orderId: refundForm.orderId,
+                                customerName: selectedOrder.value.customerName,
+                                refundAmount: refundForm.refundAmount,
+                                refundReason: refundForm.refundReason,
+                                status: 'pending',
+                                refundTime: ''
+                            };
+                            
+                            refundList.value.unshift(newRefund);
+                            total.value++;
+                            
+                            // 重置表单
+                            refundForm.orderId = '';
+                            refundForm.refundAmount = 0;
+                            refundForm.refundReason = '';
+                            refundForm.remark = '';
+                            
+                            ElementPlus.ElMessage.success('退款申请已提交');
+                        } else {
+                            return false;
+                        }
+                    });
+                };
+                
+                // 获取退款原因文本
+                const getRefundReasonText = (reason) => {
+                    const reasonMap = {
+                        'customer_cancel': '客户取消',
+                        'service_dissatisfaction': '服务不满意',
+                        'caregiver_change': '护理员变更',
+                        'other': '其他原因'
+                    };
+                    return reasonMap[reason] || reason;
+                };
+                
+                // 查看退款
+                const viewRefund = (row) => {
+                    ElementPlus.ElMessage.info(`查看退款记录: ${row.refundId}`);
+                };
+                
+                // 处理退款
+                const processRefund = (row) => {
+                    ElementPlus.ElMessageBox.confirm(`确定要处理退款操作吗？`, '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        // 模拟退款操作
+                        row.status = 'processing';
+                        
+                        // 模拟退款成功
+                        setTimeout(() => {
+                            row.status = 'success';
+                            row.refundTime = new Date().toLocaleString('zh-CN');
+                            ElementPlus.ElMessage.success('退款处理成功');
+                        }, 1500);
+                    }).catch(() => {
+                        ElementPlus.ElMessage.info('取消退款处理');
+                    });
+                };
+                
+                // 分页
+                const handleSizeChange = (size) => {
+                    pageSize.value = size;
+                };
+                
+                const handleCurrentChange = (current) => {
+                    currentPage.value = current;
+                };
+                
+                return {
+                    activeMenu,
+                    currentPage,
+                    pageSize,
+                    total,
+                    searchForm,
+                    availableOrders,
+                    refundList,
+                    refundFormRef,
+                    refundForm,
+                    rules,
+                    selectedOrder,
+                    refundHint,
+                    totalRefunds,
+                    pendingRefunds,
+                    successRefunds,
+                    failedRefunds,
+                    handleMenuSelect,
+                    handleLogout,
+                    search,
+                    reset,
+                    submitRefund,
+                    getRefundReasonText,
+                    viewRefund,
+                    processRefund,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

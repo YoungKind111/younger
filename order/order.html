@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - 月嫂家政服务系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .sidebar .el-menu {
+            background: transparent;
+            border-right: none;
+        }
+        .sidebar .el-menu-item {
+            color: white;
+            height: 50px;
+            line-height: 50px;
+            margin: 0 10px;
+            border-radius: 8px;
+        }
+        .sidebar .el-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .el-menu-item.is-active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 20px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .search-bar .el-input,
+        .search-bar .el-select {
+            width: 200px;
+        }
+        .search-bar .el-button {
+            margin-left: 0px;
+            white-space: nowrap;
+            position: relative;
+            z-index: 10;
+        }
+        .order-status {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .order-status .el-tag {
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .payment-list {
+            margin-top: 10px;
+            border-top: 1px solid #e4e7ed;
+            padding-top: 10px;
+        }
+        .payment-list .el-table {
+            margin-top: 10px;
+        }
+        .caregiver-association {
+            margin-top: 10px;
+            border-top: 1px solid #e4e7ed;
+            padding-top: 10px;
+        }
+        .caregiver-association .el-select {
+            width: 300px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h2>月嫂家政服务系统</h2>
+            <el-menu class="sidebar-menu" :default-active="activeMenu" @select="handleMenuSelect">
+                <el-menu-item index="order">
+                    <span>订单管理</span>
+                </el-menu-item>
+                <el-menu-item index="split">
+                    <span>分账结算</span>
+                </el-menu-item>
+                <el-menu-item index="caregiver">
+                    <span>账户管理</span>
+                </el-menu-item>
+                <el-menu-item index="withdrawal">
+                    <span>提现记录</span>
+                </el-menu-item>
+                <el-menu-item index="refund">
+                    <span>退款记录</span>
+                </el-menu-item>
+                <el-menu-item index="finance">
+                    <span>财务对账</span>
+                </el-menu-item>
+         
+            </el-menu>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="header">
+                <h1>订单管理</h1>
+            </div>
+            
+            <div class="page-card">
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <el-input v-model="searchForm.orderId" placeholder="订单编号" style="width: 200px;"></el-input>
+                    <el-input v-model="searchForm.customerName" placeholder="客户姓名" style="width: 200px;"></el-input>
+                    <el-select v-model="searchForm.status" placeholder="订单状态" style="width: 150px;">
+                        <el-option label="全部" value=""></el-option>
+                        <el-option label="待支付" value="pending"></el-option>
+                        <el-option label="部分支付" value="partially_paid"></el-option>
+                        <el-option label="已支付" value="paid"></el-option>
+                        <el-option label="服务中" value="servicing"></el-option>
+                        <el-option label="已完成" value="completed"></el-option>
+                        <el-option label="已取消" value="cancelled"></el-option>
+                    </el-select>
+                    <el-button type="primary" @click="search">搜索</el-button>
+                    <el-button @click="reset">重置</el-button>
+                </div>
+                
+                <!-- 订单状态统计 -->
+                <div class="order-status">
+                    <el-tag type="info">全部订单: {{ totalOrders }}</el-tag>
+                    <el-tag type="warning">待支付: {{ pendingOrders }}</el-tag>
+                    <el-tag type="warning">部分支付: {{ partiallyPaidOrders }}</el-tag>
+                    <el-tag type="info">已支付: {{ paidOrders }}</el-tag>
+                    <el-tag type="success">已完成: {{ completedOrders }}</el-tag>
+                </div>
+                
+            
+                
+                <!-- 订单列表 -->
+                <el-table :data="orderList" style="width: 100%" row-key="orderId" :expand-row-keys="expandedRowKeys" @expand-change="handleExpandChange" @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" width="55"></el-table-column>
+                    <el-table-column type="expand">
+                        <template #default="scope">
+                            <div class="payment-list">
+                                <h4 style="margin-bottom: 10px; font-weight: bold;">支付记录 ({{ (scope.row.payments && scope.row.payments.length) || 0 }} 笔)</h4>
+                                <el-table :data="scope.row.payments || []" style="width: 100%; margin-top: 10px; border: 1px solid #e4e7ed;" row-key="paymentId">
+                                    <el-table-column prop="paymentId" label="支付编号" width="180"></el-table-column>
+                                    <el-table-column prop="amount" label="支付金额" width="120">
+                                        <template #default="paymentScope">
+                                            ¥{{ paymentScope.row.amount }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="paymentMethod" label="支付方式" width="120"></el-table-column>
+                                    <el-table-column prop="status" label="支付状态" width="100">
+                                        <template #default="paymentScope">
+                                            <el-tag v-if="paymentScope.row.status === 'success'" type="success">成功</el-tag>
+                                            <el-tag v-else-if="paymentScope.row.status === 'failed'" type="danger">失败</el-tag>
+                                            <el-tag v-else-if="paymentScope.row.status === 'processing'" type="warning">处理中</el-tag>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="paymentTime" label="支付时间" width="180"></el-table-column>
+                                </el-table>
+                                <div v-if="!scope.row.payments || scope.row.payments.length === 0" style="padding: 20px; text-align: center; color: #909399;">
+                                    暂无支付记录
+                                </div>
+                            </div>
+                            <div class="payment-list" v-if="scope.row.refunds && scope.row.refunds.length > 0">
+                                <h4 style="margin-bottom: 10px; font-weight: bold;">退款记录 ({{ scope.row.refunds.length }} 笔)</h4>
+                                <el-table :data="scope.row.refunds" style="width: 100%; margin-top: 10px; border: 1px solid #e4e7ed;" row-key="refundId">
+                                    <el-table-column prop="refundId" label="退款编号" width="180"></el-table-column>
+                                    <el-table-column prop="amount" label="退款金额" width="120">
+                                        <template #default="refundScope">
+                                            ¥{{ refundScope.row.amount }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="refundMethod" label="退款方式" width="120"></el-table-column>
+                                    <el-table-column prop="status" label="退款状态" width="100">
+                                        <template #default="refundScope">
+                                            <el-tag v-if="refundScope.row.status === 'success'" type="success">成功</el-tag>
+                                            <el-tag v-else-if="refundScope.row.status === 'failed'" type="danger">失败</el-tag>
+                                            <el-tag v-else-if="refundScope.row.status === 'processing'" type="warning">处理中</el-tag>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="refundTime" label="退款时间" width="180"></el-table-column>
+                                </el-table>
+                            </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="orderId" label="订单编号" width="180"></el-table-column>
+                    <el-table-column prop="customerName" label="客户姓名" width="120"></el-table-column>
+                    <el-table-column prop="caregiverName" label="护理员" width="120"></el-table-column>
+                    <el-table-column prop="amount" label="订单金额" width="150">
+                        <template #default="scope">
+                            <div>
+                                <div>总金额: ¥{{ scope.row.amount }}</div>
+                                <div style="font-size: 12px; color: #67c23a;">
+                                    已支付: ¥{{ getPaidAmount(scope.row.payments) }}
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="订单状态" width="100">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.status === 'pending'" type="warning">待支付</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'partially_paid'" type="warning">部分支付</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'paid'" type="info">已支付</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'servicing'" type="info">服务中</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'completed'" type="success">已完成</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'cancelled'" type="danger">已取消</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="支付状态" width="180">
+                        <template #default="scope">
+                            <span style="font-size: 12px;">{{ getPaymentStatusSummary(scope.row.payments) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
+                    <el-table-column prop="serviceStartTime" label="服务开始时间" width="180">
+                        <template #default="scope">
+                            {{ scope.row.serviceStartTime || '-' }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="serviceEndTime" label="服务结束时间" width="180">
+                        <template #default="scope">
+                            {{ scope.row.serviceEndTime || '-' }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="300">
+                        <template #default="scope">
+                            <el-button v-if="scope.row.status === 'paid'" size="small" type="primary" @click="startService(scope.row)">开始服务</el-button>
+                            <el-button v-if="scope.row.status === 'servicing'" size="small" type="success" @click="completeService(scope.row)">完成服务</el-button>
+                            <el-button v-if="scope.row.status !== 'completed' && scope.row.status !== 'cancelled'" size="small" type="danger" @click="cancelOrder(scope.row)">取消订单</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                
+                <!-- 分页 -->
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50, 100]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                    ></el-pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支付记录弹窗 -->
+    <el-dialog
+        v-model="paymentDialogVisible"
+        title="支付记录"
+        width="800px"
+    >
+        <div v-if="currentOrder">
+            <h3>订单：{{ currentOrder.orderId }} - {{ currentOrder.customerName }}</h3>
+            <div class="payment-list">
+                <h4 style="margin-bottom: 10px; font-weight: bold;">支付记录 ({{ (currentOrder.payments && currentOrder.payments.length) || 0 }} 笔)</h4>
+                <el-table :data="currentOrder.payments" style="width: 100%" row-key="paymentId">
+                    <el-table-column prop="paymentId" label="支付编号" width="180"></el-table-column>
+                    <el-table-column prop="amount" label="支付金额" width="120">
+                        <template #default="scope">
+                            ¥{{ scope.row.amount }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="paymentMethod" label="支付方式" width="120"></el-table-column>
+                    <el-table-column prop="status" label="支付状态" width="100">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.status === 'success'" type="success">成功</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'failed'" type="danger">失败</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'processing'" type="warning">处理中</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="paymentTime" label="支付时间" width="180"></el-table-column>
+                </el-table>
+                <div v-if="!currentOrder.payments || currentOrder.payments.length === 0" style="padding: 20px; text-align: center; color: #909399;">
+                    暂无支付记录
+                </div>
+            </div>
+            <div class="payment-list" v-if="currentOrder.refunds && currentOrder.refunds.length > 0">
+                <h4 style="margin-bottom: 10px; font-weight: bold;">退款记录 ({{ currentOrder.refunds.length }} 笔)</h4>
+                <el-table :data="currentOrder.refunds" style="width: 100%" row-key="refundId">
+                    <el-table-column prop="refundId" label="退款编号" width="180"></el-table-column>
+                    <el-table-column prop="amount" label="退款金额" width="120">
+                        <template #default="scope">
+                            ¥{{ scope.row.amount }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="refundMethod" label="退款方式" width="120"></el-table-column>
+                    <el-table-column prop="status" label="退款状态" width="100">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.status === 'success'" type="success">成功</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'failed'" type="danger">失败</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'processing'" type="warning">处理中</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="refundTime" label="退款时间" width="180"></el-table-column>
+                </el-table>
+            </div>
+        </div>
+    </el-dialog>
+
+
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Element Plus JS -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                const activeMenu = ref('order');
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(5);
+                
+                // 搜索表单
+                const searchForm = reactive({
+                    orderId: '',
+                    customerName: '',
+                    status: ''
+                });
+                
+                // 订单列表数据
+                const orderList = ref([
+                    {
+                        orderId: 'ORD20240101001',
+                        customerName: '张三',
+                        caregiverName: '李阿姨',
+                        serviceType: '月嫂',
+                        amount: 8800,
+                        status: 'completed',
+                        createTime: '2024-01-01 10:00:00',
+                        serviceStartTime: '2024-01-02 08:00:00',
+                        serviceEndTime: '2024-01-31 18:00:00',
+                        paymentCount: 2,
+                        caregiverCount: 1,
+                        payments: [
+                            {
+                                paymentId: 'PAY20240101001',
+                                amount: 1000,
+                                paymentMethod: '微信支付',
+                                status: 'success',
+                                paymentTime: '2024-01-01 10:00:00'
+                            },
+                            {
+                                paymentId: 'PAY20240101002',
+                                amount: 7800,
+                                paymentMethod: '支付宝',
+                                status: 'success',
+                                paymentTime: '2024-01-05 14:30:00'
+                            }
+                        ],
+                        refunds: [],
+                        caregivers: [
+                            {
+                                caregiverId: 'CG2024001',
+                                caregiverName: '李阿姨',
+                                skill: '高级月嫂'
+                            }
+                        ]
+                    },
+                    {
+                        orderId: 'ORD20240102002',
+                        customerName: '李四',
+                        caregiverName: '王阿姨',
+                        serviceType: '育儿嫂',
+                        amount: 6800,
+                        status: 'servicing',
+                        createTime: '2024-01-02 14:30:00',
+                        serviceStartTime: '2024-01-05 08:00:00',
+                        serviceEndTime: '2024-02-05 18:00:00',
+                        paymentCount: 1,
+                        caregiverCount: 1,
+                        payments: [
+                            {
+                                paymentId: 'PAY20240102001',
+                                amount: 6800,
+                                paymentMethod: '微信支付',
+                                status: 'success',
+                                paymentTime: '2024-01-02 14:30:00'
+                            }
+                        ],
+                        refunds: [],
+                        caregivers: [
+                            {
+                                caregiverId: 'CG2024002',
+                                caregiverName: '王阿姨',
+                                skill: '中级月嫂'
+                            }
+                        ]
+                    },
+                    {
+                        orderId: 'ORD20240103003',
+                        customerName: '王五',
+                        caregiverName: '张阿姨',
+                        serviceType: '月嫂',
+                        amount: 9800,
+                        status: 'partially_paid',
+                        createTime: '2024-01-03 09:15:00',
+                        serviceStartTime: '',
+                        serviceEndTime: '',
+                        paymentCount: 3,
+                        caregiverCount: 2,
+                        payments: [
+                            {
+                                paymentId: 'PAY20240103001',
+                                amount: 1000,
+                                paymentMethod: '微信支付',
+                                status: 'success',
+                                paymentTime: '2024-01-03 09:15:00'
+                            },
+                            {
+                                paymentId: 'PAY20240103002',
+                                amount: 5000,
+                                paymentMethod: '支付宝',
+                                status: 'success',
+                                paymentTime: '2024-01-05 10:00:00'
+                            },
+                            {
+                                paymentId: 'PAY20240103003',
+                                amount: 3800,
+                                paymentMethod: '微信支付',
+                                status: 'processing',
+                                paymentTime: ''
+                            }
+                        ],
+                        refunds: [],
+                        caregivers: [
+                            {
+                                caregiverId: 'CG2024003',
+                                caregiverName: '张阿姨',
+                                skill: '高级月嫂'
+                            },
+                            {
+                                caregiverId: 'CG2024004',
+                                caregiverName: '刘阿姨',
+                                skill: '初级月嫂'
+                            }
+                        ]
+                    },
+                    {
+                        orderId: 'ORD20240104004',
+                        customerName: '赵六',
+                        caregiverName: '',
+                        serviceType: '育儿嫂',
+                        amount: 5800,
+                        status: 'pending',
+                        createTime: '2024-01-04 16:45:00',
+                        serviceStartTime: '',
+                        serviceEndTime: '',
+                        paymentCount: 0,
+                        caregiverCount: 0,
+                        payments: [],
+                        refunds: [],
+                        caregivers: []
+                    },
+                    {
+                        orderId: 'ORD20240105005',
+                        customerName: '孙七',
+                        caregiverName: '陈阿姨',
+                        serviceType: '月嫂',
+                        amount: 9200,
+                        status: 'cancelled',
+                        createTime: '2024-01-05 11:20:00',
+                        cancelTime: '2024-01-06 09:00:00',
+                        serviceStartTime: '',
+                        serviceEndTime: '',
+                        paymentCount: 1,
+                        caregiverCount: 1,
+                        payments: [
+                            {
+                                paymentId: 'PAY20240105001',
+                                amount: 1000,
+                                paymentMethod: '微信支付',
+                                status: 'success',
+                                paymentTime: '2024-01-05 11:20:00'
+                            }
+                        ],
+                        refunds: [
+                            {
+                                refundId: 'REF20240106001',
+                                amount: 1000,
+                                refundMethod: '原路退回',
+                                status: 'success',
+                                refundTime: '2024-01-06 10:30:00'
+                            }
+                        ],
+                        caregivers: [
+                            {
+                                caregiverId: 'CG2024005',
+                                caregiverName: '陈阿姨',
+                                skill: '中级月嫂'
+                            }
+                        ]
+                    }
+                ]);
+                
+                // 弹窗相关
+                const paymentDialogVisible = ref(false);
+                const currentOrder = ref(null);
+                
+                // 批量选择相关
+                const selectedOrders = ref([]);
+                
+                // 展开行相关
+                const expandedRowKeys = ref([]);
+                const handleExpandChange = (row, expandedRows) => {
+                    if (expandedRows.includes(row)) {
+                        expandedRowKeys.value.push(row.orderId);
+                    } else {
+                        expandedRowKeys.value = expandedRowKeys.value.filter(key => key !== row.orderId);
+                    }
+                };
+                
+                // 统计数据
+                const totalOrders = computed(function() {
+                    return orderList.value.length;
+                });
+                const pendingOrders = computed(function() {
+                    return orderList.value.filter(function(order) {
+                        return order.status === 'pending';
+                    }).length;
+                });
+                const partiallyPaidOrders = computed(function() {
+                    return orderList.value.filter(function(order) {
+                        return order.status === 'partially_paid';
+                    }).length;
+                });
+                const paidOrders = computed(function() {
+                    return orderList.value.filter(function(order) {
+                        return order.status === 'paid';
+                    }).length;
+                });
+                const completedOrders = computed(function() {
+                    return orderList.value.filter(function(order) {
+                        return order.status === 'completed';
+                    }).length;
+                });
+                
+                // 菜单选择
+                const handleMenuSelect = (key) => {
+                    if (key === 'index') {
+                        handleLogout();
+                    } else {
+                        window.location.href = key + '.html';
+                    }
+                };
+                
+                // 退出登录
+                const handleLogout = () => {
+                    window.location.href = 'index.html';
+                };
+                
+                // 搜索
+                const search = () => {
+                    ElementPlus.ElMessage.info('搜索功能开发中');
+                };
+                
+                // 重置
+                const reset = () => {
+                    searchForm.orderId = '';
+                    searchForm.customerName = '';
+                    searchForm.status = '';
+                };
+                
+                // 查看订单
+                const viewOrder = (row) => {
+                    ElementPlus.ElMessage.info(`查看订单: ${row.orderId}`);
+                };
+                
+                // 查看支付记录
+                const viewPayments = (row) => {
+                    currentOrder.value = row;
+                    paymentDialogVisible.value = true;
+                };
+                
+                // 开始服务
+                const startService = (order) => {
+                    const now = new Date();
+                    const formattedTime = now.getFullYear() + '-' + 
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(now.getDate()).padStart(2, '0') + ' ' + 
+                        String(now.getHours()).padStart(2, '0') + ':' + 
+                        String(now.getMinutes()).padStart(2, '0') + ':' + 
+                        String(now.getSeconds()).padStart(2, '0');
+                    
+                    order.serviceStartTime = formattedTime;
+                    order.status = 'servicing';
+                    ElementPlus.ElMessage.success('服务已开始');
+                };
+                
+                // 完成服务
+                const completeService = (order) => {
+                    const now = new Date();
+                    const formattedTime = now.getFullYear() + '-' + 
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(now.getDate()).padStart(2, '0') + ' ' + 
+                        String(now.getHours()).padStart(2, '0') + ':' + 
+                        String(now.getMinutes()).padStart(2, '0') + ':' + 
+                        String(now.getSeconds()).padStart(2, '0');
+                    
+                    order.serviceEndTime = formattedTime;
+                    order.status = 'completed';
+                    ElementPlus.ElMessage.success('服务已完成');
+                };
+                
+                // 取消订单
+                const cancelOrder = (order) => {
+                    ElementPlus.ElMessageBox.confirm(
+                        '确定要取消这个订单吗？',
+                        '确认取消',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        const now = new Date();
+                        const formattedTime = now.getFullYear() + '-' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(now.getDate()).padStart(2, '0') + ' ' + 
+                            String(now.getHours()).padStart(2, '0') + ':' + 
+                            String(now.getMinutes()).padStart(2, '0') + ':' + 
+                            String(now.getSeconds()).padStart(2, '0');
+                        
+                        order.cancelTime = formattedTime;
+                        order.status = 'cancelled';
+                        ElementPlus.ElMessage.success('订单已取消');
+                    }).catch(() => {
+                        ElementPlus.ElMessage.info('已取消操作');
+                    });
+                };
+                
+                // 处理表格选择变化
+                const handleSelectionChange = (selection) => {
+                    selectedOrders.value = selection;
+                };
+                
+                // 打开批量分账对话框
+                const openBatchSplitDialog = () => {
+                    ElementPlus.ElMessage.info(`批量分账功能开发中，已选择 ${selectedOrders.value.length} 个订单`);
+                };
+                
+                // 清除选择
+                const clearSelection = () => {
+                    selectedOrders.value = [];
+                };
+                
+                // 计算已支付金额
+                const getPaidAmount = (payments) => {
+                    if (!payments || !Array.isArray(payments)) return 0;
+                    return payments.filter(payment => payment.status === 'success').reduce((sum, payment) => sum + payment.amount, 0);
+                };
+                
+                // 获取支付状态汇总
+                const getPaymentStatusSummary = (payments) => {
+                    if (!payments || !Array.isArray(payments) || payments.length === 0) return '暂无支付';
+                    
+                    const successCount = payments.filter(p => p.status === 'success').length;
+                    const processingCount = payments.filter(p => p.status === 'processing').length;
+                    const failedCount = payments.filter(p => p.status === 'failed').length;
+                    
+                    let summary = `${payments.length}笔`;
+                    if (successCount > 0) summary += `，${successCount}笔成功`;
+                    if (processingCount > 0) summary += `，${processingCount}笔处理中`;
+                    if (failedCount > 0) summary += `，${failedCount}笔失败`;
+                    
+                    return summary;
+                };
+                
+                // 根据支付金额和服务时间自动判断订单状态
+                const autoDetermineOrderStatus = (order) => {
+                    if (order.status === 'cancelled') {
+                        return order.status;
+                    }
+                    
+                    const paidAmount = getPaidAmount(order.payments);
+                    const totalAmount = order.amount;
+                    const now = new Date();
+                    
+                    if (order.serviceEndTime) {
+                        const serviceEndTime = new Date(order.serviceEndTime);
+                        if (now > serviceEndTime) {
+                            return 'completed';
+                        }
+                    }
+                    
+                    if (order.serviceStartTime) {
+                        const serviceStartTime = new Date(order.serviceStartTime);
+                        if (now > serviceStartTime) {
+                            return 'servicing';
+                        }
+                    }
+                    
+                    if (paidAmount >= totalAmount) {
+                        return 'paid';
+                    } else if (paidAmount > 0) {
+                        return 'partially_paid';
+                    } else {
+                        return 'pending';
+                    }
+                };
+                
+                // 更新所有订单的状态
+                const updateAllOrderStatuses = () => {
+                    orderList.value.forEach(order => {
+                        order.status = autoDetermineOrderStatus(order);
+                    });
+                };
+                
+                // 分页
+                const handleSizeChange = (size) => {
+                    pageSize.value = size;
+                };
+                
+                const handleCurrentChange = (current) => {
+                    currentPage.value = current;
+                };
+                
+                // 组件挂载后初始化
+                onMounted(() => {
+                    updateAllOrderStatuses();
+                });
+                
+                return {
+                    activeMenu,
+                    currentPage,
+                    pageSize,
+                    total,
+                    searchForm,
+                    orderList,
+                    paymentDialogVisible,
+                    currentOrder,
+                    selectedOrders,
+                    expandedRowKeys,
+                    totalOrders,
+                    pendingOrders,
+                    partiallyPaidOrders,
+                    paidOrders,
+                    completedOrders,
+                    handleMenuSelect,
+                    handleLogout,
+                    search,
+                    reset,
+                    viewOrder,
+                    viewPayments,
+                    startService,
+                    completeService,
+                    cancelOrder,
+                    getPaidAmount,
+                    getPaymentStatusSummary,
+                    handleExpandChange,
+                    handleSelectionChange,
+                    openBatchSplitDialog,
+                    clearSelection,
+                    handleSizeChange,
+                    handleCurrentChange,
+                    updateAllOrderStatuses
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

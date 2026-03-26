@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分账结算 - 月嫂家政服务系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .sidebar .el-menu {
+            background: transparent;
+            border-right: none;
+        }
+        .sidebar .el-menu-item {
+            color: white;
+            height: 50px;
+            line-height: 50px;
+            margin: 0 10px;
+            border-radius: 8px;
+        }
+        .sidebar .el-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .el-menu-item.is-active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 20px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .search-bar .el-input,
+        .search-bar .el-select {
+            width: 200px;
+        }
+        .search-bar .el-button {
+            margin-left: 0;
+            white-space: nowrap;
+            position: relative;
+            z-index: 10;
+        }
+        .split-status {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .split-status .el-tag {
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="sidebar">
+            <h2>月嫂家政服务系统</h2>
+            <el-menu class="sidebar-menu" :default-active="activeMenu" @select="handleMenuSelect">
+                <el-menu-item index="order">
+                    <span>订单管理</span>
+                </el-menu-item>
+                <el-menu-item index="split">
+                    <span>分账结算</span>
+                </el-menu-item>
+                <el-menu-item index="caregiver">
+                    <span>账户管理</span>
+                </el-menu-item>
+                <el-menu-item index="withdrawal">
+                    <span>提现记录</span>
+                </el-menu-item>
+                <el-menu-item index="refund">
+                    <span>退款记录</span>
+                </el-menu-item>
+                <el-menu-item index="finance">
+                    <span>财务对账</span>
+                </el-menu-item>
+             
+            </el-menu>
+        </div>
+        
+        <div class="main-content">
+            <div class="header">
+                <h1>分账结算</h1>
+            </div>
+            
+            <div class="page-card">
+                <div class="search-bar">
+                    <el-input v-model="searchForm.splitId" placeholder="分账编号" style="width: 200px;"></el-input>
+                    <el-input v-model="searchForm.orderId" placeholder="订单编号" style="width: 200px;"></el-input>
+                    <el-select v-model="searchForm.status" placeholder="分账状态" style="width: 150px;">
+                        <el-option label="全部" value=""></el-option>
+                        <el-option label="分账成功" value="success"></el-option>
+                        <el-option label="分账失败" value="failed"></el-option>
+                        <el-option label="处理中" value="processing"></el-option>
+                    </el-select>
+                    <span style="margin-left: 50px;">分账时间：</span>
+                    <el-date-picker
+                        v-model="searchForm.splitTimeStart"
+                        type="date"
+                        placeholder="开始时间"
+                        format="YYYY-MM-DD"
+                        value-format="YYYY-MM-DD"
+                        style="width: 180px;">
+                    </el-date-picker>
+                    <el-date-picker
+                        v-model="searchForm.splitTimeEnd"
+                        type="date"
+                        placeholder="结束时间"
+                        format="YYYY-MM-DD"
+                        value-format="YYYY-MM-DD"
+                        style="width: 180px;">
+                    </el-date-picker>
+                    <el-button type="primary" @click="search">搜索</el-button>
+                    <el-button @click="reset">重置</el-button>
+                    <el-button type="success" @click="openImportDialog">导入分账</el-button>
+                </div>
+                
+                <div class="split-status">
+                    <el-tag type="info">全部记录: {{ totalSplits }}</el-tag>
+                    <el-tag type="success">分账成功: {{ successSplits }}</el-tag>
+                    <el-tag type="danger">分账失败: {{ failedSplits }}</el-tag>
+                    <el-tag type="info">处理中: {{ processingSplits }}</el-tag>
+                </div>
+                
+                <el-table :data="splitList" style="width: 100%">
+                    <el-table-column prop="splitId" label="分账编号" width="180"></el-table-column>
+                    <el-table-column prop="orderId" label="订单编号" width="180"></el-table-column>
+                    <el-table-column prop="userId" label="UserID" width="150"></el-table-column>
+                    <el-table-column prop="caregiverName" label="姓名" width="120"></el-table-column>
+                    <el-table-column prop="orderAmount" label="订单金额" width="100">
+                        <template #default="scope">
+                            ¥{{ scope.row.orderAmount }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="splitAmount" label="分账金额" width="100">
+                        <template #default="scope">
+                            ¥{{ scope.row.splitAmount }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="分账状态" width="100">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.status === 'success'" type="success">分账成功</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'failed'" type="danger">分账失败</el-tag>
+                            <el-tag v-else-if="scope.row.status === 'processing'" type="info">处理中</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="splitTime" label="分账时间" width="180"></el-table-column>
+                    <el-table-column label="操作" width="100">
+                        <template #default="scope">
+                            <el-button size="small" @click="viewSplit(scope.row)">查看</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <el-pagination
+                        v-model:current-page="currentPage"
+                        v-model:page-size="pageSize"
+                        :page-sizes="[10, 20, 50, 100]"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                    ></el-pagination>
+                </div>
+            </div>
+        </div>
+        
+        <el-dialog v-model="viewDialogVisible" title="分账详情" width="800px">
+            <el-descriptions :column="2" border v-if="currentSplit">
+                <el-descriptions-item label="分账编号">{{ currentSplit.splitId }}</el-descriptions-item>
+                <el-descriptions-item label="订单编号">{{ currentSplit.orderId }}</el-descriptions-item>
+                <el-descriptions-item label="UserID">{{ currentSplit.userId }}</el-descriptions-item>
+                <el-descriptions-item label="姓名">{{ currentSplit.caregiverName }}</el-descriptions-item>
+                <el-descriptions-item label="订单金额">¥{{ currentSplit.orderAmount }}</el-descriptions-item>
+                <el-descriptions-item label="分账金额">¥{{ currentSplit.splitAmount }}</el-descriptions-item>
+                <el-descriptions-item label="分账状态">
+                    <el-tag v-if="currentSplit.status === 'success'" type="success">分账成功</el-tag>
+                    <el-tag v-else-if="currentSplit.status === 'failed'" type="danger">分账失败</el-tag>
+                    <el-tag v-else-if="currentSplit.status === 'processing'" type="info">处理中</el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="分账时间">{{ currentSplit.splitTime }}</el-descriptions-item>
+            </el-descriptions>
+            
+            <div style="margin-top: 20px;" v-if="currentSplit && currentSplit.paymentRecords">
+                <el-divider content-position="left">支付记录与分账分配</el-divider>
+                
+                <el-alert
+                    title="分账说明"
+                    type="info"
+                    :closable="false"
+                    style="margin-bottom: 15px;">
+                    <template #default>
+                        <div>
+                            本订单包含 <strong>{{ currentSplit.paymentRecords.length }}</strong> 笔支付记录，订单总金额 ¥{{ currentSplit.orderAmount }}。
+                            需分账金额 ¥{{ currentSplit.splitAmount }}，系统将从各笔支付记录中按顺序分配足够金额完成分账。
+                        </div>
+                    </template>
+                </el-alert>
+                
+                <el-table :data="currentSplit.paymentRecords" style="width: 100%" border>
+                    <el-table-column prop="paymentId" label="支付编号" width="180"></el-table-column>
+                    <el-table-column prop="paymentAmount" label="支付金额" width="120">
+                        <template #default="scope">
+                            <strong style="color: #409eff;">¥{{ scope.row.paymentAmount }}</strong>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="splitFromThisPayment" label="本次分账金额" width="140">
+                        <template #default="scope">
+                            <span style="color: #67c23a; font-weight: bold;">¥{{ scope.row.splitFromThisPayment }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="paymentTime" label="支付时间"></el-table-column>
+                </el-table>
+                
+                <div style="margin-top: 15px; padding: 15px; background: #f5f7fa; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>订单总金额：</span>
+                        <strong>¥{{ currentSplit.orderAmount }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>分账总金额：</span>
+                        <strong style="color: #67c23a;">¥{{ currentSplit.splitAmount }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>分配状态：</span>
+                        <el-tag v-if="currentSplit.status === 'success'" type="success" size="small">已完成分配</el-tag>
+                        <el-tag v-else-if="currentSplit.status === 'failed'" type="danger" size="small">分配失败</el-tag>
+                        <el-tag v-else-if="currentSplit.status === 'processing'" type="info" size="small">分配中</el-tag>
+                    </div>
+                </div>
+            </div>
+            
+            <template #footer>
+                <el-button @click="viewDialogVisible = false">关闭</el-button>
+            </template>
+        </el-dialog>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed } = Vue;
+        
+        createApp({
+            setup() {
+                const activeMenu = ref('split');
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(3);
+                const viewDialogVisible = ref(false);
+                const currentSplit = ref(null);
+                
+                const searchForm = reactive({
+                    splitId: '',
+                    orderId: '',
+                    status: '',
+                    splitTimeStart: '',
+                    splitTimeEnd: ''
+                });
+                
+                const splitList = ref([
+                    {
+                        splitId: 'SPL20240101001',
+                        orderId: 'ORD20240101001',
+                        userId: 'USER001',
+                        caregiverName: '李阿姨',
+                        orderAmount: 10000,
+                        splitAmount: 9000,
+                        status: 'success',
+                        splitTime: '2024-01-15 10:00:00',
+                        paymentRecords: [
+                            {
+                                paymentId: 'PAY20240101001',
+                                paymentAmount: 2000,
+                                paymentTime: '2024-01-01 09:00:00',
+                                splitFromThisPayment: 2000
+                            },
+                            {
+                                paymentId: 'PAY20240101002',
+                                paymentAmount: 8000,
+                                paymentTime: '2024-01-01 10:30:00',
+                                splitFromThisPayment: 7000
+                            }
+                        ]
+                    },
+                    {
+                        splitId: 'SPL20240102002',
+                        orderId: 'ORD20240102002',
+                        userId: 'USER002',
+                        caregiverName: '王阿姨',
+                        orderAmount: 6800,
+                        splitAmount: 6800,
+                        status: 'success',
+                        splitTime: '2024-01-16 11:00:00',
+                        paymentRecords: [
+                            {
+                                paymentId: 'PAY20240102001',
+                                paymentAmount: 6800,
+                                paymentTime: '2024-01-02 14:00:00',
+                                splitFromThisPayment: 6800
+                            }
+                        ]
+                    },
+                    {
+                        splitId: 'SPL20240103003',
+                        orderId: 'ORD20240103003',
+                        userId: 'USER003',
+                        caregiverName: '张阿姨',
+                        orderAmount: 9800,
+                        splitAmount: 9800,
+                        status: 'processing',
+                        splitTime: '2024-01-20 14:30:00',
+                        paymentRecords: [
+                            {
+                                paymentId: 'PAY20240103001',
+                                paymentAmount: 5000,
+                                paymentTime: '2024-01-03 10:00:00',
+                                splitFromThisPayment: 5000
+                            },
+                            {
+                                paymentId: 'PAY20240103002',
+                                paymentAmount: 4800,
+                                paymentTime: '2024-01-03 15:00:00',
+                                splitFromThisPayment: 4800
+                            }
+                        ]
+                    }
+                ]);
+                
+                const totalSplits = computed(() => splitList.value.length);
+                const successSplits = computed(() => splitList.value.filter(split => split.status === 'success').length);
+                const failedSplits = computed(() => splitList.value.filter(split => split.status === 'failed').length);
+                const processingSplits = computed(() => splitList.value.filter(split => split.status === 'processing').length);
+                
+                const handleMenuSelect = (key) => {
+                    if (key === 'index') {
+                        handleLogout();
+                    } else {
+                        window.location.href = key + '.html';
+                    }
+                };
+                
+                const handleLogout = () => {
+                    window.location.href = 'index.html';
+                };
+                
+                const search = () => {
+                    ElementPlus.ElMessage.info('搜索功能开发中');
+                };
+                
+                const reset = () => {
+                    searchForm.splitId = '';
+                    searchForm.orderId = '';
+                    searchForm.status = '';
+                    searchForm.splitTimeStart = '';
+                    searchForm.splitTimeEnd = '';
+                };
+                
+                const viewSplit = (row) => {
+                    currentSplit.value = row;
+                    viewDialogVisible.value = true;
+                };
+                
+                const handleSizeChange = (val) => {
+                    pageSize.value = val;
+                };
+                
+                const handleCurrentChange = (val) => {
+                    currentPage.value = val;
+                };
+                
+                return {
+                    activeMenu,
+                    currentPage,
+                    pageSize,
+                    total,
+                    viewDialogVisible,
+                    currentSplit,
+                    searchForm,
+                    splitList,
+                    totalSplits,
+                    successSplits,
+                    failedSplits,
+                    processingSplits,
+                    handleMenuSelect,
+                    handleLogout,
+                    search,
+                    reset,
+                    viewSplit,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

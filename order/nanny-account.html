@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账户设置 - 月嫂家政服务系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            max-width: 414px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .section-card {
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .section-title {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .form-item label {
+            display: block;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-item .el-input,
+        .form-item .el-select {
+            width: 100%;
+        }
+        .form-tip {
+            margin-top: 5px;
+            color: #999;
+            font-size: 12px;
+        }
+        .submit-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 414px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+        .nav-item {
+            text-align: center;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: #667eea;
+        }
+        .nav-item .icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .nav-item .text {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>账户设置</h1>
+            <p>月嫂家政服务系统</p>
+        </div>
+        
+        <!-- 实名认证卡片 -->
+        <div class="section-card">
+            <div class="section-title">实名认证</div>
+            
+            <div v-if="idVerified" class="status-info">
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #67c23a;">认证状态：</span>
+                    <el-tag type="success">已认证</el-tag>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #666;">真实姓名：</span>
+                    <span>{{ idName }}</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #666;">证件号码：</span>
+                    <span>{{ idCard }}</span>
+                </div>
+            </div>
+            
+            <div v-else>
+                <el-form :model="idForm" :rules="idRules" ref="idFormRef">
+                    <div class="form-item">
+                        <label>用户类型 <span style="color: #f56c6c;">*</span></label>
+                        <el-select v-model="idForm.userType" placeholder="请选择用户类型" style="width: 100%;">
+                            <el-option label="个人" value="personal"></el-option>
+                            <el-option label="企业" value="enterprise"></el-option>
+                            <el-option label="个体工商户" value="individual"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="form-item">
+                        <label>真实姓名 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="idForm.name" placeholder="请输入真实姓名"></el-input>
+                    </div>
+                    <div class="form-item">
+                        <label>证件类型 <span style="color: #f56c6c;">*</span></label>
+                        <el-select v-model="idForm.idType" placeholder="请选择证件类型" style="width: 100%;">
+                            <el-option label="身份证" value="idcard"></el-option>
+                            <el-option label="营业执照" value="businesslicense"></el-option>
+                            <el-option label="组织机构代码" value="orgcode"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="form-item">
+                        <label>证件号码 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="idForm.idNumber" placeholder="请输入证件号码"></el-input>
+                    </div>
+                    <div class="form-item">
+                        <label>手机号 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="idForm.phone" placeholder="请输入手机号"></el-input>
+                    </div>
+                    <div class="form-tip">请确保填写的信息与证件一致</div>
+                    <el-button type="primary" class="submit-btn" @click="submitId">提交认证</el-button>
+                </el-form>
+            </div>
+        </div>
+        
+        <!-- 绑卡卡片 -->
+        <div class="section-card">
+            <div class="section-title">绑定银行卡</div>
+            
+            <div v-if="cardBound" class="status-info">
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #67c23a;">绑卡状态：</span>
+                    <el-tag type="success">已绑定</el-tag>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #666;">绑定银行卡：</span>
+                    <span>{{ bankName }} {{ bankCard }}</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #666;">持卡人：</span>
+                    <span>{{ cardHolder }}</span>
+                </div>
+            </div>
+            
+            <div v-else>
+                <el-form :model="cardForm" :rules="cardRules" ref="cardFormRef">
+                    <div class="form-item">
+                        <label>持卡人姓名 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="cardForm.holderName" placeholder="请输入持卡人姓名"></el-input>
+                    </div>
+                    <div class="form-item">
+                        <label>证件类型 <span style="color: #f56c6c;">*</span></label>
+                        <el-select v-model="cardForm.idType" placeholder="请选择证件类型" style="width: 100%;">
+                            <el-option label="身份证" value="idcard"></el-option>
+                            <el-option label="营业执照" value="businesslicense"></el-option>
+                            <el-option label="组织机构代码" value="orgcode"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="form-item">
+                        <label>证件号码 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="cardForm.idNumber" placeholder="请输入证件号码"></el-input>
+                    </div>
+                    <div class="form-item">
+                        <label>银行预留手机号 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="cardForm.phone" placeholder="请输入银行预留手机号"></el-input>
+                    </div>
+                    <div class="form-item">
+                        <label>银行代码 <span style="color: #f56c6c;">*</span></label>
+                        <el-select v-model="cardForm.bankCode" placeholder="请选择银行" style="width: 100%;">
+                            <el-option label="中国工商银行" value="ICBC"></el-option>
+                            <el-option label="中国建设银行" value="CCB"></el-option>
+                            <el-option label="中国农业银行" value="ABC"></el-option>
+                            <el-option label="中国银行" value="BOC"></el-option>
+                            <el-option label="招商银行" value="CMB"></el-option>
+                            <el-option label="交通银行" value="BOCOM"></el-option>
+                            <el-option label="中国邮政储蓄银行" value="PSBC"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="form-item">
+                        <label>银行卡号 <span style="color: #f56c6c;">*</span></label>
+                        <el-input v-model="cardForm.cardNumber" placeholder="请输入银行卡号"></el-input>
+                    </div>
+                    <div class="form-tip">请确保填写的信息与银行预留信息一致</div>
+                    <el-button type="primary" class="submit-btn" @click="submitCard">绑定银行卡</el-button>
+                </el-form>
+            </div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item" @click="goToHome">
+                <div class="icon">🏠</div>
+                <div class="text">首页</div>
+            </div>
+            <div class="nav-item" @click="goToWallet">
+                <div class="icon">💰</div>
+                <div class="text">我的钱包</div>
+            </div>
+            <div class="nav-item active" @click="goToAccount">
+                <div class="icon">⚙️</div>
+                <div class="text">账户设置</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Element Plus JS -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, reactive } = Vue;
+        
+        createApp({
+            setup() {
+                const idVerified = ref(false);
+                const idName = ref('');
+                const idCard = ref('');
+                
+                const idFormRef = ref(null);
+                const idForm = reactive({
+                    userType: 'personal',
+                    name: '',
+                    idType: 'idcard',
+                    idNumber: '',
+                    phone: ''
+                });
+                
+                const idRules = {
+                    userType: [{ required: true, message: '请选择用户类型', trigger: 'change' }],
+                    name: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+                    idType: [{ required: true, message: '请选择证件类型', trigger: 'change' }],
+                    idNumber: [{ required: true, message: '请输入证件号码', trigger: 'blur' }],
+                    phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
+                };
+                
+                const cardBound = ref(false);
+                const bankName = ref('');
+                const bankCard = ref('');
+                const cardHolder = ref('');
+                
+                const cardFormRef = ref(null);
+                const cardForm = reactive({
+                    holderName: '',
+                    idType: 'idcard',
+                    idNumber: '',
+                    phone: '',
+                    bankCode: '',
+                    cardNumber: ''
+                });
+                
+                const cardRules = {
+                    holderName: [{ required: true, message: '请输入持卡人姓名', trigger: 'blur' }],
+                    idType: [{ required: true, message: '请选择证件类型', trigger: 'change' }],
+                    idNumber: [{ required: true, message: '请输入证件号码', trigger: 'blur' }],
+                    phone: [{ required: true, message: '请输入银行预留手机号', trigger: 'blur' }],
+                    bankCode: [{ required: true, message: '请选择银行', trigger: 'change' }],
+                    cardNumber: [{ required: true, message: '请输入银行卡号', trigger: 'blur' }]
+                };
+                
+                const submitId = () => {
+                    idFormRef.value.validate((valid) => {
+                        if (valid) {
+                            ElementPlus.ElMessage.info('正在提交认证...');
+                            setTimeout(() => {
+                                idVerified.value = true;
+                                idName.value = idForm.name;
+                                idCard.value = '**** **** **** ' + idForm.idNumber.substr(-4);
+                                ElementPlus.ElMessage.success('实名认证成功');
+                            }, 1500);
+                        }
+                    });
+                };
+                
+                const submitCard = () => {
+                    cardFormRef.value.validate((valid) => {
+                        if (valid) {
+                            ElementPlus.ElMessage.info('正在绑定银行卡...');
+                            setTimeout(() => {
+                                cardBound.value = true;
+                                const bankNames = {
+                                    'ICBC': '中国工商银行',
+                                    'CCB': '中国建设银行',
+                                    'ABC': '中国农业银行',
+                                    'BOC': '中国银行',
+                                    'CMB': '招商银行',
+                                    'BOCOM': '交通银行',
+                                    'PSBC': '中国邮政储蓄银行'
+                                };
+                                bankName.value = bankNames[cardForm.bankCode] || '中国建设银行';
+                                bankCard.value = '**** **** **** ' + cardForm.cardNumber.substr(-4);
+                                cardHolder.value = cardForm.holderName;
+                                ElementPlus.ElMessage.success('银行卡绑定成功');
+                            }, 1500);
+                        }
+                    });
+                };
+                
+                const goToWallet = () => {
+                    window.location.href = 'nanny-wallet.html';
+                };
+                
+                const goToAccount = () => {
+                };
+                
+                const goToHome = () => {
+                    window.location.href = 'nanny-home.html';
+                };
+                
+                return {
+                    idVerified,
+                    idName,
+                    idCard,
+                    idFormRef,
+                    idForm,
+                    idRules,
+                    cardBound,
+                    bankName,
+                    bankCard,
+                    cardHolder,
+                    cardFormRef,
+                    cardForm,
+                    cardRules,
+                    submitId,
+                    submitCard,
+                    goToWallet,
+                    goToAccount,
+                    goToHome
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>
