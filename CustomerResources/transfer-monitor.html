@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流转中监控 - 线索管理系统</title>
+    
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    
+    <!-- 自定义样式 -->
+    <style>
+        /* ==================== 基础重置样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #303133;
+        }
+        
+        /* ==================== 布局容器 ==================== */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ==================== 左侧侧边栏 ==================== */
+        .sidebar {
+            width: 220px;
+            background-color: #001529;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 侧边栏Logo区域 */
+        .sidebar-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* 侧边栏导航菜单 */
+        .sidebar-menu {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+        
+        .menu-item {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .menu-item:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        .menu-item.active {
+            color: #fff;
+            background-color: #1890ff;
+        }
+        
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        /* 子菜单样式 */
+        .submenu {
+            background-color: rgba(0,0,0,0.15);
+        }
+        
+        .submenu-item {
+            padding: 10px 24px 10px 54px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        
+        .submenu-item:hover {
+            color: #fff;
+        }
+        
+        .submenu-item.active {
+            color: #1890ff;
+            background-color: rgba(24,144,255,0.1);
+        }
+        
+        /* ==================== 右侧主内容区 ==================== */
+        .main-container {
+            flex: 1;
+            margin-left: 220px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ==================== 顶部面包屑导航 ==================== */
+        .breadcrumb-header {
+            height: 50px;
+            background: #fff;
+            border-bottom: 1px solid #e4e7ed;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .breadcrumb a {
+            color: #606266;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .breadcrumb a:hover {
+            color: #409eff;
+        }
+        
+        .breadcrumb .separator {
+            margin: 0 8px;
+            color: #c0c4cc;
+        }
+        
+        .breadcrumb .current {
+            color: #303133;
+            font-weight: 500;
+        }
+        
+        /* ==================== 页面主体内容 ==================== */
+        .page-content {
+            flex: 1;
+            padding: 20px 24px;
+        }
+        
+        /* ==================== 统计卡片区域 ==================== */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+        
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        
+        .stat-icon.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #fff;
+        }
+        
+        .stat-icon.red {
+            background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+            color: #fff;
+        }
+        
+        .stat-info {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #909399;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #303133;
+        }
+        
+        .stat-value.warning {
+            color: #f56c6c;
+        }
+        
+        /* ==================== 搜索筛选区域 ==================== */
+        .filter-section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+        
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-item label {
+            font-size: 14px;
+            color: #606266;
+            white-space: nowrap;
+        }
+        
+        /* ==================== 数据表格区域 ==================== */
+        .table-section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #303133;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 表格行高亮动画 - 即将超时的行 */
+        @keyframes flash-warning {
+            0%, 100% { background-color: rgba(245, 108, 108, 0.1); }
+            50% { background-color: rgba(245, 108, 108, 0.2); }
+        }
+        
+        .warning-row {
+            animation: flash-warning 1.5s infinite;
+        }
+        
+        .warning-row td {
+            color: #f56c6c !important;
+        }
+        
+        /* 进度条样式 */
+        .time-progress {
+            width: 100%;
+        }
+        
+        .time-text {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        
+        .time-remaining {
+            font-weight: 600;
+        }
+        
+        .time-remaining.danger {
+            color: #f56c6c;
+        }
+        
+        /* 流转历史样式 - 参考 manual-pool.html */
+        .transfer-history {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 12px;
+        }
+
+        .transfer-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f5f7fa;
+        }
+
+        .transfer-item.current {
+            background: #ecf5ff;
+            border: 1px solid #409eff;
+        }
+
+        .transfer-item.completed {
+            background: #f0f9eb;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .transfer-sales {
+            color: #606266;
+            font-weight: 500;
+        }
+
+        .transfer-result {
+            color: #909399;
+            margin-left: 2px;
+        }
+
+        .transfer-result.timeout {
+            color: #f56c6c;
+        }
+
+        .transfer-result.processing {
+            color: #409eff;
+            font-weight: 600;
+        }
+
+        .transfer-arrow {
+            color: #c0c4cc;
+            margin: 0 2px;
+        }
+        
+        /* ==================== 分页器 ==================== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ebeef5;
+        }
+        
+        /* ==================== 详情对话框 ==================== */
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 12px;
+            padding-left: 10px;
+            border-left: 3px solid #409eff;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-item.full-width {
+            grid-column: span 2;
+        }
+        
+        .detail-label {
+            width: 100px;
+            font-size: 13px;
+            color: #909399;
+        }
+        
+        .detail-value {
+            flex: 1;
+            font-size: 14px;
+            color: #303133;
+            font-weight: 500;
+        }
+        
+        /* 流转时间线 */
+        .transfer-timeline {
+            padding-left: 20px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+            padding-left: 24px;
+            border-left: 2px solid #e4e7ed;
+        }
+        
+        .timeline-item:last-child {
+            border-left-color: transparent;
+        }
+        
+        .timeline-item.active {
+            border-left-color: #409eff;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -7px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dcdfe6;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #dcdfe6;
+        }
+        
+        .timeline-item.active .timeline-dot {
+            background: #409eff;
+            box-shadow: 0 0 0 1px #409eff;
+        }
+        
+        .timeline-item.completed .timeline-dot {
+            background: #67c23a;
+            box-shadow: 0 0 0 1px #67c23a;
+        }
+        
+        .timeline-content {
+            font-size: 13px;
+        }
+        
+        .timeline-title {
+            font-weight: 500;
+            color: #303133;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-time {
+            color: #909399;
+            font-size: 12px;
+        }
+
+        /* 详情弹窗流转历史样式 - 参考 manual-pool.html */
+        .transfer-history-detail {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            background: #f5f7fa;
+            border-radius: 8px;
+        }
+
+        .transfer-detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #fff;
+            border: 1px solid #e4e7ed;
+            min-width: 80px;
+        }
+
+        .transfer-detail-item.current {
+            background: #ecf5ff;
+            border-color: #409eff;
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+        }
+
+        .transfer-detail-item.completed {
+            background: #f0f9eb;
+            border-color: #67c23a;
+            opacity: 0.8;
+        }
+
+        .transfer-detail-sales {
+            font-weight: 600;
+            color: #303133;
+            font-size: 14px;
+        }
+
+        .transfer-detail-result {
+            font-size: 12px;
+            margin-top: 4px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f5f7fa;
+        }
+
+        .transfer-detail-result.timeout {
+            color: #f56c6c;
+            background: #fef0f0;
+        }
+
+        .transfer-detail-result.processing {
+            color: #409eff;
+            background: #ecf5ff;
+            font-weight: 600;
+        }
+
+        .transfer-detail-time {
+            font-size: 11px;
+            color: #909399;
+            margin-top: 4px;
+        }
+
+        .transfer-detail-arrow {
+            font-size: 18px;
+            color: #c0c4cc;
+            font-weight: 600;
+        }
+
+        /* ==================== 响应式适配 ==================== */
+        @media (max-width: 1200px) {
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .main-container {
+                margin-left: 0;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-wrapper">
+            <!-- ==================== 左侧侧边栏 ==================== -->
+            <aside class="sidebar">
+                <!-- Logo区域 -->
+                <div class="sidebar-logo">
+                    🎯 线索管理系统
+                </div>
+                
+                <!-- 导航菜单 -->
+                <nav class="sidebar-menu">
+                    <!-- 🎯 线索管理 - 当前激活 -->
+                    <div class="menu-item active">
+                        <span class="menu-icon">🎯</span>
+                        <span>线索管理</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="channel-list.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道列表</div></a>
+                        <a href="transfer-monitor.html" style="text-decoration: none; display: block;"><div class="submenu-item active">流转中监控</div></a>
+                        <a href="manual-pool.html" style="text-decoration: none; display: block;"><div class="submenu-item">人工池</div></a>
+                        <a href="allocation-record.html" style="text-decoration: none; display: block;"><div class="submenu-item">分配记录</div></a>
+                    </div>
+                    
+                    <!-- 📈 数据报表 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">📈</span>
+                        <span>数据报表</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="report-channel.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道维度</div></a>
+                        <a href="report-promoter.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员维度</div></a>
+                        <a href="report-platform.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台维度</div></a>
+                        <a href="report-sales.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售绩效</div></a>
+                    </div>
+                    
+                    <!-- ⚙️ 基础数据 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">⚙️</span>
+                        <span>基础数据</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="promoter-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员管理</div></a>
+                        <a href="platform-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台管理</div></a>
+                        <a href="sales-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售人员管理</div></a>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- ==================== 右侧主内容区 ==================== -->
+            <main class="main-container">
+                <!-- 面包屑导航 -->
+                <header class="breadcrumb-header">
+                    <nav class="breadcrumb">
+                        <a href="index.html">首页</a>
+                        <span class="separator">/</span>
+                        <a href="clue-pool.html">线索管理</a>
+                        <span class="separator">/</span>
+                        <span class="current">流转中监控</span>
+                    </nav>
+                </header>
+                
+                <!-- 页面内容 -->
+                <div class="page-content">
+                    <!-- ==================== 统计卡片区 ==================== -->
+                    <section class="stats-cards">
+                        <!-- 正在流转线索数 -->
+                        <div class="stat-card">
+                            <div class="stat-icon blue">🔄</div>
+                            <div class="stat-info">
+                                <div class="stat-label">正在流转线索数</div>
+                                <div class="stat-value">{{ stats.transferring }}条</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 平均已等待时长 -->
+                        <div class="stat-card">
+                            <div class="stat-icon green">⏱️</div>
+                            <div class="stat-info">
+                                <div class="stat-label">平均已等待时长</div>
+                                <div class="stat-value">{{ formatTime(stats.avgRemainingTime) }}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 即将超时 -->
+                        <div class="stat-card">
+                            <div class="stat-icon red">⚠️</div>
+                            <div class="stat-info">
+                                <div class="stat-label">即将超时（&lt;1分钟）</div>
+                                <div class="stat-value warning">{{ stats.timeoutSoon }}条</div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- ==================== 搜索筛选区 ==================== -->
+                    <section class="filter-section">
+                        <div class="filter-row">
+                            <!-- 渠道筛选 -->
+                            <div class="filter-item">
+                                <label>渠道：</label>
+                                <el-select 
+                                    v-model="filterForm.channelId" 
+                                    placeholder="请选择渠道" 
+                                    clearable
+                                    style="width: 160px">
+                                    <el-option 
+                                        v-for="item in channelOptions" 
+                                        :key="item.value" 
+                                        :label="item.label" 
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            
+                            <!-- 当前分配销售筛选 -->
+                            <div class="filter-item">
+                                <label>当前分配：</label>
+                                <el-select 
+                                    v-model="filterForm.salesId" 
+                                    placeholder="请选择销售" 
+                                    clearable
+                                    style="width: 160px">
+                                    <el-option 
+                                        v-for="item in salesOptions" 
+                                        :key="item.value" 
+                                        :label="item.label" 
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+                            
+                            <!-- 线索ID搜索 -->
+                            <div class="filter-item">
+                                <label>线索ID：</label>
+                                <el-input 
+                                    v-model="filterForm.clueId" 
+                                    placeholder="请输入线索ID" 
+                                    clearable
+                                    style="width: 180px">
+                                </el-input>
+                            </div>
+                            
+                            <!-- 客户电话搜索 -->
+                            <div class="filter-item">
+                                <label>客户电话：</label>
+                                <el-input 
+                                    v-model="filterForm.phone" 
+                                    placeholder="请输入客户电话" 
+                                    clearable
+                                    style="width: 180px">
+                                </el-input>
+                            </div>
+                            
+                            <!-- 操作按钮 -->
+                            <div class="filter-item" style="margin-left: auto;">
+                                <el-button type="primary" @click="handleSearch">
+                                    <el-icon><search /></el-icon>查询
+                                </el-button>
+                                <el-button @click="handleReset">重置</el-button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- ==================== 数据表格区 ==================== -->
+                    <section class="table-section">
+                        <!-- 表格标题和操作 -->
+                        <div class="table-header">
+                            <h3 class="table-title">流转中线索列表 (共 {{ tableData.length }} 条)</h3>
+                            <div class="table-actions">
+                                <el-button type="primary" plain @click="refreshData">
+                                    <el-icon><refresh /></el-icon>刷新
+                                </el-button>
+                            </div>
+                        </div>
+                        
+                        <!-- 数据表格 -->
+                        <el-table 
+                            :data="paginatedData" 
+                            border 
+                            stripe
+                            v-loading="loading"
+                            :row-class-name="getRowClassName"
+                            style="width: 100%">
+                            
+                            <!-- 线索ID列 -->
+                            <el-table-column label="线索ID" width="120" align="center">
+                                <template #default="scope">
+                                    <span>{{ scope.row.id }}</span>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 渠道名称列 -->
+                            <el-table-column label="渠道名称" width="140" align="center">
+                                <template #default="scope">
+                                    <span>{{ scope.row.channelName }}</span>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 客户姓名列 -->
+                            <el-table-column label="客户姓名" width="100" align="center">
+                                <template #default="scope">
+                                    <span>{{ scope.row.customerName }}</span>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 客户电话列 -->
+                            <el-table-column prop="phone" label="客户电话" width="130" align="center">
+                                <template #default="{ row }">
+                                    {{ maskPhone(row.phone) }}
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 客户微信列 -->
+                            <el-table-column label="客户微信" width="130" align="center">
+                                <template #default="scope">
+                                    <span v-if="scope.row.customerWechat" style="color: #67c23a;">{{ scope.row.customerWechat }}</span>
+                                    <span v-else style="color: #c0c4cc;">-</span>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 当前分配销售列 -->
+                            <el-table-column prop="currentSales" label="当前分配销售" width="160" align="center">
+                                <template #default="{ row }">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <el-avatar :size="24" :style="{ background: getAvatarColor(row.currentSales) }">
+                                            {{ row.currentSales.charAt(0) }}
+                                        </el-avatar>
+                                        <span>{{ row.currentSales }}</span>
+                                        <el-tag v-if="row.isPriority" type="success" size="small" effect="dark">
+                                            <el-icon><star-filled /></el-icon>
+                                        </el-tag>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 已等待时长列 -->
+                            <el-table-column label="已等待时长" width="120" align="center">
+                                <template #default="scope">
+                                    <span>{{ formatDuration(scope.row.waitTime) }}</span>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 剩余等待时间列（带进度条） -->
+                            <el-table-column label="剩余等待时间" width="200" align="center">
+                                <template #default="{ row }">
+                                    <div class="time-progress">
+                                        <div class="time-text">
+                                            <span class="time-remaining" :class="{ danger: row.remainingTime < 60 }">
+                                                {{ formatTime(row.remainingTime) }}
+                                            </span>
+                                       
+                                        </div>
+                                        <el-progress 
+                                            :percentage="Math.round(row.remainingTime / row.totalTime * 100)"
+                                            :color="getProgressColor(row.remainingTime)"
+                                            :show-text="false"
+                                            :stroke-width="6">
+                                        </el-progress>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 流转历史列 - 参考 manual-pool.html 样式 -->
+                            <el-table-column label="流转历史" min-width="240" align="center">
+                                <template #default="{ row }">
+                                    <div class="transfer-history">
+                                        <template v-for="(item, index) in row.transferHistory" :key="index">
+                                            <div 
+                                                class="transfer-item" 
+                                                :class="{ 
+                                                    completed: item.status === 'completed',
+                                                    current: item.status === 'current' 
+                                                }"
+                                            >
+                                                <span class="transfer-sales">{{ item.sales }}</span>
+                                                <span 
+                                                    class="transfer-result" 
+                                                    :class="{ 
+                                                        timeout: item.result === '超时',
+                                                        processing: item.result === '领取确认中' 
+                                                    }"
+                                                >
+                                                    ({{ item.result }})
+                                                </span>
+                                            </div>
+                                            <span 
+                                                v-if="index < row.transferHistory.length - 1" 
+                                                class="transfer-arrow"
+                                            >
+                                                →
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            
+                            <!-- 操作列 -->
+                            <!-- 操作列 -->
+                            <el-table-column label="操作" width="120" align="center" fixed="right">
+                                <template #default="scope">
+                                    <el-button 
+                                        type="danger" 
+                                        link 
+                                        size="small"
+                                        @click="handleStopTransfer(scope.row)">
+                                        终止流转
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pagination.currentPage"
+                                v-model:page-size="pagination.pageSize"
+                                :page-sizes="[10, 15, 20, 50]"
+                                :total="filteredData.length"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                @size-change="handleSizeChange"
+                                @current-change="handleCurrentChange">
+                            </el-pagination>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+        
+        <!-- ==================== 详情对话框 ==================== -->
+        <el-dialog
+            v-model="detailDialog.visible"
+            title="线索详情"
+            width="700px"
+            :close-on-click-modal="false">
+            
+            <div v-if="detailDialog.data" class="detail-content">
+                <!-- 基本信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">基本信息</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">线索ID：</span>
+                            <span class="detail-value">
+                                <el-tag size="small" type="info" effect="dark">{{ detailDialog.data.id }}</el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">渠道名称：</span>
+                            <span class="detail-value">
+                                <el-tag size="small" :type="getChannelType(detailDialog.data.channelId)" effect="light">
+                                    {{ detailDialog.data.channelName }}
+                                </el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">客户姓名：</span>
+                            <span class="detail-value">{{ detailDialog.data.customerName }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">客户电话：</span>
+                            <span class="detail-value">{{ detailDialog.data.phone }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">客户微信：</span>
+                            <span class="detail-value">
+                                <span v-if="detailDialog.data.customerWechat" style="color: #67c23a;">{{ detailDialog.data.customerWechat }}</span>
+                                <span v-else style="color: #c0c4cc;">未提供</span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">创建时间：</span>
+                            <span class="detail-value">{{ detailDialog.data.createTime }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 流转状态 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">流转状态</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">当前分配：</span>
+                            <span class="detail-value">
+                                <el-avatar :size="24" :style="{ background: getAvatarColor(detailDialog.data.currentSales) }">
+                                    {{ detailDialog.data.currentSales.charAt(0) }}
+                                </el-avatar>
+                                {{ detailDialog.data.currentSales }}
+                                <el-tag v-if="detailDialog.data.isPriority" type="success" size="small" style="margin-left: 8px;">
+                                    <el-icon><star-filled /></el-icon>
+                                    优先分配
+                                </el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">已等待时长：</span>
+                            <span class="detail-value">
+                                <el-tag 
+                                    size="small" 
+                                    :type="detailDialog.data.waitTime < 300 ? 'success' : detailDialog.data.waitTime < 600 ? 'warning' : 'danger'"
+                                    effect="dark"
+                                >
+                                    {{ formatDuration(detailDialog.data.waitTime) }}
+                                </el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">剩余时间：</span>
+                            <span class="detail-value" :style="{ color: detailDialog.data.remainingTime < 60 ? '#f56c6c' : '#67c23a' }">
+                                {{ formatTime(detailDialog.data.remainingTime) }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">流转进度：</span>
+                            <span class="detail-value">
+                                当前第{{ detailDialog.data.currentStep }}位（已流转{{ detailDialog.data.currentStep - 1 }}次）
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 流转记录 - 参考 manual-pool.html 样式 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">流转记录</div>
+                    <div class="detail-transfer-history">
+                        <div class="transfer-history-detail">
+                            <template 
+                                v-for="(item, index) in detailDialog.data.transferHistory" 
+                                :key="index"
+                            >
+                                <div 
+                                    class="transfer-detail-item"
+                                    :class="{ 
+                                        completed: item.status === 'completed',
+                                        current: item.status === 'current' 
+                                    }"
+                                >
+                                    <div class="transfer-detail-sales">{{ item.sales }}</div>
+                                    <div 
+                                        class="transfer-detail-result"
+                                        :class="{ 
+                                            timeout: item.result === '超时',
+                                            processing: item.result === '领取确认中' 
+                                        }"
+                                    >
+                                        {{ item.result }}
+                                    </div>
+                                    <div class="transfer-detail-time">
+                                        {{ getTransferTime(detailDialog.data, index) }}
+                                    </div>
+                                </div>
+                                <span 
+                                    v-if="index < detailDialog.data.transferHistory.length - 1" 
+                                    class="transfer-detail-arrow"
+                                >
+                                    →
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <template #footer>
+                <el-button @click="detailDialog.visible = false">关闭</el-button>
+            </template>
+        </el-dialog>
+    </div>
+    
+    <!-- ==================== CDN引入的JS库 ==================== -->
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    <!-- Element Plus 图标 -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+    
+    <script>
+        // ==================== 注册Element Plus图标组件 ====================
+        const { Search, Refresh } = ElementPlusIconsVue;
+        
+        // ==================== 生成Mock数据 ====================
+        function generateMockData() {
+            // 渠道选项
+            const channels = [
+                { id: 1, name: '百度推广' },
+                { id: 2, name: '抖音广告' },
+                { id: 3, name: '微信推广' },
+                { id: 4, name: '知乎营销' },
+                { id: 5, name: '线下活动' }
+            ];
+            
+            // 销售选项
+            const salesList = ['张明', '李华', '王芳', '刘强', '陈静', '赵伟', '孙丽', '周杰'];
+            
+            // 生成15条线索数据
+            const data = [];
+            for (let i = 1; i <= 15; i++) {
+                const channel = channels[Math.floor(Math.random() * channels.length)];
+                const transferHistory = [];
+                const historyCount = Math.floor(Math.random() * 3) + 3; // 3-5位销售
+                const currentStep = Math.floor(Math.random() * historyCount) + 1;
+                
+                // 先生成所有销售的流转历史（用于确定 currentSales）
+                const allSales = [];
+                for (let j = 0; j < historyCount; j++) {
+                    allSales.push(salesList[Math.floor(Math.random() * salesList.length)]);
+                }
+                
+                // 随机设置是否为优先分配（30%概率）
+                const isPriority = Math.random() > 0.7;
+                
+                // 生成流转历史
+                if (isPriority) {
+                    // 优先分配：流转历史只有当前销售
+                    const currentSales = allSales[currentStep - 1];
+                    transferHistory.push({
+                        sales: currentSales,
+                        result: '领取确认中',
+                        status: 'current'
+                    });
+                } else {
+                    // 正常分配：流转历史包含已超时和当前销售
+                    for (let j = 0; j < currentStep; j++) {
+                        const sales = allSales[j];
+                        let result, status;
+                        
+                        if (j < currentStep - 1) {
+                            // 已完成的流转（超时）
+                            result = '超时';
+                            status = 'completed';
+                        } else {
+                            // 当前领取确认中
+                            result = '领取确认中';
+                            status = 'current';
+                        }
+                        
+                        transferHistory.push({
+                            sales: sales,
+                            result: result,
+                            status: status
+                        });
+                    }
+                }
+                
+                const totalTime = 300 + Math.floor(Math.random() * 600); // 总等待时间5-15分钟
+                const remainingTime = Math.floor(Math.random() * totalTime);
+                const waitTime = totalTime - remainingTime;
+                
+                // 客户姓名选项
+                const customerNames = ['王先生', '李女士', '张先生', '刘女士', '陈先生', '赵先生', '孙女士', '周先生'];
+                const customerName = customerNames[Math.floor(Math.random() * customerNames.length)];
+                const hasWechat = Math.random() > 0.3; // 70%概率有微信
+                const customerWechat = hasWechat ? `wx_${String(Math.floor(Math.random() * 1000000))}` : '';
+                
+                data.push({
+                    id: `CL${String(i).padStart(4, '0')}`,
+                    channelId: channel.id,
+                    channelName: channel.name,
+                    customerName: customerName,
+                    phone: `138${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+                    customerWechat: customerWechat,
+                    currentSales: allSales[currentStep - 1],
+                    waitTime: waitTime,
+                    remainingTime: remainingTime,
+                    totalTime: totalTime,
+                    currentStep: currentStep,
+                    transferHistory: transferHistory,
+                    isPriority: isPriority,
+                    priorityCount: isPriority ? Math.floor(Math.random() * 3) + 1 : 0, // 优先资格数量
+                    createTime: new Date(Date.now() - waitTime * 1000).toLocaleString('zh-CN')
+                });
+            }
+            
+            return data;
+        }
+        
+        // ==================== Vue应用 ====================
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+        
+        const app = createApp({
+            setup() {
+                // ==================== 响应式数据 ====================
+                
+                // 表格数据
+                const tableData = ref(generateMockData());
+                
+                // 加载状态
+                const loading = ref(false);
+                
+                // 筛选表单
+                const filterForm = ref({
+                    channelId: '',
+                    salesId: '',
+                    clueId: '',
+                    phone: ''
+                });
+                
+                // 分页配置
+                const pagination = ref({
+                    currentPage: 1,
+                    pageSize: 10
+                });
+                
+                // 详情对话框
+                const detailDialog = ref({
+                    visible: false,
+                    data: null
+                });
+                
+                // 渠道选项
+                const channelOptions = [
+                    { value: 1, label: '百度推广' },
+                    { value: 2, label: '抖音广告' },
+                    { value: 3, label: '微信推广' },
+                    { value: 4, label: '知乎营销' },
+                    { value: 5, label: '线下活动' }
+                ];
+                
+                // 销售选项
+                const salesOptions = [
+                    { value: '张明', label: '张明' },
+                    { value: '李华', label: '李华' },
+                    { value: '王芳', label: '王芳' },
+                    { value: '刘强', label: '刘强' },
+                    { value: '陈静', label: '陈静' },
+                    { value: '赵伟', label: '赵伟' },
+                    { value: '孙丽', label: '孙丽' },
+                    { value: '周杰', label: '周杰' }
+                ];
+                
+                // 定时器引用
+                let countdownTimer = null;
+                
+                // ==================== 计算属性 ====================
+                
+                // 统计数据
+                const stats = computed(() => {
+                    const transferring = tableData.value.length;
+                    const avgRemainingTime = transferring > 0 
+                        ? Math.floor(tableData.value.reduce((sum, item) => sum + item.waitTime, 0) / transferring)
+                        : 0;
+                    const timeoutSoon = tableData.value.filter(item => item.remainingTime < 60).length;
+                    
+                    return {
+                        transferring,
+                        avgRemainingTime,
+                        timeoutSoon
+                    };
+                });
+                
+                // 筛选后的数据
+                const filteredData = computed(() => {
+                    return tableData.value.filter(item => {
+                        // 渠道筛选
+                        if (filterForm.value.channelId && item.channelId !== filterForm.value.channelId) {
+                            return false;
+                        }
+                        // 销售筛选
+                        if (filterForm.value.salesId && item.currentSales !== filterForm.value.salesId) {
+                            return false;
+                        }
+                        // 线索ID搜索
+                        if (filterForm.value.clueId && !item.id.includes(filterForm.value.clueId)) {
+                            return false;
+                        }
+                        // 客户电话搜索
+                        if (filterForm.value.phone && !item.phone.includes(filterForm.value.phone)) {
+                            return false;
+                        }
+                        return true;
+                    });
+                });
+                
+                // 分页后的数据
+                const paginatedData = computed(() => {
+                    const start = (pagination.value.currentPage - 1) * pagination.value.pageSize;
+                    const end = start + pagination.value.pageSize;
+                    return filteredData.value.slice(start, end);
+                });
+                
+                // ==================== 方法 ====================
+                
+                // 页面跳转
+                const goToPage = (url) => {
+                    window.location.href = url;
+                };
+                
+                // 搜索
+                const handleSearch = () => {
+                    pagination.value.currentPage = 1;
+                    ElementPlus.ElMessage.success('查询成功');
+                };
+                
+                // 重置筛选
+                const handleReset = () => {
+                    filterForm.value = {
+                        channelId: '',
+                        salesId: '',
+                        clueId: '',
+                        phone: ''
+                    };
+                    pagination.value.currentPage = 1;
+                };
+                
+                // 刷新数据
+                const refreshData = () => {
+                    loading.value = true;
+                    setTimeout(() => {
+                        tableData.value = generateMockData();
+                        loading.value = false;
+                        ElementPlus.ElMessage.success('数据已刷新');
+                    }, 500);
+                };
+                
+                // 每页条数改变
+                const handleSizeChange = (val) => {
+                    pagination.value.pageSize = val;
+                };
+                
+                // 页码改变
+                const handleCurrentChange = (val) => {
+                    pagination.value.currentPage = val;
+                };
+                
+                // 获取行样式类名
+                const getRowClassName = ({ row }) => {
+                    return row.remainingTime < 60 ? 'warning-row' : '';
+                };
+                
+                // 格式化时间（秒转为 mm:ss）
+                const formatTime = (seconds) => {
+                    if (seconds <= 0) return '00:00';
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                };
+                
+                // 格式化时长
+                const formatDuration = (seconds) => {
+                    if (seconds < 60) return `${seconds}秒`;
+                    if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`;
+                    const hours = Math.floor(seconds / 3600);
+                    const mins = Math.floor((seconds % 3600) / 60);
+                    return `${hours}小时${mins}分钟`;
+                };
+                
+                // 获取进度条颜色
+                const getProgressColor = (remainingTime) => {
+                    if (remainingTime < 60) return '#f56c6c';
+                    if (remainingTime < 180) return '#e6a23c';
+                    return '#67c23a';
+                };
+                
+                // 获取渠道标签类型
+                const getChannelType = (channelId) => {
+                    const types = ['', 'primary', 'success', 'warning', 'danger', 'info'];
+                    return types[channelId] || 'info';
+                };
+                
+                // 获取头像颜色
+                const getAvatarColor = (name) => {
+                    const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#8e44ad'];
+                    let hash = 0;
+                    for (let i = 0; i < name.length; i++) {
+                        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    return colors[Math.abs(hash) % colors.length];
+                };
+                
+                // 脱敏手机号
+                const maskPhone = (phone) => {
+                    return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+                };
+                
+                // 获取流转时间
+                const getTransferTime = (row, index) => {
+                    if (index < row.currentStep - 1) {
+                        // 已完成（超时）
+                        const time = new Date(Date.now() - (row.remainingTime + (row.currentStep - 1 - index) * 300) * 1000);
+                        return `超时于 ${time.toLocaleString('zh-CN')}`;
+                    } else {
+                        // 当前领取确认中
+                        return `分配于 ${row.createTime}`;
+                    }
+                };
+                
+                // 查看详情
+                // 终止流转
+                const handleStopTransfer = (row) => {
+                    console.log('终止流转 clicked', row);
+                    if (!row || !row.id) {
+                        console.error('row is invalid', row);
+                        return;
+                    }
+                    
+                    const { ElMessageBox, ElMessage } = ElementPlus;
+                    
+                    ElMessageBox.confirm(
+                        '确定要终止线索 ' + row.id + ' 的流转吗？该线索将停止自动分配，需要人工处理。',
+                        '确认终止流转',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        console.log('用户确认终止');
+                        // 模拟终止流转
+                        const index = tableData.value.findIndex(item => item.id === row.id);
+                        if (index > -1) {
+                            // 从列表移除，进入人工处理
+                            tableData.value.splice(index, 1);
+                            ElementPlus.ElMessage.success('线索已终止流转，已进入人工处理');
+                        }
+                    }).catch(() => {
+                        ElementPlus.ElMessage.info('已取消操作');
+                    });
+                };
+                
+                // 倒计时更新
+                const updateCountdown = () => {
+                    tableData.value.forEach(item => {
+                        if (item.remainingTime > 0) {
+                            item.remainingTime--;
+                            item.waitTime++;
+                        }
+                    });
+                };
+                
+                // ==================== 生命周期钩子 ====================
+                
+                onMounted(() => {
+                    // 启动倒计时定时器（每秒更新）
+                    countdownTimer = setInterval(updateCountdown, 1000);
+                    
+                    // 欢迎提示
+                    ElementPlus.ElMessage.success('欢迎使用流转中监控页面');
+                });
+                
+                onUnmounted(() => {
+                    // 清除定时器
+                    if (countdownTimer) {
+                        clearInterval(countdownTimer);
+                    }
+                });
+                
+                // ==================== 返回模板使用的数据和方法 ====================
+                return {
+                    // 数据
+                    tableData,
+                    loading,
+                    filterForm,
+                    pagination,
+                    detailDialog,
+                    channelOptions,
+                    salesOptions,
+                    stats,
+                    filteredData,
+                    paginatedData,
+                    
+                    // 方法
+                    goToPage,
+                    handleSearch,
+                    handleReset,
+                    refreshData,
+                    handleSizeChange,
+                    handleCurrentChange,
+                    getRowClassName,
+                    formatTime,
+                    formatDuration,
+                    getProgressColor,
+                    getChannelType,
+                    getAvatarColor,
+                    maskPhone,
+                    getTransferTime,
+                    handleStopTransfer
+                };
+            }
+        });
+        
+        // 注册图标组件
+        app.component('Search', Search);
+        app.component('Refresh', Refresh);
+        
+        // 使用Element Plus
+        app.use(ElementPlus);
+        
+        // 挂载应用
+        app.mount('#app');
+    </script>
+</body>
+</html>

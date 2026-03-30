@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>渠道配置 - 获客管理系统</title>
+    
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+    
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #303133;
+        }
+        
+        /* ========== 布局容器 ========== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 220px;
+            background-color: #001529;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .menu-item {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .menu-item:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .menu-item.active {
+            color: #fff;
+            background-color: #1890ff;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .submenu {
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu-item {
+            padding: 10px 24px 10px 54px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .submenu-item:hover {
+            color: #fff;
+        }
+        .submenu-item.active {
+            color: #1890ff;
+            background-color: rgba(24,144,255,0.1);
+        }
+        
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            padding: 20px;
+        }
+        
+        /* ========== 面包屑导航 ========== */
+        .breadcrumb {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* ========== 页面标题 ========== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #303133;
+        }
+        
+        /* ========== 表单卡片 ========== */
+        .form-container {
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            padding: 30px;
+        }
+        
+        .section-card {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px dashed #ebeef5;
+        }
+        
+        .section-card:last-of-type {
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #303133;
+            margin-bottom: 20px;
+            padding-left: 12px;
+            border-left: 4px solid #1890ff;
+        }
+        
+        /* ========== 表单样式 ========== */
+        .form-row {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .form-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-item.full-width {
+            width: 100%;
+        }
+        
+        .form-label {
+            width: 100px;
+            text-align: right;
+            padding-right: 12px;
+            color: #606266;
+            font-size: 14px;
+        }
+        
+        .form-label.required::before {
+            content: '*';
+            color: #f56c6c;
+            margin-right: 4px;
+        }
+        
+        .form-control {
+            flex: 1;
+            max-width: 300px;
+        }
+        
+        .form-control.wide {
+            max-width: 500px;
+        }
+        
+        /* ========== 销售队列样式 ========== */
+        .sales-queue-container {
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 80px;
+        }
+        
+        .sales-queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .sales-queue-title {
+            font-size: 14px;
+            color: #606266;
+        }
+        
+        .sales-queue-hint {
+            font-size: 12px;
+            color: #909399;
+        }
+        
+        .sales-tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 40px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: 1px dashed #dcdfe6;
+        }
+        
+        .sales-tags-container.empty {
+            align-items: center;
+            justify-content: center;
+            color: #909399;
+            font-size: 13px;
+        }
+        
+        .sales-tag {
+            cursor: move;
+            user-select: none;
+        }
+        
+        .sales-tag.dragging {
+            opacity: 0.5;
+        }
+        
+        /* ========== 兜底通知区样式 ========== */
+        .escalation-header {
+            background-color: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 4px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+        }
+        
+        .escalation-title {
+            font-size: 14px;
+            color: #fa8c16;
+            font-weight: 500;
+        }
+        
+        .escalation-desc {
+            font-size: 12px;
+            color: #faad14;
+            margin-top: 5px;
+        }
+        
+        /* ========== 高级设置样式 ========== */
+        .advanced-setting-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+        }
+        
+        .setting-label {
+            flex: 1;
+        }
+        
+        .setting-name {
+            font-size: 14px;
+            color: #303133;
+            font-weight: 500;
+        }
+        
+        .setting-desc {
+            font-size: 12px;
+            color: #909399;
+            margin-top: 4px;
+        }
+        
+        /* ========== 底部操作栏 ========== */
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding-top: 30px;
+            border-top: 1px solid #ebeef5;
+        }
+        
+        /* ========== 选择销售对话框中的列表 ========== */
+        .sales-select-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .sales-select-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ebeef5;
+        }
+        
+        .sales-select-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sales-info {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        
+        .sales-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .sales-name {
+            font-size: 14px;
+            color: #303133;
+        }
+        
+        .sales-dept {
+            font-size: 12px;
+            color: #909399;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- 侧边栏导航 -->
+            <aside class="sidebar">
+                <div class="sidebar-logo">
+                    <span>获客管理系统</span>
+                </div>
+                <nav class="sidebar-menu">
+                    <!-- 线索管理 -->
+                    <div class="menu-item active">
+                        <span class="menu-icon">🎯</span>
+                        <span>线索管理</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="channel-list.html" style="text-decoration: none; display: block;"><div class="submenu-item active">渠道列表</div></a>
+                        <a href="transfer-monitor.html" style="text-decoration: none; display: block;"><div class="submenu-item">流转中监控</div></a>
+                        <a href="manual-pool.html" style="text-decoration: none; display: block;"><div class="submenu-item">人工池</div></a>
+                        <a href="allocation-record.html" style="text-decoration: none; display: block;"><div class="submenu-item">分配记录</div></a>
+                    </div>
+                    
+                    <!-- 数据报表 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">📈</span>
+                        <span>数据报表</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="report-channel.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道维度</div></a>
+                        <a href="report-promoter.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员维度</div></a>
+                        <a href="report-platform.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台维度</div></a>
+                        <a href="report-sales.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售绩效</div></a>
+                    </div>
+                    
+                    <!-- 基础数据 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">⚙️</span>
+                        <span>基础数据</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="promoter-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员管理</div></a>
+                        <a href="platform-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台管理</div></a>
+                        <a href="sales-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售人员管理</div></a>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- 主内容区 -->
+            <main class="main-content">
+                <!-- 面包屑导航 -->
+                <el-breadcrumb class="breadcrumb" separator="/">
+                    <el-breadcrumb-item @click="goToPage('index.html')">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item @click="goToPage('channel-list.html')">渠道管理</el-breadcrumb-item>
+                    <el-breadcrumb-item>{{ isEdit ? '编辑渠道' : '新建渠道' }}</el-breadcrumb-item>
+                </el-breadcrumb>
+                
+                <!-- 页面标题 -->
+                <div class="page-header">
+                    <h1 class="page-title">{{ isEdit ? '编辑渠道' : '新建渠道' }}</h1>
+                </div>
+                
+                <!-- 表单容器 -->
+                <div class="form-container">
+                    <!-- ========== 基础信息区 ========== -->
+                    <div class="section-card">
+                        <div class="section-title">基础信息</div>
+                        
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label class="form-label required">渠道名称</label>
+                                <div class="form-control wide">
+                                    <el-input 
+                                        v-model="form.channelName" 
+                                        placeholder="请输入渠道名称"
+                                        maxlength="50"
+                                        show-word-limit>
+                                    </el-input>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label class="form-label required">推广员</label>
+                                <div class="form-control">
+                                    <el-select 
+                                        v-model="form.promoterId" 
+                                        placeholder="请选择推广员"
+                                        @change="onPromoterChange"
+                                        style="width: 100%">
+                                        <el-option 
+                                            v-for="item in promoterList" 
+                                            :key="item.id" 
+                                            :label="item.name" 
+                                            :value="item.id">
+                                            <span style="float: left">{{ item.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.dept }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                            </div>
+                            <div class="form-item">
+                                <label class="form-label required">平台</label>
+                                <div class="form-control">
+                                    <el-select 
+                                        v-model="form.platform" 
+                                        placeholder="请选择平台"
+                                        @change="onPlatformChange"
+                                        style="width: 100%">
+                                        <el-option 
+                                            v-for="item in platformList" 
+                                            :key="item.value" 
+                                            :label="item.label" 
+                                            :value="item.value">
+                                            <span style="float: left">{{ item.label }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.description }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ========== 分配规则区 ========== -->
+                    <div class="section-card">
+                        <div class="section-title">分配规则</div>
+                        
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label class="form-label required">销售队列</label>
+                                <div class="form-control wide">
+                                    <el-select 
+                                        v-model="form.salesQueueId" 
+                                        placeholder="请选择销售队列"
+                                        style="width: 100%"
+                                        @change="onSalesQueueChange">
+                                        <el-option 
+                                            v-for="item in salesQueueList" 
+                                            :key="item.id" 
+                                            :label="item.name" 
+                                            :value="item.id">
+                                            <span style="float: left">{{ item.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">
+                                                {{ item.salesCount }}人 | 已关联{{ item.channelCount }}个渠道
+                                            </span>
+                                        </el-option>
+                                    </el-select>
+                                    <div style="margin-top: 8px;">
+                                        <el-link type="primary" @click="goToSalesQueueManage">
+                                            <el-icon><link /></el-icon>
+                                            管理销售队列
+                                        </el-link>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-item">
+                                <label class="form-label required">超时时间</label>
+                                <div class="form-control">
+                                    <el-input-number 
+                                        v-model="form.timeout" 
+                                        :min="3" 
+                                        :max="30" 
+                                        style="width: 100%">
+                                        <template #append>分钟</template>
+                                    </el-input-number>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                    </div>
+                    
+                    <!-- ========== 兜底通知区 ========== -->
+                    <div class="section-card">
+                        <div class="section-title">兜底通知设置</div>
+                        
+                        <!-- 提示信息 -->
+                        <div class="escalation-header">
+                            <div class="escalation-title">
+                                <el-icon><warning /></el-icon>
+                                当线索无人认领进入人工池时，通知以下管理员
+                            </div>
+                            <div class="escalation-desc">
+                                请至少选择一位管理员，系统将在线索超时未分配时自动发送通知
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-item full-width">
+                                <label class="form-label required">管理员</label>
+                                <div class="form-control wide">
+                                    <el-select 
+                                        v-model="form.administrators" 
+                                        multiple 
+                                        placeholder="请选择管理员（可多选）"
+                                        style="width: 100%">
+                                        <el-option 
+                                            v-for="item in administratorList" 
+                                            :key="item.id" 
+                                            :label="item.name" 
+                                            :value="item.id">
+                                            <span style="float: left">{{ item.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.role }}</span>
+                                        </el-option>
+                                        <template #empty>
+                                            <div style="padding: 10px; text-align: center; color: #909399;">
+                                                暂无可选管理员
+                                            </div>
+                                        </template>
+                                    </el-select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-item full-width">
+                                <label class="form-label required">通知方式</label>
+                                <div class="form-control wide">
+                                    <el-checkbox v-model="form.notifyWecom" disabled>
+                                        企微应用消息
+                                    </el-checkbox>
+                                    <el-text type="info" size="small" style="margin-left: 10px;">
+                                        （默认启用，不可取消）
+                                    </el-text>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ========== 高级设置区 ========== -->
+                    <div class="section-card">
+                        <div class="section-title">高级设置</div>
+                        
+                        <div class="advanced-setting-item">
+                            <div class="setting-label">
+                                <div class="setting-name">启用渠道</div>
+                                <div class="setting-desc">关闭后该渠道将停止接收新线索</div>
+                            </div>
+                            <el-switch v-model="form.enabled" active-text="开启" inactive-text="关闭"></el-switch>
+                        </div>
+                    </div>
+                    
+                    <!-- ========== 底部操作 ========== -->
+                    <div class="form-actions">
+                        <el-button type="primary" size="large" @click="handleSave" :loading="saving">
+                            <el-icon><check /></el-icon>
+                            保存
+                        </el-button>
+                        <el-button size="large" @click="handleCancel">
+                            <el-icon><close /></el-icon>
+                            取消
+                        </el-button>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+    </div>
+    
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.8/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <!-- Element Plus 图标 -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.1.0/dist/index.iife.js"></script>
+    
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
+        const { Plus, Check, Close, InfoFilled, Warning, Search } = ElementPlusIconsVue;
+        
+        createApp({
+            components: {
+                Plus, Check, Close, InfoFilled, Warning, Search
+            },
+            setup() {
+                // ========== 数据状态 ==========
+                
+                // 是否为编辑模式（通过URL参数判断）
+                const isEdit = ref(false);
+                const channelId = ref(null);
+                
+                // 保存状态
+                const saving = ref(false);
+                
+                // 表单数据
+                const form = reactive({
+                    channelName: '',
+                    promoterId: null,
+                    platform: '',
+                    timeout: 5, // 超时时间（分钟）
+                    salesQueueId: null, // 销售队列ID
+                    administrators: [], // 管理员列表
+                    notifyWecom: true, // 默认勾选企微通知
+                    enabled: true // 默认启用
+                });
+                
+                // 销售队列列表
+                const salesQueueList = ref([
+                    { 
+                        id: 1, 
+                        name: '华东销售一组', 
+                        salesCount: 4, 
+                        channelCount: 3,
+                        salesList: [
+                            { id: 101, name: '销售主管-张伟', dept: '销售一部' },
+                            { id: 102, name: '资深销售-李娜', dept: '销售一部' },
+                            { id: 103, name: '销售专员-王芳', dept: '销售一部' },
+                            { id: 104, name: '销售专员-刘洋', dept: '销售一部' }
+                        ]
+                    },
+                    { 
+                        id: 2, 
+                        name: '华东销售二组', 
+                        salesCount: 3, 
+                        channelCount: 1,
+                        salesList: [
+                            { id: 105, name: '销售主管-陈明', dept: '销售二部' },
+                            { id: 106, name: '资深销售-赵静', dept: '销售二部' },
+                            { id: 107, name: '销售专员-孙涛', dept: '销售二部' }
+                        ]
+                    },
+                    { 
+                        id: 3, 
+                        name: '华南销售组', 
+                        salesCount: 5, 
+                        channelCount: 2,
+                        salesList: [
+                            { id: 108, name: '销售专员-周雪', dept: '销售二部' },
+                            { id: 109, name: '销售主管-吴磊', dept: '销售三部' },
+                            { id: 110, name: '资深销售-郑欣', dept: '销售三部' },
+                            { id: 111, name: '销售专员-马丽', dept: '销售三部' },
+                            { id: 112, name: '销售专员-钱进', dept: '销售三部' }
+                        ]
+                    },
+                    { 
+                        id: 4, 
+                        name: 'VIP客户组', 
+                        salesCount: 3, 
+                        channelCount: 1,
+                        salesList: [
+                            { id: 101, name: '销售主管-张伟', dept: '销售一部' },
+                            { id: 105, name: '销售主管-陈明', dept: '销售二部' },
+                            { id: 109, name: '销售主管-吴磊', dept: '销售三部' }
+                        ]
+                    }
+                ]);
+                
+                // ========== Mock 数据 ==========
+                
+                // 推广员列表（10个）
+                const promoterList = ref([
+                    { id: 1, name: '张小明', dept: '市场部' },
+                    { id: 2, name: '李婷婷', dept: '市场部' },
+                    { id: 3, name: '王建国', dept: '推广部' },
+                    { id: 4, name: '刘美丽', dept: '推广部' },
+                    { id: 5, name: '陈志强', dept: '运营部' },
+                    { id: 6, name: '赵晓燕', dept: '运营部' },
+                    { id: 7, name: '孙大伟', dept: '市场部' },
+                    { id: 8, name: '周小红', dept: '推广部' },
+                    { id: 9, name: '吴建军', dept: '运营部' },
+                    { id: 10, name: '郑雅琪', dept: '市场部' }
+                ]);
+                
+                // 平台列表
+                const platformList = ref([
+                    { value: 'xiaohongshu', label: '小红书', description: '社交电商' },
+                    { value: 'douyin', label: '抖音', description: '短视频平台' },
+                    { value: 'baidu', label: '百度', description: '搜索引擎' },
+                    { value: 'offline', label: '线下展会', description: '线下活动' },
+                    { value: 'wechat', label: '微信公众号', description: '私域流量' }
+                ]);
+                
+                // 管理员列表（8个）
+                const administratorList = ref([
+                    { id: 201, name: '销售总监-张总', role: '销售总监' },
+                    { id: 202, name: '运营经理-李经理', role: '运营经理' },
+                    { id: 203, name: '市场总监-王总', role: '市场总监' },
+                    { id: 204, name: '销售主管-陈主管', role: '销售主管' },
+                    { id: 205, name: '客服主管-赵主管', role: '客服主管' },
+                    { id: 206, name: '产品总监-刘总', role: '产品总监' },
+                    { id: 207, name: '技术总监-孙总', role: '技术总监' },
+                    { id: 208, name: '客服经理-周经理', role: '客服经理' }
+                ]);
+                
+                // ========== 方法 ==========
+                
+                // 页面跳转
+                const goToPage = (url) => {
+                    window.location.href = url;
+                };
+                
+                // 获取推广员名称
+                const getPromoterName = () => {
+                    const promoter = promoterList.value.find(p => p.id === form.promoterId);
+                    return promoter ? promoter.name : '';
+                };
+                
+                // 获取平台显示名称
+                const getPlatformLabel = () => {
+                    const platform = platformList.value.find(p => p.value === form.platform);
+                    return platform ? platform.label : '';
+                };
+                
+                // 自动生成渠道名称
+                const autoGenerateChannelName = () => {
+                    const promoterName = getPromoterName();
+                    const platformLabel = getPlatformLabel();
+                    if (promoterName && platformLabel) {
+                        form.channelName = `${promoterName}-${platformLabel}`;
+                    }
+                };
+                
+                // 推广员变更回调
+                const onPromoterChange = () => {
+                    autoGenerateChannelName();
+                };
+                
+                // 平台变更回调
+                const onPlatformChange = () => {
+                    autoGenerateChannelName();
+                };
+                
+                // 销售队列变更回调
+                const onSalesQueueChange = () => {
+                    // 可以在这里添加队列变更后的逻辑
+                };
+                
+                // 跳转到销售队列管理
+                const goToSalesQueueManage = () => {
+                    window.open('sales-queue-manage.html', '_blank');
+                };
+                
+                // ========== 表单提交相关方法 ==========
+                
+                // 表单验证
+                const validateForm = () => {
+                    if (!form.channelName.trim()) {
+                        ElMessage.warning('请输入渠道名称');
+                        return false;
+                    }
+                    if (!form.promoterId) {
+                        ElMessage.warning('请选择推广员');
+                        return false;
+                    }
+                    if (!form.platform) {
+                        ElMessage.warning('请选择平台');
+                        return false;
+                    }
+                    if (!form.salesQueueId) {
+                        ElMessage.warning('请选择销售队列');
+                        return false;
+                    }
+                    if (form.administrators.length === 0) {
+                        ElMessage.warning('请至少选择一位管理员');
+                        return false;
+                    }
+                    return true;
+                };
+                
+                // 保存渠道
+                const handleSave = () => {
+                    if (!validateForm()) {
+                        return;
+                    }
+                    
+                    saving.value = true;
+                    
+                    // 模拟API调用
+                    setTimeout(() => {
+                        saving.value = false;
+                        
+                        const message = isEdit.value ? '渠道修改成功' : '渠道创建成功';
+                        ElMessage.success(message);
+                        
+                        // 跳转到渠道列表页
+                        setTimeout(() => {
+                            goToPage('channel-list.html');
+                        }, 500);
+                    }, 1000);
+                };
+                
+                // 取消操作
+                const handleCancel = () => {
+                    ElMessageBox.confirm('确定要取消吗？未保存的内容将丢失', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '继续编辑',
+                        type: 'warning'
+                    }).then(() => {
+                        goToPage('channel-list.html');
+                    }).catch(() => {
+                        // 用户选择继续编辑，不做任何操作
+                    });
+                };
+                
+                // 解析URL参数
+                const parseUrlParams = () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const id = urlParams.get('id');
+                    if (id) {
+                        isEdit.value = true;
+                        channelId.value = id;
+                        // 模拟加载编辑数据
+                        loadChannelData(id);
+                    }
+                };
+                
+                // 加载渠道数据（模拟）
+                const loadChannelData = (id) => {
+                    // 模拟从API加载数据
+                    const mockChannelData = {
+                        id: id,
+                        channelName: '张小明-小红书',
+                        promoterId: 1,
+                        platform: 'xiaohongshu',
+                        salesQueueId: 1, // 关联销售队列ID
+                        timeout: 5,
+                        administrators: [201, 202],
+                        notifyWecom: true,
+                        enabled: true
+                    };
+                    
+                    // 填充表单数据
+                    Object.assign(form, mockChannelData);
+                };
+                
+                // ========== 生命周期 ==========
+                
+                onMounted(() => {
+                    parseUrlParams();
+                });
+                
+                return {
+                    // 状态
+                    isEdit,
+                    saving,
+                    form,
+                    promoterList,
+                    platformList,
+                    salesQueueList,
+                    administratorList,
+                    
+                    // 方法
+                    goToPage,
+                    onPromoterChange,
+                    onPlatformChange,
+                    onSalesQueueChange,
+                    goToSalesQueueManage,
+                    handleSave,
+                    handleCancel
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

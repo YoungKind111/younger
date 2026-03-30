@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推广员线索录入 - 线索管理系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* ==================== 布局样式 ==================== */
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==================== 顶部Header ==================== */
+        .app-header {
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1890ff, #096dd9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .system-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f1f1f;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #1f1f1f;
+        }
+
+        /* ==================== 主体布局 ==================== */
+        .app-body {
+            display: flex;
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* ==================== 左侧边栏 ==================== */
+        .app-sidebar {
+            width: 220px;
+            background: #001529;
+            min-height: calc(100vh - 60px);
+            position: fixed;
+            left: 0;
+            top: 60px;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-item.active {
+            color: #fff;
+            background: #1890ff;
+            border-right: 3px solid #69c0ff;
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* ==================== 主内容区 ==================== */
+        .app-main {
+            flex: 1;
+            margin-left: 220px;
+            padding: 24px;
+            background: #f0f2f5;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* ==================== 欢迎与统计卡片 ==================== */
+        .welcome-section {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            border-radius: 12px;
+            padding: 24px 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-left {
+            flex: 1;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .welcome-right {
+            display: flex;
+            gap: 32px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0 16px;
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-item:first-child {
+            border-left: none;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* ==================== 表单区域 ==================== */
+        .form-card {
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f1f1f;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* 表单项宽度 */
+        .form-input {
+            width: 320px;
+        }
+
+        .form-textarea {
+            width: 480px;
+        }
+
+        /* 字数统计 */
+        .char-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .char-count.warning {
+            color: #ff4d4f;
+        }
+
+        /* ==================== 操作按钮区 ==================== */
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #e8e8e8;
+            margin-top: 8px;
+        }
+
+        /* ==================== 最近录入记录 ==================== */
+        .record-card {
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .tag-pending {
+            background: #fff7e6;
+            border-color: #ffd591;
+            color: #fa8c16;
+        }
+
+        .tag-assigned {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+            color: #1890ff;
+        }
+
+        .tag-converted {
+            background: #f6ffed;
+            border-color: #b7eb8f;
+            color: #52c41a;
+        }
+
+        /* ==================== 响应式适配 ==================== */
+        @media screen and (max-width: 1200px) {
+            .form-input {
+                width: 280px;
+            }
+            
+            .form-textarea {
+                width: 400px;
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            .app-sidebar {
+                width: 64px;
+            }
+            
+            .app-main {
+                margin-left: 64px;
+            }
+            
+            .menu-item span {
+                display: none;
+            }
+            
+            .menu-icon {
+                margin-right: 0;
+            }
+            
+            .welcome-section {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .welcome-right {
+                justify-content: center;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .form-input,
+            .form-textarea {
+                width: 100%;
+            }
+            
+            .app-main {
+                padding: 16px;
+            }
+        }
+
+        /* ==================== 动画效果 ==================== */
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- ==================== 顶部Header ==================== -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">📋</div>
+                <span class="system-title">线索录入系统</span>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <el-avatar :size="32" :src="currentUser.avatar"></el-avatar>
+                    <span class="user-name">{{ currentUser.name }}</span>
+                </div>
+                <el-button type="danger" size="small" @click="handleLogout">
+                    <el-icon><switch-button /></el-icon> 退出登录
+                </el-button>
+            </div>
+        </header>
+
+        <!-- ==================== 主体区域 ==================== -->
+        <div class="app-body">
+            <!-- ==================== 左侧边栏 ==================== -->
+            <aside class="app-sidebar">
+                <nav class="sidebar-menu">
+                    <a href="#" class="menu-item active" @click.prevent>
+                        <span class="menu-icon">✏️</span>
+                        <span>线索录入</span>
+                    </a>
+                    <a href="#" class="menu-item" @click.prevent="goToHistory">
+                        <span class="menu-icon">📋</span>
+                        <span>录入记录</span>
+                    </a>
+                    <a href="#" class="menu-item" @click.prevent="goToStatistics">
+                        <span class="menu-icon">📊</span>
+                        <span>数据统计</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- ==================== 主内容区 ==================== -->
+            <main class="app-main">
+                <!-- 欢迎与统计卡片 -->
+                <section class="welcome-section">
+                    <div class="welcome-left">
+                        <div class="welcome-title">欢迎回来，{{ currentUser.name }}！</div>
+                        <div class="welcome-subtitle">{{ welcomeTip }}</div>
+                    </div>
+                    <div class="welcome-right">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ currentUser.todayEntryCount }}</div>
+                            <div class="stat-label">今日录入数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ currentUser.monthEntryCount }}</div>
+                            <div class="stat-label">本月录入数</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 线索录入表单 -->
+                <el-card class="form-card" shadow="never">
+                    <template #header>
+                        <div class="card-header">
+                            <span class="card-header-title">📝 线索录入</span>
+                            <el-tag type="info" size="small">请填写客户信息</el-tag>
+                        </div>
+                    </template>
+                    
+                    <div class="card-body">
+                        <el-form 
+                            ref="clueFormRef"
+                            :model="clueForm"
+                            :rules="formRules"
+                            label-width="120px"
+                            label-position="right"
+                        >
+                            <!-- 选择渠道 -->
+                            <el-form-item label="选择渠道" prop="channelId">
+                                <el-select 
+                                    v-model="clueForm.channelId" 
+                                    placeholder="请选择渠道"
+                                    class="form-input"
+                                    clearable
+                                >
+                                    <el-option
+                                        v-for="channel in myChannels"
+                                        :key="channel.id"
+                                        :label="channel.name"
+                                        :value="channel.id"
+                                    >
+                                        <span style="float: left">{{ channel.name }}</span>
+                                        <span style="float: right; color: #8492a6; font-size: 13px">
+                                            {{ channel.platform }}
+                                        </span>
+                                    </el-option>
+                                </el-select>
+                                <span class="el-form-item__tip" style="margin-left: 10px; color: #999;">
+                                    只能选择您关联的渠道
+                                </span>
+                            </el-form-item>
+
+                            <!-- 客户姓名 -->
+                            <el-form-item label="客户姓名" prop="customerName">
+                                <el-input 
+                                    v-model="clueForm.customerName" 
+                                    placeholder="请输入客户姓名"
+                                    class="form-input"
+                                    maxlength="20"
+                                    show-word-limit
+                                ></el-input>
+                            </el-form-item>
+
+                            <!-- 客户电话 -->
+                            <el-form-item label="客户电话" prop="customerPhone">
+                                <el-input 
+                                    v-model="clueForm.customerPhone" 
+                                    placeholder="请输入客户电话"
+                                    class="form-input"
+                                    maxlength="11"
+                                >
+                                    <template #prefix>
+                                        <el-icon><iphone /></el-icon>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
+
+                            <!-- 客户微信 -->
+                            <el-form-item label="客户微信" prop="customerWechat">
+                                <el-input 
+                                    v-model="clueForm.customerWechat" 
+                                    placeholder="请输入客户微信（选填）"
+                                    class="form-input"
+                                    maxlength="30"
+                                >
+                                    <template #prefix>
+                                        <el-icon><chat-dot-round /></el-icon>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
+
+                            <!-- 客户年龄 -->
+                            <el-form-item label="客户年龄" prop="customerAge">
+                                <el-input-number 
+                                    v-model="clueForm.customerAge" 
+                                    :min="1" 
+                                    :max="120"
+                                    placeholder="选填"
+                                    controls-position="right"
+                                    style="width: 160px;"
+                                ></el-input-number>
+                                <span style="margin-left: 10px; color: #999;">岁（选填）</span>
+                            </el-form-item>
+
+                            <!-- 需求类型 -->
+                            <el-form-item label="需求类型" prop="demandType">
+                                <el-select 
+                                    v-model="clueForm.demandType" 
+                                    placeholder="请选择需求类型"
+                                    class="form-input"
+                                    clearable
+                                >
+                                    <el-option label="课程咨询" value="course"></el-option>
+                                    <el-option label="价格咨询" value="price"></el-option>
+                                    <el-option label="试听预约" value="trial"></el-option>
+                                    <el-option label="其他" value="other"></el-option>
+                                </el-select>
+                            </el-form-item>
+
+                            <!-- 需求描述 -->
+                            <el-form-item label="需求描述" prop="demandDesc">
+                                <el-input 
+                                    v-model="clueForm.demandDesc" 
+                                    type="textarea"
+                                    :rows="4"
+                                    placeholder="请描述客户的具体需求（选填）"
+                                    class="form-textarea"
+                                    maxlength="200"
+                                    resize="none"
+                                ></el-input>
+                                <div class="char-count" :class="{ warning: descCharLeft < 20 }">
+                                    还可输入 {{ descCharLeft }} 字
+                                </div>
+                            </el-form-item>
+
+                            <!-- 紧急程度 -->
+                            <el-form-item label="紧急程度" prop="urgency">
+                                <el-radio-group v-model="clueForm.urgency">
+                                    <el-radio label="normal">
+                                        <el-tag type="info" size="small">普通</el-tag>
+                                    </el-radio>
+                                    <el-radio label="urgent">
+                                        <el-tag type="warning" size="small">紧急</el-tag>
+                                    </el-radio>
+                                    <el-radio label="very_urgent">
+                                        <el-tag type="danger" size="small">非常紧急</el-tag>
+                                    </el-radio>
+                                </el-radio-group>
+                            </el-form-item>
+
+                            <!-- 预计跟进时间 -->
+                            <el-form-item label="预计跟进时间" prop="followUpTime">
+                                <el-date-picker
+                                    v-model="clueForm.followUpTime"
+                                    type="datetime"
+                                    placeholder="选择日期时间"
+                                    format="YYYY-MM-DD HH:mm"
+                                    value-format="YYYY-MM-DD HH:mm:ss"
+                                    :default-time="defaultFollowTime"
+                                    style="width: 240px;"
+                                ></el-date-picker>
+                            </el-form-item>
+
+                            <!-- 操作按钮 -->
+                            <div class="form-actions">
+                                <el-button @click="resetForm" size="large">
+                                    <el-icon><refresh-left /></el-icon> 重置表单
+                                </el-button>
+                                <el-button 
+                                    type="primary" 
+                                    size="large" 
+                                    @click="submitForm"
+                                    :loading="submitLoading"
+                                >
+                                    <el-icon><check /></el-icon> 提交录入
+                                </el-button>
+                            </div>
+                        </el-form>
+                    </div>
+                </el-card>
+
+                <!-- 最近录入记录 -->
+                <el-card class="record-card" shadow="never">
+                    <template #header>
+                        <div class="card-header">
+                            <span class="card-header-title">📋 最近录入记录</span>
+                            <el-button type="primary" link @click="goToHistory">
+                                查看全部 <el-icon class="el-icon--right"><arrow-right /></el-icon>
+                            </el-button>
+                        </div>
+                    </template>
+                    
+                    <el-table :data="recentRecords" stripe style="width: 100%">
+                        <el-table-column prop="entryTime" label="录入时间" width="160">
+                            <template #default="scope">
+                                <el-icon><timer /></el-icon>
+                                {{ scope.row.entryTime }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="channelName" label="渠道" width="140">
+                            <template #default="scope">
+                                <el-tag size="small" type="info">{{ scope.row.channelName }}</el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="customerName" label="客户姓名" width="100"></el-table-column>
+                        <el-table-column prop="customerPhone" label="电话" width="130">
+                            <template #default="scope">
+                                {{ maskPhone(scope.row.customerPhone) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="demandType" label="需求类型" width="100">
+                            <template #default="scope">
+                                <el-tag size="small" :type="getDemandTypeType(scope.row.demandType)">
+                                    {{ getDemandTypeText(scope.row.demandType) }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="状态" width="100">
+                            <template #default="scope">
+                                <el-tag 
+                                    size="small" 
+                                    :class="getStatusClass(scope.row.status)"
+                                >
+                                    {{ getStatusText(scope.row.status) }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="urgency" label="紧急程度" width="100">
+                            <template #default="scope">
+                                <el-tag 
+                                    size="small" 
+                                    :type="getUrgencyType(scope.row.urgency)"
+                                >
+                                    {{ getUrgencyText(scope.row.urgency) }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    
+                    <el-empty v-if="recentRecords.length === 0" description="暂无录入记录"></el-empty>
+                </el-card>
+            </main>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
+
+        createApp({
+            setup() {
+                // ==================== Mock数据 ====================
+                
+                // 当前登录推广员信息
+                const currentUser = reactive({
+                    id: 1,
+                    name: "张三",
+                    phone: "13800138000",
+                    avatar: "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png",
+                    todayEntryCount: 15,
+                    monthEntryCount: 328
+                });
+
+                // 推广员关联的渠道
+                const myChannels = [
+                    { id: 1, name: "张三-小红书", platform: "小红书" },
+                    { id: 2, name: "张三-抖音", platform: "抖音" },
+                    { id: 3, name: "张三-百度", platform: "百度" }
+                ];
+
+                // 最近录入记录（Mock数据）
+                const recentRecords = ref([
+                    {
+                        id: 1001,
+                        entryTime: "2026-03-27 14:30:25",
+                        channelName: "张三-小红书",
+                        customerName: "李女士",
+                        customerPhone: "13912345678",
+                        demandType: "course",
+                        status: "pending",
+                        urgency: "normal"
+                    },
+                    {
+                        id: 1002,
+                        entryTime: "2026-03-27 11:15:08",
+                        channelName: "张三-抖音",
+                        customerName: "王先生",
+                        customerPhone: "13887654321",
+                        demandType: "price",
+                        status: "assigned",
+                        urgency: "urgent"
+                    },
+                    {
+                        id: 1003,
+                        entryTime: "2026-03-27 09:45:33",
+                        channelName: "张三-百度",
+                        customerName: "张女士",
+                        customerPhone: "13711112222",
+                        demandType: "trial",
+                        status: "pending",
+                        urgency: "very_urgent"
+                    },
+                    {
+                        id: 1004,
+                        entryTime: "2026-03-26 16:20:15",
+                        channelName: "张三-小红书",
+                        customerName: "刘先生",
+                        customerPhone: "13633334444",
+                        demandType: "other",
+                        status: "converted",
+                        urgency: "normal"
+                    },
+                    {
+                        id: 1005,
+                        entryTime: "2026-03-26 10:05:42",
+                        channelName: "张三-抖音",
+                        customerName: "陈女士",
+                        customerPhone: "13555556666",
+                        demandType: "course",
+                        status: "assigned",
+                        urgency: "normal"
+                    }
+                ]);
+
+                // ==================== 表单相关 ====================
+                
+                const clueFormRef = ref(null);
+                const submitLoading = ref(false);
+
+                // 表单数据
+                const clueForm = reactive({
+                    channelId: null,
+                    customerName: "",
+                    customerPhone: "",
+                    customerWechat: "",
+                    customerAge: null,
+                    demandType: "",
+                    demandDesc: "",
+                    urgency: "normal",
+                    followUpTime: ""
+                });
+
+                // 计算默认跟进时间（明天同一时间）
+                const defaultFollowTime = computed(() => {
+                    const now = new Date();
+                    now.setDate(now.getDate() + 1);
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    return `${hours}:${minutes}:00`;
+                });
+
+                // 设置默认跟进时间
+                const initFollowUpTime = () => {
+                    const now = new Date();
+                    now.setDate(now.getDate() + 1);
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    clueForm.followUpTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                };
+
+                // 手机号验证规则
+                const validatePhone = (rule, value, callback) => {
+                    if (!value) {
+                        callback(new Error('请输入客户电话'));
+                    } else if (!/^1[3-9]\d{9}$/.test(value)) {
+                        callback(new Error('请输入正确的手机号格式'));
+                    } else {
+                        callback();
+                    }
+                };
+
+                // 表单验证规则
+                const formRules = {
+                    channelId: [
+                        { required: true, message: '请选择渠道', trigger: 'change' }
+                    ],
+                    customerName: [
+                        { required: true, message: '请输入客户姓名', trigger: 'blur' },
+                        { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                    ],
+                    customerPhone: [
+                        { required: true, validator: validatePhone, trigger: 'blur' }
+                    ],
+                    demandType: [
+                        { required: true, message: '请选择需求类型', trigger: 'change' }
+                    ],
+                    followUpTime: [
+                        { required: true, message: '请选择预计跟进时间', trigger: 'change' }
+                    ]
+                };
+
+                // 需求描述剩余字数
+                const descCharLeft = computed(() => {
+                    return 200 - (clueForm.demandDesc?.length || 0);
+                });
+
+                // 欢迎提示语
+                const welcomeTip = computed(() => {
+                    const hour = new Date().getHours();
+                    if (hour < 9) return '早上好！新的一天开始了，加油录入线索吧！';
+                    if (hour < 12) return '上午好！请选择渠道并填写客户信息';
+                    if (hour < 14) return '中午好！记得休息一下，劳逸结合';
+                    if (hour < 18) return '下午好！请选择渠道并填写客户信息';
+                    return '晚上好！辛苦了一天，继续加油！';
+                });
+
+                // ==================== 方法函数 ====================
+
+                // 提交表单
+                const submitForm = () => {
+                    clueFormRef.value.validate((valid) => {
+                        if (valid) {
+                            submitLoading.value = true;
+                            
+                            // 模拟API提交
+                            setTimeout(() => {
+                                // 获取渠道名称
+                                const channel = myChannels.find(c => c.id === clueForm.channelId);
+                                const channelName = channel ? channel.name : '';
+                                
+                                // 创建新记录
+                                const newRecord = {
+                                    id: Date.now(),
+                                    entryTime: new Date().toLocaleString('zh-CN', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                        hour12: false
+                                    }).replace(/\//g, '-'),
+                                    channelName: channelName,
+                                    customerName: clueForm.customerName,
+                                    customerPhone: clueForm.customerPhone,
+                                    demandType: clueForm.demandType,
+                                    status: "pending",
+                                    urgency: clueForm.urgency
+                                };
+                                
+                                // 添加到最近记录
+                                recentRecords.value.unshift(newRecord);
+                                if (recentRecords.value.length > 5) {
+                                    recentRecords.value.pop();
+                                }
+                                
+                                // 更新统计
+                                currentUser.todayEntryCount++;
+                                currentUser.monthEntryCount++;
+                                
+                                // 显示成功提示
+                                ElMessage.success(`录入成功！该线索已进入【${channelName}】的待分配队列`);
+                                
+                                // 重置表单
+                                resetForm();
+                                
+                                submitLoading.value = false;
+                            }, 1000);
+                        } else {
+                            ElMessage.error('请检查表单填写是否正确');
+                            return false;
+                        }
+                    });
+                };
+
+                // 重置表单
+                const resetForm = () => {
+                    clueFormRef.value.resetFields();
+                    clueForm.urgency = "normal";
+                    clueForm.customerAge = null;
+                    clueForm.customerWechat = "";
+                    clueForm.demandDesc = "";
+                    initFollowUpTime();
+                    ElMessage.info('表单已重置');
+                };
+
+                // 退出登录
+                const handleLogout = () => {
+                    ElMessageBox.confirm(
+                        '确定要退出登录吗？',
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        ElMessage.success('已退出登录');
+                        // 实际项目中这里会跳转到登录页
+                    }).catch(() => {
+                        // 取消退出
+                    });
+                };
+
+                // 跳转到录入记录页面
+                const goToHistory = () => {
+                    ElMessage.info('跳转至录入记录页面...');
+                    setTimeout(() => {
+                        window.location.href = 'promoter-entry-history.html';
+                    }, 500);
+                };
+
+                // 跳转到数据统计页面
+                const goToStatistics = () => {
+                    ElMessage.info('跳转至数据统计页面...');
+                    setTimeout(() => {
+                        window.location.href = 'promoter-statistics.html';
+                    }, 500);
+                };
+
+                // 手机号脱敏显示
+                const maskPhone = (phone) => {
+                    if (!phone || phone.length !== 11) return phone;
+                    return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+                };
+
+                // 获取需求类型文本
+                const getDemandTypeText = (type) => {
+                    const map = {
+                        course: '课程咨询',
+                        price: '价格咨询',
+                        trial: '试听预约',
+                        other: '其他'
+                    };
+                    return map[type] || type;
+                };
+
+                // 获取需求类型标签样式
+                const getDemandTypeType = (type) => {
+                    const map = {
+                        course: 'primary',
+                        price: 'warning',
+                        trial: 'success',
+                        other: 'info'
+                    };
+                    return map[type] || '';
+                };
+
+                // 获取状态文本
+                const getStatusText = (status) => {
+                    const map = {
+                        pending: '待分配',
+                        assigned: '已分配',
+                        converted: '已转化'
+                    };
+                    return map[status] || status;
+                };
+
+                // 获取状态标签样式类
+                const getStatusClass = (status) => {
+                    const map = {
+                        pending: 'tag-pending',
+                        assigned: 'tag-assigned',
+                        converted: 'tag-converted'
+                    };
+                    return map[status] || '';
+                };
+
+                // 获取紧急程度文本
+                const getUrgencyText = (urgency) => {
+                    const map = {
+                        normal: '普通',
+                        urgent: '紧急',
+                        very_urgent: '非常紧急'
+                    };
+                    return map[urgency] || urgency;
+                };
+
+                // 获取紧急程度标签样式
+                const getUrgencyType = (urgency) => {
+                    const map = {
+                        normal: 'info',
+                        urgent: 'warning',
+                        very_urgent: 'danger'
+                    };
+                    return map[urgency] || '';
+                };
+
+                // ==================== 生命周期 ====================
+                
+                onMounted(() => {
+                    // 初始化默认跟进时间
+                    initFollowUpTime();
+                    
+                    // 页面加载提示
+                    ElMessage.success(`欢迎回来，${currentUser.name}！`);
+                });
+
+                return {
+                    // 数据
+                    currentUser,
+                    myChannels,
+                    recentRecords,
+                    clueForm,
+                    clueFormRef,
+                    submitLoading,
+                    formRules,
+                    defaultFollowTime,
+                    descCharLeft,
+                    welcomeTip,
+                    
+                    // 方法
+                    submitForm,
+                    resetForm,
+                    handleLogout,
+                    goToHistory,
+                    goToStatistics,
+                    maskPhone,
+                    getDemandTypeText,
+                    getDemandTypeType,
+                    getStatusText,
+                    getStatusClass,
+                    getUrgencyText,
+                    getUrgencyType
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

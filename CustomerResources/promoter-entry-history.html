@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录入记录 - 线索录入系统</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* ==================== 布局样式 ==================== */
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==================== 顶部Header ==================== */
+        .app-header {
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1890ff, #096dd9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .system-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f1f1f;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #1f1f1f;
+        }
+
+        /* ==================== 主体布局 ==================== */
+        .app-body {
+            display: flex;
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* ==================== 左侧边栏 ==================== */
+        .app-sidebar {
+            width: 220px;
+            background: #001529;
+            min-height: calc(100vh - 60px);
+            position: fixed;
+            left: 0;
+            top: 60px;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-item.active {
+            color: #fff;
+            background: #1890ff;
+            border-right: 3px solid #69c0ff;
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* ==================== 主内容区 ==================== */
+        .app-main {
+            flex: 1;
+            margin-left: 220px;
+            padding: 24px;
+            background: #f0f2f5;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* ==================== 统计卡片 ==================== */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.total {
+            background: #f0f5ff;
+        }
+
+        .stat-icon.pending {
+            background: #fff7e6;
+        }
+
+        .stat-icon.assigned {
+            background: #e6f7ff;
+        }
+
+        .stat-icon.converted {
+            background: #f6ffed;
+        }
+
+        .stat-icon.manual {
+            background: #fff1f0;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f1f1f;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        /* ==================== 筛选卡片 ==================== */
+        .filter-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #595959;
+            white-space: nowrap;
+        }
+
+        .filter-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ==================== 表格卡片 ==================== */
+        .table-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f1f1f;
+        }
+
+        /* 状态标签样式 */
+        .tag-pending {
+            background: #fff7e6 !important;
+            border-color: #ffd591 !important;
+            color: #fa8c16 !important;
+        }
+
+        .tag-assigned {
+            background: #e6f7ff !important;
+            border-color: #91d5ff !important;
+            color: #1890ff !important;
+        }
+
+        .tag-converted {
+            background: #f6ffed !important;
+            border-color: #b7eb8f !important;
+            color: #52c41a !important;
+        }
+
+        .tag-manual {
+            background: #fff1f0 !important;
+            border-color: #ffa39e !important;
+            color: #ff4d4f !important;
+        }
+
+        /* ==================== 分页器 ==================== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* ==================== 详情弹窗 ==================== */
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f1f1f;
+            margin-bottom: 16px;
+            padding-left: 12px;
+            border-left: 3px solid #1890ff;
+        }
+
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .detail-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-info-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            min-width: 80px;
+        }
+
+        .detail-info-value {
+            font-size: 14px;
+            color: #262626;
+            flex: 1;
+        }
+
+        /* 时间轴样式 */
+        .timeline-wrapper {
+            padding-left: 8px;
+        }
+
+        /* ==================== 响应式适配 ==================== */
+        @media screen and (max-width: 1400px) {
+            .stats-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 1200px) {
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            .app-sidebar {
+                width: 64px;
+            }
+            
+            .app-main {
+                margin-left: 64px;
+            }
+            
+            .menu-item span {
+                display: none;
+            }
+            
+            .menu-icon {
+                margin-right: 0;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .detail-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .app-main {
+                padding: 16px;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-item {
+                width: 100%;
+            }
+            
+            .filter-item .el-select,
+            .filter-item .el-date-picker,
+            .filter-item .el-input {
+                width: 100% !important;
+            }
+        }
+
+        /* ==================== 动画效果 ==================== */
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- ==================== 顶部Header ==================== -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">📋</div>
+                <span class="system-title">线索录入系统</span>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <el-avatar :size="32" :src="currentUser.avatar"></el-avatar>
+                    <span class="user-name">{{ currentUser.name }}</span>
+                </div>
+                <el-button type="danger" size="small" @click="handleLogout">
+                    <el-icon><switch-button /></el-icon> 退出登录
+                </el-button>
+            </div>
+        </header>
+
+        <!-- ==================== 主体区域 ==================== -->
+        <div class="app-body">
+            <!-- ==================== 左侧边栏 ==================== -->
+            <aside class="app-sidebar">
+                <nav class="sidebar-menu">
+                    <a href="#" class="menu-item" @click.prevent="goToEntry">
+                        <span class="menu-icon">✏️</span>
+                        <span>线索录入</span>
+                    </a>
+                    <a href="#" class="menu-item active" @click.prevent>
+                        <span class="menu-icon">📋</span>
+                        <span>录入记录</span>
+                    </a>
+                    <a href="#" class="menu-item" @click.prevent="goToStatistics">
+                        <span class="menu-icon">📊</span>
+                        <span>数据统计</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- ==================== 主内容区 ==================== -->
+            <main class="app-main">
+                <!-- 统计卡片区 -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon total">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ stats.total }}</div>
+                            <div class="stat-label">总录入数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">⏳</div>
+                        <div class="stat-content">
+                            <div class="stat-value" style="color: #fa8c16;">{{ stats.pending }}</div>
+                            <div class="stat-label">待分配</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon assigned">👤</div>
+                        <div class="stat-content">
+                            <div class="stat-value" style="color: #1890ff;">{{ stats.assigned }}</div>
+                            <div class="stat-label">已分配</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon converted">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-value" style="color: #52c41a;">{{ stats.converted }}</div>
+                            <div class="stat-label">已转化</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon manual">⚠️</div>
+                        <div class="stat-content">
+                            <div class="stat-value" style="color: #ff4d4f;">{{ stats.manual }}</div>
+                            <div class="stat-label">进入人工池</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选区 -->
+                <div class="filter-card">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <span class="filter-label">时间范围</span>
+                            <el-radio-group v-model="filter.dateRange" size="small" @change="handleDateRangeChange">
+                                <el-radio-button label="7">最近7天</el-radio-button>
+                                <el-radio-button label="30">最近30天</el-radio-button>
+                                <el-radio-button label="month">本月</el-radio-button>
+                                <el-radio-button label="custom">自定义</el-radio-button>
+                            </el-radio-group>
+                        </div>
+                        <div class="filter-item" v-if="filter.dateRange === 'custom'">
+                            <el-date-picker
+                                v-model="filter.customDateRange"
+                                type="daterange"
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期"
+                                size="small"
+                                style="width: 220px;"
+                                @change="handleFilterChange"
+                            ></el-date-picker>
+                        </div>
+                        <div class="filter-item">
+                            <span class="filter-label">渠道</span>
+                            <el-select 
+                                v-model="filter.channel" 
+                                placeholder="全部渠道" 
+                                size="small"
+                                style="width: 140px;"
+                                clearable
+                                @change="handleFilterChange"
+                            >
+                                <el-option
+                                    v-for="channel in myChannels"
+                                    :key="channel.id"
+                                    :label="channel.name"
+                                    :value="channel.name"
+                                ></el-option>
+                            </el-select>
+                        </div>
+                        <div class="filter-item">
+                            <span class="filter-label">需求类型</span>
+                            <el-select 
+                                v-model="filter.demandType" 
+                                placeholder="全部类型" 
+                                size="small"
+                                style="width: 120px;"
+                                clearable
+                                @change="handleFilterChange"
+                            >
+                                <el-option label="课程咨询" value="课程咨询"></el-option>
+                                <el-option label="价格咨询" value="价格咨询"></el-option>
+                                <el-option label="试听预约" value="试听预约"></el-option>
+                                <el-option label="其他" value="其他"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="filter-item">
+                            <span class="filter-label">状态</span>
+                            <el-select 
+                                v-model="filter.status" 
+                                placeholder="全部状态" 
+                                size="small"
+                                style="width: 120px;"
+                                clearable
+                                @change="handleFilterChange"
+                            >
+                                <el-option label="待分配" value="待分配"></el-option>
+                                <el-option label="已分配" value="已分配"></el-option>
+                                <el-option label="已转化" value="已转化"></el-option>
+                                <el-option label="人工池" value="人工池"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="filter-item">
+                            <el-input
+                                v-model="filter.keyword"
+                                placeholder="客户姓名/电话"
+                                size="small"
+                                style="width: 160px;"
+                                clearable
+                                @input="handleFilterChange"
+                            >
+                                <template #prefix>
+                                    <el-icon><search /></el-icon>
+                                </template>
+                            </el-input>
+                        </div>
+                        <div class="filter-actions">
+                            <el-button type="primary" size="small" @click="handleExport">
+                                <el-icon><download /></el-icon> 导出Excel
+                            </el-button>
+                            <el-button size="small" @click="resetFilter">
+                                <el-icon><refresh-left /></el-icon> 重置
+                            </el-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据表格区 -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <span class="table-title">📋 录入记录列表</span>
+                        <el-tag type="info" size="small">共 {{ filteredList.length }} 条记录</el-tag>
+                    </div>
+                    
+                    <el-table 
+                        :data="paginatedList" 
+                        stripe 
+                        style="width: 100%"
+                        v-loading="loading"
+                    >
+                        <el-table-column prop="entryTime" label="录入时间" width="160" sortable>
+                            <template #default="scope">
+                                <el-icon><timer /></el-icon>
+                                {{ scope.row.entryTime }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="channelName" label="渠道名称" width="140">
+                            <template #default="scope">
+                                <el-tag size="small" type="info">{{ scope.row.channelName }}</el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="customerName" label="客户姓名" width="100"></el-table-column>
+                        <el-table-column prop="phone" label="客户电话" width="130">
+                            <template #default="scope">
+                                {{ maskPhone(scope.row.phone) }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="demandType" label="需求类型" width="100">
+                            <template #default="scope">
+                                <el-tag size="small" :type="getDemandTypeType(scope.row.demandType)">
+                                    {{ scope.row.demandType }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" label="状态" width="100">
+                            <template #default="scope">
+                                <el-tag 
+                                    size="small" 
+                                    :class="getStatusClass(scope.row.status)"
+                                >
+                                    {{ scope.row.status }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="assignedSales" label="当前归属" width="120">
+                            <template #default="scope">
+                                <span v-if="scope.row.assignedSales">
+                                    <el-icon><user /></el-icon> {{ scope.row.assignedSales }}
+                                </span>
+                                <span v-else style="color: #bfbfbf;">-</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="100" fixed="right">
+                            <template #default="scope">
+                                <el-button 
+                                    type="primary" 
+                                    link 
+                                    size="small"
+                                    @click="showDetail(scope.row)"
+                                >
+                                    查看详情
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+
+                    <!-- 空状态 -->
+                    <el-empty v-if="filteredList.length === 0" description="暂无符合条件的记录"></el-empty>
+
+                    <!-- 分页器 -->
+                    <div class="pagination-wrapper" v-if="filteredList.length > 0">
+                        <el-pagination
+                            v-model:current-page="pagination.currentPage"
+                            v-model:page-size="pagination.pageSize"
+                            :page-sizes="[10, 20, 50]"
+                            :total="filteredList.length"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                        ></el-pagination>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================== 详情弹窗 ==================== -->
+        <el-dialog
+            v-model="detailDialog.visible"
+            title="线索详情"
+            width="700px"
+            destroy-on-close
+        >
+            <div v-if="detailDialog.data">
+                <!-- 线索基本信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">线索信息</div>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">线索ID</span>
+                            <span class="detail-info-value">{{ detailDialog.data.id }}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">录入时间</span>
+                            <span class="detail-info-value">{{ detailDialog.data.entryTime }}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">推广渠道</span>
+                            <span class="detail-info-value">
+                                <el-tag size="small" type="info">{{ detailDialog.data.channelName }}</el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">当前状态</span>
+                            <span class="detail-info-value">
+                                <el-tag size="small" :class="getStatusClass(detailDialog.data.status)">
+                                    {{ detailDialog.data.status }}
+                                </el-tag>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 客户信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">客户信息</div>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">客户姓名</span>
+                            <span class="detail-info-value">{{ detailDialog.data.customerName }}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">联系电话</span>
+                            <span class="detail-info-value">{{ detailDialog.data.phone }}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">微信号</span>
+                            <span class="detail-info-value">{{ detailDialog.data.wechat || '-' }}</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">客户年龄</span>
+                            <span class="detail-info-value">{{ detailDialog.data.age ? detailDialog.data.age + '岁' : '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 需求信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">需求信息</div>
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">需求类型</span>
+                            <span class="detail-info-value">
+                                <el-tag size="small" :type="getDemandTypeType(detailDialog.data.demandType)">
+                                    {{ detailDialog.data.demandType }}
+                                </el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-info-label">紧急程度</span>
+                            <span class="detail-info-value">
+                                <el-tag size="small" :type="getUrgencyType(detailDialog.data.urgency)">
+                                    {{ getUrgencyText(detailDialog.data.urgency) }}
+                                </el-tag>
+                            </span>
+                        </div>
+                        <div class="detail-info-item" style="grid-column: span 2;">
+                            <span class="detail-info-label">需求描述</span>
+                            <span class="detail-info-value">{{ detailDialog.data.demandDesc || '暂无描述' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 流转记录 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">流转记录</div>
+                    <div class="timeline-wrapper">
+                        <el-timeline>
+                            <el-timeline-item
+                                v-for="(record, index) in detailDialog.flowRecords"
+                                :key="index"
+                                :type="record.type"
+                                :color="record.color"
+                                :timestamp="record.time"
+                            >
+                                {{ record.content }}
+                            </el-timeline-item>
+                        </el-timeline>
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <el-button @click="detailDialog.visible = false">关闭</el-button>
+            </template>
+        </el-dialog>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
+
+        createApp({
+            setup() {
+                // ==================== Mock数据 ====================
+                
+                // 当前登录推广员信息
+                const currentUser = reactive({
+                    id: 1,
+                    name: "张三",
+                    phone: "13800138000",
+                    avatar: "https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+                });
+
+                // 推广员关联的渠道
+                const myChannels = [
+                    { id: 1, name: "张三-小红书", platform: "小红书" },
+                    { id: 2, name: "张三-抖音", platform: "抖音" },
+                    { id: 3, name: "张三-百度", platform: "百度" }
+                ];
+
+                // 生成20条Mock录入记录
+                const generateMockData = () => {
+                    const channels = ["张三-小红书", "张三-抖音", "张三-百度"];
+                    const demandTypes = ["课程咨询", "价格咨询", "试听预约", "其他"];
+                    const statuses = ["待分配", "已分配", "已转化", "人工池"];
+                    const surnames = ["王", "李", "张", "刘", "陈", "杨", "黄", "赵", "吴", "周"];
+                    const names = ["先生", "女士", "先生", "女士", "同学", "家长"];
+                    const salesNames = ["销售A", "销售B", "销售C", "销售D", "销售E"];
+                    
+                    const records = [];
+                    const now = new Date();
+                    
+                    for (let i = 0; i < 20; i++) {
+                        const status = statuses[Math.floor(Math.random() * statuses.length)];
+                        const entryDate = new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+                        const entryTime = entryDate.toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        }).replace(/\//g, '-');
+                        
+                        const phone = `1${[3,4,5,6,7,8,9][Math.floor(Math.random() * 7)]}${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`;
+                        
+                        let assignedSales = null;
+                        let conversionTime = null;
+                        
+                        if (status === "已分配" || status === "已转化") {
+                            assignedSales = salesNames[Math.floor(Math.random() * salesNames.length)];
+                        }
+                        
+                        if (status === "已转化") {
+                            const convDate = new Date(entryDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000);
+                            conversionTime = convDate.toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                            }).replace(/\//g, '-');
+                        }
+                        
+                        records.push({
+                            id: `CL${entryDate.getFullYear()}${String(entryDate.getMonth() + 1).padStart(2, '0')}${String(entryDate.getDate()).padStart(2, '0')}${String(i + 1).padStart(4, '0')}`,
+                            entryTime: entryTime,
+                            channelName: channels[Math.floor(Math.random() * channels.length)],
+                            customerName: surnames[Math.floor(Math.random() * surnames.length)] + names[Math.floor(Math.random() * names.length)],
+                            phone: phone,
+                            wechat: Math.random() > 0.5 ? `wx_${phone.slice(-6)}` : null,
+                            age: Math.random() > 0.3 ? Math.floor(Math.random() * 40) + 18 : null,
+                            demandType: demandTypes[Math.floor(Math.random() * demandTypes.length)],
+                            demandDesc: Math.random() > 0.5 ? "客户想了解课程详情和价格，有明确的购买意向" : null,
+                            urgency: ["normal", "urgent", "very_urgent"][Math.floor(Math.random() * 3)],
+                            status: status,
+                            assignedSales: assignedSales,
+                            conversionTime: conversionTime
+                        });
+                    }
+                    
+                    // 按时间倒序排序
+                    return records.sort((a, b) => new Date(b.entryTime) - new Date(a.entryTime));
+                };
+
+                const allRecords = ref(generateMockData());
+                const loading = ref(false);
+
+                // ==================== 统计数据 ====================
+                const stats = computed(() => {
+                    const total = allRecords.value.length;
+                    const pending = allRecords.value.filter(r => r.status === "待分配").length;
+                    const assigned = allRecords.value.filter(r => r.status === "已分配").length;
+                    const converted = allRecords.value.filter(r => r.status === "已转化").length;
+                    const manual = allRecords.value.filter(r => r.status === "人工池").length;
+                    return { total, pending, assigned, converted, manual };
+                });
+
+                // ==================== 筛选条件 ====================
+                const filter = reactive({
+                    dateRange: "30",
+                    customDateRange: null,
+                    channel: "",
+                    demandType: "",
+                    status: "",
+                    keyword: ""
+                });
+
+                // ==================== 日期范围处理 ====================
+                const getDateRange = () => {
+                    const now = new Date();
+                    let startDate, endDate;
+                    
+                    switch (filter.dateRange) {
+                        case "7":
+                            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            endDate = now;
+                            break;
+                        case "30":
+                            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                            endDate = now;
+                            break;
+                        case "month":
+                            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                            endDate = now;
+                            break;
+                        case "custom":
+                            if (filter.customDateRange && filter.customDateRange.length === 2) {
+                                startDate = new Date(filter.customDateRange[0]);
+                                endDate = new Date(filter.customDateRange[1]);
+                                endDate.setHours(23, 59, 59, 999);
+                            } else {
+                                return null;
+                            }
+                            break;
+                        default:
+                            return null;
+                    }
+                    
+                    return { startDate, endDate };
+                };
+
+                const handleDateRangeChange = () => {
+                    if (filter.dateRange !== 'custom') {
+                        filter.customDateRange = null;
+                    }
+                    handleFilterChange();
+                };
+
+                // ==================== 筛选逻辑 ====================
+                const filteredList = computed(() => {
+                    let result = [...allRecords.value];
+                    
+                    // 时间范围筛选
+                    const dateRange = getDateRange();
+                    if (dateRange) {
+                        result = result.filter(r => {
+                            const recordDate = new Date(r.entryTime);
+                            return recordDate >= dateRange.startDate && recordDate <= dateRange.endDate;
+                        });
+                    }
+                    
+                    // 渠道筛选
+                    if (filter.channel) {
+                        result = result.filter(r => r.channelName === filter.channel);
+                    }
+                    
+                    // 需求类型筛选
+                    if (filter.demandType) {
+                        result = result.filter(r => r.demandType === filter.demandType);
+                    }
+                    
+                    // 状态筛选
+                    if (filter.status) {
+                        result = result.filter(r => r.status === filter.status);
+                    }
+                    
+                    // 关键词搜索
+                    if (filter.keyword) {
+                        const keyword = filter.keyword.toLowerCase();
+                        result = result.filter(r => 
+                            r.customerName.toLowerCase().includes(keyword) ||
+                            r.phone.includes(keyword)
+                        );
+                    }
+                    
+                    return result;
+                });
+
+                const handleFilterChange = () => {
+                    pagination.currentPage = 1;
+                };
+
+                const resetFilter = () => {
+                    filter.dateRange = "30";
+                    filter.customDateRange = null;
+                    filter.channel = "";
+                    filter.demandType = "";
+                    filter.status = "";
+                    filter.keyword = "";
+                    pagination.currentPage = 1;
+                    ElMessage.success('筛选条件已重置');
+                };
+
+                // ==================== 分页 ====================
+                const pagination = reactive({
+                    currentPage: 1,
+                    pageSize: 10
+                });
+
+                const paginatedList = computed(() => {
+                    const start = (pagination.currentPage - 1) * pagination.pageSize;
+                    const end = start + pagination.pageSize;
+                    return filteredList.value.slice(start, end);
+                });
+
+                const handleSizeChange = (size) => {
+                    pagination.pageSize = size;
+                    pagination.currentPage = 1;
+                };
+
+                const handleCurrentChange = (page) => {
+                    pagination.currentPage = page;
+                };
+
+                // ==================== 详情弹窗 ====================
+                const detailDialog = reactive({
+                    visible: false,
+                    data: null,
+                    flowRecords: []
+                });
+
+                const showDetail = (row) => {
+                    detailDialog.data = { ...row };
+                    
+                    // 生成流转记录
+                    const flowRecords = [];
+                    
+                    // 录入记录
+                    flowRecords.push({
+                        time: row.entryTime,
+                        content: `推广员${currentUser.name}录入线索`,
+                        type: 'primary',
+                        color: '#1890ff'
+                    });
+                    
+                    // 根据状态添加后续记录
+                    if (row.status === "已分配" || row.status === "已转化") {
+                        const assignTime = new Date(new Date(row.entryTime).getTime() + 5 * 60000);
+                        flowRecords.push({
+                            time: assignTime.toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                            }).replace(/\//g, '-'),
+                            content: `系统分配给${row.assignedSales}`,
+                            type: 'success',
+                            color: '#52c41a'
+                        });
+                        
+                        const confirmTime = new Date(assignTime.getTime() + 5 * 60000);
+                        flowRecords.push({
+                            time: confirmTime.toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                            }).replace(/\//g, '-'),
+                            content: `${row.assignedSales}确认领取线索`,
+                            type: 'success',
+                            color: '#52c41a'
+                        });
+                    }
+                    
+                    if (row.status === "已转化") {
+                        flowRecords.push({
+                            time: row.conversionTime,
+                            content: `${row.assignedSales}完成转化，客户已签约`,
+                            type: 'success',
+                            color: '#52c41a'
+                        });
+                    }
+                    
+                    if (row.status === "人工池") {
+                        const poolTime = new Date(new Date(row.entryTime).getTime() + 30 * 60000);
+                        flowRecords.push({
+                            time: poolTime.toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                            }).replace(/\//g, '-'),
+                            content: '线索进入人工池，等待人工分配',
+                            type: 'warning',
+                            color: '#fa8c16'
+                        });
+                    }
+                    
+                    detailDialog.flowRecords = flowRecords;
+                    detailDialog.visible = true;
+                };
+
+                // ==================== 导出功能 ====================
+                const handleExport = () => {
+                    // 模拟导出
+                    const data = filteredList.value;
+                    if (data.length === 0) {
+                        ElMessage.warning('暂无数据可导出');
+                        return;
+                    }
+                    
+                    // 创建CSV内容
+                    const headers = ['线索ID', '录入时间', '渠道名称', '客户姓名', '客户电话', '需求类型', '状态', '当前归属'];
+                    const rows = data.map(r => [
+                        r.id,
+                        r.entryTime,
+                        r.channelName,
+                        r.customerName,
+                        r.phone,
+                        r.demandType,
+                        r.status,
+                        r.assignedSales || '-'
+                    ]);
+                    
+                    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                    
+                    // 下载文件
+                    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `录入记录_${new Date().toISOString().slice(0, 10)}.csv`;
+                    link.click();
+                    
+                    ElMessage.success(`已导出 ${data.length} 条记录`);
+                };
+
+                // ==================== 工具函数 ====================
+                const maskPhone = (phone) => {
+                    if (!phone || phone.length !== 11) return phone;
+                    return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+                };
+
+                const getDemandTypeType = (type) => {
+                    const map = {
+                        "课程咨询": "primary",
+                        "价格咨询": "warning",
+                        "试听预约": "success",
+                        "其他": "info"
+                    };
+                    return map[type] || '';
+                };
+
+                const getStatusClass = (status) => {
+                    const map = {
+                        "待分配": "tag-pending",
+                        "已分配": "tag-assigned",
+                        "已转化": "tag-converted",
+                        "人工池": "tag-manual"
+                    };
+                    return map[status] || '';
+                };
+
+                const getUrgencyText = (urgency) => {
+                    const map = {
+                        normal: '普通',
+                        urgent: '紧急',
+                        very_urgent: '非常紧急'
+                    };
+                    return map[urgency] || urgency;
+                };
+
+                const getUrgencyType = (urgency) => {
+                    const map = {
+                        normal: 'info',
+                        urgent: 'warning',
+                        very_urgent: 'danger'
+                    };
+                    return map[urgency] || '';
+                };
+
+                // ==================== 导航跳转 ====================
+                const goToEntry = () => {
+                    window.location.href = 'promoter-clue-entry.html';
+                };
+
+                const goToStatistics = () => {
+                    ElMessage.info('数据统计页面开发中...');
+                };
+
+                // ==================== 退出登录 ====================
+                const handleLogout = () => {
+                    ElMessageBox.confirm(
+                        '确定要退出登录吗？',
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        ElMessage.success('已退出登录');
+                    }).catch(() => {});
+                };
+
+                // ==================== 生命周期 ====================
+                onMounted(() => {
+                    ElMessage.success('欢迎回来，' + currentUser.name + '！');
+                });
+
+                return {
+                    // 数据
+                    currentUser,
+                    myChannels,
+                    allRecords,
+                    loading,
+                    stats,
+                    filter,
+                    pagination,
+                    filteredList,
+                    paginatedList,
+                    detailDialog,
+
+                    // 方法
+                    handleDateRangeChange,
+                    handleFilterChange,
+                    resetFilter,
+                    handleSizeChange,
+                    handleCurrentChange,
+                    showDetail,
+                    handleExport,
+                    maskPhone,
+                    getDemandTypeType,
+                    getStatusClass,
+                    getUrgencyText,
+                    getUrgencyType,
+                    goToEntry,
+                    goToStatistics,
+                    handleLogout
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

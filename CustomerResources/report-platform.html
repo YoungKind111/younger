@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平台维度报表 - 数据报表</title>
+    
+    <!-- ==================== Element Plus CSS (CDN) ==================== -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    
+    <style>
+        /* ==================== 页面基础样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        /* ==================== 布局容器 ==================== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ==================== 左侧固定侧边栏 ==================== */
+        .sidebar {
+            width: 220px;
+            background-color: #001529;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .menu-item {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .menu-item:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .menu-item.active {
+            color: #fff;
+            background-color: #1890ff;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .submenu {
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu-item {
+            padding: 10px 24px 10px 54px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .submenu-item:hover {
+            color: #fff;
+        }
+        .submenu-item.active {
+            color: #1890ff;
+            background-color: rgba(24,144,255,0.1);
+        }
+        
+        /* ==================== 右侧主内容区 ==================== */
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* ==================== 顶部面包屑导航 ==================== */
+        .breadcrumb-header {
+            height: 56px;
+            background-color: #fff;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+        }
+        
+        /* ==================== 内容区域 ==================== */
+        .content-wrapper {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        /* ==================== 统计卡片区 ==================== */
+        .stats-section {
+            margin-bottom: 24px;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-right: 16px;
+        }
+        
+        .stat-icon.blue {
+            background-color: #e6f7ff;
+        }
+        
+        .stat-icon.green {
+            background-color: #f6ffed;
+        }
+        
+        .stat-icon.orange {
+            background-color: #fff7e6;
+        }
+        
+        .stat-info {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #262626;
+        }
+        
+        .stat-value.blue { color: #1890ff; }
+        .stat-value.green { color: #52c41a; }
+        .stat-value.orange { color: #fa8c16; }
+        
+        /* ==================== 内容卡片 ==================== */
+        .content-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+        
+        /* ==================== 搜索筛选区 ==================== */
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        /* ==================== 图表区域 ==================== */
+        .chart-section {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+            padding-left: 12px;
+            border-left: 4px solid #1890ff;
+        }
+        
+        .progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .progress-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .progress-label {
+            width: 140px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .platform-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .platform-name {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        
+        .progress-bar-wrapper {
+            flex: 1;
+            margin: 0 20px;
+        }
+        
+        .progress-stats {
+            width: 150px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        
+        .progress-count {
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .progress-percent {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-left: 8px;
+        }
+        
+        /* ==================== 数据表格区 ==================== */
+        .table-section {
+            padding: 0 20px 20px;
+        }
+        
+        /* 平台单元格样式 */
+        .platform-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .platform-cell .platform-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        /* 转化率样式 */
+        .conversion-rate {
+            font-weight: 500;
+        }
+        
+        .conversion-rate.high {
+            color: #52c41a;
+        }
+        
+        .conversion-rate.medium {
+            color: #faad14;
+        }
+        
+        .conversion-rate.low {
+            color: #f5222d;
+        }
+        
+        /* 响应时间样式 */
+        .response-time {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .response-time.fast {
+            color: #52c41a;
+        }
+        
+        .response-time.normal {
+            color: #faad14;
+        }
+        
+        .response-time.slow {
+            color: #f5222d;
+        }
+        
+        /* ==================== 分页区域 ==================== */
+        .pagination-section {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        /* ==================== 对话框样式 ==================== */
+        .promoter-table {
+            margin-top: 10px;
+        }
+        
+        .dialog-platform-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .dialog-platform-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        
+        .dialog-platform-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #262626;
+        }
+        
+        .dialog-platform-stats {
+            font-size: 14px;
+            color: #595959;
+            margin-top: 4px;
+        }
+        
+        /* ==================== 响应式适配 ==================== */
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 64px;
+            }
+            
+            .sidebar-logo span,
+            .menu-item span,
+            .submenu-item {
+                display: none;
+            }
+            
+            .menu-item {
+                justify-content: center;
+                padding: 12px;
+            }
+            
+            .menu-item i {
+                margin-right: 0;
+            }
+            
+            .main-content {
+                margin-left: 64px;
+            }
+            
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- ==================== 左侧固定侧边栏 ==================== -->
+            <aside class="sidebar">
+                <!-- Logo区域 -->
+                <div class="sidebar-logo">招生管理系统</div>
+                
+                <!-- 菜单区域 -->
+                <nav class="sidebar-menu">
+                    <!-- 🎯 线索管理 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">🎯</span>
+                        <span>线索管理</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="channel-list.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道列表</div></a>
+                        <a href="transfer-monitor.html" style="text-decoration: none; display: block;"><div class="submenu-item">流转中监控</div></a>
+                        <a href="manual-pool.html" style="text-decoration: none; display: block;"><div class="submenu-item">人工池</div></a>
+                        <a href="allocation-record.html" style="text-decoration: none; display: block;"><div class="submenu-item">分配记录</div></a>
+                    </div>
+                    
+                    <!-- 数据报表 -->
+                    <a href="report-channel.html" style="text-decoration: none; display: block;">
+                    <div class="menu-item active">
+                        <span class="menu-icon">📈</span>
+                        <span>数据报表</span>
+                    </div>
+                </a>
+                    <div class="submenu">
+                        <a href="report-channel.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道维度</div></a>
+                        <a href="report-promoter.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员维度</div></a>
+                        <a href="report-platform.html" style="text-decoration: none; display: block;"><div class="submenu-item active">平台维度</div></a>
+                        <a href="report-sales.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售绩效</div></a>
+                    </div>
+                    
+                    <!-- 基础数据 -->
+                    <a href="promoter-manage.html" style="text-decoration: none; display: block;">
+                    <div class="menu-item">
+                        <span class="menu-icon">⚙️</span>
+                        <span>基础数据</span>
+                    </div>
+                </a>
+                    <div class="submenu">
+                        <a href="promoter-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员管理</div></a>
+                        <a href="platform-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台管理</div></a>
+                        <a href="sales-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售人员管理</div></a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- ==================== 右侧主内容区 ==================== -->
+            <main class="main-content">
+                <!-- 顶部面包屑导航 -->
+                <header class="breadcrumb-header">
+                    <el-breadcrumb separator="/">
+                        <el-breadcrumb-item><a href="index.html">首页</a></el-breadcrumb-item>
+                        <el-breadcrumb-item>数据报表</el-breadcrumb-item>
+                        <el-breadcrumb-item>平台维度</el-breadcrumb-item>
+                    </el-breadcrumb>
+                </header>
+
+                <!-- 内容区域 -->
+                <div class="content-wrapper">
+                    <!-- ==================== 统计卡片区 ==================== -->
+                    <div class="stats-section">
+                        <div class="stats-row">
+                            <!-- 平台数量卡片 -->
+                            <div class="stat-card">
+                                <div class="stat-icon blue">📱</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">平台数量</div>
+                                    <div class="stat-value blue">{{ stats.platformCount }}个</div>
+                                </div>
+                            </div>
+                            <!-- 总线索数卡片 -->
+                            <div class="stat-card">
+                                <div class="stat-icon green">📋</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">总线索数</div>
+                                    <div class="stat-value green">{{ stats.totalClues }}条</div>
+                                </div>
+                            </div>
+                            <!-- 平台平均转化率卡片 -->
+                            <div class="stat-card">
+                                <div class="stat-icon orange">📈</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">平台平均转化率</div>
+                                    <div class="stat-value orange">{{ stats.avgConversionRate }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== 筛选区、图表区、表格区 ==================== -->
+                    <div class="content-card">
+                        <!-- 筛选区 -->
+                        <div class="search-section">
+                            <el-form :inline="true" class="search-form">
+                                <!-- 时间范围选择器 -->
+                                <el-form-item label="时间范围">
+                                    <el-date-picker
+                                        v-model="searchForm.dateRange"
+                                        type="daterange"
+                                        range-separator="至"
+                                        start-placeholder="开始日期"
+                                        end-placeholder="结束日期"
+                                        value-format="YYYY-MM-DD"
+                                        @change="handleSearch"
+                                    ></el-date-picker>
+                                </el-form-item>
+                                
+                                <!-- 平台筛选 -->
+                                <el-form-item label="平台">
+                                    <el-select 
+                                        v-model="searchForm.platform" 
+                                        placeholder="请选择平台"
+                                        clearable
+                                        @change="handleSearch"
+                                    >
+                                        <el-option 
+                                            v-for="item in platformOptions" 
+                                            :key="item.value" 
+                                            :label="item.label" 
+                                            :value="item.value"
+                                        ></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                
+                                <!-- 搜索和重置按钮 -->
+                                <el-form-item>
+                                    <el-button type="primary" @click="handleSearch">
+                                        <el-icon><search /></el-icon>搜索
+                                    </el-button>
+                                    <el-button @click="handleReset">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+
+                        <!-- ==================== 图表区 - 各平台线索量占比 ==================== -->
+                        <div class="chart-section">
+                            <div class="chart-title">各平台线索量占比</div>
+                            <div class="progress-list">
+                                <div 
+                                    class="progress-item" 
+                                    v-for="(item, index) in chartData" 
+                                    :key="item.platformId"
+                                >
+                                    <!-- 平台图标和名称 -->
+                                    <div class="progress-label">
+                                        <div class="platform-icon" :style="{ backgroundColor: item.bgColor }">
+                                            {{ item.icon }}
+                                        </div>
+                                        <span class="platform-name">{{ item.platformName }}</span>
+                                    </div>
+                                    <!-- 进度条 -->
+                                    <div class="progress-bar-wrapper">
+                                        <el-progress 
+                                            :percentage="item.percentage" 
+                                            :color="item.color"
+                                            :stroke-width="16"
+                                            :show-text="false"
+                                        ></el-progress>
+                                    </div>
+                                    <!-- 统计数据 -->
+                                    <div class="progress-stats">
+                                        <span class="progress-count">{{ item.totalClues }}条</span>
+                                        <span class="progress-percent">{{ item.percentage }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ==================== 数据表格区 ==================== -->
+                        <div class="table-section">
+                            <el-table 
+                                :data="paginatedData" 
+                                style="width: 100%"
+                                v-loading="loading"
+                                border
+                                stripe
+                            >
+                                <!-- 平台名称列 -->
+                                <el-table-column label="平台名称" min-width="160">
+                                    <template #default="scope">
+                                        <div class="platform-cell">
+                                            <div class="platform-icon" :style="{ backgroundColor: scope.row.bgColor }">
+                                                {{ scope.row.icon }}
+                                            </div>
+                                            <span>{{ scope.row.platformName }}</span>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 关联渠道数列 -->
+                                <el-table-column prop="channelCount" label="关联渠道数" width="110" align="center">
+                                    <template #default="scope">
+                                        <el-tag type="info" size="small">{{ scope.row.channelCount }}个</el-tag>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 线索量列 -->
+                                <el-table-column prop="totalClues" label="线索量" width="100" align="center" sortable>
+                                    <template #default="scope">
+                                        <span style="font-weight: 500; color: #1890ff;">{{ scope.row.totalClues }}</span>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 成功分配数列 -->
+                                <el-table-column prop="successCount" label="成功分配数" width="110" align="center">
+                                    <template #default="scope">
+                                        <span style="font-weight: 500; color: #52c41a;">{{ scope.row.successCount }}</span>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 平台平均转化率列 -->
+                                <el-table-column label="平台平均转化率" width="140" align="center" sortable>
+                                    <template #default="scope">
+                                        <span :class="getConversionRateClass(scope.row.conversionRate)">
+                                            {{ scope.row.conversionRate }}%
+                                        </span>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 平均响应时长列 -->
+                                <el-table-column label="平均响应时长" width="130" align="center" sortable>
+                                    <template #default="scope">
+                                        <div :class="getResponseTimeClass(scope.row.avgResponseTime)">
+                                            <el-icon><timer /></el-icon>
+                                            <span>{{ scope.row.avgResponseTime }}</span>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 操作列 -->
+                                <el-table-column label="操作" width="100" fixed="right" align="center">
+                                    <template #default="scope">
+                                        <el-button 
+                                            link 
+                                            type="primary" 
+                                            size="small"
+                                            @click="handleViewDetail(scope.row)"
+                                        >
+                                            查看详情
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+
+                        <!-- ==================== 分页器 ==================== -->
+                        <div class="pagination-section">
+                            <el-pagination
+                                v-model:current-page="pagination.currentPage"
+                                v-model:page-size="pagination.pageSize"
+                                :page-sizes="[5, 10, 20, 50]"
+                                :total="filteredData.length"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                @size-change="handleSizeChange"
+                                @current-change="handleCurrentChange"
+                            ></el-pagination>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================== 推广员分布详情对话框 ==================== -->
+        <el-dialog
+            v-model="dialogVisible"
+            title="平台推广员分布详情"
+            width="700px"
+            destroy-on-close
+        >
+            <!-- 平台基本信息 -->
+            <div class="dialog-platform-info" v-if="currentPlatform">
+                <div class="dialog-platform-icon" :style="{ backgroundColor: currentPlatform.bgColor }">
+                    {{ currentPlatform.icon }}
+                </div>
+                <div>
+                    <div class="dialog-platform-name">{{ currentPlatform.platformName }}</div>
+                    <div class="dialog-platform-stats">
+                        关联渠道：{{ currentPlatform.channelCount }}个 | 
+                        线索总量：{{ currentPlatform.totalClues }}条 | 
+                        平均转化率：{{ currentPlatform.conversionRate }}%
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 推广员分布表格 -->
+            <el-table 
+                :data="promoterDetailData" 
+                class="promoter-table"
+                border
+                stripe
+                size="small"
+            >
+                <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+                <el-table-column prop="promoterName" label="推广员姓名" min-width="120"></el-table-column>
+                <el-table-column prop="channelCount" label="负责渠道数" width="100" align="center"></el-table-column>
+                <el-table-column prop="clueCount" label="线索量" width="100" align="center"></el-table-column>
+                <el-table-column prop="successCount" label="成功分配" width="100" align="center"></el-table-column>
+                <el-table-column label="转化率" width="120" align="center">
+                    <template #default="scope">
+                        <el-progress 
+                            :percentage="scope.row.conversionRate" 
+                            :stroke-width="8"
+                            :show-text="true"
+                        ></el-progress>
+                    </template>
+                </el-table-column>
+            </el-table>
+            
+            <template #footer>
+                <el-button @click="dialogVisible = false">关闭</el-button>
+            </template>
+        </el-dialog>
+    </div>
+
+    <!-- ==================== Vue 3 CDN ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.13/dist/vue.global.js"></script>
+    <!-- ==================== Element Plus CDN ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    <!-- ==================== Element Plus Icons CDN ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+    <script>
+        // 解构Vue API
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        // 解构Element Plus Icons
+        const { Search, Timer } = ElementPlusIconsVue;
+
+        // 创建Vue应用
+        createApp({
+            // 注册组件
+            components: {
+                Search,
+                Timer
+            },
+            setup() {
+                // ==================== 加载状态 ====================
+                const loading = ref(false);
+                
+                // ==================== 对话框相关 ====================
+                const dialogVisible = ref(false);
+                const currentPlatform = ref(null);
+                const promoterDetailData = ref([]);
+                
+                // ==================== 统计数据 ====================
+                const stats = reactive({
+                    platformCount: 0,
+                    totalClues: 0,
+                    avgConversionRate: 0
+                });
+
+                // ==================== 搜索表单数据 ====================
+                const searchForm = reactive({
+                    dateRange: [],      // 时间范围
+                    platform: ''        // 平台筛选
+                });
+
+                // ==================== 筛选选项数据 ====================
+                const platformOptions = [
+                    { value: '小红书', label: '小红书' },
+                    { value: '抖音', label: '抖音' },
+                    { value: '快手', label: '快手' },
+                    { value: 'B站', label: 'B站' },
+                    { value: '微信', label: '微信' },
+                    { value: '微博', label: '微博' },
+                    { value: '知乎', label: '知乎' },
+                    { value: '百度', label: '百度' }
+                ];
+
+                // ==================== Mock 数据 ====================
+                // 平台图标配置
+                const platformIcons = {
+                    '小红书': { icon: '📕', bgColor: '#ff2442', color: '#ff2442' },
+                    '抖音': { icon: '🎵', bgColor: '#000000', color: '#000000' },
+                    '快手': { icon: '🎬', bgColor: '#ff6600', color: '#ff6600' },
+                    'B站': { icon: '📺', bgColor: '#00a1d6', color: '#00a1d6' },
+                    '微信': { icon: '💬', bgColor: '#07c160', color: '#07c160' },
+                    '微博': { icon: '🌐', bgColor: '#e6162d', color: '#e6162d' },
+                    '知乎': { icon: '❓', bgColor: '#0084ff', color: '#0084ff' },
+                    '百度': { icon: '🔍', bgColor: '#2932e1', color: '#2932e1' }
+                };
+
+                // 推广员姓名池
+                const promoterNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
+
+                /**
+                 * 生成Mock数据（8条平台报表数据）
+                 * @returns {Object[]} 平台报表数据数组
+                 */
+                const generateMockData = () => {
+                    const data = [];
+                    const platforms = Object.keys(platformIcons);
+                    
+                    for (let i = 0; i < 8; i++) {
+                        const platformName = platforms[i];
+                        const iconConfig = platformIcons[platformName];
+                        const totalClues = Math.floor(Math.random() * 5000) + 1000; // 1000-6000条
+                        const successCount = Math.floor(totalClues * (Math.random() * 0.4 + 0.3)); // 30%-70%成功
+                        const conversionRate = ((successCount / totalClues) * 100).toFixed(1);
+                        
+                        // 生成平均响应时间（分钟）
+                        const avgMinutes = Math.floor(Math.random() * 120) + 5;
+                        let avgResponseTime;
+                        if (avgMinutes < 60) {
+                            avgResponseTime = `${avgMinutes}分钟`;
+                        } else {
+                            const hours = Math.floor(avgMinutes / 60);
+                            const mins = avgMinutes % 60;
+                            avgResponseTime = mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
+                        }
+                        
+                        data.push({
+                            platformId: i + 1,
+                            platformName: platformName,
+                            icon: iconConfig.icon,
+                            bgColor: iconConfig.bgColor,
+                            color: iconConfig.color,
+                            channelCount: Math.floor(Math.random() * 20) + 5, // 5-25个渠道
+                            totalClues: totalClues,
+                            successCount: successCount,
+                            conversionRate: conversionRate,
+                            avgResponseTime: avgResponseTime,
+                            avgResponseMinutes: avgMinutes // 用于排序
+                        });
+                    }
+                    
+                    // 按线索量降序排序
+                    return data.sort((a, b) => b.totalClues - a.totalClues);
+                };
+
+                // 原始数据
+                const tableData = ref(generateMockData());
+
+                // ==================== 分页相关 ====================
+                const pagination = reactive({
+                    currentPage: 1,
+                    pageSize: 10
+                });
+
+                // ==================== 计算属性 ====================
+                
+                /**
+                 * 计算统计数据
+                 */
+                const calculateStats = () => {
+                    const data = filteredData.value;
+                    stats.platformCount = data.length;
+                    stats.totalClues = data.reduce((sum, item) => sum + item.totalClues, 0);
+                    
+                    const totalSuccess = data.reduce((sum, item) => sum + item.successCount, 0);
+                    stats.avgConversionRate = stats.totalClues > 0 
+                        ? ((totalSuccess / stats.totalClues) * 100).toFixed(1) 
+                        : '0.0';
+                };
+
+                /**
+                 * 图表数据 - 各平台线索量占比
+                 */
+                const chartData = computed(() => {
+                    const data = filteredData.value;
+                    const total = data.reduce((sum, item) => sum + item.totalClues, 0);
+                    
+                    return data.map(item => ({
+                        ...item,
+                        percentage: total > 0 ? Math.round((item.totalClues / total) * 100) : 0
+                    }));
+                });
+
+                /**
+                 * 筛选后的数据
+                 */
+                const filteredData = computed(() => {
+                    let data = tableData.value;
+                    
+                    // 平台筛选
+                    if (searchForm.platform) {
+                        data = data.filter(item => item.platformName === searchForm.platform);
+                    }
+                    
+                    return data;
+                });
+
+                /**
+                 * 分页后的数据
+                 */
+                const paginatedData = computed(() => {
+                    const start = (pagination.currentPage - 1) * pagination.pageSize;
+                    const end = start + pagination.pageSize;
+                    return filteredData.value.slice(start, end);
+                });
+
+                // ==================== 方法函数 ====================
+
+                /**
+                 * 获取转化率样式类
+                 * @param {number} rate - 转化率
+                 * @returns {string} 样式类名
+                 */
+                const getConversionRateClass = (rate) => {
+                    const r = parseFloat(rate);
+                    if (r >= 50) return 'conversion-rate high';
+                    if (r >= 30) return 'conversion-rate medium';
+                    return 'conversion-rate low';
+                };
+
+                /**
+                 * 获取响应时间样式类
+                 * @param {string} time - 响应时间字符串
+                 * @returns {string} 样式类名
+                 */
+                const getResponseTimeClass = (time) => {
+                    if (time.includes('分钟')) {
+                        const minutes = parseInt(time);
+                        if (minutes <= 15) return 'response-time fast';
+                        if (minutes <= 60) return 'response-time normal';
+                    }
+                    return 'response-time slow';
+                };
+
+                /**
+                 * 生成推广员详情数据
+                 * @param {Object} platform - 平台数据
+                 * @returns {Object[]} 推广员分布数据
+                 */
+                const generatePromoterDetailData = (platform) => {
+                    const data = [];
+                    const count = Math.min(platform.channelCount, 8); // 最多8个推广员
+                    
+                    for (let i = 0; i < count; i++) {
+                        const clueCount = Math.floor(platform.totalClues / count * (0.8 + Math.random() * 0.4));
+                        const successCount = Math.floor(clueCount * (Math.random() * 0.4 + 0.3));
+                        const conversionRate = Math.round((successCount / clueCount) * 100);
+                        
+                        data.push({
+                            promoterName: promoterNames[i % promoterNames.length],
+                            channelCount: Math.floor(Math.random() * 5) + 1,
+                            clueCount: clueCount,
+                            successCount: successCount,
+                            conversionRate: conversionRate
+                        });
+                    }
+                    
+                    // 按线索量降序排序
+                    return data.sort((a, b) => b.clueCount - a.clueCount);
+                };
+
+                /**
+                 * 搜索按钮点击处理
+                 */
+                const handleSearch = () => {
+                    pagination.currentPage = 1;
+                    calculateStats();
+                    ElementPlus.ElMessage.success('筛选成功');
+                };
+
+                /**
+                 * 重置按钮点击处理
+                 */
+                const handleReset = () => {
+                    searchForm.dateRange = [];
+                    searchForm.platform = '';
+                    pagination.currentPage = 1;
+                    calculateStats();
+                    ElementPlus.ElMessage.success('已重置筛选条件');
+                };
+
+                /**
+                 * 查看详情按钮点击处理
+                 * @param {Object} row - 行数据
+                 */
+                const handleViewDetail = (row) => {
+                    currentPlatform.value = row;
+                    promoterDetailData.value = generatePromoterDetailData(row);
+                    dialogVisible.value = true;
+                };
+
+                /**
+                 * 每页条数变化处理
+                 * @param {number} val - 每页条数
+                 */
+                const handleSizeChange = (val) => {
+                    pagination.pageSize = val;
+                    pagination.currentPage = 1;
+                };
+
+                /**
+                 * 页码变化处理
+                 * @param {number} val - 当前页码
+                 */
+                const handleCurrentChange = (val) => {
+                    pagination.currentPage = val;
+                };
+
+                // ==================== 生命周期钩子 ====================
+                onMounted(() => {
+                    loading.value = true;
+                    // 模拟加载延迟
+                    setTimeout(() => {
+                        calculateStats();
+                        loading.value = false;
+                    }, 300);
+                });
+
+                // ==================== 返回响应式数据和方法 ====================
+                return {
+                    // 数据
+                    loading,
+                    stats,
+                    searchForm,
+                    platformOptions,
+                    tableData,
+                    chartData,
+                    filteredData,
+                    paginatedData,
+                    pagination,
+                    dialogVisible,
+                    currentPlatform,
+                    promoterDetailData,
+                    // 方法
+                    getConversionRateClass,
+                    getResponseTimeClass,
+                    handleSearch,
+                    handleReset,
+                    handleViewDetail,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

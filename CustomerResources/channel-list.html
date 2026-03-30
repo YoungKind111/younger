@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线索管理 - 渠道列表</title>
+    
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    
+    <style>
+        /* ==================== 页面基础样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        /* ==================== 布局容器 ==================== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ==================== 左侧侧边栏 ==================== */
+        .sidebar {
+            width: 220px;
+            background-color: #001529;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+        
+        .sidebar-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .menu-item {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        .menu-item.active {
+            color: #fff;
+            background-color: #1890ff;
+        }
+        
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .submenu {
+            background-color: rgba(0,0,0,0.15);
+        }
+        
+        .submenu-item {
+            padding: 10px 24px 10px 54px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .submenu-item:hover {
+            color: #fff;
+        }
+        
+        .submenu-item.active {
+            color: #1890ff;
+            background-color: rgba(24,144,255,0.1);
+        }
+        
+        /* ==================== 右侧主内容区 ==================== */
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ==================== 顶部面包屑 ==================== */
+        .breadcrumb-header {
+            background-color: #fff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+        }
+        
+        .breadcrumb-item {
+            color: #606266;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item a {
+            color: #606266;
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item a:hover {
+            color: #1890ff;
+        }
+        
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #c0c4cc;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #303133;
+            font-weight: 500;
+        }
+        
+        /* ==================== 内容区域 ==================== */
+        .content-wrapper {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .content-card {
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        /* ==================== 搜索筛选区 ==================== */
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #ebeef5;
+        }
+        
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-form .el-input,
+        .search-form .el-select {
+            width: 200px;
+        }
+        
+        /* ==================== 操作按钮区 ==================== */
+        .action-section {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ebeef5;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* ==================== 表格区域 ==================== */
+        .table-section {
+            padding: 0 20px 20px;
+        }
+        
+        /* 销售队列样式 */
+        .sales-queue-tag {
+            margin-right: 4px;
+            margin-bottom: 2px;
+        }
+        
+        .sales-queue-more {
+            color: #909399;
+            font-size: 12px;
+        }
+        
+        /* 状态标签样式 */
+        .status-enabled {
+            color: #67c23a;
+        }
+        
+        .status-disabled {
+            color: #f56c6c;
+        }
+        
+        /* 操作按钮样式 */
+        .action-btn {
+            padding: 0 8px;
+        }
+        
+        /* ==================== 分页区域 ==================== */
+        .pagination-section {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #ebeef5;
+        }
+        
+        /* ==================== 图标样式 ==================== */
+        .icon-channel::before {
+            content: "📊";
+        }
+        
+        .icon-lead::before {
+            content: "👤";
+        }
+        
+        .icon-report::before {
+            content: "📈";
+        }
+        
+        .icon-setting::before {
+            content: "⚙️";
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- ==================== 左侧侧边栏 ==================== -->
+            <aside class="sidebar">
+                <div class="sidebar-logo">营销管理系统</div>
+                <nav>
+                    <!-- 🎯 线索管理 - 当前激活 -->
+                    <div class="menu-item active">
+                        <span class="menu-icon">🎯</span>
+                        <span>线索管理</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="channel-list.html" style="text-decoration: none; display: block;"><div class="submenu-item active">渠道列表</div></a>
+                        <a href="transfer-monitor.html" style="text-decoration: none; display: block;"><div class="submenu-item">流转中监控</div></a>
+                        <a href="manual-pool.html" style="text-decoration: none; display: block;"><div class="submenu-item">人工池</div></a>
+                        <a href="allocation-record.html" style="text-decoration: none; display: block;"><div class="submenu-item">分配记录</div></a>
+                    </div>
+                    
+                    <!-- 数据报表 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">📈</span>
+                        <span>数据报表</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="report-channel.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道维度</div></a>
+                        <a href="report-promoter.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员维度</div></a>
+                        <a href="report-platform.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台维度</div></a>
+                        <a href="report-sales.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售绩效</div></a>
+                    </div>
+                    
+                    <!-- 基础数据 -->
+                    <div class="menu-item">
+                        <span class="menu-icon">⚙️</span>
+                        <span>基础数据</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="promoter-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员管理</div></a>
+                        <a href="platform-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台管理</div></a>
+                        <a href="sales-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售人员管理</div></a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- ==================== 右侧主内容区 ==================== -->
+            <main class="main-content">
+                <!-- 顶部面包屑导航 -->
+                <header class="breadcrumb-header">
+                    <span class="breadcrumb-item"><a href="index.html">首页</a></span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">线索管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">渠道列表</span>
+                </header>
+
+                <!-- 内容区域 -->
+                <div class="content-wrapper">
+                    <div class="content-card">
+                        <!-- ==================== 搜索筛选区 ==================== -->
+                        <div class="search-section">
+                            <el-form :inline="true" class="search-form">
+                                <!-- 渠道名称搜索 -->
+                                <el-form-item label="渠道名称">
+                                    <el-input 
+                                        v-model="searchForm.name" 
+                                        placeholder="请输入渠道名称"
+                                        clearable
+                                        @keyup.enter="handleSearch"
+                                    ></el-input>
+                                </el-form-item>
+                                
+                                <!-- 推广员筛选 -->
+                                <el-form-item label="推广员">
+                                    <el-select 
+                                        v-model="searchForm.promoter" 
+                                        placeholder="请选择推广员"
+                                        clearable
+                                    >
+                                        <el-option 
+                                            v-for="item in promoterOptions" 
+                                            :key="item.value" 
+                                            :label="item.label" 
+                                            :value="item.value"
+                                        ></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                
+                                <!-- 平台筛选 -->
+                                <el-form-item label="平台">
+                                    <el-select 
+                                        v-model="searchForm.platform" 
+                                        placeholder="请选择平台"
+                                        clearable
+                                    >
+                                        <el-option 
+                                            v-for="item in platformOptions" 
+                                            :key="item.value" 
+                                            :label="item.label" 
+                                            :value="item.value"
+                                        ></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                
+                                <!-- 状态筛选 -->
+                                <el-form-item label="状态">
+                                    <el-select 
+                                        v-model="searchForm.status" 
+                                        placeholder="请选择状态"
+                                        clearable
+                                    >
+                                        <el-option label="启用" :value="1"></el-option>
+                                        <el-option label="停用" :value="0"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                
+                                <!-- 搜索和重置按钮 -->
+                                <el-form-item>
+                                    <el-button type="primary" @click="handleSearch">
+                                        <el-icon><search /></el-icon>搜索
+                                    </el-button>
+                                    <el-button @click="handleReset">重置</el-button>
+                                </el-form-item>
+                            </el-form>
+                        </div>
+
+                        <!-- ==================== 操作按钮区 ==================== -->
+                        <div class="action-section">
+                            <el-button type="primary" @click="handleAdd">
+                                <el-icon><plus /></el-icon>新增渠道
+                            </el-button>
+                            <el-button type="success" plain @click="goToSalesQueueManage">
+                                <el-icon><user-filled /></el-icon>销售队列管理
+                            </el-button>
+                        </div>
+
+                        <!-- ==================== 数据表格区 ==================== -->
+                        <div class="table-section">
+                            <el-table 
+                                :data="paginatedData" 
+                                style="width: 100%"
+                                v-loading="loading"
+                                @selection-change="handleSelectionChange"
+                                border
+                            >
+                                <!-- 多选列 -->
+                                <el-table-column type="selection" width="55" align="center"></el-table-column>
+                                
+                                <!-- 渠道名称 -->
+                                <el-table-column prop="name" label="渠道名称" min-width="150" show-overflow-tooltip></el-table-column>
+                                
+                                <!-- 推广员 -->
+                                <el-table-column prop="promoter" label="推广员" width="100" align="center"></el-table-column>
+                                
+                                <!-- 平台 -->
+                                <el-table-column prop="platform" label="平台" width="100" align="center">
+                                    <template #default="scope">
+                                        <el-tag size="small" effect="plain">{{ scope.row.platform }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 销售队列（显示前3人） -->
+                                <el-table-column label="销售队列" min-width="180">
+                                    <template #default="scope">
+                                        <template v-if="scope.row.salesQueue && scope.row.salesQueue.length > 0">
+                                            <el-tag 
+                                                v-for="(sales, index) in scope.row.salesQueue.slice(0, 3)" 
+                                                :key="index"
+                                                size="small"
+                                                type="info"
+                                                class="sales-queue-tag"
+                                            >
+                                                {{ sales }}
+                                            </el-tag>
+                                            <span v-if="scope.row.salesQueue.length > 3" class="sales-queue-more">
+                                                +{{ scope.row.salesQueue.length - 3 }}人
+                                            </span>
+                                        </template>
+                                        <span v-else style="color: #909399;">-</span>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 兜底管理员 -->
+                                <el-table-column label="兜底管理员" width="100" align="center">
+                                    <template #default="scope">
+                                        <el-tag size="small" type="warning">{{ scope.row.managers ? scope.row.managers.length : 0 }}人</el-tag>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 状态 -->
+                                <el-table-column label="状态" width="80" align="center">
+                                    <template #default="scope">
+                                        <el-tag 
+                                            :type="scope.row.status === 1 ? 'success' : 'danger'"
+                                            size="small"
+                                        >
+                                            {{ scope.row.status === 1 ? '启用' : '停用' }}
+                                        </el-tag>
+                                    </template>
+                                </el-table-column>
+                                
+                                <!-- 创建时间 -->
+                                <el-table-column prop="createTime" label="创建时间" width="160" align="center"></el-table-column>
+                                
+                                <!-- 操作列 -->
+                                <el-table-column label="操作" width="260" fixed="right" align="center">
+                                    <template #default="scope">
+                                        <el-button 
+                                            link 
+                                            type="primary" 
+                                            size="small"
+                                            @click="handleEdit(scope.row)"
+                                            class="action-btn"
+                                        >
+                                            编辑
+                                        </el-button>
+                                        <el-button 
+                                            link 
+                                            :type="scope.row.status === 1 ? 'danger' : 'success'" 
+                                            size="small"
+                                            @click="handleToggleStatus(scope.row)"
+                                            class="action-btn"
+                                        >
+                                            {{ scope.row.status === 1 ? '停用' : '启用' }}
+                                        </el-button>
+                                        <el-button 
+                                            link 
+                                            type="success" 
+                                            size="small"
+                                            @click="handleEntryClue(scope.row)"
+                                            class="action-btn"
+                                            :disabled="scope.row.status !== 1"
+                                            title="向该渠道录入新线索"
+                                        >
+                                            录入线索
+                                        </el-button>
+                                        <el-button 
+                                            link 
+                                            type="warning" 
+                                            size="small"
+                                            @click="handleViewPending(scope.row)"
+                                            class="action-btn"
+                                            title="查看该渠道的待分配线索"
+                                        >
+                                            待分配
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+
+                        <!-- ==================== 分页器 ==================== -->
+                        <div class="pagination-section">
+                            <el-pagination
+                                v-model:current-page="pagination.currentPage"
+                                v-model:page-size="pagination.pageSize"
+                                :page-sizes="[10, 20, 50, 100]"
+                                :total="filteredData.length"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                @size-change="handleSizeChange"
+                                @current-change="handleCurrentChange"
+                            ></el-pagination>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================== 录入线索弹窗 ==================== -->
+        <el-dialog
+            v-model="entryDialogVisible"
+            title="录入线索"
+            width="600px"
+            :close-on-click-modal="false"
+            @close="handleEntryClose"
+        >
+            <!-- 渠道信息提示 -->
+            <el-alert
+                :title="`正在向渠道【${currentChannel.name}】录入线索`"
+                type="info"
+                :closable="false"
+                style="margin-bottom: 20px;"
+            />
+            
+            <el-form
+                ref="entryFormRef"
+                :model="entryForm"
+                :rules="entryRules"
+                label-width="100px"
+                label-position="right"
+            >
+                <!-- 客户姓名 -->
+                <el-form-item label="客户姓名" prop="customerName">
+                    <el-input 
+                        v-model="entryForm.customerName" 
+                        placeholder="请输入客户姓名"
+                        maxlength="20"
+                        show-word-limit
+                    />
+                </el-form-item>
+
+                <!-- 客户电话 -->
+                <el-form-item label="客户电话" prop="customerPhone">
+                    <el-input 
+                        v-model="entryForm.customerPhone" 
+                        placeholder="请输入客户手机号（电话和微信至少填一个）"
+                        maxlength="11"
+                    />
+                </el-form-item>
+
+                <!-- 客户微信 -->
+                <el-form-item label="客户微信" prop="customerWechat">
+                    <el-input 
+                        v-model="entryForm.customerWechat" 
+                        placeholder="请输入客户微信号（电话和微信至少填一个）"
+                        maxlength="50"
+                    />
+                </el-form-item>
+
+                <!-- 意向产品 -->
+                <el-form-item label="意向产品" prop="demandType">
+                    <el-select 
+                        v-model="entryForm.demandType" 
+                        placeholder="请选择意向产品"
+                        style="width: 100%;"
+                    >
+                        <el-option 
+                            v-for="item in demandTypeOptions" 
+                            :key="item.value" 
+                            :label="item.label" 
+                            :value="item.value"
+                        />
+                    </el-select>
+                </el-form-item>
+
+                <!-- 需求描述 -->
+                <el-form-item label="需求描述" prop="demandDesc">
+                    <el-input 
+                        v-model="entryForm.demandDesc" 
+                        type="textarea"
+                        :rows="3"
+                        placeholder="请输入客户需求描述（选填，最多200字）"
+                        maxlength="200"
+                        show-word-limit
+                    />
+                </el-form-item>
+
+                <!-- 预产期 -->
+                <el-form-item label="预产期">
+                    <el-date-picker
+                        v-model="entryForm.dueDate"
+                        type="date"
+                        placeholder="请选择预产期（选填）"
+                        style="width: 100%;"
+                        value-format="YYYY-MM-DD"
+                        :editable="false"
+                    />
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="handleEntryClose">取消</el-button>
+                    <el-button 
+                        type="primary" 
+                        @click="handleEntrySubmit"
+                        :loading="entrySubmitLoading"
+                    >
+                        确认录入
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- ==================== 待分配队列弹窗 ==================== -->
+        <el-dialog
+            v-model="pendingDialogVisible"
+            :title="`待分配队列 - ${currentChannel.name || ''}`"
+            width="900px"
+            :close-on-click-modal="false"
+            @close="handlePendingDialogClose"
+        >
+            <!-- 统计信息 -->
+            <el-row :gutter="20" style="margin-bottom: 20px;">
+                <el-col :span="8">
+                    <el-statistic title="待分配总数" :value="pendingData.length" />
+                </el-col>
+                <el-col :span="8">
+                    <el-statistic title="积压超过5分钟" :value="pendingData.filter(item => item.waitMinutes > 5).length" value-style="color: #f56c6c;" />
+                </el-col>
+                <el-col :span="8">
+                    <el-statistic title="平均等待时长" :value="pendingData.length > 0 ? Math.round(pendingData.reduce((sum, item) => sum + item.waitMinutes, 0) / pendingData.length) : 0" suffix="分钟" />
+                </el-col>
+            </el-row>
+
+            <!-- 数据表格 -->
+            <el-table
+                :data="pendingPaginatedData"
+                v-loading="pendingLoading"
+                style="width: 100%"
+                border
+                size="small"
+            >
+                <!-- 序号 -->
+                <el-table-column type="index" width="50" align="center" />
+                
+                <!-- 线索ID -->
+                <el-table-column prop="id" label="线索ID" min-width="140" show-overflow-tooltip />
+                
+                <!-- 客户姓名 -->
+                <el-table-column prop="customerName" label="客户姓名" width="100" align="center" />
+                
+                <!-- 电话 -->
+                <el-table-column prop="phone" label="电话" width="120" align="center">
+                    <template #default="scope">
+                        {{ scope.row.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') }}
+                    </template>
+                </el-table-column>
+                
+                <!-- 微信 -->
+                <el-table-column prop="customerWechat" label="微信" width="130" align="center">
+                    <template #default="scope">
+                        <span v-if="scope.row.customerWechat" style="color: #67c23a;">{{ scope.row.customerWechat }}</span>
+                        <span v-else style="color: #c0c4cc;">-</span>
+                    </template>
+                </el-table-column>
+                
+                <!-- 意向产品 -->
+                <el-table-column prop="demandType" label="意向产品" width="120" align="center">
+                    <template #default="scope">
+                        <el-tag size="small" :type="getProductTagType(scope.row.demandType)">
+                            {{ getProductLabel(scope.row.demandType) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                
+                <!-- 预产期 -->
+                <el-table-column prop="dueDate" label="预产期" width="110" align="center">
+                    <template #default="scope">
+                        <span v-if="scope.row.dueDate" style="color: #e6a23c; font-weight: 500;">{{ scope.row.dueDate }}</span>
+                        <span v-else style="color: #c0c4cc;">-</span>
+                    </template>
+                </el-table-column>
+                
+                <!-- 进入时间 -->
+                <el-table-column prop="enterTime" label="进入时间" width="160" align="center">
+                    <template #default="scope">
+                        {{ new Date(scope.row.enterTime).toLocaleString() }}
+                    </template>
+                </el-table-column>
+                
+                <!-- 等待时长 -->
+                <el-table-column label="等待时长" width="100" align="center">
+                    <template #default="scope">
+                        <el-tag :type="getWaitTimeTagType(scope.row.waitMinutes)" size="small">
+                            {{ formatWaitTime(scope.row.waitMinutes) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                
+                <!-- 需求描述 -->
+                <el-table-column prop="demandDesc" label="需求描述" min-width="150" show-overflow-tooltip>
+                    <template #default="scope">
+                        <span v-if="scope.row.demandDesc" style="color: #606266;">{{ scope.row.demandDesc }}</span>
+                        <span v-else style="color: #c0c4cc;">-</span>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <!-- 分页 -->
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <el-pagination
+                    v-model:current-page="pendingPagination.currentPage"
+                    v-model:page-size="pendingPagination.pageSize"
+                    :page-sizes="[10, 20, 50]"
+                    :total="pendingData.length"
+                    layout="total, sizes, prev, pager, next"
+                    @size-change="handlePendingSizeChange"
+                    @current-change="handlePendingPageChange"
+                />
+            </div>
+
+            <template #footer>
+                <el-button @click="handlePendingDialogClose">关闭</el-button>
+            </template>
+        </el-dialog>
+    </div>
+
+    <!-- Vue 3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.13/dist/vue.global.js"></script>
+    <!-- Element Plus CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        const { Search, Plus, Check, Close } = ElementPlusIconsVue;
+
+        createApp({
+            components: {
+                Search,
+                Plus,
+                Check,
+                Close
+            },
+            setup() {
+                // ==================== 加载状态 ====================
+                const loading = ref(false);
+                
+                // ==================== 搜索表单数据 ====================
+                const searchForm = reactive({
+                    name: '',           // 渠道名称
+                    promoter: '',       // 推广员
+                    platform: '',       // 平台
+                    status: ''          // 状态
+                });
+
+                // ==================== 筛选选项数据 ====================
+                // 推广员选项
+                const promoterOptions = [
+                    { value: '张三', label: '张三' },
+                    { value: '李四', label: '李四' },
+                    { value: '王五', label: '王五' },
+                    { value: '赵六', label: '赵六' },
+                    { value: '钱七', label: '钱七' }
+                ];
+
+                // 平台选项
+                const platformOptions = [
+                    { value: '小红书', label: '小红书' },
+                    { value: '抖音', label: '抖音' },
+                    { value: '快手', label: '快手' },
+                    { value: 'B站', label: 'B站' },
+                    { value: '微信', label: '微信' }
+                ];
+
+                // ==================== Mock 数据 ====================
+                // 销售姓名池
+                const salesNames = ['销售A', '销售B', '销售C', '销售D', '销售E', '销售F', '销售G'];
+                // 管理员姓名池
+                const managerNames = ['管理员1', '管理员2', '管理员3', '管理员4'];
+                // 平台数组
+                const platforms = ['小红书', '抖音', '快手', 'B站', '微信'];
+                // 推广员数组
+                const promoters = ['张三', '李四', '王五', '赵六', '钱七'];
+
+                /**
+                 * 生成随机销售队列
+                 * @param {number} count - 销售人数
+                 * @returns {string[]} 销售姓名数组
+                 */
+                const generateSalesQueue = (count) => {
+                    const shuffled = [...salesNames].sort(() => 0.5 - Math.random());
+                    return shuffled.slice(0, count);
+                };
+
+                /**
+                 * 生成随机管理员列表
+                 * @param {number} count - 管理员人数
+                 * @returns {string[]} 管理员姓名数组
+                 */
+                const generateManagers = (count) => {
+                    const shuffled = [...managerNames].sort(() => 0.5 - Math.random());
+                    return shuffled.slice(0, count);
+                };
+
+                /**
+                 * 生成Mock数据
+                 * @returns {Object[]} 渠道数据数组
+                 */
+                const generateMockData = () => {
+                    const data = [];
+                    for (let i = 1; i <= 15; i++) {
+                        const promoter = promoters[Math.floor(Math.random() * promoters.length)];
+                        const platform = platforms[Math.floor(Math.random() * platforms.length)];
+                        data.push({
+                            id: i,
+                            name: `${promoter}-${platform}-${String(i).padStart(2, '0')}`,
+                            promoter: promoter,
+                            platform: platform,
+                            salesQueue: generateSalesQueue(Math.floor(Math.random() * 5) + 2), // 2-6人
+                            managers: generateManagers(Math.floor(Math.random() * 3) + 1), // 1-3人
+                            status: Math.random() > 0.3 ? 1 : 0, // 70%概率启用
+                            createTime: `2024-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')} ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`
+                        });
+                    }
+                    return data;
+                };
+
+                // 原始数据
+                const tableData = ref(generateMockData());
+                
+                // 选中项ID数组
+                const selectedIds = ref([]);
+
+                // ==================== 分页相关 ====================
+                const pagination = reactive({
+                    currentPage: 1,
+                    pageSize: 10
+                });
+
+                // ==================== 计算属性 ====================
+                
+                /**
+                 * 筛选后的数据
+                 */
+                const filteredData = computed(() => {
+                    return tableData.value.filter(item => {
+                        // 渠道名称筛选
+                        if (searchForm.name && !item.name.includes(searchForm.name)) {
+                            return false;
+                        }
+                        // 推广员筛选
+                        if (searchForm.promoter && item.promoter !== searchForm.promoter) {
+                            return false;
+                        }
+                        // 平台筛选
+                        if (searchForm.platform && item.platform !== searchForm.platform) {
+                            return false;
+                        }
+                        // 状态筛选
+                        if (searchForm.status !== '' && item.status !== searchForm.status) {
+                            return false;
+                        }
+                        return true;
+                    });
+                });
+
+                /**
+                 * 分页后的数据
+                 */
+                const paginatedData = computed(() => {
+                    const start = (pagination.currentPage - 1) * pagination.pageSize;
+                    const end = start + pagination.pageSize;
+                    return filteredData.value.slice(start, end);
+                });
+
+                // ==================== 方法 ====================
+
+                /**
+                 * 搜索按钮点击
+                 */
+                const handleSearch = () => {
+                    pagination.currentPage = 1;
+                };
+
+                /**
+                 * 重置按钮点击
+                 */
+                const handleReset = () => {
+                    searchForm.name = '';
+                    searchForm.promoter = '';
+                    searchForm.platform = '';
+                    searchForm.status = '';
+                    pagination.currentPage = 1;
+                };
+
+                /**
+                 * 表格选择变化
+                 */
+                const handleSelectionChange = (selection) => {
+                    selectedIds.value = selection.map(item => item.id);
+                };
+
+                /**
+                 * 新增渠道
+                 */
+                const handleAdd = () => {
+                    window.location.href = 'channel-config.html';
+                };
+                
+                /**
+                 * 跳转到销售队列管理
+                 */
+                const goToSalesQueueManage = () => {
+                    window.open('sales-queue-manage.html', '_blank');
+                };
+
+                /**
+                 * 编辑渠道
+                 * @param {Object} row - 行数据
+                 */
+                const handleEdit = (row) => {
+                    window.location.href = `channel-config.html?id=${row.id}`;
+                };
+
+                /**
+                 * 配置渠道
+                 * @param {Object} row - 行数据
+                 */
+                const handleConfig = (row) => {
+                    window.location.href = `channel-config.html?id=${row.id}`;
+                };
+
+                /**
+                 * 查看渠道的待分配队列
+                 * @param {Object} row - 行数据
+                 */
+                const handleViewPending = (row) => {
+                    currentChannel.value = row;
+                    pendingDialogVisible.value = true;
+                    // 模拟加载该渠道的待分配数据
+                    loadPendingData(row.id);
+                };
+
+                // ==================== 待分配队列弹窗相关 ====================
+                const pendingDialogVisible = ref(false);
+                const pendingLoading = ref(false);
+                const pendingData = ref([]);
+                const pendingPagination = reactive({
+                    currentPage: 1,
+                    pageSize: 10
+                });
+
+                /**
+                 * 加载待分配数据（Mock）
+                 * @param {number} channelId - 渠道ID
+                 */
+                // 意向产品选项
+                const productOptions = [
+                    { value: 'yuezi', label: '月子中心', tagType: 'primary' },
+                    { value: 'yuesao', label: '自营月嫂', tagType: 'success' },
+                    { value: 'chanhou', label: '产后康复', tagType: 'warning' },
+                    { value: 'yuying', label: '育婴保姆', tagType: 'info' }
+                ];
+
+                // 获取意向产品标签文字
+                const getProductLabel = (value) => {
+                    const product = productOptions.find(item => item.value === value);
+                    return product ? product.label : value;
+                };
+
+                // 获取意向产品标签类型
+                const getProductTagType = (value) => {
+                    const product = productOptions.find(item => item.value === value);
+                    return product ? product.tagType : 'info';
+                };
+
+                const loadPendingData = (channelId) => {
+                    pendingLoading.value = true;
+                    // 模拟API延迟
+                    setTimeout(() => {
+                        // 生成该渠道的待分配线索Mock数据
+                        const mockData = [];
+                        const count = Math.floor(Math.random() * 15) + 5; // 5-20条
+                        const customerNames = ['王先生', '李女士', '张先生', '刘女士', '陈先生', '赵先生', '孙女士', '周先生'];
+                        
+                        for (let i = 1; i <= count; i++) {
+                            const enterTime = new Date(Date.now() - Math.random() * 3600000 * 24); // 24小时内
+                            const hasWechat = Math.random() > 0.3;
+                            const hasDueDate = Math.random() > 0.4; // 60%概率有预产期
+                            const product = productOptions[Math.floor(Math.random() * productOptions.length)];
+                            
+                            // 生成预产期（未来1-6个月内）
+                            let dueDate = '';
+                            if (hasDueDate) {
+                                const futureDate = new Date();
+                                futureDate.setMonth(futureDate.getMonth() + Math.floor(Math.random() * 5) + 1);
+                                dueDate = futureDate.toISOString().split('T')[0];
+                            }
+                            
+                            // 生成随机需求描述（70%概率有描述）
+                            const demandDescs = [
+                                '客户想了解月子中心的服务内容和价格',
+                                '客户预产期在3个月后，想提前预约月嫂',
+                                '客户对产后康复项目感兴趣',
+                                '客户需要育婴师服务，宝宝刚满月',
+                                '客户想对比多家月子中心的价格和服务',
+                                '客户有高血压，需要特殊护理',
+                                ''
+                            ];
+                            const demandDesc = Math.random() > 0.3 ? demandDescs[Math.floor(Math.random() * (demandDescs.length - 1))] : '';
+                            
+                            mockData.push({
+                                id: `CL${Date.now()}${i}`,
+                                channelId: channelId,
+                                channelName: currentChannel.value.name,
+                                customerName: customerNames[Math.floor(Math.random() * customerNames.length)],
+                                phone: `138${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+                                customerWechat: hasWechat ? `wx_${String(Math.floor(Math.random() * 1000000))}` : '',
+                                demandType: product.value,
+                                demandDesc: demandDesc,
+                                dueDate: dueDate,
+                                enterTime: enterTime.toISOString(),
+                                waitMinutes: Math.floor((Date.now() - enterTime) / 60000)
+                            });
+                        }
+                        // 按进入时间排序（先进先出）
+                        mockData.sort((a, b) => new Date(a.enterTime) - new Date(b.enterTime));
+                        pendingData.value = mockData;
+                        pendingLoading.value = false;
+                    }, 500);
+                };
+
+                /**
+                 * 待分配数据分页
+                 */
+                const pendingPaginatedData = computed(() => {
+                    const start = (pendingPagination.currentPage - 1) * pendingPagination.pageSize;
+                    const end = start + pendingPagination.pageSize;
+                    return pendingData.value.slice(start, end);
+                });
+
+                /**
+                 * 格式化等待时长
+                 * @param {number} minutes - 分钟数
+                 */
+                const formatWaitTime = (minutes) => {
+                    if (minutes < 60) {
+                        return `${minutes}分钟`;
+                    } else {
+                        const hours = Math.floor(minutes / 60);
+                        const mins = minutes % 60;
+                        return `${hours}小时${mins}分钟`;
+                    }
+                };
+
+                /**
+                 * 获取等待时长标签类型
+                 * @param {number} minutes - 分钟数
+                 */
+                const getWaitTimeTagType = (minutes) => {
+                    if (minutes < 5) return 'success';
+                    if (minutes < 10) return 'warning';
+                    return 'danger';
+                };
+
+                /**
+                 * 关闭待分配弹窗
+                 */
+                const handlePendingDialogClose = () => {
+                    pendingDialogVisible.value = false;
+                    pendingData.value = [];
+                    pendingPagination.currentPage = 1;
+                };
+
+                /**
+                 * 待分配分页变化
+                 */
+                const handlePendingPageChange = (page) => {
+                    pendingPagination.currentPage = page;
+                };
+
+                /**
+                 * 待分配每页条数变化
+                 */
+                const handlePendingSizeChange = (size) => {
+                    pendingPagination.pageSize = size;
+                    pendingPagination.currentPage = 1;
+                };
+
+                // ==================== 录入线索功能 ====================
+                // 录入弹窗显示状态
+                const entryDialogVisible = ref(false);
+                // 当前选中的渠道
+                const currentChannel = ref({});
+                // 录入表单
+                const entryForm = reactive({
+                    customerName: '',
+                    customerPhone: '',
+                    customerWechat: '',
+                    demandType: '',
+                    demandDesc: '',
+                    dueDate: ''
+                });
+                // 录入表单引用
+                const entryFormRef = ref(null);
+                // 录入提交loading
+                const entrySubmitLoading = ref(false);
+
+                // 意向产品选项
+                const demandTypeOptions = [
+                    { value: 'yuezi', label: '月子中心' },
+                    { value: 'yuesao', label: '自营月嫂' },
+                    { value: 'chanhou', label: '产后康复' },
+                    { value: 'yuying', label: '育婴保姆' }
+                ];
+
+                /**
+                 * 打开录入线索弹窗
+                 * @param {Object} row - 渠道数据
+                 */
+                const handleEntryClue = (row) => {
+                    currentChannel.value = row;
+                    // 重置表单
+                    Object.assign(entryForm, {
+                        customerName: '',
+                        customerPhone: '',
+                        customerWechat: '',
+                        demandType: '',
+                        demandDesc: '',
+                        dueDate: ''
+                    });
+                    entryDialogVisible.value = true;
+                };
+
+                /**
+                 * 关闭录入弹窗
+                 */
+                const handleEntryClose = () => {
+                    entryDialogVisible.value = false;
+                    entryFormRef.value?.resetFields();
+                };
+
+                /**
+                 * 检查线索是否重复（基于手机号或微信号）
+                 * @returns {Object|null} 重复线索信息，无重复返回null
+                 */
+                const checkDuplicateClue = () => {
+                    const phone = entryForm.customerPhone?.trim();
+                    const wechat = entryForm.customerWechat?.trim();
+                    
+                    // 模拟已存在的线索数据（实际应从后端查询）
+                    const existingClues = [
+                        {
+                            id: 'CL202403200001',
+                            customerName: '王女士',
+                            phone: '13812345678',
+                            customerWechat: 'wx_wang123',
+                            salesName: '张小明',
+                            salesUserId: 'zhangxiaoming',
+                            assignTime: '2024-03-20 10:30',
+                            status: '跟进中'
+                        },
+                        {
+                            id: 'CL202403210002',
+                            customerName: '李先生',
+                            phone: '13987654321',
+                            customerWechat: 'wx_li456',
+                            salesName: '李红梅',
+                            salesUserId: 'lihongmei',
+                            assignTime: '2024-03-21 14:20',
+                            status: '已签约'
+                        }
+                    ];
+                    
+                    // 检查手机号或微信号是否重复
+                    const duplicate = existingClues.find(clue => {
+                        const phoneMatch = phone && clue.phone === phone;
+                        const wechatMatch = wechat && clue.customerWechat === wechat;
+                        return phoneMatch || wechatMatch;
+                    });
+                    
+                    return duplicate || null;
+                };
+                
+                /**
+                 * 发送重复线索通知给原销售（企微应用消息）
+                 * @param {Object} duplicateClue - 重复线索信息
+                 */
+                const sendDuplicateNotification = (duplicateClue) => {
+                    // 模拟调用企微接口发送通知
+                    console.log('发送企微通知给原销售:', duplicateClue.salesName);
+                    
+                    // 实际应调用后端API发送企微应用消息
+                    const notificationContent = {
+                        touser: duplicateClue.salesUserId,
+                        msgtype: 'textcard',
+                        textcard: {
+                            title: '⚠️ 重复线索提醒',
+                            description: `<div>您之前跟进的客户有新的线索录入</div>
+                                <div>客户姓名：${duplicateClue.customerName}</div>
+                                <div>客户电话：${duplicateClue.phone}</div>
+                                <div>原线索ID：${duplicateClue.id}</div>
+                                <div>原分配时间：${duplicateClue.assignTime}</div>
+                                <div>请及时跟进，避免客户流失！</div>`,
+                            url: `https://work.weixin.qq.com/clue/detail?id=${duplicateClue.id}`,
+                            btntxt: '查看详情'
+                        }
+                    };
+                    
+                    // TODO: 调用后端API发送企微通知
+                    // await api.sendWechatNotification(notificationContent);
+                    
+                    console.log('通知内容:', notificationContent);
+                };
+                
+                /**
+                 * 提交录入线索
+                 */
+                const handleEntrySubmit = async () => {
+                    if (!entryFormRef.value) return;
+                    
+                    try {
+                        await entryFormRef.value.validate();
+                        entrySubmitLoading.value = true;
+                        
+                        // 检查是否重复
+                        const duplicateClue = checkDuplicateClue();
+                        
+                        if (duplicateClue) {
+                            entrySubmitLoading.value = false;
+                            
+                            // 发送通知给原销售
+                            sendDuplicateNotification(duplicateClue);
+                            
+                            // 提示推广员录入失败
+                            ElementPlus.ElMessageBox.alert(
+                                `<div style="line-height: 1.8;">
+                                    <p><strong>❌ 录入失败：该客户已存在线索</strong></p>
+                                    <br/>
+                                    <p>客户信息：</p>
+                                    <p>• 线索ID：${duplicateClue.id}</p>
+                                    <p>• 客户姓名：${duplicateClue.customerName}</p>
+                                    <p>• 客户电话：${duplicateClue.phone}</p>
+                                    <p>• 原负责销售：${duplicateClue.salesName}</p>
+                                    <p>• 原分配时间：${duplicateClue.assignTime}</p>
+                                    <p>• 当前状态：${duplicateClue.status}</p>
+                                    <br/>
+                                    <p style="color: #67c23a;"><strong>已通知原销售【${duplicateClue.salesName}】及时跟进</strong></p>
+                                    <br/>
+                                    <p style="color: #909399; font-size: 13px;">如有疑问，请联系管理员</p>
+                                </div>`,
+                                '无法录入',
+                                {
+                                    confirmButtonText: '我知道了',
+                                    type: 'error',
+                                    dangerouslyUseHTMLString: true,
+                                    closeOnClickModal: false,
+                                    showClose: false
+                                }
+                            );
+                        } else {
+                            // 无重复，直接录入
+                            setTimeout(() => {
+                                entrySubmitLoading.value = false;
+                                entryDialogVisible.value = false;
+                                ElementPlus.ElMessage.success(
+                                    `录入成功！该线索已进入【${currentChannel.value.name}】的待分配队列`
+                                );
+                                entryFormRef.value.resetFields();
+                            }, 1000);
+                        }
+                    } catch (error) {
+                        console.log('表单验证失败');
+                    }
+                };
+
+                // 自定义验证器：电话和微信至少填一个
+                const validateContact = (rule, value, callback) => {
+                    if (!entryForm.customerPhone && !entryForm.customerWechat) {
+                        callback(new Error('客户电话和微信至少填写一个'));
+                    } else if (entryForm.customerPhone && !/^1[3-9]\d{9}$/.test(entryForm.customerPhone)) {
+                        callback(new Error('请输入正确的手机号'));
+                    } else {
+                        callback();
+                    }
+                };
+
+                // 录入表单验证规则
+                const entryRules = {
+                    customerName: [
+                        { required: true, message: '请输入客户姓名', trigger: 'blur' },
+                        { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                    ],
+                    customerPhone: [
+                        { validator: validateContact, trigger: 'blur' }
+                    ],
+                    customerWechat: [
+                        { validator: validateContact, trigger: 'blur' }
+                    ],
+                    demandType: [
+                        { required: true, message: '请选择意向产品', trigger: 'change' }
+                    ],
+                    demandDesc: [
+                        { max: 200, message: '最多200个字符', trigger: 'blur' }
+                    ]
+                };
+
+                /**
+                 * 切换状态（启用/停用）
+                 * @param {Object} row - 行数据
+                 */
+                const handleToggleStatus = (row) => {
+                    const action = row.status === 1 ? '停用' : '启用';
+                    const newStatus = row.status === 1 ? 0 : 1;
+                    
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要${action}渠道 "${row.name}" 吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        row.status = newStatus;
+                        ElementPlus.ElMessage.success(`${action}成功`);
+                    }).catch(() => {
+                        // 取消操作
+                    });
+                };
+
+                /**
+                 * 批量启用
+                 */
+                const handleBatchEnable = () => {
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要启用选中的 ${selectedIds.value.length} 个渠道吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        tableData.value.forEach(item => {
+                            if (selectedIds.value.includes(item.id)) {
+                                item.status = 1;
+                            }
+                        });
+                        ElementPlus.ElMessage.success('批量启用成功');
+                    }).catch(() => {});
+                };
+
+                /**
+                 * 批量停用
+                 */
+                const handleBatchDisable = () => {
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要停用选中的 ${selectedIds.value.length} 个渠道吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        tableData.value.forEach(item => {
+                            if (selectedIds.value.includes(item.id)) {
+                                item.status = 0;
+                            }
+                        });
+                        ElementPlus.ElMessage.success('批量停用成功');
+                    }).catch(() => {});
+                };
+
+                /**
+                 * 每页条数变化
+                 */
+                const handleSizeChange = (val) => {
+                    pagination.pageSize = val;
+                    pagination.currentPage = 1;
+                };
+
+                /**
+                 * 页码变化
+                 */
+                const handleCurrentChange = (val) => {
+                    pagination.currentPage = val;
+                };
+
+                // ==================== 生命周期 ====================
+                onMounted(() => {
+                    loading.value = true;
+                    // 模拟加载延迟
+                    setTimeout(() => {
+                        loading.value = false;
+                    }, 300);
+                });
+
+                return {
+                    // 数据
+                    loading,
+                    searchForm,
+                    promoterOptions,
+                    platformOptions,
+                    tableData,
+                    selectedIds,
+                    pagination,
+                    filteredData,
+                    paginatedData,
+                    // 录入线索相关
+                    entryDialogVisible,
+                    currentChannel,
+                    entryForm,
+                    entryFormRef,
+                    entrySubmitLoading,
+                    demandTypeOptions,
+                    entryRules,
+                    // 方法
+                    handleSearch,
+                    handleReset,
+                    handleSelectionChange,
+                    handleAdd,
+                    goToSalesQueueManage,
+                    handleEdit,
+                    handleConfig,
+                    handleToggleStatus,
+                    handleBatchEnable,
+                    handleBatchDisable,
+                    handleSizeChange,
+                    handleCurrentChange,
+                    handleEntryClue,
+                    handleEntryClose,
+                    handleEntrySubmit,
+                    checkDuplicateClue,
+                    sendDuplicateNotification,
+                    handleViewPending,
+                    // 待分配弹窗相关
+                    pendingDialogVisible,
+                    pendingLoading,
+                    pendingData,
+                    pendingPagination,
+                    pendingPaginatedData,
+                    formatWaitTime,
+                    getWaitTimeTagType,
+                    handlePendingDialogClose,
+                    handlePendingPageChange,
+                    handlePendingSizeChange,
+                    // 意向产品相关
+                    productOptions,
+                    getProductLabel,
+                    getProductTagType
+                };
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

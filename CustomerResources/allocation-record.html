@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分配记录查询 - 线索管理系统</title>
+    
+    <!-- ============================================ -->
+    <!-- Element Plus CSS - 使用jsdelivr CDN -->
+    <!-- ============================================ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.css">
+    
+    <!-- ============================================ -->
+    <!-- 自定义样式 -->
+    <!-- ============================================ -->
+    <style>
+        /* ==================== 全局重置 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        /* ==================== 页面布局 ==================== */
+        .page-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ==================== 左侧侧边栏 ==================== */
+        .sidebar {
+            width: 220px;
+            background-color: #001529;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .menu-item {
+            padding: 14px 24px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .menu-item:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .menu-item.active {
+            color: #fff;
+            background-color: #1890ff;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .submenu {
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu-item {
+            padding: 10px 24px 10px 54px;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .submenu-item:hover {
+            color: #fff;
+        }
+        .submenu-item.active {
+            color: #1890ff;
+            background-color: rgba(24,144,255,0.1);
+        }
+
+        /* ==================== 右侧主内容区 ==================== */
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            padding: 20px;
+        }
+
+        /* ==================== 面包屑导航 ==================== */
+        .breadcrumb-wrapper {
+            margin-bottom: 20px;
+        }
+
+        /* ==================== 搜索筛选区卡片 ==================== */
+        .search-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .search-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .search-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-label {
+            font-size: 14px;
+            color: #606266;
+            white-space: nowrap;
+        }
+
+        /* ==================== 数据表格卡片 ==================== */
+        .table-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #303133;
+        }
+
+        /* 分配结果标签样式 */
+        .result-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .result-success {
+            background-color: #f0f9ff;
+            color: #67c23a;
+            border: 1px solid #b3e19d;
+        }
+
+        .result-timeout {
+            background-color: #fdf6ec;
+            color: #e6a23c;
+            border: 1px solid #f5dab1;
+        }
+
+        .result-manual {
+            background-color: #fef0f0;
+            color: #f56c6c;
+            border: 1px solid #fbc4c4;
+        }
+
+        /* 流转路径展开行样式 */
+        .expand-content {
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 4px;
+        }
+
+        .expand-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 10px;
+        }
+
+        /* ==================== 分页器 ==================== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ebeef5;
+        }
+
+        /* ==================== 流转路径时间轴对话框 ==================== */
+        .timeline-dialog .el-dialog__body {
+            padding: 20px 30px;
+        }
+
+        .timeline-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 20px;
+            border-left: 2px solid #e4e7ed;
+            margin-left: 8px;
+        }
+
+        .timeline-item:last-child {
+            border-left-color: transparent;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #409eff;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 1px #409eff;
+        }
+
+        .timeline-item.success .timeline-dot {
+            background-color: #67c23a;
+            box-shadow: 0 0 0 1px #67c23a;
+        }
+
+        .timeline-item.timeout .timeline-dot {
+            background-color: #e6a23c;
+            box-shadow: 0 0 0 1px #e6a23c;
+        }
+
+        .timeline-item.manual .timeline-dot {
+            background-color: #f56c6c;
+            box-shadow: 0 0 0 1px #f56c6c;
+        }
+
+        .timeline-time {
+            font-size: 13px;
+            color: #909399;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            font-size: 14px;
+            color: #303133;
+            font-weight: 500;
+        }
+
+        .timeline-sales {
+            font-size: 13px;
+            color: #606266;
+            margin-top: 5px;
+        }
+
+        /* 时间轴结束标记 */
+        .timeline-end {
+            text-align: center;
+            color: #909399;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================ -->
+    <!-- Vue 3 应用挂载点 -->
+    <!-- ============================================ -->
+    <div id="app">
+        <div class="page-container">
+            <!-- ============================================ -->
+            <!-- 左侧固定侧边栏导航 -->
+            <!-- ============================================ -->
+            <aside class="sidebar">
+                <div class="sidebar-logo">🎯 线索管理系统</div>
+                <nav>
+                    <!-- 🎯 线索管理 - 当前激活 -->
+                    <div class="menu-item active">
+                        <span class="menu-icon">🎯</span>
+                        <span>线索管理</span>
+                    </div>
+                    <div class="submenu">
+                        <a href="channel-list.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道列表</div></a>
+                        <a href="transfer-monitor.html" style="text-decoration: none; display: block;"><div class="submenu-item">流转中监控</div></a>
+                        <a href="manual-pool.html" style="text-decoration: none; display: block;"><div class="submenu-item">人工池</div></a>
+                        <a href="allocation-record.html" style="text-decoration: none; display: block;"><div class="submenu-item active">分配记录</div></a>
+                    </div>
+                    <!-- 📈 数据报表 -->
+                    <a href="report-channel.html" style="text-decoration: none; display: block;">
+                    <div class="menu-item">
+                        <span class="menu-icon">📈</span>
+                        <span>数据报表</span>
+                    </div>
+                </a>
+                    <div class="submenu">
+                        <a href="report-channel.html" style="text-decoration: none; display: block;"><div class="submenu-item">渠道维度</div></a>
+                        <a href="report-promoter.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员维度</div></a>
+                        <a href="report-platform.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台维度</div></a>
+                        <a href="report-sales.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售绩效</div></a>
+                    </div>
+                    <!-- ⚙️ 基础数据 -->
+                    <a href="promoter-manage.html" style="text-decoration: none; display: block;">
+                    <div class="menu-item">
+                        <span class="menu-icon">⚙️</span>
+                        <span>基础数据</span>
+                    </div>
+                </a>
+                    <div class="submenu">
+                        <a href="promoter-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">推广员管理</div></a>
+                        <a href="platform-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">平台管理</div></a>
+                        <a href="sales-manage.html" style="text-decoration: none; display: block;"><div class="submenu-item">销售人员管理</div></a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- ============================================ -->
+            <!-- 右侧主内容区 -->
+            <!-- ============================================ -->
+            <main class="main-content">
+                <!-- 面包屑导航 -->
+                <div class="breadcrumb-wrapper">
+                    <el-breadcrumb separator="/">
+                        <el-breadcrumb-item @click="goToPage('index.html')" style="cursor: pointer;">首页</el-breadcrumb-item>
+                        <el-breadcrumb-item>线索管理</el-breadcrumb-item>
+                        <el-breadcrumb-item>分配记录</el-breadcrumb-item>
+                    </el-breadcrumb>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- 搜索筛选区 -->
+                <!-- ============================================ -->
+                <el-card class="search-card" shadow="never">
+                    <div class="search-row">
+                        <!-- 时间范围选择器 -->
+                        <div class="search-item">
+                            <span class="search-label">时间范围：</span>
+                            <el-date-picker
+                                v-model="searchForm.dateRange"
+                                type="datetimerange"
+                                range-separator="至"
+                                start-placeholder="开始时间"
+                                end-placeholder="结束时间"
+                                value-format="YYYY-MM-DD HH:mm:ss"
+                                :default-time="['00:00:00', '23:59:59']"
+                                style="width: 380px;"
+                            ></el-date-picker>
+                        </div>
+                        
+                        <!-- 线索ID搜索 -->
+                        <div class="search-item">
+                            <span class="search-label">线索ID：</span>
+                            <el-input
+                                v-model="searchForm.clueId"
+                                placeholder="请输入线索ID"
+                                clearable
+                                style="width: 180px;"
+                            ></el-input>
+                        </div>
+                        
+                        <!-- 客户电话搜索 -->
+                        <div class="search-item">
+                            <span class="search-label">客户电话：</span>
+                            <el-input
+                                v-model="searchForm.phone"
+                                placeholder="请输入客户电话"
+                                clearable
+                                style="width: 180px;"
+                            ></el-input>
+                        </div>
+                    </div>
+                    
+                    <div class="search-row">
+                        <!-- 渠道筛选 -->
+                        <div class="search-item">
+                            <span class="search-label">渠道：</span>
+                            <el-select
+                                v-model="searchForm.channel"
+                                placeholder="请选择渠道"
+                                clearable
+                                style="width: 150px;"
+                            >
+                                <el-option label="抖音广告" value="douyin"></el-option>
+                                <el-option label="微信朋友圈" value="wechat"></el-option>
+                                <el-option label="百度推广" value="baidu"></el-option>
+                                <el-option label="小红书" value="xiaohongshu"></el-option>
+                                <el-option label="官网注册" value="official"></el-option>
+                                <el-option label="线下活动" value="offline"></el-option>
+                            </el-select>
+                        </div>
+                        
+                        <!-- 销售筛选 -->
+                        <div class="search-item">
+                            <span class="search-label">销售：</span>
+                            <el-select
+                                v-model="searchForm.sales"
+                                placeholder="请选择销售"
+                                clearable
+                                style="width: 150px;"
+                            >
+                                <el-option label="销售A" value="销售A"></el-option>
+                                <el-option label="销售B" value="销售B"></el-option>
+                                <el-option label="销售C" value="销售C"></el-option>
+                                <el-option label="销售D" value="销售D"></el-option>
+                                <el-option label="销售E" value="销售E"></el-option>
+                                <el-option label="销售F" value="销售F"></el-option>
+                            </el-select>
+                        </div>
+                        
+                        <!-- 分配结果筛选 -->
+                        <div class="search-item">
+                            <span class="search-label">分配结果：</span>
+                            <el-select
+                                v-model="searchForm.result"
+                                placeholder="请选择结果"
+                                clearable
+                                style="width: 150px;"
+                            >
+                                <el-option label="分配成功" value="success">
+                                    <el-tag size="small" type="success">分配成功</el-tag>
+                                </el-option>
+                                <el-option label="超时" value="timeout">
+                                    <el-tag size="small" type="warning">超时</el-tag>
+                                </el-option>
+                                <el-option label="进入人工池" value="manual">
+                                    <el-tag size="small" type="danger">进入人工池</el-tag>
+                                </el-option>
+                            </el-select>
+                        </div>
+                        
+                        <!-- 搜索和重置按钮 -->
+                        <div class="search-item" style="margin-left: auto;">
+                            <el-button type="primary" @click="handleSearch" :icon="Search">搜索</el-button>
+                            <el-button @click="handleReset" :icon="RefreshRight">重置</el-button>
+                        </div>
+                    </div>
+                </el-card>
+
+                <!-- ============================================ -->
+                <!-- 数据表格区 -->
+                <!-- ============================================ -->
+                <el-card class="table-card" shadow="never">
+                    <div class="table-header">
+                        <span class="table-title">分配记录列表</span>
+                    </div>
+                    
+                    <!-- 数据表格 -->
+                    <el-table
+                        :data="paginatedData"
+                        stripe
+                        border
+                        style="width: 100%"
+                        v-loading="loading"
+                        row-key="id"
+                    >
+
+                        
+                        <!-- 线索ID -->
+                        <el-table-column prop="clueId" label="线索ID" width="120" align="center">
+                            <template #default="{ row }">
+                                <el-link type="primary" @click="goToClueDetail(row.clueId)">{{ row.clueId }}</el-link>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 渠道名称 -->
+                        <el-table-column prop="channelName" label="渠道名称" width="130" align="center">
+                            <template #default="{ row }">
+                                <el-tag size="small" effect="plain">{{ row.channelName }}</el-tag>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 客户姓名 -->
+                        <el-table-column prop="customerName" label="客户姓名" width="100" align="center">
+                            <template #default="{ row }">
+                                <span>{{ row.customerName || '-' }}</span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 客户电话 -->
+                        <el-table-column prop="phone" label="客户电话" width="130" align="center">
+                            <template #default="{ row }">
+                                <span style="font-family: monospace;">{{ row.phone ? row.phone.substring(0, 3) + '****' + row.phone.substring(7) : '-' }}</span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 客户微信 -->
+                        <el-table-column prop="customerWechat" label="客户微信" width="130" align="center">
+                            <template #default="{ row }">
+                                <span :style="{ color: row.customerWechat ? '#67c23a' : '#c0c4cc' }">{{ row.customerWechat || '-' }}</span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 最终归属销售 -->
+                        <el-table-column prop="finalSales" label="最终归属销售" width="120" align="center">
+                            <template #default="{ row }">
+                                <el-avatar :size="24" style="background-color: #409eff; font-size: 12px; margin-right: 5px;">
+                                    {{ row.finalSales ? row.finalSales.charAt(0) : '-' }}
+                                </el-avatar>
+                                <span>{{ row.finalSales || '-' }}</span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 分配结果 -->
+                        <el-table-column prop="result" label="分配结果" width="110" align="center">
+                            <template #default="{ row }">
+                                <span :class="getResultClass(row.result)">
+                                    <el-icon style="margin-right: 4px; vertical-align: middle;">
+                                        <component :is="getResultIcon(row.result)"></component>
+                                    </el-icon>
+                                    {{ getResultText(row.result) }}
+                                </span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 总耗时 -->
+                        <el-table-column prop="totalTime" label="总耗时" width="100" align="center">
+                            <template #default="{ row }">
+                                <el-tag size="small" :type="getTimeTagType(row.totalTime)">{{ row.totalTime }}</el-tag>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 分配时间 -->
+                        <el-table-column prop="allocateTime" label="分配时间" width="170" align="center">
+                            <template #default="{ row }">
+                                <span style="color: #606266; font-size: 13px;">{{ row.allocateTime }}</span>
+                            </template>
+                        </el-table-column>
+                        
+                        <!-- 操作列 -->
+                        <el-table-column label="操作" width="140" align="center" fixed="right">
+                            <template #default="{ row }">
+                                <el-button
+                                    type="primary"
+                                    link
+                                    size="small"
+                                    :icon="View"
+                                    @click="showTransferPath(row)"
+                                >
+                                    查看流转路径
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    
+                    <!-- 分页器 -->
+                    <div class="pagination-wrapper">
+                        <el-pagination
+                            v-model:current-page="pagination.page"
+                            v-model:page-size="pagination.pageSize"
+                            :page-sizes="[10, 20, 50, 100]"
+                            :total="filteredData.length"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            @size-change="handleSizeChange"
+                            @current-change="handlePageChange"
+                        ></el-pagination>
+                    </div>
+                </el-card>
+
+                <!-- ============================================ -->
+                <!-- 流转路径详情对话框 -->
+                <!-- ============================================ -->
+                <el-dialog
+                    v-model="dialogVisible"
+                    title="🔄 流转路径详情"
+                    width="600px"
+                    class="timeline-dialog"
+                    destroy-on-close
+                >
+                    <div v-if="currentRecord" class="timeline-wrapper">
+                        <!-- 基本信息 -->
+                        <el-descriptions :column="2" border size="small" style="margin-bottom: 20px;">
+                            <el-descriptions-item label="线索ID">{{ currentRecord.clueId }}</el-descriptions-item>
+                            <el-descriptions-item label="渠道">{{ currentRecord.channelName }}</el-descriptions-item>
+                            <el-descriptions-item label="客户电话">{{ currentRecord.phone }}</el-descriptions-item>
+                            <el-descriptions-item label="最终归属">{{ currentRecord.finalSales || '-' }}</el-descriptions-item>
+                        </el-descriptions>
+                        
+                        <!-- 时间轴 -->
+                        <div class="timeline-title" style="font-weight: 600; margin-bottom: 15px; color: #303133;">
+                            完整流转历史
+                        </div>
+                        <div
+                            v-for="(item, index) in currentRecord.transferPath"
+                            :key="index"
+                            :class="['timeline-item', getTimelineItemClass(item.node)]"
+                        >
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-time">{{ item.time }}</div>
+                            <div class="timeline-content">{{ item.node }}</div>
+                            <div class="timeline-sales" v-if="item.sales !== '-'">
+                                <el-icon style="margin-right: 4px;"><User /></el-icon>
+                                处理人：{{ item.sales }}
+                            </div>
+                        </div>
+                        <div class="timeline-end">—— 流转结束 ——</div>
+                    </div>
+                </el-dialog>
+            </main>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- JavaScript 部分 -->
+    <!-- ============================================ -->
+    
+    <!-- Vue 3 - 使用jsdelivr CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.js"></script>
+    
+    <!-- Element Plus Icons Vue - 图标库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+    
+    <!-- Element Plus - 使用jsdelivr CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/index.full.js"></script>
+    
+    <!-- Element Plus 中文语言包 -->
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.5.3/dist/locale/zh-cn.min.js"></script>
+
+    <script>
+        // ============================================
+        // 解构Vue API
+        // ============================================
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        
+        // ============================================
+        // 解构Element Plus图标
+        // ============================================
+        const { Search, RefreshRight, Download, View, User, SuccessFilled, WarningFilled, CircleCloseFilled, Timer } = ElementPlusIconsVue;
+
+        // ============================================
+        // 生成Mock数据 - 20条分配记录
+        // ============================================
+        function generateMockData() {
+            const channels = ['抖音广告', '微信朋友圈', '百度推广', '小红书', '官网注册', '线下活动'];
+            const salesList = ['销售A', '销售B', '销售C', '销售D', '销售E', '销售F'];
+            const results = ['success', 'timeout', 'manual'];
+            
+            // 流转路径模板
+            const transferPathTemplates = {
+                success: [
+                    [
+                        {node: '进入待分配队列', time: '10:00:00', sales: '-'},
+                        {node: '分配给销售A', time: '10:01:30', sales: '销售A'},
+                        {node: 'A确认领取，分配成功', time: '10:02:15', sales: '销售A'}
+                    ],
+                    [
+                        {node: '进入待分配队列', time: '14:30:00', sales: '-'},
+                        {node: '分配给销售B', time: '14:30:45', sales: '销售B'},
+                        {node: 'B超时未响应，重新分配', time: '14:35:45', sales: '-'},
+                        {node: '分配给销售C', time: '14:36:00', sales: '销售C'},
+                        {node: 'C确认领取，分配成功', time: '14:38:20', sales: '销售C'}
+                    ],
+                    [
+                        {node: '进入待分配队列', time: '09:15:00', sales: '-'},
+                        {node: '分配给销售D', time: '09:16:10', sales: '销售D'},
+                        {node: 'D确认领取，分配成功', time: '09:18:30', sales: '销售D'}
+                    ]
+                ],
+                timeout: [
+                    [
+                        {node: '进入待分配队列', time: '11:00:00', sales: '-'},
+                        {node: '分配给销售A', time: '11:01:00', sales: '销售A'},
+                        {node: 'A超时未响应，重新分配', time: '11:06:00', sales: '-'},
+                        {node: '分配给销售B', time: '11:06:30', sales: '销售B'},
+                        {node: 'B超时未响应，重新分配', time: '11:11:30', sales: '-'},
+                        {node: '再次分配超时，标记为超时', time: '11:20:00', sales: '-'}
+                    ],
+                    [
+                        {node: '进入待分配队列', time: '16:00:00', sales: '-'},
+                        {node: '分配给销售E', time: '16:00:30', sales: '销售E'},
+                        {node: 'E超时未响应，重新分配', time: '16:05:30', sales: '-'},
+                        {node: '分配给销售F', time: '16:06:00', sales: '销售F'},
+                        {node: 'F超时未响应，标记为超时', time: '16:16:00', sales: '-'}
+                    ]
+                ],
+                manual: [
+                    [
+                        {node: '进入待分配队列', time: '13:00:00', sales: '-'},
+                        {node: '分配给销售C', time: '13:01:00', sales: '销售C'},
+                        {node: 'C超时未响应，重新分配', time: '13:06:00', sales: '-'},
+                        {node: '分配给销售D', time: '13:06:30', sales: '销售D'},
+                        {node: 'D超时未响应，流转至人工池', time: '13:16:30', sales: '-'}
+                    ],
+                    [
+                        {node: '进入待分配队列', time: '08:30:00', sales: '-'},
+                        {node: '系统异常，进入人工池', time: '08:31:00', sales: '-'}
+                    ],
+                    [
+                        {node: '进入待分配队列', time: '15:00:00', sales: '-'},
+                        {node: '分配给销售A', time: '15:00:45', sales: '销售A'},
+                        {node: 'A拒绝领取，重新分配', time: '15:02:00', sales: '-'},
+                        {node: '分配给销售B', time: '15:02:30', sales: '销售B'},
+                        {node: 'B超时未响应，流转至人工池', time: '15:17:30', sales: '-'}
+                    ]
+                ]
+            };
+
+            const data = [];
+            for (let i = 1; i <= 20; i++) {
+                const result = results[Math.floor(Math.random() * results.length)];
+                const templates = transferPathTemplates[result];
+                const pathTemplate = templates[Math.floor(Math.random() * templates.length)];
+                
+                // 深拷贝路径模板
+                const transferPath = JSON.parse(JSON.stringify(pathTemplate));
+                
+                // 根据结果确定最终归属销售
+                let finalSales = '-';
+                if (result === 'success') {
+                    const successNode = transferPath.find(p => p.node.includes('成功'));
+                    if (successNode) {
+                        finalSales = successNode.sales;
+                    }
+                } else if (result === 'timeout') {
+                    finalSales = '-';
+                } else {
+                    finalSales = '-';
+                }
+
+                // 计算总耗时（模拟）
+                const startTime = new Date(`2024-01-01T${transferPath[0].time}`);
+                const endTime = new Date(`2024-01-01T${transferPath[transferPath.length - 1].time}`);
+                const diffSeconds = Math.floor((endTime - startTime) / 1000);
+                const minutes = Math.floor(diffSeconds / 60);
+                const seconds = diffSeconds % 60;
+                const totalTime = `${minutes}分${seconds}秒`;
+
+                // 生成客户姓名
+                const surnames = ['张', '李', '王', '刘', '陈', '杨', '赵', '黄', '周', '吴'];
+                const names = ['伟', '芳', '娜', '敏', '静', '秀', '强', '磊', '洋', '艳', '杰', '娟', '涛', '明'];
+                const customerName = surnames[Math.floor(Math.random() * surnames.length)] + names[Math.floor(Math.random() * names.length)];
+                
+                // 生成客户微信（70%概率有）
+                const hasWechat = Math.random() < 0.7;
+                const customerWechat = hasWechat ? `wx_${String(Math.floor(Math.random() * 1000000000)).padStart(8, '0')}` : '';
+                
+                data.push({
+                    id: i,
+                    clueId: `CLUE${String(i).padStart(5, '0')}`,
+                    channelName: channels[Math.floor(Math.random() * channels.length)],
+                    customerName: customerName,
+                    phone: `1${[3,4,5,6,7,8,9][Math.floor(Math.random() * 7)]}${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+                    customerWechat: customerWechat,
+                    finalSales: finalSales,
+                    result: result,
+                    totalTime: totalTime,
+                    allocateTime: `2024-01-${String(Math.floor(Math.random() * 30) + 1).padStart(2, '0')} ${transferPath[0].time}`,
+                    transferPath: transferPath
+                });
+            }
+            return data;
+        }
+
+        // ============================================
+        // 创建Vue应用
+        // ============================================
+        const app = createApp({
+            setup() {
+                // ============================================
+                // 搜索表单数据
+                // ============================================
+                const searchForm = reactive({
+                    dateRange: null,
+                    clueId: '',
+                    phone: '',
+                    channel: '',
+                    sales: '',
+                    result: ''
+                });
+
+                // ============================================
+                // 表格数据
+                // ============================================
+                const tableData = ref([]);
+                const loading = ref(false);
+
+                // ============================================
+                // 分页数据
+                // ============================================
+                const pagination = reactive({
+                    page: 1,
+                    pageSize: 10
+                });
+
+                // ============================================
+                // 对话框控制
+                // ============================================
+                const dialogVisible = ref(false);
+                const currentRecord = ref(null);
+
+                // ============================================
+                // 筛选后的数据（计算属性）
+                // ============================================
+                const filteredData = computed(() => {
+                    return tableData.value.filter(item => {
+                        // 时间范围筛选
+                        if (searchForm.dateRange && searchForm.dateRange.length === 2) {
+                            const itemTime = new Date(item.allocateTime).getTime();
+                            const startTime = new Date(searchForm.dateRange[0]).getTime();
+                            const endTime = new Date(searchForm.dateRange[1]).getTime();
+                            if (itemTime < startTime || itemTime > endTime) {
+                                return false;
+                            }
+                        }
+
+                        // 线索ID筛选
+                        if (searchForm.clueId && !item.clueId.toLowerCase().includes(searchForm.clueId.toLowerCase())) {
+                            return false;
+                        }
+
+                        // 电话筛选
+                        if (searchForm.phone && !item.phone.includes(searchForm.phone)) {
+                            return false;
+                        }
+
+                        // 渠道筛选（需要根据value映射到name）
+                        if (searchForm.channel) {
+                            const channelMap = {
+                                'douyin': '抖音广告',
+                                'wechat': '微信朋友圈',
+                                'baidu': '百度推广',
+                                'xiaohongshu': '小红书',
+                                'official': '官网注册',
+                                'offline': '线下活动'
+                            };
+                            if (item.channelName !== channelMap[searchForm.channel]) {
+                                return false;
+                            }
+                        }
+
+                        // 销售筛选
+                        if (searchForm.sales && item.finalSales !== searchForm.sales) {
+                            return false;
+                        }
+
+                        // 分配结果筛选
+                        if (searchForm.result && item.result !== searchForm.result) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+                });
+
+                // ============================================
+                // 分页后的数据（计算属性）
+                // ============================================
+                const paginatedData = computed(() => {
+                    const start = (pagination.page - 1) * pagination.pageSize;
+                    const end = start + pagination.pageSize;
+                    return filteredData.value.slice(start, end);
+                });
+
+                // ============================================
+                // 获取结果样式类
+                // ============================================
+                const getResultClass = (result) => {
+                    const classMap = {
+                        'success': 'result-tag result-success',
+                        'timeout': 'result-tag result-timeout',
+                        'manual': 'result-tag result-manual'
+                    };
+                    return classMap[result] || '';
+                };
+
+                // ============================================
+                // 获取结果文本
+                // ============================================
+                const getResultText = (result) => {
+                    const textMap = {
+                        'success': '分配成功',
+                        'timeout': '超时',
+                        'manual': '进入人工池'
+                    };
+                    return textMap[result] || result;
+                };
+
+                // ============================================
+                // 获取结果图标
+                // ============================================
+                const getResultIcon = (result) => {
+                    const iconMap = {
+                        'success': 'SuccessFilled',
+                        'timeout': 'WarningFilled',
+                        'manual': 'CircleCloseFilled'
+                    };
+                    return iconMap[result] || 'InfoFilled';
+                };
+
+                // ============================================
+                // 获取时间标签类型
+                // ============================================
+                const getTimeTagType = (time) => {
+                    const minutes = parseInt(time);
+                    if (minutes < 2) return 'success';
+                    if (minutes < 5) return 'warning';
+                    return 'danger';
+                };
+
+                // ============================================
+                // 获取时间轴节点样式类
+                // ============================================
+                const getTimelineItemClass = (node) => {
+                    if (node.includes('成功')) return 'success';
+                    if (node.includes('超时')) return 'timeout';
+                    if (node.includes('人工池')) return 'manual';
+                    return '';
+                };
+
+                // ============================================
+                // 搜索处理
+                // ============================================
+                const handleSearch = () => {
+                    pagination.page = 1;
+                    loading.value = true;
+                    setTimeout(() => {
+                        loading.value = false;
+                        ElementPlus.ElMessage.success('搜索完成');
+                    }, 300);
+                };
+
+                // ============================================
+                // 重置处理
+                // ============================================
+                const handleReset = () => {
+                    searchForm.dateRange = null;
+                    searchForm.clueId = '';
+                    searchForm.phone = '';
+                    searchForm.channel = '';
+                    searchForm.sales = '';
+                    searchForm.result = '';
+                    pagination.page = 1;
+                    ElementPlus.ElMessage.info('已重置筛选条件');
+                };
+
+                // ============================================
+                // 导出处理
+                // ============================================
+                const handleExport = () => {
+                    ElementPlus.ElMessage.success('数据导出中，请稍候...');
+                    // 模拟导出
+                    setTimeout(() => {
+                        const dataStr = JSON.stringify(filteredData.value, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `分配记录_${new Date().toLocaleDateString()}.json`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        ElementPlus.ElMessage.success('导出成功');
+                    }, 1000);
+                };
+
+                // ============================================
+                // 分页大小变化
+                // ============================================
+                const handleSizeChange = (size) => {
+                    pagination.pageSize = size;
+                    pagination.page = 1;
+                };
+
+                // ============================================
+                // 页码变化
+                // ============================================
+                const handlePageChange = (page) => {
+                    pagination.page = page;
+                };
+
+                // ============================================
+                // 显示流转路径
+                // ============================================
+                const showTransferPath = (row) => {
+                    currentRecord.value = row;
+                    dialogVisible.value = true;
+                };
+
+                // ============================================
+                // 页面跳转
+                // ============================================
+                const goToPage = (url) => {
+                    window.location.href = url;
+                };
+
+                // ============================================
+                // 跳转到线索详情
+                // ============================================
+                const goToClueDetail = (clueId) => {
+                    window.location.href = `clue-detail.html?id=${clueId}`;
+                };
+
+                // ============================================
+                // 组件挂载时初始化
+                // ============================================
+                onMounted(() => {
+                    loading.value = true;
+                    // 模拟异步加载
+                    setTimeout(() => {
+                        tableData.value = generateMockData();
+                        loading.value = false;
+                    }, 500);
+                });
+
+                // ============================================
+                // 返回响应式数据和方法
+                // ============================================
+                return {
+                    // 图标
+                    Search,
+                    RefreshRight,
+                    Download,
+                    View,
+                    User,
+                    SuccessFilled,
+                    WarningFilled,
+                    CircleCloseFilled,
+                    Timer,
+                    
+                    // 数据
+                    searchForm,
+                    tableData,
+                    loading,
+                    pagination,
+                    filteredData,
+                    paginatedData,
+                    dialogVisible,
+                    currentRecord,
+                    
+                    // 方法
+                    getResultClass,
+                    getResultText,
+                    getResultIcon,
+                    getTimeTagType,
+                    getTimelineItemClass,
+                    handleSearch,
+                    handleReset,
+                    handleExport,
+                    handleSizeChange,
+                    handlePageChange,
+                    showTransferPath,
+                    goToPage,
+                    goToClueDetail
+                };
+            }
+        });
+
+        // ============================================
+        // 配置Element Plus中文语言
+        // ============================================
+        app.use(ElementPlus, {
+            locale: ElementPlusLocaleZhCn
+        });
+
+        // ============================================
+        // 注册所有Element Plus图标组件
+        // ============================================
+        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+            app.component(key, component);
+        }
+
+        // ============================================
+        // 挂载应用
+        // ============================================
+        app.mount('#app');
+    </script>
+</body>
+</html>
