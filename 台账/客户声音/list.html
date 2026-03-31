@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户声音 - 列表</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-form .el-form-item {
+            margin-bottom: 0;
+        }
+        .table-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .table-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #606266;
+        }
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .el-table {
+            font-size: 13px;
+        }
+        .el-table .cell {
+            white-space: nowrap;
+        }
+        .pagination-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .notes-section {
+            background: #fdf6ec;
+            border: 1px solid #f5dab1;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .notes-title {
+            font-weight: 600;
+            color: #e6a23c;
+            margin-bottom: 10px;
+        }
+        .notes-list {
+            color: #606266;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .notes-list li {
+            margin-left: 20px;
+        }
+        .tag-yes {
+            color: #67c23a;
+            font-weight: 500;
+        }
+        .tag-no {
+            color: #f56c6c;
+            font-weight: 500;
+        }
+        .category-cell {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div class="page-title">客户声音</div>
+                <el-form :inline="true" :model="searchForm" class="search-form">
+                    <el-form-item label="发生日期">
+                        <el-date-picker
+                            v-model="searchForm.occurrenceDate"
+                            type="date"
+                            placeholder="选择日期"
+                            format="YYYY/MM/D"
+                            value-format="YYYY/MM/D">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="归属月份">
+                        <el-date-picker
+                            v-model="searchForm.belongMonth"
+                            type="month"
+                            placeholder="选择月份"
+                            format="YYYY年M月"
+                            value-format="YYYY年M月">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="客户姓名">
+                        <el-input v-model="searchForm.customerName" placeholder="请输入客户姓名" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="合同编号">
+                        <el-input v-model="searchForm.contractNo" placeholder="请输入合同编号" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="服务月嫂">
+                        <el-input v-model="searchForm.nannyName" placeholder="请输入月嫂名字" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="问题来源">
+                        <el-select v-model="searchForm.problemSource" placeholder="请选择" clearable>
+                            <el-option v-for="item in problemSourceOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="处理结果">
+                        <el-select v-model="searchForm.processResult" placeholder="请选择" clearable style="width: 130px">
+                            <el-option v-for="item in processResultOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="专属客服">
+                        <el-select v-model="searchForm.customerService" placeholder="请选择" clearable>
+                            <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="客诉是否成立">
+                        <el-select v-model="searchForm.complaintValid" placeholder="请选择" clearable style="width: 100px">
+                            <el-option label="是" value="是"></el-option>
+                            <el-option label="否" value="否"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="handleSearch">查询</el-button>
+                        <el-button @click="handleReset">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="table-container">
+                <div class="table-header">
+                    <span class="table-title">客户声音列表</span>
+                    <div class="action-btns">
+                        <el-button type="success" @click="handleExport">导出Excel</el-button>
+                        <el-button type="primary" @click="handleAdd">新增记录</el-button>
+                    </div>
+                </div>
+
+                <el-table
+                    :data="tableData"
+                    border
+                    stripe
+                    style="width: 100%"
+                    v-loading="loading"
+                    :scrollbar-always-on="true">
+                    <el-table-column type="index" label="序号" width="50" align="center" fixed="left"></el-table-column>
+                    <el-table-column prop="entryDate" label="录入日期" width="100" align="center" fixed="left"></el-table-column>
+                    <el-table-column prop="occurrenceDate" label="发生日期" width="100" align="center"></el-table-column>
+                    <el-table-column prop="belongMonth" label="归属月份" width="100" align="center"></el-table-column>
+                    <el-table-column prop="customerName" label="客户姓名" width="90" align="center"></el-table-column>
+                    <el-table-column prop="contractNo" label="合同编号" width="130" align="center"></el-table-column>
+                    <el-table-column prop="serviceArea" label="服务地区" width="80" align="center"></el-table-column>
+                    <el-table-column prop="packageLevel" label="套餐级别" width="80" align="center"></el-table-column>
+                    <el-table-column prop="nannyName" label="服务月嫂" width="90" align="center"></el-table-column>
+                    <el-table-column prop="nannyLevel" label="月嫂级别" width="80" align="center"></el-table-column>
+                    <el-table-column prop="nannyTeacher" label="月嫂老师" width="90" align="center"></el-table-column>
+                    <el-table-column label="是否首单" width="80" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.isFirstOrder === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.isFirstOrder }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="是否二月宝" width="90" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.isSecondBaby === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.isSecondBaby }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="是否急单" width="80" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.isUrgent === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.isUrgent }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="problemSource" label="问题来源" width="100" align="center"></el-table-column>
+                    <el-table-column prop="problemDetail" label="问题详情" width="150" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="problemFocus" label="问题重点现象" width="120" align="center"></el-table-column>
+                    <el-table-column prop="startDate" label="月嫂上户时间" width="110" align="center"></el-table-column>
+                    <el-table-column prop="endDate" label="月嫂下户时间" width="110" align="center"></el-table-column>
+                    <el-table-column prop="actualServiceDays" label="实际服务天数" width="100" align="center"></el-table-column>
+                    <el-table-column prop="changeRequirement" label="客户更换要求" width="120" align="center"></el-table-column>
+                    <el-table-column label="是否换人成功" width="100" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.changeSuccess === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.changeSuccess }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="newNannyName" label="更换月嫂名字" width="110" align="center"></el-table-column>
+                    <el-table-column prop="actualStartDate" label="上户时间" width="100" align="center"></el-table-column>
+                    <el-table-column prop="processResult" label="处理结果" width="120" align="center"></el-table-column>
+                    <el-table-column prop="customerService" label="专属客服" width="90" align="center"></el-table-column>
+                    <el-table-column prop="creator" label="制表人" width="80" align="center"></el-table-column>
+                    <el-table-column label="退单一类" width="300">
+                        <el-table-column prop="category1Level1" label="归类1" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category1Level1 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="category1Level2" label="归类2" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category1Level2 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="responsibleDept1" label="责任部门1" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.responsibleDept1 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                    </el-table-column>
+                    <el-table-column label="退单二类" width="300">
+                        <el-table-column prop="category2Level1" label="归类1" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category2Level1 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="category2Level2" label="归类2" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category2Level2 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="responsibleDept2" label="责任部门2" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.responsibleDept2 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                    </el-table-column>
+                    <el-table-column label="退单三类" width="300">
+                        <el-table-column prop="category3Level1" label="归类1" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category3Level1 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="category3Level2" label="归类2" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.category3Level2 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="responsibleDept3" label="责任部门3" width="100" align="center">
+                            <template #default="scope">
+                                <div class="category-cell">{{ scope.row.responsibleDept3 || '-' }}</div>
+                            </template>
+                        </el-table-column>
+                    </el-table-column>
+                    <el-table-column label="客诉是否成立" width="100" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.complaintValid === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.complaintValid }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="绩效是否扣罚" width="100" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.performancePenalty === '是' ? 'tag-yes' : 'tag-no'">{{ scope.row.performancePenalty }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="definedBy" label="界定人员" width="90" align="center"></el-table-column>
+                    <el-table-column label="操作" width="150" align="center" fixed="right">
+                        <template #default="scope">
+                            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <div class="pagination-container">
+                    <el-pagination
+                        background
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                    </el-pagination>
+                </div>
+
+                <!-- 备注说明 -->
+                <div class="notes-section">
+                    <div class="notes-title">📋 功能说明</div>
+                    <ol class="notes-list">
+                        <li>此报表允许对单个记录进行修改，修改后能保有修改纪录；</li>
+                        <li>除了"备注"为非必填外，其他项均为必填项；</li>
+                        <li>报表允许导出功能。</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <!-- Element Plus 中文语言包 -->
+    <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // 搜索表单
+                const searchForm = reactive({
+                    occurrenceDate: '',
+                    belongMonth: '',
+                    customerName: '',
+                    contractNo: '',
+                    nannyName: '',
+                    problemSource: '',
+                    processResult: '',
+                    customerService: '',
+                    complaintValid: ''
+                });
+
+                // 下拉选项
+                const problemSourceOptions = ['回访反馈', '顾问反馈', '客户反馈', '400反馈', '平台反馈', '媒介反馈'];
+                const processResultOptions = ['换人', '顶班', '退单', '磨合调整', '理赔', '赠送服务天数', '服务完订金退单', '换人+理赔', '顶班+理赔', '退单+理赔', '换人+赠送', '顶班+赠送', '退单+赠送'];
+                const customerServiceOptions = ['孙媛', '黄景蝶', '梁泳诗', '梁绮雯', '肖兰', '杨飞红', '姚艳兰'];
+
+                // 表格数据
+                const loading = ref(false);
+                const tableData = ref([]);
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(0);
+
+                // Mock 数据
+                const mockData = [
+                    {
+                        id: 1,
+                        entryDate: '2024/11/3',
+                        occurrenceDate: '2024/11/1',
+                        belongMonth: '2024年11月',
+                        customerName: '江珊',
+                        contractNo: 'HT202411001',
+                        serviceArea: '广州',
+                        packageLevel: 'Y3',
+                        nannyName: '李淑珍',
+                        nannyLevel: 'Y3',
+                        nannyTeacher: '王老师',
+                        isFirstOrder: '是',
+                        isSecondBaby: '否',
+                        isUrgent: '否',
+                        problemSource: '回访反馈',
+                        problemDetail: '客户反馈月嫂服务态度不好',
+                        problemFocus: '服务态度',
+                        startDate: '2024/10/15',
+                        endDate: '2024/11/15',
+                        actualServiceDays: 31,
+                        changeRequirement: '要求换人',
+                        changeSuccess: '是',
+                        newNannyName: '王阿姨',
+                        actualStartDate: '2024/11/2',
+                        processResult: '换人',
+                        customerService: '孙媛',
+                        creator: '孙媛',
+                        category1Level1: '服务态度问题',
+                        category1Level2: '沟通不畅',
+                        category2Level1: '',
+                        category2Level2: '',
+                        category3Level1: '',
+                        category3Level2: '',
+                        complaintValid: '是',
+                        performancePenalty: '是',
+                        definedBy: '孙媛'
+                    },
+                    {
+                        id: 2,
+                        entryDate: '2024/11/5',
+                        occurrenceDate: '2024/11/3',
+                        belongMonth: '2024年11月',
+                        customerName: '王芳',
+                        contractNo: 'HT202411002',
+                        serviceArea: '佛山',
+                        packageLevel: 'Y4',
+                        nannyName: '张阿姨',
+                        nannyLevel: 'Y4',
+                        nannyTeacher: '李老师',
+                        isFirstOrder: '否',
+                        isSecondBaby: '是',
+                        isUrgent: '是',
+                        problemSource: '客户反馈',
+                        problemDetail: '月嫂专业技能不足',
+                        problemFocus: '专业能力',
+                        startDate: '2024/10/20',
+                        endDate: '',
+                        actualServiceDays: 15,
+                        changeRequirement: '要求退单',
+                        changeSuccess: '否',
+                        newNannyName: '',
+                        actualStartDate: '',
+                        processResult: '退单',
+                        customerService: '黄景蝶',
+                        creator: '黄景蝶',
+                        category1Level1: '专业能力不足',
+                        category1Level2: '护理技能',
+                        category2Level1: '退单原因',
+                        category2Level2: '服务不满意',
+                        category3Level1: '',
+                        category3Level2: '',
+                        complaintValid: '是',
+                        performancePenalty: '是',
+                        definedBy: '黄景蝶'
+                    },
+                    {
+                        id: 3,
+                        entryDate: '2024/11/8',
+                        occurrenceDate: '2024/11/6',
+                        belongMonth: '2024年11月',
+                        customerName: '张丽',
+                        contractNo: 'HT202411003',
+                        serviceArea: '深圳',
+                        packageLevel: 'Y5',
+                        nannyName: '陈姐',
+                        nannyLevel: 'Y5',
+                        nannyTeacher: '张老师',
+                        isFirstOrder: '是',
+                        isSecondBaby: '否',
+                        isUrgent: '否',
+                        problemSource: '400反馈',
+                        problemDetail: '月嫂迟到',
+                        problemFocus: '时间观念',
+                        startDate: '2024/11/01',
+                        endDate: '',
+                        actualServiceDays: 5,
+                        changeRequirement: '要求顶班',
+                        changeSuccess: '是',
+                        newNannyName: '刘阿姨',
+                        actualStartDate: '2024/11/07',
+                        processResult: '顶班',
+                        customerService: '梁泳诗',
+                        creator: '梁泳诗',
+                        category1Level1: '时间管理',
+                        category1Level2: '迟到早退',
+                        category2Level1: '',
+                        category2Level2: '',
+                        category3Level1: '',
+                        category3Level2: '',
+                        complaintValid: '否',
+                        performancePenalty: '否',
+                        definedBy: '梁泳诗'
+                    }
+                ];
+
+                // 获取表格数据
+                const getTableData = () => {
+                    loading.value = true;
+                    setTimeout(() => {
+                        let filteredData = [...mockData];
+                        
+                        // 筛选逻辑
+                        if (searchForm.occurrenceDate) {
+                            filteredData = filteredData.filter(item => item.occurrenceDate === searchForm.occurrenceDate);
+                        }
+                        if (searchForm.belongMonth) {
+                            filteredData = filteredData.filter(item => item.belongMonth === searchForm.belongMonth);
+                        }
+                        if (searchForm.customerName) {
+                            filteredData = filteredData.filter(item => item.customerName.includes(searchForm.customerName));
+                        }
+                        if (searchForm.contractNo) {
+                            filteredData = filteredData.filter(item => item.contractNo.includes(searchForm.contractNo));
+                        }
+                        if (searchForm.nannyName) {
+                            filteredData = filteredData.filter(item => item.nannyName.includes(searchForm.nannyName));
+                        }
+                        if (searchForm.problemSource) {
+                            filteredData = filteredData.filter(item => item.problemSource === searchForm.problemSource);
+                        }
+                        if (searchForm.processResult) {
+                            filteredData = filteredData.filter(item => item.processResult === searchForm.processResult);
+                        }
+                        if (searchForm.customerService) {
+                            filteredData = filteredData.filter(item => item.customerService === searchForm.customerService);
+                        }
+                        if (searchForm.complaintValid) {
+                            filteredData = filteredData.filter(item => item.complaintValid === searchForm.complaintValid);
+                        }
+
+                        total.value = filteredData.length;
+                        const start = (currentPage.value - 1) * pageSize.value;
+                        const end = start + pageSize.value;
+                        tableData.value = filteredData.slice(start, end);
+                        loading.value = false;
+                    }, 300);
+                };
+
+                // 查询
+                const handleSearch = () => {
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 重置
+                const handleReset = () => {
+                    searchForm.occurrenceDate = '';
+                    searchForm.belongMonth = '';
+                    searchForm.customerName = '';
+                    searchForm.contractNo = '';
+                    searchForm.nannyName = '';
+                    searchForm.problemSource = '';
+                    searchForm.processResult = '';
+                    searchForm.customerService = '';
+                    searchForm.complaintValid = '';
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 新增
+                const handleAdd = () => {
+                    window.location.href = 'form.html';
+                };
+
+                // 编辑
+                const handleEdit = (row) => {
+                    window.location.href = `form.html?id=${row.id}`;
+                };
+
+                // 删除
+                const handleDelete = (row) => {
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要删除客户"${row.customerName}"的声音记录吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        const index = mockData.findIndex(item => item.id === row.id);
+                        if (index > -1) {
+                            mockData.splice(index, 1);
+                            getTableData();
+                            ElementPlus.ElMessage.success('删除成功');
+                        }
+                    }).catch(() => {});
+                };
+
+                // 导出
+                const handleExport = () => {
+                    ElementPlus.ElMessage.success('正在导出Excel，请稍候...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('导出成功');
+                    }, 1000);
+                };
+
+                // 分页
+                const handleSizeChange = (val) => {
+                    pageSize.value = val;
+                    getTableData();
+                };
+
+                const handleCurrentChange = (val) => {
+                    currentPage.value = val;
+                    getTableData();
+                };
+
+                onMounted(() => {
+                    getTableData();
+                });
+
+                return {
+                    searchForm,
+                    problemSourceOptions,
+                    processResultOptions,
+                    customerServiceOptions,
+                    loading,
+                    tableData,
+                    currentPage,
+                    pageSize,
+                    total,
+                    handleSearch,
+                    handleReset,
+                    handleAdd,
+                    handleEdit,
+                    handleDelete,
+                    handleExport,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+    </script>
+</body>
+</html>

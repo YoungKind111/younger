@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好评台账 - 列表</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-form .el-form-item {
+            margin-bottom: 0;
+        }
+        .table-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .table-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #606266;
+        }
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .el-table {
+            font-size: 14px;
+        }
+        .el-table .cell {
+            white-space: nowrap;
+        }
+        .pagination-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .credential-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .notes-section {
+            background: #fdf6ec;
+            border: 1px solid #f5dab1;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .notes-title {
+            font-weight: 600;
+            color: #e6a23c;
+            margin-bottom: 10px;
+        }
+        .notes-list {
+            color: #606266;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .notes-list li {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div class="page-title">好评台账</div>
+                <el-form :inline="true" :model="searchForm" class="search-form">
+                    <el-form-item label="归属月份">
+                        <el-date-picker
+                            v-model="searchForm.month"
+                            type="month"
+                            placeholder="选择月份"
+                            format="YYYY年M月"
+                            value-format="YYYY-MM">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="客户名字">
+                        <el-input v-model="searchForm.customerName" placeholder="请输入客户名字" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="好评对象">
+                        <el-input v-model="searchForm.targetName" placeholder="请输入好评对象名字" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="套餐级别">
+                        <el-select v-model="searchForm.packageLevel" placeholder="请选择" clearable>
+                            <el-option v-for="item in packageOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="好评来源">
+                        <el-select v-model="searchForm.source" placeholder="请选择" clearable>
+                            <el-option v-for="item in sourceOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="好评岗位">
+                        <el-select v-model="searchForm.position" placeholder="请选择" clearable>
+                            <el-option v-for="item in positionOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="专属客服">
+                        <el-select v-model="searchForm.customerService" placeholder="请选择" clearable>
+                            <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="handleSearch">查询</el-button>
+                        <el-button @click="handleReset">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="table-container">
+                <div class="table-header">
+                    <span class="table-title">好评记录列表</span>
+                    <div class="action-btns">
+                        <el-button type="success" @click="handleExport">导出Excel</el-button>
+                        <el-button type="primary" @click="handleAdd">新增好评</el-button>
+                    </div>
+                </div>
+
+                <el-table
+                    :data="tableData"
+                    border
+                    stripe
+                    style="width: 100%"
+                    v-loading="loading">
+                    <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+                    <el-table-column prop="entryDate" label="录入日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="belongMonth" label="归属月份" width="110" align="center"></el-table-column>
+                    <el-table-column prop="customerName" label="客户名字" width="100" align="center"></el-table-column>
+                    <el-table-column prop="packageLevel" label="套餐级别" width="90" align="center"></el-table-column>
+                    <el-table-column prop="targetName" label="好评对象" width="110" align="center"></el-table-column>
+                    <el-table-column prop="position" label="好评岗位" width="100" align="center"></el-table-column>
+                    <el-table-column prop="source" label="好评来源" width="100" align="center"></el-table-column>
+                    <el-table-column label="好评凭证" width="90" align="center">
+                        <template #default="scope">
+                            <el-image
+                                v-if="scope.row.credentials && scope.row.credentials.length > 0"
+                                :src="scope.row.credentials[0]"
+                                :preview-src-list="scope.row.credentials"
+                                class="credential-img"
+                                fit="cover">
+                            </el-image>
+                            <span v-else>-</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="customerService" label="专属客服" width="100" align="center"></el-table-column>
+                    <el-table-column prop="creator" label="制表人" width="90" align="center"></el-table-column>
+                    <el-table-column label="操作" width="150" align="center" fixed="right">
+                        <template #default="scope">
+                            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <div class="pagination-container">
+                    <el-pagination
+                        background
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                    </el-pagination>
+                </div>
+
+                <!-- 备注说明 -->
+                <div class="notes-section">
+                    <div class="notes-title">📋 功能说明</div>
+                    <ol class="notes-list">
+                        <li>此报表允许对单个记录进行修改，修改后能保有修改纪录；</li>
+                        <li>各目录均为必填项；</li>
+                        <li>报表允许导出功能。</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <!-- Element Plus 中文语言包 -->
+    <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // 搜索表单
+                const searchForm = reactive({
+                    month: '',
+                    customerName: '',
+                    targetName: '',
+                    packageLevel: '',
+                    source: '',
+                    position: '',
+                    customerService: ''
+                });
+
+                // 下拉选项
+                const packageOptions = ['Y3', 'Y4', 'Y5', 'Y6', 'Y7'];
+                const sourceOptions = ['护理日志', '锦旗', '奖杯', '平台', '服务群', '鲜花'];
+                const positionOptions = ['月嫂', '客服老师', '顾问老师', '月嫂老师', '督导老师'];
+                const customerServiceOptions = ['孙媛', '黄景蝶', '梁泳诗', '梁绮雯', '肖兰', '杨飞红', '姚艳兰'];
+
+                // 表格数据
+                const loading = ref(false);
+                const tableData = ref([]);
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(0);
+
+                // Mock 数据
+                const mockData = [
+                    {
+                        id: 1,
+                        entryDate: '2024/12/4',
+                        belongMonth: '2024年1月',
+                        customerName: '杨智婷',
+                        targetName: '彭妹',
+                        packageLevel: 'Y3',
+                        source: '护理日志',
+                        position: '月嫂',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证1'],
+                        customerService: '孙媛',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 2,
+                        entryDate: '2024/12/5',
+                        belongMonth: '2024年1月',
+                        customerName: '王芳',
+                        targetName: '李姐',
+                        packageLevel: 'Y4',
+                        source: '锦旗',
+                        position: '客服老师',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证2'],
+                        customerService: '黄景蝶',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 3,
+                        entryDate: '2024/12/6',
+                        belongMonth: '2024年2月',
+                        customerName: '张丽',
+                        targetName: '王阿姨',
+                        packageLevel: 'Y5',
+                        source: '奖杯',
+                        position: '顾问老师',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证3'],
+                        customerService: '梁泳诗',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 4,
+                        entryDate: '2024/12/7',
+                        belongMonth: '2024年2月',
+                        customerName: '刘梅',
+                        targetName: '陈姐',
+                        packageLevel: 'Y6',
+                        source: '平台',
+                        position: '月嫂老师',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证4'],
+                        customerService: '梁绮雯',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 5,
+                        entryDate: '2024/12/8',
+                        belongMonth: '2024年3月',
+                        customerName: '赵雪',
+                        targetName: '张妹',
+                        packageLevel: 'Y7',
+                        source: '服务群',
+                        position: '督导老师',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证5'],
+                        customerService: '肖兰',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 6,
+                        entryDate: '2024/12/9',
+                        belongMonth: '2024年3月',
+                        customerName: '陈静',
+                        targetName: '李阿姨',
+                        packageLevel: 'Y3',
+                        source: '鲜花',
+                        position: '月嫂',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证6'],
+                        customerService: '杨飞红',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 7,
+                        entryDate: '2024/12/10',
+                        belongMonth: '2024年4月',
+                        customerName: '周婷',
+                        targetName: '王姐',
+                        packageLevel: 'Y4',
+                        source: '护理日志',
+                        position: '客服老师',
+                        credentials: ['https://via.placeholder.com/100x100?text=凭证7'],
+                        customerService: '姚艳兰',
+                        creator: '孙媛'
+                    },
+                    {
+                        id: 8,
+                        entryDate: '2024/12/11',
+                        belongMonth: '2024年4月',
+                        customerName: '吴芳',
+                        targetName: '刘妹',
+                        packageLevel: 'Y5',
+                        source: '锦旗',
+                        position: '顾问老师',
+                        credentials: [],
+                        customerService: '孙媛',
+                        creator: '孙媛'
+                    }
+                ];
+
+                // 获取表格数据
+                const getTableData = () => {
+                    loading.value = true;
+                    setTimeout(() => {
+                        let filteredData = [...mockData];
+                        
+                        // 筛选逻辑
+                        if (searchForm.month) {
+                            const monthStr = searchForm.month.replace('-', '年') + '月';
+                            filteredData = filteredData.filter(item => item.belongMonth.includes(monthStr));
+                        }
+                        if (searchForm.customerName) {
+                            filteredData = filteredData.filter(item => item.customerName.includes(searchForm.customerName));
+                        }
+                        if (searchForm.targetName) {
+                            filteredData = filteredData.filter(item => item.targetName.includes(searchForm.targetName));
+                        }
+                        if (searchForm.packageLevel) {
+                            filteredData = filteredData.filter(item => item.packageLevel === searchForm.packageLevel);
+                        }
+                        if (searchForm.source) {
+                            filteredData = filteredData.filter(item => item.source === searchForm.source);
+                        }
+                        if (searchForm.position) {
+                            filteredData = filteredData.filter(item => item.position === searchForm.position);
+                        }
+                        if (searchForm.customerService) {
+                            filteredData = filteredData.filter(item => item.customerService === searchForm.customerService);
+                        }
+
+                        total.value = filteredData.length;
+                        const start = (currentPage.value - 1) * pageSize.value;
+                        const end = start + pageSize.value;
+                        tableData.value = filteredData.slice(start, end);
+                        loading.value = false;
+                    }, 300);
+                };
+
+                // 查询
+                const handleSearch = () => {
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 重置
+                const handleReset = () => {
+                    searchForm.month = '';
+                    searchForm.customerName = '';
+                    searchForm.targetName = '';
+                    searchForm.packageLevel = '';
+                    searchForm.source = '';
+                    searchForm.position = '';
+                    searchForm.customerService = '';
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 新增
+                const handleAdd = () => {
+                    window.location.href = 'form.html';
+                };
+
+                // 编辑
+                const handleEdit = (row) => {
+                    window.location.href = `form.html?id=${row.id}`;
+                };
+
+                // 删除
+                const handleDelete = (row) => {
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要删除客户"${row.customerName}"的好评记录吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        const index = mockData.findIndex(item => item.id === row.id);
+                        if (index > -1) {
+                            mockData.splice(index, 1);
+                            getTableData();
+                            ElementPlus.ElMessage.success('删除成功');
+                        }
+                    }).catch(() => {});
+                };
+
+                // 导出
+                const handleExport = () => {
+                    ElementPlus.ElMessage.success('正在导出Excel，请稍候...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('导出成功');
+                    }, 1000);
+                };
+
+                // 分页
+                const handleSizeChange = (val) => {
+                    pageSize.value = val;
+                    getTableData();
+                };
+
+                const handleCurrentChange = (val) => {
+                    currentPage.value = val;
+                    getTableData();
+                };
+
+                onMounted(() => {
+                    getTableData();
+                });
+
+                return {
+                    searchForm,
+                    packageOptions,
+                    sourceOptions,
+                    positionOptions,
+                    customerServiceOptions,
+                    loading,
+                    tableData,
+                    currentPage,
+                    pageSize,
+                    total,
+                    handleSearch,
+                    handleReset,
+                    handleAdd,
+                    handleEdit,
+                    handleDelete,
+                    handleExport,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+    </script>
+</body>
+</html>

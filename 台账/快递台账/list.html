@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快递台账 - 列表</title>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #303133;
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-form .el-form-item {
+            margin-bottom: 0;
+        }
+        .table-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .table-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #606266;
+        }
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .el-table {
+            font-size: 14px;
+        }
+        .pagination-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .notes-section {
+            background: #fdf6ec;
+            border: 1px solid #f5dab1;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .notes-title {
+            font-weight: 600;
+            color: #e6a23c;
+            margin-bottom: 10px;
+        }
+        .notes-list {
+            color: #606266;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .notes-list li {
+            margin-left: 20px;
+        }
+        .status-completed {
+            color: #67c23a;
+            font-weight: 500;
+        }
+        .status-pending {
+            color: #f56c6c;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div class="page-title">快递台账</div>
+                <el-form :inline="true" :model="searchForm" class="search-form">
+                    <el-form-item label="寄出日期">
+                        <el-date-picker
+                            v-model="searchForm.sendDate"
+                            type="date"
+                            placeholder="选择日期"
+                            format="YYYY/MM/D"
+                            value-format="YYYY/MM/D">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="客户名字">
+                        <el-input v-model="searchForm.customerName" placeholder="请输入客户名字" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="运单号">
+                        <el-input v-model="searchForm.trackingNo" placeholder="请输入运单号" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="寄件原因">
+                        <el-select v-model="searchForm.reason" placeholder="请选择" clearable style="width: 180px">
+                            <el-option v-for="item in reasonOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="费用承担方">
+                        <el-select v-model="searchForm.costBearer" placeholder="请选择" clearable>
+                            <el-option label="公司" value="公司"></el-option>
+                            <el-option label="月嫂" value="月嫂"></el-option>
+                            <el-option label="客服" value="客服"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="月嫂名字">
+                        <el-input v-model="searchForm.nannyName" placeholder="请输入月嫂名字" clearable></el-input>
+                    </el-form-item>
+                    <el-form-item label="专属客服">
+                        <el-select v-model="searchForm.customerService" placeholder="请选择" clearable>
+                            <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="是否完成扣款">
+                        <el-select v-model="searchForm.deductionStatus" placeholder="请选择" clearable>
+                            <el-option label="是" value="是"></el-option>
+                            <el-option label="否" value="否"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="handleSearch">查询</el-button>
+                        <el-button @click="handleReset">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="table-container">
+                <div class="table-header">
+                    <span class="table-title">工具包寄送记录列表</span>
+                    <div class="action-btns">
+                        <el-button type="success" @click="handleImport">导入</el-button>
+                        <el-button type="success" @click="handleExport">导出Excel</el-button>
+                        <el-button type="primary" @click="handleAdd">新增寄送记录</el-button>
+                    </div>
+                </div>
+
+                <el-table
+                    :data="tableData"
+                    border
+                    stripe
+                    style="width: 100%"
+                    v-loading="loading">
+                    <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+                    <el-table-column prop="entryDate" label="录入日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="sendDate" label="寄出日期" width="110" align="center"></el-table-column>
+                    <el-table-column label="收件客户信息" width="200" show-overflow-tooltip>
+                        <template #default="scope">
+                            <div>{{ scope.row.customerName }}</div>
+                            <div style="color: #909399; font-size: 12px;">{{ scope.row.customerPhone }}</div>
+                            <div style="color: #909399; font-size: 12px;">{{ scope.row.customerAddress }}</div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="trackingNo" label="运单号" width="160" align="center"></el-table-column>
+                    <el-table-column prop="reason" label="寄件原因" width="140" align="center"></el-table-column>
+                    <el-table-column prop="costBearer" label="费用承担方" width="100" align="center"></el-table-column>
+                    <el-table-column prop="nannyName" label="月嫂名字" width="100" align="center"></el-table-column>
+                    <el-table-column prop="customerService" label="专属客服" width="100" align="center"></el-table-column>
+                    <el-table-column prop="creator" label="制表人" width="90" align="center"></el-table-column>
+                    <el-table-column prop="deductionAmount" label="扣款金额" width="100" align="center">
+                        <template #default="scope">
+                            <span v-if="scope.row.deductionAmount">¥{{ scope.row.deductionAmount }}</span>
+                            <span v-else>-</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="deductionTime" label="扣款时间" width="110" align="center">
+                        <template #default="scope">
+                            <span v-if="scope.row.deductionTime">{{ scope.row.deductionTime }}</span>
+                            <span v-else>-</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="是否完成扣款" width="110" align="center">
+                        <template #default="scope">
+                            <span :class="scope.row.deductionCompleted === '是' ? 'status-completed' : 'status-pending'">
+                                {{ scope.row.deductionCompleted }}
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="remark" label="备注" width="150" show-overflow-tooltip></el-table-column>
+                    <el-table-column label="操作" width="150" align="center" fixed="right">
+                        <template #default="scope">
+                            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <div class="pagination-container">
+                    <el-pagination
+                        background
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="currentPage"
+                        :page-sizes="[10, 20, 50, 100]"
+                        :page-size="pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total">
+                    </el-pagination>
+                </div>
+
+                <!-- 备注说明 -->
+                <div class="notes-section">
+                    <div class="notes-title">📋 功能说明</div>
+                    <ol class="notes-list">
+                        <li>此报表允许对单个记录进行修改，修改后能保有修改纪录；</li>
+                        <li>除了"备注"为非必填外，其他项均为必填项；</li>
+                        <li>报表允许导出、导入功能。</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <!-- Element Plus 中文语言包 -->
+    <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
+
+    <script>
+        const { createApp, ref, reactive, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // 搜索表单
+                const searchForm = reactive({
+                    sendDate: '',
+                    customerName: '',
+                    trackingNo: '',
+                    reason: '',
+                    costBearer: '',
+                    nannyName: '',
+                    customerService: '',
+                    deductionStatus: ''
+                });
+
+                // 下拉选项
+                const reasonOptions = [
+                    '正常工具包',
+                    '正常工具包邮寄',
+                    '顶班/换人工具包邮',
+                    '急单工具包邮寄',
+                    '工具包物料补寄',
+                    '月嫂工具包回寄',
+                    '客户工具包回寄',
+                    '取消寄件',
+                    '拦截退回'
+                ];
+                const customerServiceOptions = ['孙媛', '黄景蝶', '梁泳诗', '梁绮雯', '肖兰', '杨飞红', '姚艳兰'];
+
+                // 表格数据
+                const loading = ref(false);
+                const tableData = ref([]);
+                const currentPage = ref(1);
+                const pageSize = ref(10);
+                const total = ref(0);
+
+                // Mock 数据
+                const mockData = [
+                    {
+                        id: 1,
+                        entryDate: '2024/11/3',
+                        sendDate: '2024/11/3',
+                        customerName: '江珊',
+                        customerPhone: '13617285069',
+                        customerAddress: '佛山顺德区陈村藏珑华府18栋2001',
+                        trackingNo: 'JDVC27032821645',
+                        reason: '正常工具包',
+                        costBearer: '公司',
+                        nannyName: '李淑珍',
+                        customerService: '杨飞红',
+                        creator: '杨飞红',
+                        deductionAmount: '',
+                        deductionTime: '',
+                        deductionCompleted: '否',
+                        remark: ''
+                    },
+                    {
+                        id: 2,
+                        entryDate: '2024/11/5',
+                        sendDate: '2024/11/5',
+                        customerName: '王芳',
+                        customerPhone: '13800138001',
+                        customerAddress: '广州市天河区珠江新城',
+                        trackingNo: 'SF1234567890',
+                        reason: '正常工具包邮寄',
+                        costBearer: '公司',
+                        nannyName: '张阿姨',
+                        customerService: '孙媛',
+                        creator: '孙媛',
+                        deductionAmount: '',
+                        deductionTime: '',
+                        deductionCompleted: '否',
+                        remark: ''
+                    },
+                    {
+                        id: 3,
+                        entryDate: '2024/11/8',
+                        sendDate: '2024/11/8',
+                        customerName: '李梅',
+                        customerPhone: '13900139001',
+                        customerAddress: '深圳市南山区科技园',
+                        trackingNo: 'YT9876543210',
+                        reason: '顶班/换人工具包邮',
+                        costBearer: '月嫂',
+                        nannyName: '王姐',
+                        customerService: '黄景蝶',
+                        creator: '黄景蝶',
+                        deductionAmount: '50.00',
+                        deductionTime: '2024/11/10',
+                        deductionCompleted: '是',
+                        remark: '已从工资扣除'
+                    },
+                    {
+                        id: 4,
+                        entryDate: '2024/11/10',
+                        sendDate: '2024/11/10',
+                        customerName: '张丽',
+                        customerPhone: '13700137001',
+                        customerAddress: '东莞市南城区',
+                        trackingNo: 'ZTO1122334455',
+                        reason: '急单工具包邮寄',
+                        costBearer: '客服',
+                        nannyName: '陈姐',
+                        customerService: '梁泳诗',
+                        creator: '梁泳诗',
+                        deductionAmount: '',
+                        deductionTime: '',
+                        deductionCompleted: '否',
+                        remark: ''
+                    },
+                    {
+                        id: 5,
+                        entryDate: '2024/11/12',
+                        sendDate: '2024/11/12',
+                        customerName: '刘静',
+                        customerPhone: '13600136001',
+                        customerAddress: '中山市石岐区',
+                        trackingNo: 'JDVC9988776655',
+                        reason: '工具包物料补寄',
+                        costBearer: '公司',
+                        nannyName: '赵阿姨',
+                        customerService: '梁绮雯',
+                        creator: '梁绮雯',
+                        deductionAmount: '',
+                        deductionTime: '',
+                        deductionCompleted: '否',
+                        remark: '补充护理日志'
+                    }
+                ];
+
+                // 获取表格数据
+                const getTableData = () => {
+                    loading.value = true;
+                    setTimeout(() => {
+                        let filteredData = [...mockData];
+                        
+                        // 筛选逻辑
+                        if (searchForm.sendDate) {
+                            filteredData = filteredData.filter(item => item.sendDate === searchForm.sendDate);
+                        }
+                        if (searchForm.customerName) {
+                            filteredData = filteredData.filter(item => item.customerName.includes(searchForm.customerName));
+                        }
+                        if (searchForm.trackingNo) {
+                            filteredData = filteredData.filter(item => item.trackingNo.includes(searchForm.trackingNo));
+                        }
+                        if (searchForm.reason) {
+                            filteredData = filteredData.filter(item => item.reason === searchForm.reason);
+                        }
+                        if (searchForm.costBearer) {
+                            filteredData = filteredData.filter(item => item.costBearer === searchForm.costBearer);
+                        }
+                        if (searchForm.nannyName) {
+                            filteredData = filteredData.filter(item => item.nannyName.includes(searchForm.nannyName));
+                        }
+                        if (searchForm.customerService) {
+                            filteredData = filteredData.filter(item => item.customerService === searchForm.customerService);
+                        }
+                        if (searchForm.deductionStatus) {
+                            filteredData = filteredData.filter(item => item.deductionCompleted === searchForm.deductionStatus);
+                        }
+
+                        total.value = filteredData.length;
+                        const start = (currentPage.value - 1) * pageSize.value;
+                        const end = start + pageSize.value;
+                        tableData.value = filteredData.slice(start, end);
+                        loading.value = false;
+                    }, 300);
+                };
+
+                // 查询
+                const handleSearch = () => {
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 重置
+                const handleReset = () => {
+                    searchForm.sendDate = '';
+                    searchForm.customerName = '';
+                    searchForm.trackingNo = '';
+                    searchForm.reason = '';
+                    searchForm.costBearer = '';
+                    searchForm.nannyName = '';
+                    searchForm.customerService = '';
+                    searchForm.deductionStatus = '';
+                    currentPage.value = 1;
+                    getTableData();
+                };
+
+                // 新增
+                const handleAdd = () => {
+                    window.location.href = 'form.html';
+                };
+
+                // 编辑
+                const handleEdit = (row) => {
+                    window.location.href = `form.html?id=${row.id}`;
+                };
+
+                // 删除
+                const handleDelete = (row) => {
+                    ElementPlus.ElMessageBox.confirm(
+                        `确定要删除客户"${row.customerName}"的寄送记录吗？`,
+                        '提示',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }
+                    ).then(() => {
+                        const index = mockData.findIndex(item => item.id === row.id);
+                        if (index > -1) {
+                            mockData.splice(index, 1);
+                            getTableData();
+                            ElementPlus.ElMessage.success('删除成功');
+                        }
+                    }).catch(() => {});
+                };
+
+                // 导入
+                const handleImport = () => {
+                    ElementPlus.ElMessage.info('导入功能：请选择Excel文件');
+                };
+
+                // 导出
+                const handleExport = () => {
+                    ElementPlus.ElMessage.success('正在导出Excel，请稍候...');
+                    setTimeout(() => {
+                        ElementPlus.ElMessage.success('导出成功');
+                    }, 1000);
+                };
+
+                // 分页
+                const handleSizeChange = (val) => {
+                    pageSize.value = val;
+                    getTableData();
+                };
+
+                const handleCurrentChange = (val) => {
+                    currentPage.value = val;
+                    getTableData();
+                };
+
+                onMounted(() => {
+                    getTableData();
+                });
+
+                return {
+                    searchForm,
+                    reasonOptions,
+                    customerServiceOptions,
+                    loading,
+                    tableData,
+                    currentPage,
+                    pageSize,
+                    total,
+                    handleSearch,
+                    handleReset,
+                    handleAdd,
+                    handleEdit,
+                    handleDelete,
+                    handleImport,
+                    handleExport,
+                    handleSizeChange,
+                    handleCurrentChange
+                };
+            }
+        }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
+    </script>
+</body>
+</html>
