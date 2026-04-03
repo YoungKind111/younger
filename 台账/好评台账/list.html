@@ -170,25 +170,13 @@
                     style="width: 100%"
                     v-loading="loading">
                     <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
-                    <el-table-column prop="entryDate" label="录入日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="entryDate" label="创建日期" width="110" align="center"></el-table-column>
                     <el-table-column prop="belongMonth" label="归属月份" width="110" align="center"></el-table-column>
                     <el-table-column prop="customerName" label="客户名字" width="100" align="center"></el-table-column>
                     <el-table-column prop="packageLevel" label="套餐级别" width="90" align="center"></el-table-column>
                     <el-table-column prop="targetName" label="好评对象" width="110" align="center"></el-table-column>
                     <el-table-column prop="position" label="好评岗位" width="100" align="center"></el-table-column>
                     <el-table-column prop="source" label="好评来源" width="100" align="center"></el-table-column>
-                    <el-table-column label="好评凭证" width="90" align="center">
-                        <template #default="scope">
-                            <el-image
-                                v-if="scope.row.credentials && scope.row.credentials.length > 0"
-                                :src="scope.row.credentials[0]"
-                                :preview-src-list="scope.row.credentials"
-                                class="credential-img"
-                                fit="cover">
-                            </el-image>
-                            <span v-else>-</span>
-                        </template>
-                    </el-table-column>
                     <el-table-column prop="customerService" label="专属客服" width="100" align="center"></el-table-column>
                     <el-table-column prop="creator" label="制表人" width="90" align="center"></el-table-column>
                     <el-table-column label="操作" width="150" align="center" fixed="right">

@@ -175,8 +175,10 @@
                     style="width: 100%"
                     v-loading="loading">
                     <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
-                    <el-table-column prop="entryDate" label="录入日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="entryDate" label="创建日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="belongMonth" label="归属月份" width="100" align="center"></el-table-column>
                     <el-table-column prop="sendDate" label="寄出日期" width="110" align="center"></el-table-column>
+                    <el-table-column prop="customerName" label="客户名称" width="120" align="center"></el-table-column>
                     <el-table-column label="收件客户信息" width="200" show-overflow-tooltip>
                         <template #default="scope">
                             <div>{{ scope.row.customerName }}</div>
@@ -295,6 +297,7 @@
                         id: 1,
                         entryDate: '2024/11/3',
                         sendDate: '2024/11/3',
+                        belongMonth: '2024/11',
                         customerName: '江珊',
                         customerPhone: '13617285069',
                         customerAddress: '佛山顺德区陈村藏珑华府18栋2001',
@@ -313,6 +316,7 @@
                         id: 2,
                         entryDate: '2024/11/5',
                         sendDate: '2024/11/5',
+                        belongMonth: '2024/11',
                         customerName: '王芳',
                         customerPhone: '13800138001',
                         customerAddress: '广州市天河区珠江新城',
@@ -331,6 +335,7 @@
                         id: 3,
                         entryDate: '2024/11/8',
                         sendDate: '2024/11/8',
+                        belongMonth: '2024/11',
                         customerName: '李梅',
                         customerPhone: '13900139001',
                         customerAddress: '深圳市南山区科技园',
@@ -349,6 +354,7 @@
                         id: 4,
                         entryDate: '2024/11/10',
                         sendDate: '2024/11/10',
+                        belongMonth: '2024/11',
                         customerName: '张丽',
                         customerPhone: '13700137001',
                         customerAddress: '东莞市南城区',
@@ -367,6 +373,7 @@
                         id: 5,
                         entryDate: '2024/11/12',
                         sendDate: '2024/11/12',
+                        belongMonth: '2024/11',
                         customerName: '刘静',
                         customerPhone: '13600136001',
                         customerAddress: '中山市石岐区',

@@ -191,7 +191,7 @@
                     v-loading="loading"
                     :scrollbar-always-on="true">
                     <el-table-column type="index" label="序号" width="50" align="center" fixed="left"></el-table-column>
-                    <el-table-column prop="entryDate" label="录入日期" width="100" align="center" fixed="left"></el-table-column>
+                    <el-table-column prop="entryDate" label="创建日期" width="100" align="center" fixed="left"></el-table-column>
                     <el-table-column prop="occurrenceDate" label="发生日期" width="100" align="center"></el-table-column>
                     <el-table-column prop="belongMonth" label="归属月份" width="100" align="center"></el-table-column>
                     <el-table-column prop="customerName" label="客户姓名" width="90" align="center"></el-table-column>
@@ -218,7 +218,7 @@
                     </el-table-column>
                     <el-table-column prop="problemSource" label="问题来源" width="100" align="center"></el-table-column>
                     <el-table-column prop="problemDetail" label="问题详情" width="150" show-overflow-tooltip></el-table-column>
-                    <el-table-column prop="problemFocus" label="问题重点现象" width="120" align="center"></el-table-column>
+                    <el-table-column prop="problemFocus" label="问题重点" width="120" align="center"></el-table-column>
                     <el-table-column prop="startDate" label="月嫂上户时间" width="110" align="center"></el-table-column>
                     <el-table-column prop="endDate" label="月嫂下户时间" width="110" align="center"></el-table-column>
                     <el-table-column prop="actualServiceDays" label="实际服务天数" width="100" align="center"></el-table-column>
@@ -233,7 +233,7 @@
                     <el-table-column prop="processResult" label="处理结果" width="120" align="center"></el-table-column>
                     <el-table-column prop="customerService" label="专属客服" width="90" align="center"></el-table-column>
                     <el-table-column prop="creator" label="制表人" width="80" align="center"></el-table-column>
-                    <el-table-column label="退单一类" width="300">
+                    <el-table-column label="一类" width="300">
                         <el-table-column prop="category1Level1" label="归类1" width="100" align="center">
                             <template #default="scope">
                                 <div class="category-cell">{{ scope.row.category1Level1 || '-' }}</div>
@@ -250,7 +250,7 @@
                             </template>
                         </el-table-column>
                     </el-table-column>
-                    <el-table-column label="退单二类" width="300">
+                    <el-table-column label="二类" width="300">
                         <el-table-column prop="category2Level1" label="归类1" width="100" align="center">
                             <template #default="scope">
                                 <div class="category-cell">{{ scope.row.category2Level1 || '-' }}</div>
@@ -267,7 +267,7 @@
                             </template>
                         </el-table-column>
                     </el-table-column>
-                    <el-table-column label="退单三类" width="300">
+                    <el-table-column label="三类" width="300">
                         <el-table-column prop="category3Level1" label="归类1" width="100" align="center">
                             <template #default="scope">
                                 <div class="category-cell">{{ scope.row.category3Level1 || '-' }}</div>
@@ -321,7 +321,6 @@
                     <div class="notes-title">📋 功能说明</div>
                     <ol class="notes-list">
                         <li>此报表允许对单个记录进行修改，修改后能保有修改纪录；</li>
-                        <li>除了"备注"为非必填外，其他项均为必填项；</li>
                         <li>报表允许导出功能。</li>
                     </ol>
                 </div>

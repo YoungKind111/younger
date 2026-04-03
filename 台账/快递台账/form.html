@@ -316,6 +316,15 @@
             padding-left: 10px;
             border-left: 4px solid #409eff;
         }
+        .upload-area {
+            width: 100%;
+        }
+        .upload-area:focus {
+            outline: none;
+        }
+        .upload-area .el-upload-dragger {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -338,7 +347,7 @@
                 <div v-if="isEdit" class="info-section">
                     <div class="info-section-title">系统信息</div>
                     <div class="info-item">
-                        <span class="info-label">录入日期：</span>
+                        <span class="info-label">创建日期：</span>
                         <span class="info-value">{{ form.entryDate }}</span>
                     </div>
                     <div class="info-item">
@@ -449,19 +458,17 @@
                         <el-input 
                             v-model="form.customerName" 
                             placeholder="请输入客户名字" 
-                            maxlength="20" 
-                            show-word-limit
-                            :disabled="!isEdit && !!selectedNanny">
+                            maxlength="20"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
                     <!-- 客户电话 -->
                     <el-form-item label="客户电话" prop="customerPhone">
-                        <el-input 
-                            v-model="form.customerPhone" 
-                            placeholder="请输入客户电话" 
-                            maxlength="20"
-                            :disabled="!isEdit && !!selectedNanny">
+                        <el-input
+                            v-model="form.customerPhone"
+                            placeholder="请输入客户电话"
+                            maxlength="20">
                         </el-input>
                     </el-form-item>
 
@@ -471,10 +478,9 @@
                             v-model="form.customerAddress" 
                             type="textarea" 
                             :rows="2"
-                            placeholder="请输入客户详细地址" 
+                            placeholder="请输入客户详细地址"
                             maxlength="200"
-                            show-word-limit
-                            :disabled="!isEdit && !!selectedNanny">
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
@@ -504,10 +510,9 @@
                     <el-form-item label="月嫂名字" prop="nannyName">
                         <el-input 
                             v-model="form.nannyName" 
-                            placeholder="请输入月嫂名字" 
-                            maxlength="20" 
-                            show-word-limit
-                            :disabled="!isEdit && !!selectedNanny">
+                            placeholder="请输入月嫂名字"
+                            maxlength="20"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
@@ -515,17 +520,16 @@
                     <el-form-item label="专属客服" prop="customerService">
                         <el-select 
                             v-model="form.customerService" 
-                            placeholder="请选择专属客服" 
-                            style="width: 100%"
-                            :disabled="!isEdit && !!selectedOrder">
+                            placeholder="请选择专属客服"
+                            style="width: 100%">
                             <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
                         </el-select>
                         <div class="upload-tip">选择订单后自动填充，后期可在系统后台添加新选项</div>
                     </el-form-item>
 
                     <!-- 扣款信息区域 -->
-                    <div v-if="showDeductionSection" class="deduction-section">
-                        <div class="deduction-title">扣款信息</div>
+                    <div class="deduction-section">
+                        <div class="deduction-title">扣款信息（非必填）</div>
                         
                         <!-- 扣款金额 -->
                         <el-form-item label="扣款金额" prop="deductionAmount">
@@ -564,6 +568,34 @@
                         </div>
                     </div>
 
+                    <!-- 附件上传 -->
+                    <el-form-item label="附件上传" prop="attachments">
+                        <div
+                            class="upload-area"
+                            @paste="handlePaste"
+                            tabindex="0">
+                            <el-upload
+                                ref="uploadRef"
+                                action="#"
+                                :auto-upload="false"
+                                :file-list="attachmentList"
+                                :on-change="handleFileChange"
+                                :on-remove="handleFileRemove"
+                                :multiple="true"
+                                list-type="picture-card"
+                                drag>
+                                <i class="el-icon-upload"></i>
+                                <div class="el-upload__text">
+                                    拖拽文件到此处，或 <em>点击上传</em><br>
+                                    <small>支持 Ctrl+V 粘贴截图</small>
+                                </div>
+                            </el-upload>
+                        </div>
+                        <div class="upload-tip">
+                            支持图片、PDF、Word、Excel等常见格式，单个文件不超过10MB。可直接粘贴截图。
+                        </div>
+                    </el-form-item>
+
                     <!-- 备注 -->
                     <el-form-item label="备注" prop="remark">
                         <el-input 
@@ -590,11 +622,14 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Element Plus -->
     <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.min.js"></script>
     <!-- Element Plus 中文语言包 -->
     <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
 
     <script>
         const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
+        const { Plus } = ElementPlusIconsVue;
 
         createApp({
             setup() {
@@ -608,6 +643,8 @@
                 const isEdit = ref(!!recordId);
                 const formRef = ref(null);
                 const submitting = ref(false);
+                const uploadRef = ref(null);
+                const attachmentList = ref([]);
 
                 // 客户搜索相关
                 const customerSearchKey = ref('');
@@ -707,19 +744,6 @@
                     remark: ''
                 });
 
-                // 是否显示扣款区域
-                const showDeductionSection = computed(() => {
-                    return form.costBearer === '月嫂' || form.costBearer === '客服';
-                });
-
-                // 监听费用承担方变化
-                watch(() => form.costBearer, (newVal) => {
-                    if (newVal !== '月嫂' && newVal !== '客服') {
-                        form.deductionAmount = null;
-                        form.deductionTime = '';
-                        form.deductionCompleted = '否';
-                    }
-                });
 
                 // 表单验证规则
                 const rules = {
@@ -732,39 +756,9 @@
                     costBearer: [{ required: true, message: '请选择费用承担方', trigger: 'change' }],
                     nannyName: [{ required: true, message: '请输入月嫂名字', trigger: 'blur' }],
                     customerService: [{ required: true, message: '请选择专属客服', trigger: 'change' }],
-                    deductionAmount: [{ 
-                        required: true, 
-                        validator: (rule, value, callback) => {
-                            if (showDeductionSection.value && (value === null || value === undefined || value === '')) {
-                                callback(new Error('请输入扣款金额'));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: 'blur' 
-                    }],
-                    deductionTime: [{ 
-                        required: true, 
-                        validator: (rule, value, callback) => {
-                            if (showDeductionSection.value && !value) {
-                                callback(new Error('请选择扣款时间'));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: 'change' 
-                    }],
-                    deductionCompleted: [{ 
-                        required: true, 
-                        validator: (rule, value, callback) => {
-                            if (showDeductionSection.value && !value) {
-                                callback(new Error('请选择是否完成扣款'));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: 'change' 
-                    }]
+                    deductionAmount: [], // 非必填
+                    deductionTime: [], // 非必填
+                    deductionCompleted: [] // 非必填
                 };
 
                 // Mock 数据存储
@@ -873,6 +867,46 @@
                     window.location.href = 'list.html';
                 };
 
+                // 附件上传 - 处理粘贴事件
+                const handlePaste = (e) => {
+                    const items = e.clipboardData?.items;
+                    if (!items) return;
+
+                    for (let i = 0; i < items.length; i++) {
+                        const item = items[i];
+                        if (item.type.indexOf('image') !== -1) {
+                            const blob = item.getAsFile();
+                            if (blob) {
+                                const file = new File([blob], `粘贴截图_${new Date().getTime()}.png`, { type: blob.type });
+                                attachmentList.value.push({
+                                    name: file.name,
+                                    url: URL.createObjectURL(file),
+                                    raw: file
+                                });
+                                ElementPlus.ElMessage.success('截图已粘贴');
+                            }
+                        }
+                    }
+                };
+
+                // 附件上传 - 文件变更
+                const handleFileChange = (uploadFile) => {
+                    const isLt10M = uploadFile.size / 1024 / 1024 < 10;
+                    if (!isLt10M) {
+                        ElementPlus.ElMessage.error('文件大小不能超过 10MB!');
+                        return false;
+                    }
+                    attachmentList.value.push(uploadFile);
+                };
+
+                // 附件上传 - 文件移除
+                const handleFileRemove = (file) => {
+                    const index = attachmentList.value.findIndex(item => item.uid === file.uid);
+                    if (index !== -1) {
+                        attachmentList.value.splice(index, 1);
+                    }
+                };
+
                 // 提交表单
                 const handleSubmit = () => {
                     formRef.value.validate((valid) => {
@@ -908,7 +942,9 @@
                     form,
                     rules,
                     submitting,
-                    showDeductionSection,
+                    // 附件上传相关
+                    uploadRef,
+                    attachmentList,
                     // 客户搜索相关
                     customerSearchKey,
                     searching,
@@ -927,7 +963,11 @@
                     selectOrder,
                     selectNanny,
                     goBack,
-                    handleSubmit
+                    handleSubmit,
+                    // 附件上传方法
+                    handlePaste,
+                    handleFileChange,
+                    handleFileRemove
                 };
             }
         }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');

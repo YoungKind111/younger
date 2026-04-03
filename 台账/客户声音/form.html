@@ -290,13 +290,13 @@
             <!-- 表单区域 -->
             <div class="form-container">
                 <div class="form-title">客户声音信息录入</div>
-                <div class="required-note">* 除备注外，其他字段均为必填项</div>
+               
 
                 <!-- 系统信息展示（编辑时显示） -->
                 <div v-if="isEdit" class="info-section">
                     <div class="info-section-title">系统信息</div>
                     <div class="info-item">
-                        <span class="info-label">录入日期：</span>
+                        <span class="info-label">创建日期：</span>
                         <span class="info-value">{{ form.entryDate }}</span>
                     </div>
                     <div class="info-item">
@@ -433,45 +433,51 @@
 
                     <!-- 客户姓名 -->
                     <el-form-item label="客户姓名" prop="customerName">
-                        <el-input 
-                            v-model="form.customerName" 
-                            placeholder="请输入客户姓名" 
-                            maxlength="20" 
-                            show-word-limit
-                            :disabled="!isEdit && !!selectedOrder">
+                        <el-input
+                            v-model="form.customerName"
+                            placeholder="请输入客户姓名"
+                            maxlength="20"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
                     <!-- 合同编号 -->
                     <el-form-item label="合同编号" prop="contractNo">
-                        <el-input 
-                            v-model="form.contractNo" 
-                            placeholder="请输入合同编号" 
-                            maxlength="30" 
-                            show-word-limit
-                            :disabled="!isEdit && !!selectedOrder">
+                        <el-input
+                            v-model="form.contractNo"
+                            placeholder="请输入合同编号"
+                            maxlength="30"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
                     <!-- 服务地区 -->
                     <el-form-item label="服务地区" prop="serviceArea">
-                        <el-select 
-                            v-model="form.serviceArea" 
-                            placeholder="请选择服务地区" 
-                            style="width: 100%"
-                            :disabled="!isEdit && !!selectedOrder">
+                        <el-select
+                            v-model="form.serviceArea"
+                            placeholder="请选择服务地区"
+                            style="width: 100%">
                             <el-option v-for="item in areaOptions" :key="item" :label="item" :value="item"></el-option>
                         </el-select>
                     </el-form-item>
 
                     <!-- 套餐级别 -->
                     <el-form-item label="套餐级别" prop="packageLevel">
-                        <el-select 
-                            v-model="form.packageLevel" 
-                            placeholder="请选择套餐级别" 
-                            style="width: 100%"
-                            :disabled="!isEdit && !!selectedOrder">
+                        <el-select
+                            v-model="form.packageLevel"
+                            placeholder="请选择套餐级别"
+                            style="width: 100%">
                             <el-option v-for="item in packageOptions" :key="item" :label="item" :value="item"></el-option>
+                        </el-select>
+                    </el-form-item>
+
+                    <!-- 专属客服 -->
+                    <el-form-item label="专属客服" prop="customerService">
+                        <el-select
+                            v-model="form.customerService"
+                            placeholder="请选择专属客服"
+                            style="width: 100%">
+                            <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
                         </el-select>
                     </el-form-item>
 
@@ -479,34 +485,31 @@
 
                     <!-- 服务月嫂 -->
                     <el-form-item label="服务月嫂" prop="nannyName">
-                        <el-input 
-                            v-model="form.nannyName" 
-                            placeholder="请输入服务月嫂名字" 
-                            maxlength="20" 
-                            show-word-limit
-                            :disabled="!isEdit && selectedNannyIndex !== null">
+                        <el-input
+                            v-model="form.nannyName"
+                            placeholder="请输入服务月嫂名字"
+                            maxlength="20"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
                     <!-- 月嫂级别 -->
                     <el-form-item label="月嫂级别" prop="nannyLevel">
-                        <el-select 
-                            v-model="form.nannyLevel" 
-                            placeholder="请选择月嫂级别" 
-                            style="width: 100%"
-                            :disabled="!isEdit && selectedNannyIndex !== null">
+                        <el-select
+                            v-model="form.nannyLevel"
+                            placeholder="请选择月嫂级别"
+                            style="width: 100%">
                             <el-option v-for="item in nannyLevelOptions" :key="item" :label="item" :value="item"></el-option>
                         </el-select>
                     </el-form-item>
 
                     <!-- 月嫂老师 -->
                     <el-form-item label="月嫂老师" prop="nannyTeacher">
-                        <el-input 
-                            v-model="form.nannyTeacher" 
-                            placeholder="请输入月嫂老师名字" 
-                            maxlength="20" 
-                            show-word-limit
-                            :disabled="!isEdit && selectedNannyIndex !== null">
+                        <el-input
+                            v-model="form.nannyTeacher"
+                            placeholder="请输入月嫂老师名字"
+                            maxlength="20"
+                            show-word-limit>
                         </el-input>
                     </el-form-item>
 
@@ -545,7 +548,6 @@
                             format="YYYY/MM/D"
                             value-format="YYYY/MM/D"
                             style="width: 100%"
-                            :disabled="!isEdit && selectedNannyIndex !== null"
                             @change="calculateServiceDays">
                         </el-date-picker>
                     </el-form-item>
@@ -585,22 +587,116 @@
 
                     <!-- 问题详情 -->
                     <el-form-item label="问题详情" prop="problemDetail">
-                        <el-input 
-                            v-model="form.problemDetail" 
-                            type="textarea" 
+                        <el-input
+                            v-model="form.problemDetail"
+                            type="textarea"
                             :rows="3"
-                            placeholder="请详细描述问题" 
+                            placeholder="请详细描述问题"
                             maxlength="500"
                             show-word-limit>
                         </el-input>
                     </el-form-item>
 
-                    <!-- 问题重点现象 -->
-                    <el-form-item label="问题重点现象" prop="problemFocus">
-                        <el-input v-model="form.problemFocus" placeholder="请输入问题重点现象" maxlength="50" show-word-limit></el-input>
+                    <!-- AI 辅助按钮 -->
+                    <el-form-item style="margin-top: -10px;">
+                        <div style="display: flex; gap: 10px; margin-left: 0;">
+                            <el-button
+                                type="primary"
+                                size="small"
+                                :disabled="!form.problemDetail"
+                                :loading="extractingKeyPoints"
+                                @click="extractKeyPoints"
+                                icon="el-icon-magic-stick"
+                                plain>
+                                提炼重点
+                            </el-button>
+                            <el-button
+                                type="success"
+                                size="small"
+                                :disabled="!form.problemDetail"
+                                :loading="autoCategorizing"
+                                @click="autoCategorize"
+                                icon="el-icon-s-operation"
+                                plain>
+                                自动归类
+                            </el-button>
+                        </div>
                     </el-form-item>
 
-                    <div class="section-title">处理信息</div>
+                    <!-- 问题重点 -->
+                    <el-form-item label="问题重点" prop="problemFocus">
+                        <el-input v-model="form.problemFocus" placeholder="请输入问题重点" maxlength="50" show-word-limit></el-input>
+                    </el-form-item>
+
+                    <div class="section-title">归类</div>
+
+                    <!-- 一类 -->
+                    <div class="category-section">
+                        <div class="category-title">一类</div>
+                        <div class="category-row">
+                            <el-form-item label="归类1" prop="category1Level1" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category1Level1" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category1Level1Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="归类2" prop="category1Level2" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category1Level2" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category1Level2Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="责任部门1" prop="responsibleDept1" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.responsibleDept1" placeholder="请选择责任部门" clearable style="width: 100%">
+                                    <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <!-- 二类 -->
+                    <div class="category-section">
+                        <div class="category-title">二类</div>
+                        <div class="category-row">
+                            <el-form-item label="归类1" prop="category2Level1" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category2Level1" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category2Level1Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="归类2" prop="category2Level2" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category2Level2" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category2Level2Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="责任部门2" prop="responsibleDept2" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.responsibleDept2" placeholder="请选择责任部门" clearable style="width: 100%">
+                                    <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <!-- 三类 -->
+                    <div class="category-section">
+                        <div class="category-title">三类</div>
+                        <div class="category-row">
+                            <el-form-item label="归类1" prop="category3Level1" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category3Level1" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category3Level1Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="归类2" prop="category3Level2" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.category3Level2" placeholder="请选择" clearable style="width: 100%">
+                                    <el-option v-for="item in category3Level2Options" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="责任部门3" prop="responsibleDept3" style="flex: 1; margin-bottom: 0;">
+                                <el-select v-model="form.responsibleDept3" placeholder="请选择责任部门" clearable style="width: 100%">
+                                    <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div class="section-title">处理结果</div>
 
                     <!-- 客户更换要求 -->
                     <el-form-item label="客户更换要求" prop="changeRequirement">
@@ -644,85 +740,6 @@
                             <el-option v-for="item in processResultOptions" :key="item" :label="item" :value="item"></el-option>
                         </el-select>
                     </el-form-item>
-
-                    <!-- 专属客服 -->
-                    <el-form-item label="专属客服" prop="customerService">
-                        <el-select 
-                            v-model="form.customerService" 
-                            placeholder="请选择专属客服" 
-                            style="width: 100%"
-                            :disabled="!isEdit && !!selectedOrder">
-                            <el-option v-for="item in customerServiceOptions" :key="item" :label="item" :value="item"></el-option>
-                        </el-select>
-                    </el-form-item>
-
-                    <div class="section-title">退单归类</div>
-
-                    <!-- 退单一类 -->
-                    <div class="category-section">
-                        <div class="category-title">退单一类</div>
-                        <div class="category-row">
-                            <el-form-item label="归类1" prop="category1Level1" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category1Level1" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category1Level1Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="归类2" prop="category1Level2" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category1Level2" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category1Level2Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </div>
-                        <el-form-item label="责任部门1" prop="responsibleDept1" style="margin-top: 15px; margin-bottom: 0;">
-                            <el-select v-model="form.responsibleDept1" placeholder="请选择责任部门" clearable style="width: 100%">
-                                <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
-                            </el-select>
-                        </el-form-item>
-                    </div>
-
-                    <!-- 退单二类 -->
-                    <div class="category-section">
-                        <div class="category-title">退单二类</div>
-                        <div class="category-row">
-                            <el-form-item label="归类1" prop="category2Level1" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category2Level1" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category2Level1Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="归类2" prop="category2Level2" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category2Level2" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category2Level2Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </div>
-                        <el-form-item label="责任部门2" prop="responsibleDept2" style="margin-top: 15px; margin-bottom: 0;">
-                            <el-select v-model="form.responsibleDept2" placeholder="请选择责任部门" clearable style="width: 100%">
-                                <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
-                            </el-select>
-                        </el-form-item>
-                    </div>
-
-                    <!-- 退单三类 -->
-                    <div class="category-section">
-                        <div class="category-title">退单三类</div>
-                        <div class="category-row">
-                            <el-form-item label="归类1" prop="category3Level1" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category3Level1" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category3Level1Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="归类2" prop="category3Level2" style="flex: 1; margin-bottom: 0;">
-                                <el-select v-model="form.category3Level2" placeholder="请选择" clearable style="width: 100%">
-                                    <el-option v-for="item in category3Level2Options" :key="item" :label="item" :value="item"></el-option>
-                                </el-select>
-                            </el-form-item>
-                        </div>
-                        <el-form-item label="责任部门3" prop="responsibleDept3" style="margin-top: 15px; margin-bottom: 0;">
-                            <el-select v-model="form.responsibleDept3" placeholder="请选择责任部门" clearable style="width: 100%">
-                                <el-option v-for="item in responsibleDeptOptions" :key="item" :label="item" :value="item"></el-option>
-                            </el-select>
-                        </el-form-item>
-                    </div>
 
                     <div class="section-title">审核信息</div>
 
@@ -782,6 +799,10 @@
                 const isEdit = ref(!!recordId);
                 const formRef = ref(null);
                 const submitting = ref(false);
+
+                // AI 辅助功能 loading 状态
+                const extractingKeyPoints = ref(false);
+                const autoCategorizing = ref(false);
 
                 // 客户搜索相关
                 const customerSearchKey = ref('');
@@ -952,15 +973,15 @@
                     problemSource: [{ required: true, message: '请选择问题来源', trigger: 'change' }],
                     problemDetail: [{ required: true, message: '请输入问题详情', trigger: 'blur' }],
                     problemFocus: [{ required: true, message: '请输入问题重点现象', trigger: 'blur' }],
-                    changeRequirement: [{ required: true, message: '请选择客户更换要求', trigger: 'change' }],
-                    changeSuccess: [{ required: true, message: '请选择是否换人成功', trigger: 'change' }],
-                    newNannyName: [{ required: true, message: '请输入更换月嫂名字', trigger: 'blur' }],
-                    actualStartDate: [{ required: true, message: '请选择上户时间', trigger: 'change' }],
-                    processResult: [{ required: true, message: '请选择处理结果', trigger: 'change' }],
+                    changeRequirement: [], // 非必填
+                    changeSuccess: [], // 非必填
+                    newNannyName: [], // 非必填
+                    actualStartDate: [], // 非必填
+                    processResult: [], // 非必填
                     customerService: [{ required: true, message: '请选择专属客服', trigger: 'change' }],
-                    complaintValid: [{ required: true, message: '请选择客诉是否成立', trigger: 'change' }],
-                    performancePenalty: [{ required: true, message: '请选择绩效是否扣罚', trigger: 'change' }],
-                    definedBy: [{ required: true, message: '请选择界定人员', trigger: 'change' }]
+                    complaintValid: [], // 非必填
+                    performancePenalty: [], // 非必填
+                    definedBy: [] // 非必填
                 };
 
                 // Mock 数据存储
@@ -1119,6 +1140,100 @@
                     window.location.href = 'list.html';
                 };
 
+                // AI 提炼重点
+                const extractKeyPoints = () => {
+                    if (!form.problemDetail) {
+                        ElementPlus.ElMessage.warning('请先填写问题详情');
+                        return;
+                    }
+
+                    extractingKeyPoints.value = true;
+
+                    // 模拟大模型调用
+                    setTimeout(() => {
+                        const detail = form.problemDetail;
+                        let keyPoint = '';
+
+                        // 简单的关键词匹配逻辑（模拟大模型）
+                        if (detail.includes('态度') || detail.includes('沟通')) {
+                            keyPoint = '服务态度问题';
+                        } else if (detail.includes('专业') || detail.includes('技能') || detail.includes('护理')) {
+                            keyPoint = '专业能力不足';
+                        } else if (detail.includes('迟到') || detail.includes('缺勤') || detail.includes('时间')) {
+                            keyPoint = '时间管理问题';
+                        } else if (detail.includes('健康') || detail.includes('生病') || detail.includes('传染')) {
+                            keyPoint = '健康问题';
+                        } else if (detail.includes('换') || detail.includes('顶班')) {
+                            keyPoint = '换人/顶班问题';
+                        } else if (detail.includes('退') || detail.includes('退款')) {
+                            keyPoint = '退单问题';
+                        } else {
+                            keyPoint = '其他服务问题';
+                        }
+
+                        form.problemFocus = keyPoint;
+                        extractingKeyPoints.value = false;
+                        ElementPlus.ElMessage.success('已提炼问题重点：' + keyPoint);
+                    }, 1500);
+                };
+
+                // AI 自动归类
+                const autoCategorize = () => {
+                    if (!form.problemDetail) {
+                        ElementPlus.ElMessage.warning('请先填写问题详情');
+                        return;
+                    }
+
+                    autoCategorizing.value = true;
+
+                    // 模拟大模型调用
+                    setTimeout(() => {
+                        const detail = form.problemDetail;
+
+                        // 质量追溯标签与责任归属总表 模拟逻辑
+                        // 一类归类
+                        if (detail.includes('态度') || detail.includes('沟通') || detail.includes('恶劣')) {
+                            form.category1Level1 = '服务态度问题';
+                            form.category1Level2 = detail.includes('沟通') ? '沟通不畅' : '态度恶劣';
+                        } else if (detail.includes('专业') || detail.includes('技能') || detail.includes('护理')) {
+                            form.category1Level1 = '专业能力不足';
+                            form.category1Level2 = detail.includes('护理') ? '护理技能' : '育儿知识';
+                        } else if (detail.includes('迟到') || detail.includes('缺勤') || detail.includes('时间')) {
+                            form.category1Level1 = '时间管理';
+                            form.category1Level2 = detail.includes('迟到') ? '迟到早退' : '缺勤';
+                        } else if (detail.includes('健康') || detail.includes('生病') || detail.includes('传染')) {
+                            form.category1Level1 = '健康问题';
+                            form.category1Level2 = detail.includes('传染') ? '传染病' : '身体不适';
+                        } else {
+                            form.category1Level1 = '其他';
+                            form.category1Level2 = '其他';
+                        }
+                        form.responsibleDept1 = '月嫂管理部';
+
+                        // 二类归类
+                        if (detail.includes('换') || detail.includes('顶班')) {
+                            form.category2Level1 = '月嫂原因';
+                            form.category2Level2 = detail.includes('顶班') ? '服务不满意' : '违反规定';
+                        } else if (detail.includes('退') || detail.includes('退款')) {
+                            form.category2Level1 = '客户原因';
+                            form.category2Level2 = '个人原因';
+                        } else {
+                            form.category2Level1 = '公司原因';
+                            form.category2Level2 = '派工问题';
+                        }
+                        form.responsibleDept2 = '顾问部';
+
+                        // 三类归类
+                        const hasSeriousKeywords = detail.includes('严重') || detail.includes('重大') || detail.includes('恶劣');
+                        form.category3Level1 = hasSeriousKeywords ? '严重' : '一般';
+                        form.category3Level2 = hasSeriousKeywords ? '难挽回' : '可挽回';
+                        form.responsibleDept3 = '质控部';
+
+                        autoCategorizing.value = false;
+                        ElementPlus.ElMessage.success('已完成自动归类');
+                    }, 2000);
+                };
+
                 // 提交表单
                 const handleSubmit = () => {
                     formRef.value.validate((valid) => {
@@ -1164,6 +1279,9 @@
                     form,
                     rules,
                     submitting,
+                    // AI 辅助功能
+                    extractingKeyPoints,
+                    autoCategorizing,
                     // 客户搜索相关
                     customerSearchKey,
                     searching,
@@ -1191,7 +1309,10 @@
                     selectNanny,
                     calculateServiceDays,
                     goBack,
-                    handleSubmit
+                    handleSubmit,
+                    // AI 辅助方法
+                    extractKeyPoints,
+                    autoCategorize
                 };
             }
         }).use(ElementPlus, { locale: ElementPlusLocaleZhCn }).mount('#app');
