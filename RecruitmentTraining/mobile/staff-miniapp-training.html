@@ -233,6 +233,15 @@
       cursor: pointer;
     }
 
+    .btn-checkin {
+      padding: 6px 16px;
+      background: #52c41a;
+      color: #fff;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
     /* 空状态 */
     .empty-state {
       text-align: center;
@@ -343,12 +352,10 @@
             <span>讲师：张美玲</span>
           </div>
         </div>
-        <div class="class-footer">
-          <div class="result-label">第6天 / 共10天</div>
-          <div class="class-footer-right">
-            <div class="btn-schedule" onclick="window.location.href='staff-miniapp-schedule.html'">查看课表</div>
-            <div class="btn-exam" onclick="window.location.href='staff-miniapp-exam.html'">线上考试</div>
-          </div>
+        <div class="class-footer" style="justify-content: flex-end;">
+          <div class="btn-schedule" onclick="window.location.href='staff-miniapp-schedule.html'">查看课表</div>
+          <div class="btn-checkin" onclick="window.location.href='staff-miniapp-checkin.html'">扫码签到</div>
+          <div class="btn-exam" onclick="window.location.href='staff-miniapp-exam.html'">线上考试</div>
         </div>
       </div>
 

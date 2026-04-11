@@ -47,6 +47,18 @@
       border: 1px solid #d9d9d9;
     }
 
+    .reject-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .reject-tag-green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .reject-tag-orange { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+    .reject-tag-red { background: #fff1f0; color: #f5222d; border: 1px solid #ffa39e; }
+
     .check-icon {
       display: inline-flex;
       align-items: center;
@@ -296,18 +308,18 @@
           <span class="card-title">运营交接</span>
           <span class="card-subtitle" style="margin-left: 12px;">共 {{ filteredList.length }} 人</span>
         </div>
-        <div>
-          <el-button type="primary" @click="handleBatchHandover">
-            <i class="el-icon-s-promotion"></i> 批量交接
-          </el-button>
-        </div>
       </div>
       <div class="card-body">
         <div class="filter-bar">
-          <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 150px;">
-            <el-option label="待交接" value="pending"></el-option>
-            <el-option label="已交接" value="success"></el-option>
-            <el-option label="已拒收" value="rejected"></el-option>
+          <el-select v-model="filterIsReceived" placeholder="是否接收" clearable style="width: 120px;">
+            <el-option label="已接收" value="received"></el-option>
+            <el-option label="空" value="empty"></el-option>
+          </el-select>
+          <el-select v-model="filterRecruiter" placeholder="招生老师" clearable style="width: 150px;">
+            <el-option v-for="recruiter in recruiterList" :key="recruiter" :label="recruiter" :value="recruiter"></el-option>
+          </el-select>
+          <el-select v-model="filterNannyTeacher" placeholder="月嫂老师" clearable style="width: 150px;">
+            <el-option v-for="teacher in nannyTeacherList" :key="teacher" :label="teacher" :value="teacher"></el-option>
           </el-select>
           <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 150px;">
             <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
@@ -323,8 +335,7 @@
           </el-input>
         </div>
 
-        <el-table :data="pagedList" style="width: 100%" v-loading="loading" @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="50" fixed></el-table-column>
+        <el-table :data="pagedList" style="width: 100%" v-loading="loading">
           <el-table-column label="姓名" width="140" fixed>
             <template #default="{ row }">
               <div class="staff-info">
@@ -338,10 +349,8 @@
           <el-table-column label="岗位" width="100">
             <template #default="{ row }">{{ row.position_name }}</template>
           </el-table-column>
-          <el-table-column label="所属班级" min-width="200">
-            <template #default="{ row }">
-              <span class="class-link" @click="viewClassDetail(row.class_id)">{{ row.class_name }}</span>
-            </template>
+          <el-table-column label="招生老师" width="120">
+            <template #default="{ row }">{{ row.recruiter }}</template>
           </el-table-column>
           <el-table-column label="通过等级" width="100" align="center">
             <template #default="{ row }">{{ row.assessment_level || '-' }}</template>
@@ -388,6 +397,51 @@
               <span v-else class="empty-text">-</span>
             </template>
           </el-table-column>
+          <el-table-column label="是否接收" width="100" align="center">
+            <template #default="{ row }">
+              <span v-if="row.status === 'success'" class="status-badge status-success">已接收</span>
+              <span v-else class="empty-text">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="接收老师" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.receiver" size="small" style="width: 110px;" placeholder="请选择" @change="saveRow(row)">
+                <el-option v-for="teacher in receiverList" :key="teacher.id" :label="teacher.name" :value="teacher.name"></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="月嫂老师" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.teacher" size="small" style="width: 110px;" placeholder="请选择" @change="saveRow(row)">
+                <el-option v-for="teacher in nannyTeacherList" :key="teacher" :label="teacher" :value="teacher"></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="交接情况" width="140" align="center">
+            <template #default="{ row }">
+              <el-select v-model="row.handover_status" size="small" style="width: 130px;" placeholder="请选择" @change="handleHandoverStatusChange(row)">
+                <el-option label="正常交接" value="handover"></el-option>
+                <el-option label="档期问题" value="档期问题"></el-option>
+                <el-option label="体检问题" value="体检问题"></el-option>
+                <el-option label="简历问题" value="简历问题"></el-option>
+                <el-option label="未到/中途离开交接" value="未到/中途离开交接"></el-option>
+                <el-option label="48小时内失联" value="48小时内失联"></el-option>
+                <el-option label="不符合要求" value="不符合要求"></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="退回理由" min-width="180">
+            <template #default="{ row }">
+              <el-input
+                v-model="row.reject_reason"
+                type="textarea"
+                :rows="1"
+                placeholder="请输入退回理由"
+                size="small"
+                @blur="saveRow(row)"
+              />
+            </template>
+          </el-table-column>
           <el-table-column label="备注" min-width="180">
             <template #default="{ row }">
               <el-input
@@ -400,26 +454,10 @@
               />
             </template>
           </el-table-column>
-          <el-table-column label="管理老师是否接收" width="140" align="center">
-            <template #default="{ row }">
-              <span v-if="row.status === 'pending'" class="status-badge status-pending">待处理</span>
-              <span v-else-if="row.status === 'success'" class="status-badge status-success">已接收</span>
-              <span v-else-if="row.status === 'rejected'" class="status-badge status-rejected">已拒收</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="接收老师" width="120">
-            <template #default="{ row }">
-              <div v-if="row.receiver" class="receiver-info">
-                <i class="el-icon-user"></i>
-                <span>{{ row.receiver }}</span>
-              </div>
-              <span v-else class="empty-text">-</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120" fixed="right">
+          <el-table-column label="操作" width="140" fixed="right">
             <template #default="{ row }">
               <el-button type="text" @click="viewArchive(row)">档案</el-button>
-              <el-button v-if="row.status === 'pending'" type="text" @click="handleHandover(row)">交接</el-button>
+              <el-button v-if="row.status !== 'success'" type="text" @click="handleReceive(row)">接收</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -547,6 +585,16 @@
                 <div class="archive-item" v-if="currentArchive.remark">
                   <span class="archive-label">备注：</span>
                   <span class="archive-value">{{ currentArchive.remark }}</span>
+                </div>
+                <div class="archive-item" v-if="currentArchive.handover_type === 'reject'">
+                  <span class="archive-label">交接情况：</span>
+                  <span class="archive-value">
+                    <span :class="getRejectTagClass(currentArchive.reject_tag)" style="padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ currentArchive.reject_tag || '已拒收' }}</span>
+                  </span>
+                </div>
+                <div class="archive-item" v-if="currentArchive.reject_reason">
+                  <span class="archive-label">退回理由：</span>
+                  <span class="archive-value" style="color: #f5222d;">{{ currentArchive.reject_reason }}</span>
                 </div>
               </div>
             </div>
@@ -676,8 +724,8 @@
         </el-tabs>
 
         <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 12px;">
-          <el-button v-if="currentArchive.status === 'pending'" type="primary" style="flex: 1;" @click="handleHandoverFromDrawer">
-            <i class="el-icon-s-promotion"></i> 交接
+          <el-button v-if="currentArchive.status !== 'success'" type="primary" style="flex: 1;" @click="handleReceiveFromDrawer">
+            <i class="el-icon-s-promotion"></i> 接收
           </el-button>
           <el-button style="flex: 1;" @click="showArchiveDrawer = false">关闭</el-button>
         </div>
@@ -706,6 +754,16 @@
             <el-radio label="handover">正常交接</el-radio>
             <el-radio label="reject">拒收</el-radio>
           </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="handoverForm.handover_type === 'reject'" label="拒收标签">
+          <el-select v-model="handoverForm.reject_tag" placeholder="请选择拒收标签" style="width: 100%;">
+            <el-option label="档期问题" value="档期问题"></el-option>
+            <el-option label="体检问题" value="体检问题"></el-option>
+            <el-option label="简历问题" value="简历问题"></el-option>
+            <el-option label="未到/中途离开交接" value="未到/中途离开交接"></el-option>
+            <el-option label="48小时内失联" value="48小时内失联"></el-option>
+            <el-option label="不符合要求" value="不符合要求"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item v-if="handoverForm.handover_type === 'reject'" label="拒收理由">
           <el-input v-model="handoverForm.reject_reason" type="textarea" :rows="3" placeholder="请填写拒收理由"></el-input>
@@ -738,7 +796,9 @@
 
     createApp({
       setup() {
-        const filterStatus = ref('');
+        const filterIsReceived = ref('');
+        const filterRecruiter = ref('');
+        const filterNannyTeacher = ref('');
         const filterPosition = ref('');
         const filterLevel = ref('');
         const filterPassTime = ref([]);
@@ -746,8 +806,7 @@
         const currentPage = ref(1);
         const pageSize = ref(20);
         const loading = ref(false);
-        const selectedRows = ref([]);
-
+        
         const positionList = ref([
           { id: 1, name: '月嫂' },
           { id: 2, name: '育儿嫂' },
@@ -772,6 +831,12 @@
           { id: 4, name: '刘运营' }
         ]);
 
+        // 招生老师列表
+        const recruiterList = ref(['张小燕', '王小敏', '李小红']);
+
+        // 月嫂老师列表
+        const nannyTeacherList = ref(['张美玲', '李建国', '王秀英', '陈丽华']);
+
         const handoverList = ref([
           {
             id: 101,
@@ -779,6 +844,8 @@
             type: 'newbie',
             position_id: 1,
             position_name: '月嫂',
+            teacher: '张美玲',
+            recruiter: '张小燕',
             class_id: 1,
             class_name: '2026年4月月嫂新手班-A班',
             assessment_level: 'Y3-2',
@@ -793,7 +860,9 @@
             remark: '',
             status: 'success',
             reject_reason: '',
-            receiver: '王运营'
+            receiver: '王运营',
+            handover_type: 'handover',
+            handover_status: 'handover'
           },
           {
             id: 102,
@@ -801,6 +870,8 @@
             type: 'newbie',
             position_id: 1,
             position_name: '月嫂',
+            teacher: '张美玲',
+            recruiter: '王小敏',
             class_id: 1,
             class_name: '2026年4月月嫂新手班-A班',
             assessment_level: 'Y3-1',
@@ -815,7 +886,8 @@
             remark: '',
             status: 'pending',
             reject_reason: '',
-            receiver: ''
+            receiver: '',
+            handover_status: ''
           },
           {
             id: 103,
@@ -823,6 +895,8 @@
             type: 'veteran',
             position_id: 1,
             position_name: '月嫂',
+            teacher: '李建国',
+            recruiter: '张小燕',
             class_id: 2,
             class_name: '2026年4月熟手强化班',
             assessment_level: 'Y4-2',
@@ -837,7 +911,8 @@
             remark: '',
             status: 'success',
             reject_reason: '',
-            receiver: '李运营'
+            receiver: '李运营',
+            handover_status: 'handover'
           },
           {
             id: 104,
@@ -845,6 +920,8 @@
             type: 'newbie',
             position_id: 1,
             position_name: '月嫂',
+            teacher: '张美玲',
+            recruiter: '王小敏',
             class_id: 1,
             class_name: '2026年4月月嫂新手班-A班',
             assessment_level: '-',
@@ -858,8 +935,11 @@
             handover_time: '',
             remark: '',
             status: 'rejected',
-            reject_reason: '考核未通过',
-            receiver: ''
+            reject_reason: '考核未通过，技能不达标',
+            receiver: '',
+            handover_type: 'reject',
+            reject_tag: '不符合要求',
+            handover_status: '不符合要求'
           },
           {
             id: 105,
@@ -867,6 +947,8 @@
             type: 'veteran',
             position_id: 1,
             position_name: '月嫂',
+            teacher: '李建国',
+            recruiter: '李小红',
             class_id: 2,
             class_name: '2026年4月熟手强化班',
             assessment_level: 'Y5',
@@ -881,7 +963,10 @@
             remark: '',
             status: 'rejected',
             reject_reason: '资料不完整，缺少体检报告详细页',
-            receiver: ''
+            receiver: '',
+            handover_type: 'reject',
+            reject_tag: '体检问题',
+            handover_status: '体检问题'
           },
           {
             id: 106,
@@ -889,6 +974,8 @@
             type: 'newbie',
             position_id: 2,
             position_name: '育儿嫂',
+            teacher: '王秀英',
+            recruiter: '张小燕',
             class_id: 3,
             class_name: '2026年4月育儿嫂基础班',
             assessment_level: 'Y3-2',
@@ -903,7 +990,8 @@
             remark: '',
             status: 'success',
             reject_reason: '',
-            receiver: '张运营'
+            receiver: '张运营',
+            handover_status: 'handover'
           },
           {
             id: 107,
@@ -911,6 +999,8 @@
             type: 'veteran',
             position_id: 2,
             position_name: '育儿嫂',
+            teacher: '李建国',
+            recruiter: '李小红',
             class_id: 4,
             class_name: '2026年4月育儿嫂进阶班',
             assessment_level: 'Y4-1',
@@ -925,7 +1015,8 @@
             remark: '',
             status: 'pending',
             reject_reason: '',
-            receiver: ''
+            receiver: '',
+            handover_status: ''
           },
           {
             id: 108,
@@ -933,6 +1024,8 @@
             type: 'veteran',
             position_id: 3,
             position_name: '养老护理',
+            teacher: '王秀英',
+            recruiter: '李小红',
             class_id: 5,
             class_name: '2026年4月养老护理基础班',
             assessment_level: 'Y4',
@@ -947,7 +1040,9 @@
             remark: '',
             status: 'success',
             reject_reason: '',
-            receiver: '王运营'
+            receiver: '王运营',
+            handover_type: 'handover',
+            handover_status: 'handover'
           },
           {
             id: 109,
@@ -955,6 +1050,8 @@
             type: 'newbie',
             position_id: 3,
             position_name: '养老护理',
+            teacher: '李建国',
+            recruiter: '王小敏',
             class_id: 5,
             class_name: '2026年4月养老护理基础班',
             assessment_level: 'Y3-1',
@@ -969,7 +1066,8 @@
             remark: '',
             status: 'pending',
             reject_reason: '',
-            receiver: ''
+            receiver: '',
+            handover_status: ''
           },
           {
             id: 110,
@@ -977,6 +1075,8 @@
             type: 'newbie',
             position_id: 2,
             position_name: '育儿嫂',
+            teacher: '王秀英',
+            recruiter: '张小燕',
             class_id: 3,
             class_name: '2026年4月育儿嫂基础班',
             assessment_level: 'Y3-2',
@@ -991,14 +1091,28 @@
             remark: '',
             status: 'success',
             reject_reason: '',
-            receiver: '李运营'
+            receiver: '李运营',
+            handover_status: 'handover'
           }
         ]);
 
         const filteredList = computed(() => {
           let list = handoverList.value;
-          if (filterStatus.value) {
-            list = list.filter(item => item.status === filterStatus.value);
+          // 是否接收筛选
+          if (filterIsReceived.value) {
+            if (filterIsReceived.value === 'received') {
+              list = list.filter(item => item.status === 'success');
+            } else if (filterIsReceived.value === 'empty') {
+              list = list.filter(item => item.status !== 'success');
+            }
+          }
+          // 招生老师筛选
+          if (filterRecruiter.value) {
+            list = list.filter(item => item.recruiter === filterRecruiter.value);
+          }
+          // 月嫂老师筛选
+          if (filterNannyTeacher.value) {
+            list = list.filter(item => item.teacher === filterNannyTeacher.value);
           }
           if (filterPosition.value) {
             list = list.filter(item => item.position_id === filterPosition.value);
@@ -1038,19 +1152,18 @@
         const handoverForm = ref({
           handover_type: 'handover',
           remark: '',
+          reject_tag: '',
           reject_reason: '',
           receiver: ''
         });
 
-        const handleSelectionChange = (selection) => {
-          selectedRows.value = selection;
-        };
-
+        
         const handleHandover = (row) => {
           currentStaff.value = row;
           handoverForm.value = {
             handover_type: 'handover',
             remark: '',
+            reject_tag: '',
             reject_reason: '',
             receiver: ''
           };
@@ -1152,10 +1265,10 @@
           showPhotoDialog.value = true;
         };
 
-        const handleHandoverFromDrawer = () => {
+        const handleReceiveFromDrawer = () => {
           showArchiveDrawer.value = false;
           if (currentArchive.value) {
-            handleHandover(currentArchive.value);
+            handleReceive(currentArchive.value);
           }
         };
 
@@ -1168,6 +1281,7 @@
             if (type === 'handover') {
               // 正常交接
               staff.status = 'success';
+              staff.handover_type = 'handover';
               staff.handover_time = new Date().toLocaleString('zh-CN', {
                 year: 'numeric', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit'
@@ -1175,9 +1289,12 @@
               staff.receiver = handoverForm.value.receiver;
               staff.remark = '';
               staff.reject_reason = '';
+              staff.reject_tag = '';
             } else if (type === 'reject') {
               // 拒收
               staff.status = 'rejected';
+              staff.handover_type = 'reject';
+              staff.reject_tag = handoverForm.value.reject_tag;
               staff.reject_reason = handoverForm.value.reject_reason;
               staff.handover_time = '';
               staff.receiver = '';
@@ -1189,17 +1306,19 @@
           ElementPlus.ElMessage.success('交接操作成功');
         };
 
-        const handleBatchHandover = () => {
-          if (selectedRows.value.length === 0) {
-            ElementPlus.ElMessage.warning('请至少选择一名护理人员');
-            return;
-          }
-          ElementPlus.ElMessage.info(`已选择 ${selectedRows.value.length} 人，请逐个确认交接`);
-        };
-
+        
         const saveDocStatus = (row) => {
           // 这里可以添加保存到后端的逻辑
           // 目前只在前端更新状态
+        };
+
+        // 获取拒收标签样式
+        const getRejectTagClass = (tag) => {
+          const greenTags = ['档期问题', '体检问题'];
+          const orangeTags = ['简历问题', '未到/中途离开交接'];
+          if (greenTags.includes(tag)) return 'reject-tag-green';
+          if (orangeTags.includes(tag)) return 'reject-tag-orange';
+          return 'reject-tag-red'; // 默认红色
         };
 
         const saveRemark = (row) => {
@@ -1207,12 +1326,83 @@
           // 目前只在前端更新状态
         };
 
+        // 保存行数据（接收老师、月嫂老师变更）
+        const saveRow = (row) => {
+          // 这里可以添加保存到后端的逻辑
+          ElementPlus.ElMessage.success('保存成功');
+        };
+
+        // 处理接收操作
+        const handleReceive = (row) => {
+          // 验证接收老师和月嫂老师必须有值
+          if (!row.receiver) {
+            ElementPlus.ElMessage.warning('请先选择接收老师');
+            return;
+          }
+          if (!row.teacher) {
+            ElementPlus.ElMessage.warning('请先选择月嫂老师');
+            return;
+          }
+
+          // 二次确认
+          ElementPlus.ElMessageBox.confirm(
+            `确定要接收 ${row.name} 吗？<br>接收老师：${row.receiver}<br>月嫂老师：${row.teacher}`,
+            '确认接收',
+            {
+              confirmButtonText: '确认接收',
+              cancelButtonText: '取消',
+              type: 'warning',
+              dangerouslyUseHTMLString: true
+            }
+          ).then(() => {
+            // 更新状态为已接收
+            row.status = 'success';
+            row.handover_type = 'handover';
+            row.handover_status = 'handover';
+            row.handover_time = new Date().toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit'
+            }).replace(/\//g, '-');
+            ElementPlus.ElMessage.success('接收成功');
+          }).catch(() => {
+            // 取消操作
+          });
+        };
+
+        // 处理交接情况变更
+        const handleHandoverStatusChange = (row) => {
+          const status = row.handover_status;
+          if (status === 'handover') {
+            row.handover_type = 'handover';
+            row.status = 'success';
+            row.reject_tag = '';
+          } else if (status) {
+            row.handover_type = 'reject';
+            row.status = 'rejected';
+            row.reject_tag = status;
+            // 根据标签设置默认退回理由
+            const defaultReasons = {
+              '档期问题': '档期冲突，无法接单',
+              '体检问题': '体检报告不合格',
+              '简历问题': '简历信息不完整',
+              '未到/中途离开交接': '人员未到或中途离开',
+              '48小时内失联': '交接后48小时内无法联系',
+              '不符合要求': '不符合上岗要求'
+            };
+            row.reject_reason = defaultReasons[status] || '';
+          }
+          // 这里可以添加保存到后端的逻辑
+          ElementPlus.ElMessage.success('交接状态已更新');
+        };
+
         const viewClassDetail = (classId) => {
           window.location.href = `training-class-detail.html?id=${classId}`;
         };
 
         return {
-          filterStatus,
+          filterIsReceived,
+          filterRecruiter,
+          filterNannyTeacher,
           filterPosition,
           filterLevel,
           filterPassTime,
@@ -1222,7 +1412,9 @@
           pageSize,
           loading,
           positionList,
+          recruiterList,
           receiverList,
+          nannyTeacherList,
           filteredList,
           pagedList,
           showHandoverDialog,
@@ -1233,15 +1425,15 @@
           currentPhoto,
           handoverForm,
           activeTab,
-          handleSelectionChange,
-          handleHandover,
-          confirmHandover,
-          handleBatchHandover,
+          handleReceive,
           saveDocStatus,
+          getRejectTagClass,
           saveRemark,
+          saveRow,
+          handleHandoverStatusChange,
           viewArchive,
           viewClassDetail,
-          handleHandoverFromDrawer,
+          handleReceiveFromDrawer,
           previewPhoto
         };
       }

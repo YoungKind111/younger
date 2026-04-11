@@ -144,11 +144,25 @@
           <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 150px;">
             <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
           </el-select>
-          <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 150px;">
-            <el-option label="待开班" value="pending"></el-option>
-            <el-option label="进行中" value="active"></el-option>
-            <el-option label="已结业" value="completed"></el-option>
+          <el-select v-model="filterAssessmentLevel" placeholder="考核等级" clearable style="width: 150px;" :disabled="!filterPosition">
+            <el-option v-for="level in assessmentLevelList" :key="level" :label="level" :value="level"></el-option>
           </el-select>
+          <el-select v-model="filterRecruiter" placeholder="招生老师" clearable style="width: 150px;">
+            <el-option v-for="recruiter in recruiterList" :key="recruiter" :label="recruiter" :value="recruiter"></el-option>
+          </el-select>
+          <el-select v-model="filterAssessor" placeholder="考核老师" clearable style="width: 150px;">
+            <el-option v-for="assessor in assessorList" :key="assessor" :label="assessor" :value="assessor"></el-option>
+          </el-select>
+          <el-date-picker
+            v-model="filterPassTimeRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="考核通过开始时间"
+            end-placeholder="考核通过结束时间"
+            value-format="YYYY-MM-DD"
+            style="width: 320px;"
+            clearable
+          ></el-date-picker>
           <el-input v-model="searchKeyword" placeholder="搜索学员姓名或班级" style="width: 220px;" clearable>
             <template #prefix>
               <i class="el-icon-search"></i>
@@ -180,6 +194,22 @@
           <el-table-column label="讲师" width="100">
             <template #default="{ row }">
               {{ row.teacher }}
+            </template>
+          </el-table-column>
+          <el-table-column label="招生老师" width="100">
+            <template #default="{ row }">
+              {{ row.recruiter || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="考核老师" width="100">
+            <template #default="{ row }">
+              {{ row.assessor || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="考核通过时间" width="140" align="center">
+            <template #default="{ row }">
+              <span v-if="row.pass_time">{{ row.pass_time }}</span>
+              <span v-else class="empty-comment">-</span>
             </template>
           </el-table-column>
           <el-table-column label="初评等级" width="100" align="center">
@@ -244,7 +274,7 @@
   <script src="shared-menu.js"></script>
 
   <script>
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, watch } = Vue;
 
     SharedMenu.initPageLayout('exam-results', {
       title: '考核结果',
@@ -254,17 +284,37 @@
     createApp({
       setup() {
         const filterPosition = ref('');
-        const filterStatus = ref('');
+        const filterRecruiter = ref('');
+        const filterAssessor = ref('');
+        const filterAssessmentLevel = ref('');
+        const filterPassTimeRange = ref(null);
         const searchKeyword = ref('');
         const currentPage = ref(1);
         const pageSize = ref(20);
         const loading = ref(false);
 
         const positionList = ref([
-          { id: 1, name: '月嫂' },
-          { id: 2, name: '育儿嫂' },
-          { id: 3, name: '养老护理' }
+          { id: 1, name: '月嫂', levels: ['Y3-1', 'Y3-2', 'Y4-1', 'Y4-2', 'Y5', 'Y6', 'Y7'] },
+          { id: 2, name: '育儿嫂', levels: ['Y3-1', 'Y3-2', 'Y4-1', 'Y4-2', 'Y5', 'Y6'] },
+          { id: 3, name: '养老护理', levels: ['初级', '中级', '高级'] }
         ]);
+
+        // 招生老师列表
+        const recruiterList = ref(['张小燕', '王小敏', '李小红']);
+
+        // 考核老师列表
+        const assessorList = ref(['李建国', '张美玲', '王秀英']);
+
+        // 当前岗位对应的考核等级列表
+        const assessmentLevelList = computed(() => {
+          const position = positionList.value.find(p => p.id === filterPosition.value);
+          return position ? position.levels : [];
+        });
+
+        // 监听岗位变化，清空考核等级
+        watch(filterPosition, () => {
+          filterAssessmentLevel.value = '';
+        });
 
         const classList = ref([
           {
@@ -278,11 +328,11 @@
             end_date: '2026-04-10',
             status: 'completed',
             students: [
-              { id: 101, name: '王秀英', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 92, teacher_comment: '学习积极主动，课堂表现优秀，实操技能扎实。', comment: '学习态度认真，实操技能掌握良好，建议加强沟通技巧训练。' },
-              { id: 102, name: '李桂花', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 85, teacher_comment: '理论基础较好，但实操练习不够主动，需要加强。', comment: '理论基础扎实，实操需要更多练习，总体表现良好。' },
-              { id: 103, name: '张淑芬', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 95, teacher_comment: '经验丰富，学习能力强，是班级的优秀学员。', comment: '经验丰富，技能熟练，考核表现优秀。' },
-              { id: 104, name: '陈美华', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 68, teacher_comment: '上课注意力不集中，实操练习较少，需要督促。', comment: '理论成绩偏低，实操不够熟练，建议参加补考。' },
-              { id: 105, name: '刘玉兰', type: 'veteran', initial_level: 'Y4-2', assessment_level: 'Y5', total_score: 88, teacher_comment: '认真完成课堂任务，实操进步明显。', comment: '技能提升明显，综合表现良好。' }
+              { id: 101, name: '王秀英', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 92, teacher_comment: '学习积极主动，课堂表现优秀，实操技能扎实。', comment: '学习态度认真，实操技能掌握良好，建议加强沟通技巧训练。', recruiter: '张小燕', assessor: '李建国', pass_time: '2026-04-10 15:30' },
+              { id: 102, name: '李桂花', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 85, teacher_comment: '理论基础较好，但实操练习不够主动，需要加强。', comment: '理论基础扎实，实操需要更多练习，总体表现良好。', recruiter: '王小敏', assessor: '李建国', pass_time: '2026-04-10 16:00' },
+              { id: 103, name: '张淑芬', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 95, teacher_comment: '经验丰富，学习能力强，是班级的优秀学员。', comment: '经验丰富，技能熟练，考核表现优秀。', recruiter: '张小燕', assessor: '李建国', pass_time: '2026-04-10 14:30' },
+              { id: 104, name: '陈美华', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 68, teacher_comment: '上课注意力不集中，实操练习较少，需要督促。', comment: '理论成绩偏低，实操不够熟练，建议参加补考。', recruiter: '王小敏', assessor: '', pass_time: '' },
+              { id: 105, name: '刘玉兰', type: 'veteran', initial_level: 'Y4-2', assessment_level: 'Y5', total_score: 88, teacher_comment: '认真完成课堂任务，实操进步明显。', comment: '技能提升明显，综合表现良好。', recruiter: '张小燕', assessor: '李建国', pass_time: '2026-04-10 15:45' }
             ]
           },
           {
@@ -296,9 +346,9 @@
             end_date: '2026-04-09',
             status: 'active',
             students: [
-              { id: 201, name: '赵小芳', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '培训中表现良好，积极参与互动。', comment: '' },
-              { id: 202, name: '钱小敏', type: 'veteran', initial_level: 'Y4-2', assessment_level: '-', total_score: '-', teacher_comment: '学习态度认真，实操技能提升明显。', comment: '' },
-              { id: 203, name: '孙小琴', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '经验丰富，能够很好地掌握新知识。', comment: '' }
+              { id: 201, name: '赵小芳', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '培训中表现良好，积极参与互动。', comment: '', recruiter: '张小燕', assessor: '', pass_time: '' },
+              { id: 202, name: '钱小敏', type: 'veteran', initial_level: 'Y4-2', assessment_level: '-', total_score: '-', teacher_comment: '学习态度认真，实操技能提升明显。', comment: '', recruiter: '王小敏', assessor: '', pass_time: '' },
+              { id: 203, name: '孙小琴', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '经验丰富，能够很好地掌握新知识。', comment: '', recruiter: '张小燕', assessor: '', pass_time: '' }
             ]
           },
           {
@@ -312,10 +362,10 @@
             end_date: '2026-03-10',
             status: 'completed',
             students: [
-              { id: 301, name: '周小燕', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 90, teacher_comment: '学习能力强，课堂互动积极。', comment: '学习能力强，实操规范，表现优秀。' },
-              { id: 302, name: '吴小玲', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 82, teacher_comment: '认真完成课后作业，实操需加强。', comment: '掌握基础知识，实操技能有待提高。' },
-              { id: 303, name: '郑秀英', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 91, teacher_comment: '经验丰富，乐于帮助其他学员。', comment: '经验丰富，技能全面，考核通过。' },
-              { id: 304, name: '王小梅', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 65, teacher_comment: '出勤不稳定，课后练习较少。', comment: '基础薄弱，需要加强学习，建议重修。' }
+              { id: 301, name: '周小燕', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 90, teacher_comment: '学习能力强，课堂互动积极。', comment: '学习能力强，实操规范，表现优秀。', recruiter: '张小燕', assessor: '李建国', pass_time: '2026-03-10 16:00' },
+              { id: 302, name: '吴小玲', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 82, teacher_comment: '认真完成课后作业，实操需加强。', comment: '掌握基础知识，实操技能有待提高。', recruiter: '王小敏', assessor: '李建国', pass_time: '2026-03-10 15:30' },
+              { id: 303, name: '郑秀英', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 91, teacher_comment: '经验丰富，乐于帮助其他学员。', comment: '经验丰富，技能全面，考核通过。', recruiter: '张小燕', assessor: '李建国', pass_time: '2026-03-10 14:30' },
+              { id: 304, name: '王小梅', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 65, teacher_comment: '出勤不稳定，课后练习较少。', comment: '基础薄弱，需要加强学习，建议重修。', recruiter: '王小敏', assessor: '', pass_time: '' }
             ]
           }
         ]);
@@ -340,7 +390,10 @@
                 total_score: student.total_score,
                 is_pass: student.total_score !== '-' && student.total_score >= 70,
                 teacher_comment: student.teacher_comment,
-                comment: student.comment
+                comment: student.comment,
+                recruiter: student.recruiter,
+                assessor: student.assessor,
+                pass_time: student.pass_time
               });
             });
           });
@@ -352,9 +405,27 @@
           if (filterPosition.value) {
             list = list.filter(item => item.position_id === filterPosition.value);
           }
-          if (filterStatus.value) {
-            const statusMap = { pending: '待开班', active: '进行中', completed: '已结业' };
-            list = list.filter(item => item.status === statusMap[filterStatus.value]);
+          // 招生老师筛选
+          if (filterRecruiter.value) {
+            list = list.filter(item => item.recruiter === filterRecruiter.value);
+          }
+          // 考核老师筛选
+          if (filterAssessor.value) {
+            list = list.filter(item => item.assessor === filterAssessor.value);
+          }
+          // 考核等级筛选
+          if (filterAssessmentLevel.value) {
+            list = list.filter(item => item.assessment_level === filterAssessmentLevel.value);
+          }
+          // 考核通过时间范围筛选
+          if (filterPassTimeRange.value && filterPassTimeRange.value.length === 2) {
+            const startDate = filterPassTimeRange.value[0];
+            const endDate = filterPassTimeRange.value[1];
+            list = list.filter(item => {
+              if (!item.pass_time) return false;
+              const passDate = item.pass_time.split(' ')[0];
+              return passDate >= startDate && passDate <= endDate;
+            });
           }
           if (searchKeyword.value) {
             const keyword = searchKeyword.value.toLowerCase();
@@ -386,12 +457,18 @@
 
         return {
           filterPosition,
-          filterStatus,
+          filterRecruiter,
+          filterAssessor,
+          filterAssessmentLevel,
+          filterPassTimeRange,
           searchKeyword,
           currentPage,
           pageSize,
           loading,
           positionList,
+          recruiterList,
+          assessorList,
+          assessmentLevelList,
           filteredResults,
           pagedResults,
           getScoreClass,
