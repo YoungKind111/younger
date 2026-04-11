@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>招生老师 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .recruiter-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1200px) {
+      .recruiter-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .recruiter-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .recruiter-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border-left: 4px solid #1890ff;
+    }
+
+    .recruiter-card:nth-child(2) { border-left-color: #52c41a; }
+    .recruiter-card:nth-child(3) { border-left-color: #fa8c16; }
+    .recruiter-card:nth-child(4) { border-left-color: #722ed1; }
+    .recruiter-card:nth-child(5) { border-left-color: #13c2c2; }
+
+    .recruiter-card-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .recruiter-card-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+
+    .recruiter-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #f0f0f0;
+      transition: all 0.3s;
+    }
+
+    .recruiter-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-color: #1890ff;
+    }
+
+    .recruiter-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+      margin-right: 16px;
+    }
+
+    .recruiter-info {
+      flex: 1;
+    }
+
+    .recruiter-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .recruiter-phone {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .recruiter-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .recruiter-status.active {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .recruiter-status.inactive {
+      background: #f5f5f5;
+      color: #8c8c8c;
+    }
+
+    .recruiter-stats-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 8px;
+    }
+
+    .recruiter-stat {
+      text-align: center;
+    }
+
+    .recruiter-stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .recruiter-stat-label {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .recruiter-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .performance-bar {
+      width: 100px;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .performance-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1890ff, #36cfc9);
+      border-radius: 3px;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .detail-header-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 500;
+      margin-right: 20px;
+    }
+
+    .detail-header-info h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .detail-header-info p {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .detail-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .detail-stat-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .detail-stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1890ff;
+    }
+
+    .detail-stat-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 统计卡片 -->
+    <div class="content-card mb-2">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="card-title">数据统计</span>
+        <div class="filter-item">
+          <span class="filter-label">月份:</span>
+          <el-date-picker
+            v-model="statsMonth"
+            type="month"
+            placeholder="选择月份"
+            value-format="YYYY-MM"
+            style="width: 120px;"
+            @change="updateStats"
+          ></el-date-picker>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="recruiter-stats" style="margin-bottom: 0;">
+          <div class="recruiter-card">
+            <div class="recruiter-card-value text-primary">{{ stats.total }}</div>
+            <div class="recruiter-card-label">招生老师总数</div>
+          </div>
+          <div class="recruiter-card">
+            <div class="recruiter-card-value text-success">{{ stats.active }}</div>
+            <div class="recruiter-card-label">在职</div>
+          </div>
+          <div class="recruiter-card">
+            <div class="recruiter-card-value text-warning">{{ stats.monthAssigned }}</div>
+            <div class="recruiter-card-label">当月新分配</div>
+          </div>
+          <div class="recruiter-card">
+            <div class="recruiter-card-value">{{ stats.monthSigned }}</div>
+            <div class="recruiter-card-label">当月签约</div>
+          </div>
+          <div class="recruiter-card">
+            <div class="recruiter-card-value text-danger">{{ stats.monthConversion }}%</div>
+            <div class="recruiter-card-label">当月转化率</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- 左侧：招生老师列表 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">招生老师列表</span>
+            <span class="card-subtitle" style="margin-left: 12px;">共 {{ recruiterList.length }} 人</span>
+          </div>
+          <el-button type="primary" size="small" @click="handleAdd">
+            <i class="el-icon-plus"></i> 新增老师
+          </el-button>
+        </div>
+        <div class="card-body">
+          <div class="filter-bar" style="margin-bottom: 16px; padding: 12px;">
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索姓名/手机号"
+              clearable
+              prefix-icon="el-icon-search"
+              style="width: 200px;"
+            ></el-input>
+            <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 120px;">
+              <el-option label="在职" value="active"></el-option>
+              <el-option label="离职" value="inactive"></el-option>
+            </el-select>
+          </div>
+
+          <div v-for="recruiter in filteredList" :key="recruiter.id" class="recruiter-item" @click="selectRecruiter(recruiter)">
+            <div class="recruiter-avatar">{{ recruiter.name.charAt(0) }}</div>
+            <div class="recruiter-info">
+              <div style="display: flex; align-items: center;">
+                <span class="recruiter-name">{{ recruiter.name }}</span>
+                <span class="recruiter-status" :class="recruiter.status">
+                  <i class="el-icon-circle-check" v-if="recruiter.status === 'active'"></i>
+                  <i class="el-icon-circle-close" v-else></i>
+                  {{ recruiter.status === 'active' ? '在职' : '离职' }}
+                </span>
+              </div>
+              <div class="recruiter-phone">{{ recruiter.phone }} | 入职 {{ recruiter.joinDate }}</div>
+              <div class="recruiter-stats-row">
+                <div class="recruiter-stat">
+                  <div class="recruiter-stat-value">{{ recruiter.leadCount }}</div>
+                  <div class="recruiter-stat-label">负责线索</div>
+                </div>
+                <div class="recruiter-stat">
+                  <div class="recruiter-stat-value">{{ recruiter.signedCount }}</div>
+                  <div class="recruiter-stat-label">本月签约</div>
+                </div>
+                <div class="recruiter-stat">
+                  <div class="recruiter-stat-value">{{ recruiter.conversionRate }}%</div>
+                  <div class="recruiter-stat-label">转化率</div>
+                </div>
+              </div>
+            </div>
+            <div class="recruiter-actions">
+              <el-button type="text" @click.stop="handleEdit(recruiter)">编辑</el-button>
+              <el-button type="text" @click.stop="viewDetail(recruiter)">详情</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：招生老师详情 -->
+      <div class="content-card">
+        <div class="card-header">
+          <span class="card-title">{{ currentRecruiter ? currentRecruiter.name + ' - 详情' : '招生老师详情' }}</span>
+        </div>
+        <div class="card-body">
+          <div v-if="!currentRecruiter" style="text-align: center; padding: 60px; color: #8c8c8c;">
+            <i class="el-icon-s-custom" style="font-size: 64px; margin-bottom: 16px; display: block;"></i>
+            <p>请从左侧选择一位招生老师查看详情</p>
+          </div>
+
+          <div v-else>
+            <div class="detail-header">
+              <div class="detail-header-avatar">{{ currentRecruiter.name.charAt(0) }}</div>
+              <div class="detail-header-info">
+                <h3>{{ currentRecruiter.name }}</h3>
+                <p>{{ currentRecruiter.phone }} | {{ currentRecruiter.email }}</p>
+                <p>入职时间：{{ currentRecruiter.joinDate }} | 工号：{{ currentRecruiter.employeeNo }}</p>
+              </div>
+            </div>
+
+            <div class="detail-stats">
+              <div class="detail-stat-card">
+                <div class="detail-stat-value">{{ currentRecruiter.leadCount }}</div>
+                <div class="detail-stat-label">负责线索</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="detail-stat-value">{{ currentRecruiter.interviewCount }}</div>
+                <div class="detail-stat-label">本月邀约</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="detail-stat-value">{{ currentRecruiter.signedCount }}</div>
+                <div class="detail-stat-label">本月签约</div>
+              </div>
+              <div class="detail-stat-card">
+                <div class="detail-stat-value">{{ currentRecruiter.conversionRate }}%</div>
+                <div class="detail-stat-label">转化率</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <div style="font-weight: 600; margin-bottom: 12px;">本月业绩趋势</div>
+              <div style="height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8c8c8c;">
+                <i class="el-icon-data-line" style="font-size: 48px; margin-right: 12px;"></i>
+                业绩趋势图表区域
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <div style="font-weight: 600; margin-bottom: 12px;">最近分配的线索</div>
+              <el-table :data="currentRecruiter.recentLeads || []" style="width: 100%" size="small">
+                <el-table-column label="姓名" prop="name" min-width="100"></el-table-column>
+                <el-table-column label="岗位" prop="position" width="100"></el-table-column>
+                <el-table-column label="分配时间" prop="assignTime" width="150"></el-table-column>
+                <el-table-column label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === '未跟进' ? 'info' : 'success'" size="mini">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增/编辑对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEdit ? '编辑招生老师' : '新增招生老师'"
+      width="500px"
+    >
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="姓名" required>
+          <el-input v-model="form.name" placeholder="请输入姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" required>
+          <el-input v-model="form.phone" placeholder="请输入手机号" maxlength="11"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="form.email" placeholder="请输入邮箱"></el-input>
+        </el-form-item>
+        <el-form-item label="工号">
+          <el-input v-model="form.employeeNo" placeholder="请输入工号"></el-input>
+        </el-form-item>
+        <el-form-item label="入职日期">
+          <el-date-picker v-model="form.joinDate" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="form.status">
+            <el-radio label="active">在职</el-radio>
+            <el-radio label="inactive">离职</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="其他备注信息"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveRecruiter">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('recruiter', {
+      title: '招生老师',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 招募管理 / 招生老师'
+    });
+
+    createApp({
+      setup() {
+        // 月份筛选（默认当月）
+        const today = new Date();
+        const statsMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
+
+        // 统计数据
+        const stats = ref({
+          total: 0,
+          active: 0,
+          monthAssigned: 0,
+          monthSigned: 0,
+          monthConversion: 0
+        });
+
+        // 更新统计数据
+        const updateStats = () => {
+          const [year, month] = statsMonth.value.split('-');
+          const monthPrefix = `${year}-${month}`;
+
+          // 统计总数和在职人数
+          const total = recruiterList.value.length;
+          const active = recruiterList.value.filter(r => r.status === 'active').length;
+
+          // 统计当月数据
+          let monthAssigned = 0;
+          let monthSigned = 0;
+
+          recruiterList.value.forEach(r => {
+            // 累加当月新分配线索数
+            monthAssigned += (r.monthStats?.[statsMonth.value]?.assigned || 0);
+            // 累加当月签约数
+            monthSigned += (r.monthStats?.[statsMonth.value]?.signed || r.signedCount || 0);
+          });
+
+          // 计算转化率
+          const monthConversion = monthAssigned > 0 ? Math.round((monthSigned / monthAssigned) * 100) : 0;
+
+          stats.value = {
+            total,
+            active,
+            monthAssigned,
+            monthSigned,
+            monthConversion
+          };
+        };
+
+        const searchKeyword = ref('');
+        const filterStatus = ref('');
+        const currentRecruiter = ref(null);
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+
+        const form = ref({
+          name: '',
+          phone: '',
+          email: '',
+          employeeNo: '',
+          joinDate: '',
+          status: 'active',
+          remark: ''
+        });
+
+        // 获取当前年月
+        const getCurrentMonth = () => {
+          const d = new Date();
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        };
+
+        const recruiterList = ref([
+          {
+            id: 1,
+            name: '李小红',
+            phone: '138****1234',
+            email: 'lixiaohong@company.com',
+            employeeNo: 'ZS001',
+            joinDate: '2025-03-01',
+            status: 'active',
+            leadCount: 28,
+            interviewCount: 8,
+            signedCount: 5,
+            conversionRate: 18,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 12, signed: 5 }
+            },
+            recentLeads: [
+              { name: '王秀英', position: '月嫂', assignTime: '2026-04-06 10:30', status: '已跟进' },
+              { name: '李桂花', position: '育婴师', assignTime: '2026-04-06 09:15', status: '未跟进' }
+            ]
+          },
+          {
+            id: 2,
+            name: '王建国',
+            phone: '139****5678',
+            email: 'wangjianguo@company.com',
+            employeeNo: 'ZS002',
+            joinDate: '2025-02-15',
+            status: 'active',
+            leadCount: 35,
+            interviewCount: 12,
+            signedCount: 8,
+            conversionRate: 23,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 15, signed: 8 }
+            },
+            recentLeads: [
+              { name: '张淑芬', position: '月嫂', assignTime: '2026-04-05 16:45', status: '已跟进' }
+            ]
+          },
+          {
+            id: 3,
+            name: '张美玲',
+            phone: '137****9012',
+            email: 'zhangmeiling@company.com',
+            employeeNo: 'ZS003',
+            joinDate: '2025-01-10',
+            status: 'active',
+            leadCount: 22,
+            interviewCount: 6,
+            signedCount: 4,
+            conversionRate: 18,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 8, signed: 4 }
+            },
+            recentLeads: []
+          },
+          {
+            id: 4,
+            name: '刘志强',
+            phone: '136****2468',
+            email: 'liuzhiqiang@company.com',
+            employeeNo: 'ZS004',
+            joinDate: '2024-12-01',
+            status: 'active',
+            leadCount: 30,
+            interviewCount: 10,
+            signedCount: 6,
+            conversionRate: 20,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 10, signed: 6 }
+            },
+            recentLeads: []
+          },
+          {
+            id: 5,
+            name: '陈秀英',
+            phone: '135****7890',
+            email: 'chenxiuying@company.com',
+            employeeNo: 'ZS005',
+            joinDate: '2025-03-15',
+            status: 'active',
+            leadCount: 25,
+            interviewCount: 7,
+            signedCount: 4,
+            conversionRate: 16,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 9, signed: 4 }
+            },
+            recentLeads: []
+          },
+          {
+            id: 6,
+            name: '杨建华',
+            phone: '133****1357',
+            email: 'yangjianhua@company.com',
+            employeeNo: 'ZS006',
+            joinDate: '2025-02-01',
+            status: 'active',
+            leadCount: 18,
+            interviewCount: 5,
+            signedCount: 3,
+            conversionRate: 17,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 6, signed: 3 }
+            },
+            recentLeads: []
+          },
+          {
+            id: 7,
+            name: '赵小红',
+            phone: '132****8642',
+            email: 'zhaoxiaohong@company.com',
+            employeeNo: 'ZS007',
+            joinDate: '2025-04-01',
+            status: 'active',
+            leadCount: 12,
+            interviewCount: 2,
+            signedCount: 1,
+            conversionRate: 8,
+            monthStats: {
+              [getCurrentMonth()]: { assigned: 4, signed: 1 }
+            },
+            recentLeads: []
+          },
+          {
+            id: 8,
+            name: '孙大明',
+            phone: '131****9753',
+            email: 'sundaming@company.com',
+            employeeNo: 'ZS008',
+            joinDate: '2024-10-01',
+            status: 'inactive',
+            leadCount: 0,
+            interviewCount: 0,
+            signedCount: 0,
+            conversionRate: 0,
+            monthStats: {},
+            recentLeads: []
+          }
+        ]);
+
+        const filteredList = computed(() => {
+          let list = recruiterList.value;
+          if (searchKeyword.value) {
+            const q = searchKeyword.value.toLowerCase();
+            list = list.filter(r => r.name.includes(q) || r.phone.includes(q));
+          }
+          if (filterStatus.value) {
+            list = list.filter(r => r.status === filterStatus.value);
+          }
+          return list;
+        });
+
+        const selectRecruiter = (recruiter) => {
+          currentRecruiter.value = recruiter;
+        };
+
+        const handleAdd = () => {
+          isEdit.value = false;
+          form.value = {
+            name: '',
+            phone: '',
+            email: '',
+            employeeNo: '',
+            joinDate: '',
+            status: 'active',
+            remark: ''
+          };
+          dialogVisible.value = true;
+        };
+
+        const handleEdit = (recruiter) => {
+          isEdit.value = true;
+          form.value = { ...recruiter };
+          dialogVisible.value = true;
+        };
+
+        const saveRecruiter = () => {
+          if (!form.value.name || !form.value.phone) {
+            ElementPlus.ElMessage.warning('请填写必填项');
+            return;
+          }
+          ElementPlus.ElMessage.success(isEdit.value ? '更新成功' : '添加成功');
+          dialogVisible.value = false;
+        };
+
+        const viewDetail = (recruiter) => {
+          currentRecruiter.value = recruiter;
+        };
+
+        // 默认选中第一个
+        if (recruiterList.value.length > 0) {
+          currentRecruiter.value = recruiterList.value[0];
+        }
+
+        // 初始化统计数据
+        updateStats();
+
+        return {
+          stats,
+          statsMonth,
+          searchKeyword,
+          filterStatus,
+          currentRecruiter,
+          dialogVisible,
+          isEdit,
+          form,
+          recruiterList,
+          filteredList,
+          selectRecruiter,
+          handleAdd,
+          handleEdit,
+          saveRecruiter,
+          viewDetail,
+          updateStats
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

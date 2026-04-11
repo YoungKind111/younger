@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>线上考试</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    .mobile-container {
+      width: 375px;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      overflow-x: hidden;
+    }
+    .nav-header {
+      background: #fff;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .nav-back {
+      position: absolute;
+      left: 16px;
+      font-size: 20px;
+      color: #333;
+      cursor: pointer;
+    }
+    .nav-title { font-size: 17px; font-weight: 600; color: #333; }
+
+    .exam-header {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb0 100%);
+      padding: 20px;
+      color: #fff;
+    }
+    .exam-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    .exam-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .exam-timer {
+      background: #ff6b9d;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .question-card {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .question-number {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .question-score {
+      font-size: 13px;
+      color: #ff6b9d;
+    }
+    .question-type {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #e6f7ff;
+      color: #1890ff;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+    .question-content {
+      font-size: 15px;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: #f8f8f8;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .option-item:active { background: #f0f0f0; }
+    .option-item.selected {
+      background: #fff0f5;
+      border: 1px solid #ff6b9d;
+    }
+    .option-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .option-item.selected .option-letter {
+      background: #ff6b9d;
+      color: #fff;
+      border-color: #ff6b9d;
+    }
+    .option-text { font-size: 14px; color: #333; }
+
+    .question-nav {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .nav-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; }
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .nav-item {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .nav-item.answered { background: #52c41a; color: #fff; }
+    .nav-item.current { background: #fff; border: 2px solid #ff6b9d; color: #ff6b9d; }
+    .nav-item.unanswered { background: #f5f5f5; color: #999; border: 1px solid #e0e0e0; }
+    .nav-item.current.answered { background: #52c41a; border: 2px solid #52c41a; color: #fff; }
+
+    .submit-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 375px;
+      background: #fff;
+      padding: 12px 20px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      gap: 12px;
+    }
+    .btn-prev, .btn-next {
+      flex: 1;
+      padding: 12px;
+      border-radius: 20px;
+      font-size: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .btn-prev {
+      background: #f5f5f5;
+      color: #666;
+    }
+    .btn-next {
+      background: #ff6b9d;
+      color: #fff;
+    }
+    .btn-submit {
+      flex: 1;
+      padding: 12px;
+      background: #52c41a;
+      color: #fff;
+      border-radius: 20px;
+      font-size: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .content-padding { padding-bottom: 80px; }
+
+    /* 确认对话框 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      width: 280px;
+      text-align: center;
+    }
+    .modal-icon { font-size: 48px; margin-bottom: 12px; }
+    .modal-title { font-size: 17px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .modal-desc { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .modal-stats {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .modal-stat-item { text-align: center; }
+    .modal-stat-value { font-size: 20px; font-weight: 600; color: #333; }
+    .modal-stat-label { font-size: 12px; color: #999; margin-top: 2px; }
+    .modal-btns { display: flex; gap: 12px; }
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+    .modal-btn-cancel { background: #f5f5f5; color: #666; }
+    .modal-btn-confirm { background: #52c41a; color: #fff; }
+
+    /* 结果页面 */
+    .result-container { display: none; }
+    .result-container.show { display: block; }
+    .result-header {
+      background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+      padding: 40px 20px;
+      text-align: center;
+      color: #fff;
+    }
+    .result-header.fail {
+      background: linear-gradient(135deg, #f5222d 0%, #ff7875 100%);
+    }
+    .result-icon { font-size: 64px; margin-bottom: 16px; }
+    .result-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .result-subtitle { font-size: 14px; opacity: 0.9; }
+    .result-score-card {
+      background: #fff;
+      margin: -30px 12px 12px;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .result-score-label { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .result-score-value {
+      font-size: 56px;
+      font-weight: 600;
+      color: #52c41a;
+      margin-bottom: 12px;
+    }
+    .result-score-value.fail { color: #f5222d; }
+    .result-tag {
+      display: inline-block;
+      padding: 6px 20px;
+      background: #f6ffed;
+      color: #52c41a;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .result-tag.fail { background: #fff1f0; color: #f5222d; }
+    .result-info-card {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .result-info-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .result-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+    .result-info-label { color: #666; }
+    .result-info-value { color: #333; font-weight: 500; }
+    .result-btns {
+      padding: 20px 12px;
+      display: flex;
+      gap: 12px;
+    }
+    .result-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 24px;
+      font-size: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .result-btn-primary { background: #ff6b9d; color: #fff; }
+    .result-btn-secondary { background: #f5f5f5; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="mobile-container">
+    <div class="nav-header">
+      <span class="nav-back" onclick="history.back()">‹</span>
+      <span class="nav-title">线上考试</span>
+    </div>
+
+    <div class="exam-header">
+      <div class="exam-title">医疗护理员考核卷-A</div>
+      <div class="exam-meta">
+        <span>共15题</span>
+        <span>满分34分</span>
+        <span>及格24分</span>
+      </div>
+    </div>
+
+    <div class="exam-timer">⏱ 剩余 45:32</div>
+
+    <div class="content-padding">
+      <div class="question-card">
+        <div class="question-header">
+          <span class="question-number">第6题 / 共50题</span>
+          <span class="question-score">2分</span>
+        </div>
+        <div class="question-content">
+          双胞胎宝宝居住环境的适宜温度是（）
+        </div>
+        <div class="options-list">
+          <div class="option-item">
+            <span class="option-letter">A</span>
+            <span class="option-text">20 - 24℃</span>
+          </div>
+          <div class="option-item selected">
+            <span class="option-letter">B</span>
+            <span class="option-text">22 - 26℃</span>
+          </div>
+          <div class="option-item">
+            <span class="option-letter">C</span>
+            <span class="option-text">24 - 28℃</span>
+          </div>
+          <div class="option-item">
+            <span class="option-letter">D</span>
+            <span class="option-text">26 - 30℃</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-nav">
+        <div class="nav-title">答题卡</div>
+        <div class="nav-grid" id="navGrid">
+          <!-- 答题卡由JS动态生成 -->
+        </div>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f0f0f0; display: flex; gap: 16px; justify-content: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 16px; height: 16px; background: #52c41a; border-radius: 4px;"></div>
+            <span style="font-size: 12px; color: #666;">已答</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 16px; height: 16px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px;"></div>
+            <span style="font-size: 12px; color: #666;">未答</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 16px; height: 16px; border: 2px solid #ff6b9d; border-radius: 4px;"></div>
+            <span style="font-size: 12px; color: #666;">当前</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <div class="btn-prev">上一题</div>
+      <div class="btn-next">下一题</div>
+      <div class="btn-submit" onclick="showConfirmModal()">交卷</div>
+    </div>
+
+    <!-- 交卷确认对话框 -->
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-icon">📝</div>
+        <div class="modal-title">确认交卷？</div>
+        <div class="modal-desc">交卷后将无法修改答案，请确认是否完成所有题目</div>
+        <div class="modal-stats">
+          <div class="modal-stat-item">
+            <div class="modal-stat-value">15</div>
+            <div class="modal-stat-label">总题数</div>
+          </div>
+          <div class="modal-stat-item">
+            <div class="modal-stat-value" style="color: #52c41a;">5</div>
+            <div class="modal-stat-label">已答</div>
+          </div>
+          <div class="modal-stat-item">
+            <div class="modal-stat-value" style="color: #f5222d;">10</div>
+            <div class="modal-stat-label">未答</div>
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-btn modal-btn-cancel" onclick="hideConfirmModal()">继续答题</button>
+          <button class="modal-btn modal-btn-confirm" onclick="submitExam()">确认交卷</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 考试结果页面 -->
+    <div class="result-container" id="resultPage">
+      <div class="result-score-card" style="margin-top: 12px;">
+        <div class="result-score-label">您的得分</div>
+        <div class="result-score-value" id="resultScore">88</div>
+      </div>
+      <div class="result-info-card">
+        <div class="result-info-title">考试信息</div>
+        <div class="result-info-row">
+          <span class="result-info-label">试卷名称</span>
+          <span class="result-info-value">医疗护理员考核卷-A</span>
+        </div>
+        <div class="result-info-row">
+          <span class="result-info-label">考试时间</span>
+          <span class="result-info-value">2026-04-06 15:30</span>
+        </div>
+        <div class="result-info-row">
+          <span class="result-info-label">答题时长</span>
+          <span class="result-info-value">32分钟</span>
+        </div>
+        <div class="result-info-row">
+          <span class="result-info-label">及格分数</span>
+          <span class="result-info-value">24分</span>
+        </div>
+      </div>
+      <div class="result-btns">
+        <div class="result-btn result-btn-primary" onclick="backToTraining()">返回培训</div>
+      </div>
+    </div>
+
+    <!-- 重置按钮（用于测试） -->
+    <div style="position: fixed; top: 60px; right: 10px; z-index: 999;">
+      <button onclick="clearExamStatus()" style="padding: 4px 8px; font-size: 11px; background: #999; color: #fff; border: none; border-radius: 4px; opacity: 0.4;">重置考试</button>
+    </div>
+  </div>
+
+  <script>
+    // 检查是否已提交过考试
+    function checkExamSubmitted() {
+      const examSubmitted = localStorage.getItem('examSubmitted');
+      const examResult = localStorage.getItem('examResult');
+
+      if (examSubmitted === 'true' && examResult) {
+        // 已提交过，直接显示成绩
+        const result = JSON.parse(examResult);
+        showResultPage(result.score, result.pass);
+        return true;
+      }
+      return false;
+    }
+
+    // 保存考试结果
+    function saveExamResult(score, pass) {
+      localStorage.setItem('examSubmitted', 'true');
+      localStorage.setItem('examResult', JSON.stringify({
+        score: score,
+        pass: pass,
+        submitTime: new Date().toLocaleString('zh-CN')
+      }));
+    }
+
+    // 显示结果页面
+    function showResultPage(score, pass) {
+      document.getElementById('resultScore').textContent = score;
+      document.getElementById('resultPage').classList.add('show');
+      // 隐藏考试内容
+      document.querySelector('.exam-header').style.display = 'none';
+      document.querySelector('.content-padding').style.display = 'none';
+      document.querySelector('.submit-bar').style.display = 'none';
+      document.querySelector('.exam-timer').style.display = 'none';
+    }
+
+    // 清除考试状态（用于测试）
+    function clearExamStatus() {
+      localStorage.removeItem('examSubmitted');
+      localStorage.removeItem('examResult');
+      alert('考试状态已重置，刷新页面后可重新答题');
+    }
+
+    // 页面加载时检查
+    const isSubmitted = checkExamSubmitted();
+
+    // 如果已提交，停止加载后续逻辑
+    if (isSubmitted) {
+      // 跳过后续所有代码
+    } else {
+    // 题目数据（共15题）
+    const questions = [
+      {
+        id: 1,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿黄疸的正常消退时间是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '3-5天' },
+          { letter: 'B', text: '7-10天' },
+          { letter: 'C', text: '2-3周' },
+          { letter: 'D', text: '1个月' }
+        ],
+        answer: 'C'
+      },
+      {
+        id: 2,
+        type: 'single',
+        typeName: '单选题',
+        content: '产后产妇适宜的室内温度是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '18-20℃' },
+          { letter: 'B', text: '20-22℃' },
+          { letter: 'C', text: '24-26℃' },
+          { letter: 'D', text: '28-30℃' }
+        ],
+        answer: 'C'
+      },
+      {
+        id: 3,
+        type: 'multi',
+        typeName: '多选题',
+        content: '新生儿护理中需要注意的事项包括（）',
+        score: 4,
+        options: [
+          { letter: 'A', text: '保持脐带干燥' },
+          { letter: 'B', text: '定时更换尿布' },
+          { letter: 'C', text: '定期进行抚触按摩' },
+          { letter: 'D', text: '注意观察黄疸情况' }
+        ],
+        answer: ['A', 'B', 'C', 'D']
+      },
+      {
+        id: 4,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿脐带护理，以下做法正确的是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '用酒精每天消毒' },
+          { letter: 'B', text: '保持干燥清洁' },
+          { letter: 'C', text: '用纱布包裹' },
+          { letter: 'D', text: '涂抹护肤霜' }
+        ],
+        answer: 'B'
+      },
+      {
+        id: 5,
+        type: 'multi',
+        typeName: '多选题',
+        content: '月子期间产妇的饮食原则包括（）',
+        score: 4,
+        options: [
+          { letter: 'A', text: '营养均衡' },
+          { letter: 'B', text: '清淡易消化' },
+          { letter: 'C', text: '多喝水' },
+          { letter: 'D', text: '避免生冷食物' }
+        ],
+        answer: ['A', 'B', 'D']
+      },
+      {
+        id: 6,
+        type: 'single',
+        typeName: '单选题',
+        content: '双胞胎宝宝居住环境的适宜温度是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '20 - 24℃' },
+          { letter: 'B', text: '22 - 26℃' },
+          { letter: 'C', text: '24 - 28℃' },
+          { letter: 'D', text: '26 - 30℃' }
+        ],
+        answer: 'C'
+      },
+      {
+        id: 7,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿每天需要的睡眠时间是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '8-10小时' },
+          { letter: 'B', text: '12-14小时' },
+          { letter: 'C', text: '16-18小时' },
+          { letter: 'D', text: '20-22小时' }
+        ],
+        answer: 'C'
+      },
+      {
+        id: 8,
+        type: 'multi',
+        typeName: '多选题',
+        content: '母乳喂养的正确姿势包括（）',
+        score: 4,
+        options: [
+          { letter: 'A', text: '摇篮式' },
+          { letter: 'B', text: '侧卧式' },
+          { letter: 'C', text: '橄榄球式' },
+          { letter: 'D', text: '俯卧式' }
+        ],
+        answer: ['A', 'B', 'C']
+      },
+      {
+        id: 9,
+        type: 'single',
+        typeName: '单选题',
+        content: '产妇产后第一次洗澡应在产后（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '1-2天' },
+          { letter: 'B', text: '3-5天' },
+          { letter: 'C', text: '1周后' },
+          { letter: 'D', text: '1个月后' }
+        ],
+        answer: 'B'
+      },
+      {
+        id: 10,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿抚触的最佳时间是（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '喂奶前' },
+          { letter: 'B', text: '喂奶后30分钟内' },
+          { letter: 'C', text: '两次喂奶之间' },
+          { letter: 'D', text: '睡觉前' }
+        ],
+        answer: 'C'
+      },
+      {
+        id: 11,
+        type: 'multi',
+        typeName: '多选题',
+        content: '以下哪些是新生儿常见的生理现象（）',
+        score: 4,
+        options: [
+          { letter: 'A', text: '生理性黄疸' },
+          { letter: 'B', text: '生理性体重下降' },
+          { letter: 'C', text: '假月经' },
+          { letter: 'D', text: '乳腺肿大' }
+        ],
+        answer: ['A', 'B', 'C', 'D']
+      },
+      {
+        id: 12,
+        type: 'single',
+        typeName: '单选题',
+        content: '月子期间产妇每天需要的水分摄入量约为（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '1000-1500ml' },
+          { letter: 'B', text: '2000-2500ml' },
+          { letter: 'C', text: '3000-3500ml' },
+          { letter: 'D', text: '4000ml以上' }
+        ],
+        answer: 'B'
+      },
+      {
+        id: 13,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿脐带动脱落一般需要（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '3-5天' },
+          { letter: 'B', text: '7-10天' },
+          { letter: 'C', text: '2周' },
+          { letter: 'D', text: '1个月' }
+        ],
+        answer: 'B'
+      },
+      {
+        id: 14,
+        type: 'multi',
+        typeName: '多选题',
+        content: '产后恶露的三个阶段包括（）',
+        score: 4,
+        options: [
+          { letter: 'A', text: '血性恶露' },
+          { letter: 'B', text: '浆液恶露' },
+          { letter: 'C', text: '白色恶露' },
+          { letter: 'D', text: '黄色恶露' }
+        ],
+        answer: ['A', 'B', 'C']
+      },
+      {
+        id: 15,
+        type: 'single',
+        typeName: '单选题',
+        content: '新生儿配方奶的冲调水温应为（）',
+        score: 2,
+        options: [
+          { letter: 'A', text: '30-40℃' },
+          { letter: 'B', text: '40-50℃' },
+          { letter: 'C', text: '50-60℃' },
+          { letter: 'D', text: '70℃以上' }
+        ],
+        answer: 'B'
+      }
+    ];
+
+    let currentQuestionIndex = 5; // 当前题目索引（从0开始，5表示第6题）
+    let userAnswers = {}; // 用户答案记录
+
+    // 更新题目显示
+    function updateQuestion() {
+      const question = questions[currentQuestionIndex];
+      if (!question) return;
+
+      // 更新题号、题型和分值
+      document.querySelector('.question-number').innerHTML = `
+        <span class="question-type">${question.typeName}</span>
+        第${question.id}题 / 共${questions.length}题
+      `;
+      document.querySelector('.question-score').textContent = `${question.score}分`;
+
+      // 更新题目内容
+      document.querySelector('.question-content').textContent = question.content;
+
+      // 更新选项
+      const optionsHtml = question.options.map(opt => {
+        let isSelected = false;
+        if (question.type === 'multi') {
+          // 多选题：检查是否在答案数组中
+          isSelected = (userAnswers[question.id] || []).includes(opt.letter);
+        } else {
+          // 单选题：检查是否等于答案
+          isSelected = userAnswers[question.id] === opt.letter;
+        }
+        return `
+          <div class="option-item ${isSelected ? 'selected' : ''}" data-letter="${opt.letter}">
+            <span class="option-letter">${opt.letter}</span>
+            <span class="option-text">${opt.text}</span>
+          </div>
+        `;
+      }).join('');
+      document.querySelector('.options-list').innerHTML = optionsHtml;
+
+      // 重新绑定选项点击事件
+      bindOptionEvents();
+    }
+
+    // 绑定选项点击事件
+    function bindOptionEvents() {
+      document.querySelectorAll('.option-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const letter = this.dataset.letter;
+          const question = questions[currentQuestionIndex];
+          const questionId = question.id;
+
+          if (question.type === 'multi') {
+            // 多选题：切换选中状态，允许多选
+            if (this.classList.contains('selected')) {
+              // 如果已选中，取消选中
+              this.classList.remove('selected');
+              const index = (userAnswers[questionId] || []).indexOf(letter);
+              if (index > -1) {
+                userAnswers[questionId].splice(index, 1);
+              }
+            } else {
+              // 如果未选中，添加选中
+              this.classList.add('selected');
+              if (!userAnswers[questionId]) {
+                userAnswers[questionId] = [];
+              }
+              userAnswers[questionId].push(letter);
+              // 按字母顺序排序
+              userAnswers[questionId].sort();
+            }
+          } else {
+            // 单选题：单选逻辑
+            // 移除同组其他选项的选中状态
+            this.parentElement.querySelectorAll('.option-item').forEach(opt => {
+              opt.classList.remove('selected');
+            });
+            // 添加当前选项的选中状态
+            this.classList.add('selected');
+            // 记录用户答案
+            userAnswers[questionId] = letter;
+          }
+
+          // 更新答题卡状态
+          updateNavStatus();
+        });
+      });
+    }
+
+    // 更新答题卡状态
+    function updateNavStatus() {
+      updateNavGrid();
+    }
+
+    // 显示确认对话框
+    function showConfirmModal() {
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    // 隐藏确认对话框
+    function hideConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+    }
+
+    // 提交考试
+    function submitExam() {
+      hideConfirmModal();
+
+      // 计算得分
+      let totalScore = 0;
+      questions.forEach(q => {
+        const userAnswer = userAnswers[q.id];
+        if (!userAnswer) return;
+
+        if (q.type === 'multi') {
+          // 多选题：全对才得分
+          if (Array.isArray(userAnswer) &&
+              userAnswer.length === q.answer.length &&
+              userAnswer.every(a => q.answer.includes(a))) {
+            totalScore += q.score;
+          }
+        } else {
+          // 单选题
+          if (userAnswer === q.answer) {
+            totalScore += q.score;
+          }
+        }
+      });
+
+      // 判断是否通过（及格24分）
+      const pass = totalScore >= 24;
+
+      // 保存考试结果
+      saveExamResult(totalScore, pass);
+
+      // 更新并显示结果页面
+      document.getElementById('resultScore').textContent = totalScore;
+      document.getElementById('resultPage').classList.add('show');
+
+      // 隐藏考试内容
+      document.querySelector('.exam-header').style.display = 'none';
+      document.querySelector('.content-padding').style.display = 'none';
+      document.querySelector('.submit-bar').style.display = 'none';
+      document.querySelector('.exam-timer').style.display = 'none';
+    }
+
+    // 查看解析
+    function viewAnalysis() {
+      alert('查看答题解析');
+    }
+
+    // 返回培训页面
+    function backToTraining() {
+      window.location.href = 'staff-miniapp-training.html';
+    }
+
+    // 选项点击效果
+    document.querySelectorAll('.option-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // 移除同组其他选项的选中状态
+        this.parentElement.querySelectorAll('.option-item').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+        // 添加当前选项的选中状态
+        this.classList.add('selected');
+      });
+    });
+
+    // 答题卡事件已在initNavGrid中绑定
+
+    // 上一题/下一题
+    document.querySelector('.btn-prev').addEventListener('click', function() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        updateQuestion();
+        updateNavGrid();
+      }
+    });
+    document.querySelector('.btn-next').addEventListener('click', function() {
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        updateQuestion();
+        updateNavGrid();
+      }
+    });
+
+    // 初始化答题卡
+    function initNavGrid() {
+      const navGrid = document.getElementById('navGrid');
+      navGrid.innerHTML = questions.map((q, index) => {
+        const isAnswered = userAnswers[q.id] && (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id].length > 0 : true);
+        const isCurrent = index === currentQuestionIndex;
+        let className = 'nav-item';
+        if (isCurrent) className += ' current';
+        if (isAnswered) className += ' answered';
+        else className += ' unanswered';
+        return `<div class="${className}" data-index="${index}">${q.id}</div>`;
+      }).join('');
+
+      // 绑定点击事件
+      navGrid.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const index = parseInt(this.dataset.index);
+          currentQuestionIndex = index;
+          updateQuestion();
+          updateNavGrid();
+        });
+      });
+    }
+
+    // 更新答题卡状态
+    function updateNavGrid() {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach((nav, index) => {
+        const q = questions[index];
+        const isAnswered = userAnswers[q.id] && (Array.isArray(userAnswers[q.id]) ? userAnswers[q.id].length > 0 : true);
+        nav.className = 'nav-item';
+        if (index === currentQuestionIndex) nav.classList.add('current');
+        if (isAnswered) nav.classList.add('answered');
+        else nav.classList.add('unanswered');
+      });
+    }
+
+    // 初始化显示
+    initNavGrid();
+    updateQuestion();
+    } // 结束 else 语句（if isSubmitted）
+  </script>
+</body>
+</html>

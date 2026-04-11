@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>护理人员端 - 首页</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* 模拟手机屏幕 */
+    .mobile-container {
+      width: 375px;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 顶部用户信息区域 */
+    .user-header {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fb0 100%);
+      padding: 40px 20px 30px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-phone {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .user-phone::after {
+      content: '›';
+      font-size: 18px;
+      margin-left: 4px;
+    }
+
+    /* 功能区域通用样式 */
+    .section {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+    }
+
+    /* 功能网格 */
+    .func-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .func-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .func-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .func-item:active {
+      background: #f5f5f5;
+    }
+
+    .func-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 10px;
+      background: #f5f5f5;
+    }
+
+    /* 服务区域图标颜色 */
+    .func-icon.blue {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    }
+
+    .func-icon.orange {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    }
+
+    .func-icon.cyan {
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    }
+
+    /* 档期区域图标颜色 */
+    .func-icon.red {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    }
+
+    .func-icon.pink {
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+    }
+
+    /* 订单区域图标颜色 */
+    .func-icon.yellow {
+      background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%);
+    }
+
+    .func-icon.green {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    }
+
+    .func-icon.purple {
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    }
+
+    .func-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .func-desc {
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* 底部导航 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 20px;
+      cursor: pointer;
+    }
+
+    .tab-icon {
+      font-size: 24px;
+      color: #999;
+    }
+
+    .tab-text {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .tab-item.active .tab-icon,
+    .tab-item.active .tab-text {
+      color: #ff6b9d;
+    }
+
+    /* 内容区域底部留白 */
+    .content-wrapper {
+      padding-bottom: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-container">
+    <div class="content-wrapper">
+      <!-- 用户信息区域 -->
+      <div class="user-header">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <div class="user-name">Y K</div>
+        <div class="user-phone">手机号码：187*****3506</div>
+      </div>
+    </div>
+
+    <!-- 服务区域 -->
+    <div class="section">
+      <div class="section-title">服务</div>
+      <div class="func-grid">
+        <div class="func-item">
+          <div class="func-icon blue">🩺</div>
+          <div class="func-name">宝妈护理</div>
+          <div class="func-desc">记录宝妈情况</div>
+        </div>
+        <div class="func-item">
+          <div class="func-icon orange">🍼</div>
+          <div class="func-name">宝宝护理</div>
+          <div class="func-desc">记录宝宝情况</div>
+        </div>
+        <div class="func-item">
+          <div class="func-icon cyan">📋</div>
+          <div class="func-name">护理服务</div>
+          <div class="func-desc">记录项目情况</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 档期区域 -->
+    <div class="section">
+      <div class="section-title">档期</div>
+      <div class="func-grid-2">
+        <div class="func-item">
+          <div class="func-icon red">📅</div>
+          <div class="func-name">档期</div>
+          <div class="func-desc">查看档期安排</div>
+        </div>
+        <div class="func-item">
+          <div class="func-icon pink">⏰</div>
+          <div class="func-name">请假</div>
+          <div class="func-desc">申请请假</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单区域 -->
+    <div class="section">
+      <div class="section-title">订单</div>
+      <div class="func-grid">
+        <div class="func-item">
+          <div class="func-icon yellow">🔥</div>
+          <div class="func-name">抢单</div>
+          <div class="func-desc">查看可抢订单</div>
+        </div>
+        <div class="func-item">
+          <div class="func-icon green">🏠</div>
+          <div class="func-name">上户</div>
+          <div class="func-desc">确认上户信息</div>
+        </div>
+        <div class="func-item">
+          <div class="func-icon purple">✅</div>
+          <div class="func-name">下户</div>
+          <div class="func-desc">填写服务记录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- 底部导航 -->
+    <div class="tab-bar">
+      <div class="tab-item active" onclick="window.location.href='staff-miniapp-home.html'">
+        <div class="tab-icon">🏠</div>
+        <div class="tab-text">首页</div>
+      </div>
+      <div class="tab-item" onclick="window.location.href='staff-miniapp-training.html'">
+        <div class="tab-icon">📚</div>
+        <div class="tab-text">培训</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">👤</div>
+        <div class="tab-text">我的</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

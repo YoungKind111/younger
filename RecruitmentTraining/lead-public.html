@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>线索公共池 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 线索公共池专用样式 */
+    .batch-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: #e6f7ff;
+      border-radius: 6px;
+      align-items: center;
+    }
+    
+    .batch-info {
+      color: #096dd9;
+      font-size: 14px;
+    }
+    
+    .lead-source-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .lead-source-tag.wechat { background: #e6f7ff; color: #096dd9; }
+    .lead-source-tag.douyin { background: #f6ffed; color: #389e0d; }
+    .lead-source-tag.ditui { background: #fff7e6; color: #d46b08; }
+    .lead-source-tag.intro { background: #f9f0ff; color: #722ed1; }
+    .lead-source-tag.website { background: #e6fffb; color: #08979c; }
+    .lead-source-tag.partner { background: #fff0f6; color: #eb2f96; }
+    
+    .assign-modal-content {
+      padding: 20px;
+    }
+    
+    .recruiter-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    @media (max-width: 768px) {
+      .recruiter-list { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .recruiter-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border: 2px solid #e8e8e8;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .recruiter-item:hover {
+      border-color: #1890ff;
+    }
+    
+    .recruiter-item.selected {
+      border-color: #1890ff;
+      background: #e6f7ff;
+    }
+
+    .recruiter-item.inactive {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .recruiter-item.inactive .recruiter-name {
+      color: #8c8c8c;
+    }
+
+    .recruiter-item.inactive .recruiter-load {
+      color: #bfbfbf;
+    }
+    
+    .recruiter-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1890ff;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 12px;
+    }
+    
+    .recruiter-info {
+      flex: 1;
+    }
+    
+    .recruiter-name {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .recruiter-load {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+    
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 992px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
+    
+    .stat-mini {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-mini-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .stat-mini-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .lead-detail-drawer .detail-section {
+      margin-bottom: 24px;
+    }
+    
+    .lead-detail-drawer .detail-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .detail-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+    
+    .detail-value {
+      font-size: 14px;
+      color: #262626;
+      font-weight: 500;
+    }
+    
+    .follow-timeline {
+      padding-left: 16px;
+    }
+    
+    .follow-item {
+      position: relative;
+      padding-bottom: 20px;
+      padding-left: 20px;
+      border-left: 2px solid #e8e8e8;
+    }
+    
+    .follow-item::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1890ff;
+      border: 2px solid #fff;
+    }
+    
+    .follow-time {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+    
+    .follow-content {
+      color: #262626;
+    }
+    
+    .follow-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    
+    .follow-type.phone { background: #e6f7ff; color: #096dd9; }
+    .follow-type.wechat { background: #f6ffed; color: #389e0d; }
+    .follow_type.visit { background: #fff7e6; color: #d46b08; }
+
+    /* 跟进状态标签样式 */
+    .follow-status-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .follow-status-tag.unfollowed { background: #f5f5f5; color: #8c8c8c; }
+    .follow-status-tag.following { background: #e6f7ff; color: #096dd9; }
+    .follow-status-tag.considering { background: #fff7e6; color: #d46b08; }
+    .follow-status-tag.rejected { background: #fff1f0; color: #cf1322; }
+    .follow-status-tag.invited { background: #f6ffed; color: #389e0d; }
+    .follow-status-tag.registered { background: #e6fffb; color: #08979c; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 统计概览 -->
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-value text-primary">{{ stats.total }}</div>
+        <div class="stat-mini-label">线索总数</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-value text-success">{{ stats.today }}</div>
+        <div class="stat-mini-label">今日新增</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-value">{{ stats.unassigned }}</div>
+        <div class="stat-mini-label">未分配</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-value text-primary">{{ stats.assigned }}</div>
+        <div class="stat-mini-label">已分配</div>
+      </div>
+    </div>
+    
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-item" style="flex: 1; max-width: 300px;">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索姓名/手机号"
+          clearable
+          prefix-icon="el-icon-search"
+        ></el-input>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">分配状态:</span>
+        <el-select v-model="filterAssignStatus" placeholder="全部状态" clearable style="width: 120px;">
+          <el-option label="未分配" value="unassigned"></el-option>
+          <el-option label="已分配" value="assigned"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">来源渠道:</span>
+        <el-select v-model="filterSource" placeholder="全部渠道" clearable style="width: 130px;">
+          <el-option label="微信广告" value="wechat"></el-option>
+          <el-option label="抖音" value="douyin"></el-option>
+          <el-option label="地推" value="ditui"></el-option>
+          <el-option label="转介绍" value="intro"></el-option>
+          <el-option label="官网" value="website"></el-option>
+          <el-option label="合作伙伴" value="partner"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">分配对象:</span>
+        <el-select v-model="filterAssignTo" placeholder="全部对象" clearable filterable style="width: 130px;">
+          <el-option
+            v-for="recruiter in recruiterList"
+            :key="recruiter.id"
+            :label="recruiter.name"
+            :value="recruiter.name"
+          ></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">推荐人:</span>
+        <el-select 
+          v-model="filterReferrer" 
+          placeholder="全部推荐人" 
+          clearable 
+          filterable
+          style="width: 140px;"
+        >
+          <el-option-group label="微信广告">
+            <el-option label="张阿姨" value="zhang"></el-option>
+          </el-option-group>
+          <el-option-group label="地推">
+            <el-option label="李大哥" value="li"></el-option>
+            <el-option label="王姐" value="wang"></el-option>
+          </el-option-group>
+          <el-option-group label="转介绍">
+            <el-option label="刘阿姨" value="liu"></el-option>
+            <el-option label="孙大姐" value="sun"></el-option>
+          </el-option-group>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">目标岗位:</span>
+        <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 120px;">
+          <el-option label="月嫂" value="yuesao"></el-option>
+          <el-option label="育婴师" value="yuying"></el-option>
+          <el-option label="老年护工" value="hugong"></el-option>
+          <el-option label="其他" value="other"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">跟进状态:</span>
+        <el-select v-model="filterFollowStatus" placeholder="全部状态" clearable style="width: 120px;">
+          <el-option label="未跟进" value="未跟进"></el-option>
+          <el-option label="跟进中" value="跟进中"></el-option>
+          <el-option label="考虑中" value="考虑中"></el-option>
+          <el-option label="已拒绝" value="已拒绝"></el-option>
+          <el-option label="已邀约" value="已邀约"></el-option>
+          <el-option label="已入册" value="已入册"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">创建时间:</span>
+        <el-date-picker
+          v-model="filterCreateTime"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 220px;"
+        ></el-date-picker>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">分配时间:</span>
+        <el-date-picker
+          v-model="filterAssignTime"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 220px;"
+        ></el-date-picker>
+      </div>
+      <div class="filter-item">
+        <el-button type="primary" @click="handleSearch">
+          <i class="el-icon-search"></i> 查询
+        </el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
+    </div>
+    
+    <!-- 批量操作栏 -->
+    <div class="batch-actions" v-if="selectedLeads.length > 0">
+      <el-checkbox v-model="selectAll" @change="handleSelectAll">全选</el-checkbox>
+      <span class="batch-info">已选择 {{ selectedLeads.length }} 条线索</span>
+      <el-button type="primary" size="small" @click="showAssignDialog = true">
+        <i class="el-icon-user"></i> 批量分配
+      </el-button>
+    </div>
+    
+    <!-- 数据表格 -->
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">所有线索</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ total }} 条记录</span>
+        </div>
+        <div class="flex-center gap-2">
+          <el-button type="primary" @click="showImportDialog = true">
+            <i class="el-icon-upload2"></i> 导入线索
+          </el-button>
+          <el-button @click="handleAutoAssign">
+            <i class="el-icon-magic-stick"></i> 自动分配
+          </el-button>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <el-table
+          :data="leadList"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+          v-loading="loading"
+        >
+          <el-table-column type="selection" width="55"></el-table-column>
+          <el-table-column label="线索信息" min-width="180">
+            <template #default="{ row }">
+              <div class="cell-main">{{ row.name }}</div>
+              <div class="cell-sub">{{ row.phone }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="来源渠道" width="120">
+            <template #default="{ row }">
+              <span class="lead-source-tag" :class="row.source">{{ row.sourceText }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="目标岗位" width="100">
+            <template #default="{ row }">
+              {{ row.position }}
+            </template>
+          </el-table-column>
+          <el-table-column label="推荐人" width="120">
+            <template #default="{ row }">
+              <div v-if="row.referrer">
+                <div class="cell-main">{{ row.referrer }}</div>
+                <div v-if="row.referrerReward" class="cell-sub">
+                  <span class="reward-badge" :class="row.rewardStatus">
+                    奖励: ¥{{ row.referrerReward }}
+                  </span>
+                </div>
+              </div>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" width="150">
+            <template #default="{ row }">
+              {{ row.createTime }}
+            </template>
+          </el-table-column>
+          <el-table-column label="分配状态" width="120">
+            <template #default="{ row }">
+              <div v-if="row.assignStatus === 'assigned'">
+                <el-tag size="small" type="success">已分配</el-tag>
+                <div style="font-size: 12px; color: #595959; margin-top: 4px;">{{ row.assignTo }}</div>
+              </div>
+              <el-tag v-else size="small" type="info">未分配</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="跟进状态" width="100">
+            <template #default="{ row }">
+              <span class="follow-status-tag" :class="getFollowStatusClass(row.followStatus)">
+                {{ row.followStatus }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="跟进次数" width="90" align="center">
+            <template #default="{ row }">
+              <span style="font-weight: 600; color: #262626;">{{ row.followCount || 0 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="距上次跟进" width="110" align="center">
+            <template #default="{ row }">
+              <span v-if="row.lastFollowDays !== undefined" :style="{ color: row.lastFollowDays <= 3 ? '#52c41a' : '#f5222d' }">
+                {{ row.lastFollowDays }}天
+              </span>
+              <span v-else style="color: #8c8c8c;">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="160" fixed="right">
+            <template #default="{ row }">
+              <div class="action-btns">
+                <el-button type="text" size="small" @click="handleViewDetail(row)">详情</el-button>
+                <el-button v-if="row.assignStatus !== 'assigned'" type="text" size="small" class="text-primary" @click="handleAssign(row)">分配</el-button>
+                <el-button v-else type="text" size="small" class="text-warning" @click="handleReassign(row)">重新分配</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 分配对话框 -->
+    <el-dialog
+      v-model="showAssignDialog"
+      title="分配给招生老师"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <div class="assign-modal-content">
+        <p style="color: #595959; margin-bottom: 8px;">
+          已选择 <strong style="color: #1890ff;">{{ selectedLeads.length || 1 }}</strong> 条线索，请选择分配对象：
+        </p>
+        <el-radio-group v-model="assignType" style="margin-bottom: 16px;">
+          <el-radio label="auto">系统自动分配（按负载均衡）</el-radio>
+          <el-radio label="manual">手动指定分配</el-radio>
+        </el-radio-group>
+        
+        <div v-if="assignType === 'manual'" class="recruiter-list">
+          <div
+            v-for="recruiter in recruiterList"
+            :key="recruiter.id"
+            class="recruiter-item"
+            :class="{ selected: selectedRecruiter === recruiter.id, inactive: recruiter.status === 'inactive' }"
+            @click="recruiter.status !== 'inactive' && (selectedRecruiter = recruiter.id)"
+          >
+            <div class="recruiter-avatar">{{ recruiter.name.charAt(0) }}</div>
+            <div class="recruiter-info">
+              <div class="recruiter-name">{{ recruiter.name }}</div>
+              <div class="recruiter-load">
+                <span>当前跟进: {{ recruiter.load }}人</span>
+                <span style="margin-left: 8px; color: #52c41a;">转化率: {{ recruiter.conversionRate }}%</span>
+              </div>
+            </div>
+            <i v-if="selectedRecruiter === recruiter.id" class="el-icon-check" style="color: #1890ff;"></i>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showAssignDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmAssign" :disabled="assignType === 'manual' && !selectedRecruiter">
+          确认分配
+        </el-button>
+      </template>
+    </el-dialog>
+    
+    <!-- 导入对话框 -->
+    <el-dialog
+      v-model="showImportDialog"
+      title="批量导入线索"
+      width="500px"
+    >
+      <el-upload
+        drag
+        action="#"
+        :auto-upload="false"
+        :on-change="handleFileChange"
+        style="width: 100%;"
+      >
+        <i class="el-icon-upload" style="font-size: 48px; color: #1890ff;"></i>
+        <div style="margin-top: 16px;">点击或拖拽文件到此处上传</div>
+        <div style="margin-top: 8px; color: #8c8c8c; font-size: 12px;">支持 .xlsx, .xls, .csv 格式</div>
+      </el-upload>
+      <div style="margin-top: 16px; padding: 12px; background: #f6ffed; border-radius: 4px;">
+        <i class="el-icon-info" style="color: #52c41a; margin-right: 8px;"></i>
+        <span style="font-size: 13px; color: #262626;">下载导入模板：</span>
+        <el-link type="primary" style="font-size: 13px;">线索导入模板.xlsx</el-link>
+      </div>
+      <template #footer>
+        <el-button @click="showImportDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmImport">开始导入</el-button>
+      </template>
+    </el-dialog>
+    
+    <!-- 线索详情抽屉 -->
+    <el-drawer
+      v-model="showDetailDrawer"
+      title="线索详情"
+      size="500px"
+      :with-header="true"
+      class="lead-detail-drawer"
+    >
+      <template v-if="currentLead">
+        <div class="detail-section">
+          <div class="detail-title">基本信息</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">姓名</span>
+              <span class="detail-value">{{ currentLead.name }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">手机号</span>
+              <span class="detail-value">{{ currentLead.phone }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">年龄</span>
+              <span class="detail-value">{{ currentLead.age }}岁</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">籍贯</span>
+              <span class="detail-value">{{ currentLead.origin }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">目标岗位</span>
+              <span class="detail-value">{{ currentLead.position }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">来源渠道</span>
+              <span class="detail-value">
+                <span class="lead-source-tag" :class="currentLead.source">{{ currentLead.sourceText }}</span>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">推荐人</span>
+              <span class="detail-value">
+                <div v-if="currentLead.referrer">
+                  <div style="font-weight: 500;">{{ currentLead.referrer }}</div>
+                  <div v-if="currentLead.referrerCode" style="font-size: 12px; color: #8c8c8c;">编码: {{ currentLead.referrerCode }}</div>
+                  <div v-if="currentLead.referrerReward > 0" style="margin-top: 4px;">
+                    <span class="reward-badge" :class="currentLead.rewardStatus">
+                      {{ currentLead.rewardStatus === 'paid' ? '已发放' : '待发放' }} 奖励: ¥{{ currentLead.referrerReward }}
+                    </span>
+                  </div>
+                </div>
+                <span v-else>-</span>
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">分配状态</span>
+              <span class="detail-value">
+                <el-tag v-if="currentLead.assignStatus === 'assigned'" size="small" type="success">已分配</el-tag>
+                <el-tag v-else size="small" type="info">未分配</el-tag>
+                <div v-if="currentLead.assignTo" style="margin-top: 4px; font-size: 12px; color: #595959;">
+                  分配对象: {{ currentLead.assignTo }}
+                </div>
+                <div v-if="currentLead.assignTime" style="font-size: 12px; color: #8c8c8c;">
+                  分配时间: {{ currentLead.assignTime }}
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <div class="detail-title">跟进记录</div>
+          <div class="follow-timeline">
+            <div class="follow-item" v-for="(record, index) in currentLead.followRecords" :key="index">
+              <div class="follow-time">{{ record.time }}</div>
+              <div class="follow-content">
+                {{ record.content }}
+                <span class="follow-type" :class="record.type">{{ record.typeText }}</span>
+              </div>
+            </div>
+            <div v-if="!currentLead.followRecords || currentLead.followRecords.length === 0" style="color: #8c8c8c; padding: 20px 0;">
+              暂无跟进记录
+            </div>
+          </div>
+        </div>
+        
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 12px;">
+          <el-button v-if="currentLead.assignStatus !== 'assigned'" type="primary" style="flex: 1;" @click="handleAssign(currentLead)">
+            <i class="el-icon-user"></i> 分配线索
+          </el-button>
+          <el-button v-else type="primary" style="flex: 1;" @click="handleReassign(currentLead)">
+            <i class="el-icon-refresh"></i> 重新分配
+          </el-button>
+          <el-button style="flex: 1;" @click="showDetailDrawer = false">关闭</el-button>
+        </div>
+      </template>
+    </el-drawer>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('lead-public', {
+      title: '所有线索',
+      breadcrumb: '<a href="dashboard.html">首页</a> / <a href="lead-public.html">线索管理</a> / 所有线索'
+    });
+
+    createApp({
+      setup() {
+        // 统计数据
+        const stats = ref({
+          total: 156,
+          today: 23,
+          unassigned: 68,
+          assigned: 88
+        });
+        
+        // 筛选条件
+        const searchKeyword = ref('');
+        const filterSource = ref('');
+        const filterPosition = ref('');
+        const filterReferrer = ref('');
+        const filterAssignStatus = ref('');
+        const filterAssignTo = ref('');
+        const filterFollowStatus = ref('');
+        const filterCreateTime = ref([]);
+        const filterAssignTime = ref([]);
+        
+        // 分页
+        const currentPage = ref(1);
+        const pageSize = ref(10);
+        const total = ref(156);
+        const loading = ref(false);
+        
+        // 选择相关
+        const selectedLeads = ref([]);
+        const selectAll = ref(false);
+        
+        // 对话框控制
+        const showAssignDialog = ref(false);
+        const showImportDialog = ref(false);
+        const showDetailDrawer = ref(false);
+        
+        // 分配相关
+        const assignType = ref('auto');
+        const selectedRecruiter = ref('');
+        
+        // 当前查看的线索
+        const currentLead = ref(null);
+        
+        // 招募人员列表（与 recruiter.html 同步的数据）
+        const recruiterList = ref([
+          {
+            id: 1, name: '李小红', phone: '138****1234', email: 'lixiaohong@company.com',
+            employeeNo: 'ZS001', joinDate: '2025-03-01', status: 'active',
+            load: 28, leadCount: 28, interviewCount: 8, signedCount: 5, conversionRate: 18
+          },
+          {
+            id: 2, name: '王建国', phone: '139****5678', email: 'wangjianguo@company.com',
+            employeeNo: 'ZS002', joinDate: '2025-02-15', status: 'active',
+            load: 35, leadCount: 45, interviewCount: 12, signedCount: 8, conversionRate: 18
+          },
+          {
+            id: 3, name: '张美玲', phone: '137****9876', email: 'zhangmeiling@company.com',
+            employeeNo: 'ZS003', joinDate: '2025-03-10', status: 'active',
+            load: 22, leadCount: 22, interviewCount: 6, signedCount: 4, conversionRate: 18
+          },
+          {
+            id: 4, name: '刘志强', phone: '136****2468', email: 'liuzhiqiang@company.com',
+            employeeNo: 'ZS004', joinDate: '2025-01-20', status: 'active',
+            load: 30, leadCount: 52, interviewCount: 15, signedCount: 10, conversionRate: 19
+          },
+          {
+            id: 5, name: '陈秀英', phone: '135****1357', email: 'chenxiuying@company.com',
+            employeeNo: 'ZS005', joinDate: '2025-03-20', status: 'active',
+            load: 25, leadCount: 25, interviewCount: 7, signedCount: 4, conversionRate: 16
+          },
+          {
+            id: 6, name: '杨建华', phone: '133****8642', email: 'yangjianhua@company.com',
+            employeeNo: 'ZS006', joinDate: '2025-02-28', status: 'active',
+            load: 18, leadCount: 38, interviewCount: 10, signedCount: 6, conversionRate: 16
+          },
+          {
+            id: 7, name: '赵婷婷', phone: '150****2468', email: 'zhaotingting@company.com',
+            employeeNo: 'ZS007', joinDate: '2025-03-25', status: 'active',
+            load: 20, leadCount: 20, interviewCount: 5, signedCount: 3, conversionRate: 15
+          },
+          {
+            id: 8, name: '孙大为', phone: '151****9753', email: 'sundawei@company.com',
+            employeeNo: 'ZS008', joinDate: '2025-01-10', status: 'active',
+            load: 32, leadCount: 48, interviewCount: 14, signedCount: 9, conversionRate: 19
+          }
+        ]);
+        
+        // 线索列表（模拟数据）
+        const leadList = ref([
+          {
+            id: 1,
+            name: '王秀英',
+            phone: '138****5678',
+            age: 42,
+            origin: '湖南长沙',
+            position: '月嫂',
+            source: 'wechat',
+            sourceText: '微信广告',
+            referrer: '',
+            referrerCode: '',
+            referrerReward: 0,
+            rewardStatus: '',
+            createTime: '2026-04-06 09:30',
+            assignStatus: 'assigned',
+            assignTo: '李小红',
+            assignTime: '2026-04-06 10:30',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 2,
+            name: '李桂花',
+            phone: '139****1234',
+            age: 38,
+            origin: '湖北武汉',
+            position: '育婴师',
+            source: 'intro',
+            sourceText: '转介绍',
+            referrer: '张阿姨',
+            referrerCode: 'WX001-R01',
+            referrerReward: 0,
+            rewardStatus: 'pending',
+            createTime: '2026-04-06 08:15',
+            assignStatus: 'unassigned',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 3,
+            name: '张淑芬',
+            phone: '137****9876',
+            age: 45,
+            origin: '四川成都',
+            position: '月嫂',
+            source: 'douyin',
+            sourceText: '抖音',
+            referrer: '',
+            createTime: '2026-04-05 16:45',
+            assignStatus: 'assigned',
+            assignTo: '王建国',
+            assignTime: '2026-04-05 17:00',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 4,
+            name: '陈美华',
+            phone: '136****2468',
+            age: 35,
+            origin: '河南郑州',
+            position: '老年护工',
+            source: 'ditui',
+            sourceText: '地推',
+            referrer: '',
+            createTime: '2026-04-05 14:20',
+            assignStatus: 'unassigned',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 5,
+            name: '刘玉兰',
+            phone: '135****1357',
+            age: 48,
+            origin: '江西南昌',
+            position: '月嫂',
+            source: 'wechat',
+            sourceText: '微信广告',
+            referrer: '',
+            createTime: '2026-04-05 11:00',
+            assignStatus: 'assigned',
+            assignTo: '张美玲',
+            assignTime: '2026-04-05 12:30',
+            followStatus: '跟进中',
+            followCount: 2,
+            lastFollowDays: 1,
+            followRecords: [
+              { time: '2026-04-05 15:30', content: '首次电话，了解基本情况', type: 'phone', typeText: '电话' },
+              { time: '2026-04-06 09:00', content: '微信沟通，发送公司资料', type: 'wechat', typeText: '微信' }
+            ]
+          },
+          {
+            id: 6,
+            name: '杨秀珍',
+            phone: '133****8642',
+            age: 40,
+            origin: '安徽合肥',
+            position: '育婴师',
+            source: 'website',
+            sourceText: '官网',
+            referrer: '',
+            createTime: '2026-04-04 17:30',
+            assignStatus: 'unassigned',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 7,
+            name: '赵淑芳',
+            phone: '132****9753',
+            age: 44,
+            origin: '山东济南',
+            position: '月嫂',
+            source: 'intro',
+            sourceText: '转介绍',
+            referrer: '刘阿姨',
+            referrerCode: 'ZJ001-R04',
+            referrerReward: 1500,
+            rewardStatus: 'paid',
+            createTime: '2026-04-04 10:15',
+            assignStatus: 'assigned',
+            assignTo: '刘志强',
+            assignTime: '2026-04-04 11:00',
+            followStatus: '跟进中',
+            followCount: 1,
+            lastFollowDays: 3,
+            followRecords: [
+              { time: '2026-04-04 16:00', content: '电话沟通，有3年月嫂经验', type: 'phone', typeText: '电话' }
+            ]
+          },
+          {
+            id: 8,
+            name: '黄秀英',
+            phone: '131****7531',
+            age: 36,
+            origin: '福建福州',
+            position: '月嫂',
+            source: 'douyin',
+            sourceText: '抖音',
+            referrer: '',
+            createTime: '2026-04-03 15:45',
+            assignStatus: 'assigned',
+            assignTo: '陈秀英',
+            assignTime: '2026-04-03 16:00',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 9,
+            name: '周桂英',
+            phone: '130****6420',
+            age: 41,
+            origin: '广西南宁',
+            position: '老年护工',
+            source: 'wechat',
+            sourceText: '微信广告',
+            referrer: '',
+            createTime: '2026-04-03 09:20',
+            assignStatus: 'unassigned',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          },
+          {
+            id: 10,
+            name: '吴秀兰',
+            phone: '158****9753',
+            age: 39,
+            origin: '云南昆明',
+            position: '育婴师',
+            source: 'ditui',
+            sourceText: '地推',
+            referrer: '',
+            createTime: '2026-04-02 16:00',
+            assignStatus: 'assigned',
+            assignTo: '杨建华',
+            assignTime: '2026-04-02 17:00',
+            followStatus: '未跟进',
+            followCount: 0,
+            followRecords: []
+          }
+        ]);
+        
+        // 表格选择变化
+        const handleSelectionChange = (selection) => {
+          selectedLeads.value = selection;
+        };
+        
+        // 全选
+        const handleSelectAll = (val) => {
+          // 实际项目中这里需要调用el-table的toggleAllSelection方法
+        };
+        
+        // 搜索
+        const handleSearch = () => {
+          loading.value = true;
+          setTimeout(() => {
+            loading.value = false;
+            ElementPlus.ElMessage.success('查询完成');
+          }, 500);
+        };
+        
+        // 重置筛选
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterSource.value = '';
+          filterPosition.value = '';
+          filterReferrer.value = '';
+          filterAssignStatus.value = '';
+          filterAssignTo.value = '';
+          filterFollowStatus.value = '';
+          filterCreateTime.value = [];
+          filterAssignTime.value = [];
+        };
+
+        // 获取跟进状态样式类
+        const getFollowStatusClass = (status) => {
+          const classMap = {
+            '未跟进': 'unfollowed',
+            '跟进中': 'following',
+            '考虑中': 'considering',
+            '已拒绝': 'rejected',
+            '已邀约': 'invited',
+            '已入册': 'registered'
+          };
+          return classMap[status] || 'unfollowed';
+        };
+        
+        // 查看详情
+        const handleViewDetail = (row) => {
+          currentLead.value = row;
+          showDetailDrawer.value = true;
+        };
+        
+        // 分配线索
+        const handleAssign = (row) => {
+          if (row) {
+            selectedLeads.value = [row];
+          }
+          showAssignDialog.value = true;
+        };
+
+        // 重新分配
+        const handleReassign = (row) => {
+          if (row) {
+            selectedLeads.value = [row];
+          }
+          showAssignDialog.value = true;
+        };
+        
+        // 确认分配
+        const confirmAssign = () => {
+          let msg;
+          if (assignType.value === 'auto') {
+            msg = `已将 ${selectedLeads.value.length} 条线索按负载均衡自动分配`;
+          } else {
+            const recruiter = recruiterList.value.find(r => r.id === selectedRecruiter.value);
+            msg = `已将 ${selectedLeads.value.length} 条线索分配给 ${recruiter ? recruiter.name : '指定招生老师'}`;
+          }
+          ElementPlus.ElMessage.success(msg);
+          showAssignDialog.value = false;
+          selectedLeads.value = [];
+          selectedRecruiter.value = '';
+        };
+        
+        // 自动分配
+        const handleAutoAssign = () => {
+          ElementPlus.ElMessageBox.confirm('系统将按负载均衡自动分配给招生老师，是否继续？', '自动分配', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            ElementPlus.ElMessage.success('自动分配完成，共分配 42 条线索');
+          });
+        };
+        
+        
+        // 文件上传
+        const handleFileChange = (file) => {
+          console.log('选择文件:', file);
+        };
+        
+        // 确认导入
+        const confirmImport = () => {
+          ElementPlus.ElMessage.success('导入成功，新增 25 条线索');
+          showImportDialog.value = false;
+        };
+        
+        // 分页变化
+        const handleSizeChange = (val) => {
+          pageSize.value = val;
+        };
+
+        const handleCurrentChange = (val) => {
+          currentPage.value = val;
+        };
+
+        return {
+          stats,
+          searchKeyword,
+          filterSource,
+          filterPosition,
+          filterReferrer,
+          filterAssignStatus,
+          filterAssignTo,
+          filterFollowStatus,
+          filterCreateTime,
+          filterAssignTime,
+          currentPage,
+          pageSize,
+          total,
+          loading,
+          leadList,
+          selectedLeads,
+          selectAll,
+          showAssignDialog,
+          showImportDialog,
+          showDetailDrawer,
+          assignType,
+          selectedRecruiter,
+          recruiterList,
+          currentLead,
+          handleSelectionChange,
+          handleSelectAll,
+          handleSearch,
+          handleReset,
+          handleViewDetail,
+          handleAssign,
+          handleReassign,
+          confirmAssign,
+          getFollowStatusClass,
+          handleAutoAssign,
+          handleFileChange,
+          confirmImport,
+          handleSizeChange,
+          handleCurrentChange
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

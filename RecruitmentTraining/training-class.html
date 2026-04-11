@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班级管理 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border-left: 4px solid #1890ff;
+    }
+
+    .stat-card:nth-child(2) { border-left-color: #fa8c16; }
+    .stat-card:nth-child(3) { border-left-color: #52c41a; }
+    .stat-card:nth-child(4) { border-left-color: #8c8c8c; }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+
+    .class-list {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+    }
+
+    .class-list-header {
+      display: grid;
+      grid-template-columns: 2fr 100px 100px 120px 180px 80px 60px 100px 100px 120px;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+      font-size: 13px;
+      font-weight: 500;
+      color: #595959;
+    }
+
+    .class-list-item {
+      display: grid;
+      grid-template-columns: 2fr 100px 100px 120px 180px 80px 60px 100px 100px 120px;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f0;
+      align-items: center;
+      transition: background 0.3s;
+    }
+
+    .class-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .class-list-item:hover {
+      background: #fafafa;
+    }
+
+    .class-info-main {
+      min-width: 0;
+    }
+
+    .class-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 4px;
+    }
+
+    .class-meta {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .class-cell {
+      font-size: 13px;
+      color: #262626;
+    }
+
+    .class-cell.teacher {
+      color: #595959;
+    }
+
+    .class-cell.capacity {
+      font-weight: 500;
+    }
+
+    .class-cell.capacity.full {
+      color: #f5222d;
+    }
+
+    .class-cell.capacity.warning {
+      color: #fa8c16;
+    }
+
+    .class-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .preview-table th,
+    .preview-table td {
+      border: 1px solid #e8e8e8;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    .preview-table th {
+      background: #fce4ec;
+      color: #c2185b;
+      font-weight: 500;
+    }
+
+    .preview-table td:first-child {
+      background: #fff5f7;
+      white-space: nowrap;
+      font-weight: 500;
+      color: #595959;
+    }
+
+    .course-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+
+    .course-tag.free {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .course-tag.paid {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+
+    .course-tag.category {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+
+    .schedule-timeline {
+      padding-left: 8px;
+    }
+
+    .schedule-item {
+      position: relative;
+      padding-bottom: 16px;
+      padding-left: 20px;
+      border-left: 2px solid #e8e8e8;
+    }
+
+    .schedule-item:last-child {
+      border-left: 2px solid transparent;
+      padding-bottom: 0;
+    }
+
+    .schedule-item::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #bfbfbf;
+      border: 2px solid #fff;
+    }
+
+    .schedule-item.completed::before {
+      background: #52c41a;
+    }
+
+    .schedule-item.current::before {
+      background: #1890ff;
+      box-shadow: 0 0 0 2px #1890ff;
+    }
+
+    .schedule-item.pending::before {
+      background: #bfbfbf;
+    }
+
+    .schedule-date {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .schedule-content {
+      color: #262626;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .schedule-status {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .tabs-custom {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-item {
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-item:hover {
+      background: #f5f5f5;
+    }
+
+    .tab-item.active {
+      background: #1890ff;
+      color: #fff;
+    }
+
+    /* 排课表样式 */
+    .schedule-container {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .schedule-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .schedule-subtitle {
+      font-size: 14px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .schedule-toolbar {
+      display: flex;
+      gap: 12px;
+    }
+
+    .calendar-wrapper {
+      overflow-x: auto;
+    }
+
+    .calendar-table {
+      width: 100%;
+      min-width: 1400px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .calendar-table th,
+    .calendar-table td {
+      border: 1px solid #e8e8e8;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .calendar-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .col-teacher {
+      width: 100px;
+      background: #fffbe6 !important;
+      font-weight: 500;
+    }
+
+    .col-room {
+      width: 90px;
+      background: #fffbe6 !important;
+      font-weight: 500;
+    }
+
+    .date-header {
+      padding: 8px 4px;
+      min-width: 70px;
+    }
+
+    .date-weekday {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 2px;
+    }
+
+    .date-day {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .weekend {
+      background: #f6ffed !important;
+    }
+
+    .weekend .date-weekday,
+    .weekend .date-day {
+      color: #52c41a;
+    }
+
+    .course-cell {
+      padding: 4px 2px;
+      min-height: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 11px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .course-cell:hover {
+      opacity: 0.8;
+      white-space: normal;
+      overflow: visible;
+      z-index: 100;
+      position: relative;
+    }
+
+    .course-gangqian {
+      background: #e6f7ff;
+      color: #1890ff;
+      font-weight: 500;
+    }
+
+    .course-shengji {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .course-kaohe {
+      background: #fff1f0;
+      color: #f5222d;
+      font-weight: 500;
+    }
+
+    .course-yiliao {
+      background: #f9f0ff;
+      color: #722ed1;
+    }
+
+    .course-changdan {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+
+    .course-zonghe {
+      background: #e6fffb;
+      color: #13c2c2;
+    }
+
+    .course-day {
+      background: #fff2e8;
+      color: #fa541c;
+    }
+
+    .highlight-yellow {
+      background: #fffb8f !important;
+    }
+
+    .highlight-blue {
+      background: #bae7ff !important;
+    }
+
+    .highlight-green {
+      background: #b7eb8f !important;
+    }
+
+    .today {
+      position: relative;
+    }
+
+    .today::after {
+      content: '今';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: #f5222d;
+      color: #fff;
+      font-size: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+
+    .sticky-col-2 {
+      position: sticky;
+      left: 100px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 排课表 -->
+    <div class="schedule-container content-card">
+      <div class="schedule-header">
+        <div>
+          <div class="schedule-title">班级排课表</div>
+          <div class="schedule-subtitle">2026年4月</div>
+        </div>
+        <div class="schedule-toolbar">
+          <el-button-group>
+            <el-button size="small" @click="prevMonth">
+              <i class="el-icon-arrow-left"></i>
+            </el-button>
+            <el-button size="small" @click="nextMonth">
+              <i class="el-icon-arrow-right"></i>
+            </el-button>
+          </el-button-group>
+        </div>
+      </div>
+
+      <div class="calendar-wrapper">
+        <table class="calendar-table">
+          <thead>
+            <tr>
+              <th class="sticky-col col-teacher">开课老师</th>
+              <th class="sticky-col-2 col-room">开课教室</th>
+              <th
+                v-for="date in scheduleDates"
+                :key="date.day"
+                class="date-header"
+                :class="{ weekend: date.isWeekend, today: date.isToday }"
+              >
+                <div class="date-weekday">{{ date.weekday }}</div>
+                <div class="date-day">{{ date.day }}日</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="teacher in scheduleTeachers" :key="teacher.name + teacher.room">
+              <td class="sticky-col col-teacher">{{ teacher.name }}</td>
+              <td class="sticky-col-2 col-room">{{ teacher.room }}</td>
+              <td
+                v-for="date in scheduleDates"
+                :key="date.day"
+                class="course-cell"
+                :class="getScheduleCellClass(teacher, date)"
+                @click="handleScheduleCellClick(teacher, date)"
+              >
+                {{ getScheduleCourseContent(teacher, date) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="card-header">
+        <div class="tabs-custom">
+          <div class="tab-item" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">
+            全部 ({{ classList.length }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'pending' }" @click="activeTab = 'pending'">
+            待开班 ({{ pendingCount }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'active' }" @click="activeTab = 'active'">
+            进行中 ({{ activeCount }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'completed' }" @click="activeTab = 'completed'">
+            已结业 ({{ completedCount }})
+          </div>
+        </div>
+        <el-button type="primary" @click="handleCreate">
+          <i class="el-icon-plus"></i> 新建班级
+        </el-button>
+      </div>
+
+      <div class="card-body">
+        <div class="filter-bar">
+          <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 150px;">
+            <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
+          </el-select>
+          <el-select v-model="filterType" placeholder="全部类型" clearable style="width: 150px;">
+            <el-option label="岗前培训" value="orientation"></el-option>
+            <el-option label="技能培训" value="skill"></el-option>
+            <el-option label="考证培训" value="certification"></el-option>
+          </el-select>
+        </div>
+
+        <div class="class-list">
+          <div class="class-list-header">
+            <div>班级信息</div>
+            <div>培训岗位</div>
+            <div>讲师</div>
+            <div>培训地点</div>
+            <div>时间</div>
+            <div>报名人数</div>
+            <div>考卷</div>
+            <div>费用</div>
+            <div>状态</div>
+            <div>操作</div>
+          </div>
+          <div v-for="cls in filteredClasses" :key="cls.id" class="class-list-item">
+            <div class="class-info-main">
+              <div class="class-title">{{ cls.name }}</div>
+            </div>
+            <div class="class-cell">{{ cls.position_name }}</div>
+            <div class="class-cell teacher">{{ cls.teacher }}</div>
+            <div class="class-cell">{{ cls.location }}</div>
+            <div class="class-cell">{{ cls.start_date }} - {{ cls.end_date }}</div>
+            <div class="class-cell capacity" :class="{ full: cls.student_count >= cls.max_count, warning: cls.student_count < cls.min_count && cls.status === '待开班' }">
+              {{ cls.student_count }}
+            </div>
+            <div class="class-cell">{{ cls.exam_paper_count || 0 }}套</div>
+            <div class="class-cell">{{ cls.fee_type === 'free' ? '免费' : '¥' + cls.fee_amount }}</div>
+            <div class="class-cell">
+              <el-tag :type="getStatusType(cls.status)" size="small">{{ cls.status }}</el-tag>
+            </div>
+            <div class="class-actions">
+              <el-button type="text" @click="viewDetail(cls)">详情</el-button>
+              <el-button type="text" @click="handleEnroll(cls)">报名</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新建班级对话框 -->
+    <el-dialog v-model="showDialog" title="新建班级" width="700px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="班级名称">
+          <el-input v-model="form.name" placeholder="例如：2026年4月月嫂新手班-A班"></el-input>
+        </el-form-item>
+        <el-form-item label="关联课程">
+          <el-select v-model="form.template_id" placeholder="请选择课程" style="width: 100%;" @change="onTemplateChange">
+            <el-option v-for="template in templateList" :key="template.id" :label="template.name" :value="template.id">
+              <span>{{ template.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px;">{{ template.days }}天</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="form.template_id && selectedTemplate" label="">
+          <div style="padding: 12px; background: #f0f5ff; border-radius: 6px;">
+            <div style="margin-bottom: 8px;"><strong>{{ selectedTemplate.name }}</strong></div>
+            <div style="font-size: 13px; color: #595959; line-height: 1.8;">
+              <div>培训岗位：{{ getPositionName(selectedTemplate.position_id) }}</div>
+              <div>课程分类：{{ getCategoryText(selectedTemplate.category) }}</div>
+              <div>收费类型：{{ selectedTemplate.fee_type === 'free' ? '免费' : '¥' + selectedTemplate.fee_amount }}</div>
+              <div>考核试卷：{{ selectedTemplate.exam_papers ? selectedTemplate.exam_papers.length : 0 }}套</div>
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item label="培训地点">
+          <el-select v-model="form.location" placeholder="选择培训地点" style="width: 100%;">
+            <el-option label="总部培训室A" value="总部培训室A"></el-option>
+            <el-option label="总部培训室B" value="总部培训室B"></el-option>
+            <el-option label="分部培训室" value="分部培训室"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="主讲师">
+          <el-select v-model="form.teacher_id" placeholder="选择讲师" style="width: 100%;">
+            <el-option v-for="teacher in teacherList" :key="teacher.id" :label="teacher.name" :value="teacher.id">
+              <span>{{ teacher.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px;">{{ teacher.title }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="培训时间">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <el-date-picker
+              v-model="form.start_date"
+              type="date"
+              placeholder="选择开始日期"
+              style="width: 200px;"
+              :disabled="!form.template_id"
+              @change="onStartDateChange"
+            ></el-date-picker>
+            <span v-if="form.template_id && selectedTemplate" style="color: #8c8c8c;">
+              共 {{ selectedTemplate.days }} 天
+            </span>
+            <span v-else style="color: #bfbfbf;">请先选择课程</span>
+          </div>
+          <div v-if="form.start_date && endDate" style="margin-top: 8px; font-size: 13px; color: #595959;">
+            <i class="el-icon-date" style="color: #1890ff; margin-right: 4px;"></i>
+            培训周期：<strong>{{ formatDate(form.start_date) }}</strong> 至 <strong>{{ endDate }}</strong>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmCreate">创建班级</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 学员报名对话框 -->
+    <el-dialog v-model="showEnrollDialog" title="学员报名" width="700px">
+      <el-form :model="enrollForm" label-width="100px">
+        <el-form-item label="报名班级">
+          <div style="padding: 8px 0; font-weight: 500;">{{ currentClass?.name }}</div>
+          <div style="font-size: 13px; color: #8c8c8c;">岗位：{{ currentClass?.position_name }}</div>
+          <div v-if="currentClass?.fee_type === 'paid'" style="font-size: 13px; color: #f5222d; margin-top: 4px;">
+            培训费用：¥{{ currentClass?.fee_amount }}
+          </div>
+        </el-form-item>
+        <el-form-item label="学员姓名">
+          <el-input
+            v-model="enrollForm.nameInput"
+            type="textarea"
+            :rows="6"
+            placeholder="请输入学员姓名，一行一个&#10;例如：&#10;张三&#10;李四&#10;王五"
+            style="width: 100%;"
+            @blur="parseNameInput"
+          ></el-input>
+          <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+            已输入 {{ inputNameCount }} 个姓名，匹配成功 {{ matchedStudents.length }} 人
+          </div>
+        </el-form-item>
+
+        <!-- 重名提示 -->
+        <el-form-item v-if="duplicateNames.length > 0" label="">
+          <el-alert
+            :title="`以下 ${duplicateNames.length} 个姓名存在重名，请使用ID报名`"
+            type="warning"
+            :closable="false"
+            style="margin-bottom: 12px;"
+          >
+            <div style="margin-top: 8px;">
+              <span v-for="(name, idx) in duplicateNames" :key="idx" style="margin-right: 12px; color: #f5222d;">{{ name }}</span>
+            </div>
+          </el-alert>
+        </el-form-item>
+
+        <!-- 未匹配提示 -->
+        <el-form-item v-if="unmatchedNames.length > 0" label="">
+          <el-alert
+            :title="`以下 ${unmatchedNames.length} 个姓名未找到匹配学员`"
+            type="error"
+            :closable="false"
+          >
+            <div style="margin-top: 8px;">
+              <span v-for="(name, idx) in unmatchedNames" :key="idx" style="margin-right: 12px;">{{ name }}</span>
+            </div>
+          </el-alert>
+        </el-form-item>
+
+        <!-- ID报名（用于重名情况） -->
+        <el-form-item label="ID报名">
+          <el-input
+            v-model="enrollForm.idInput"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入学员ID（一行一个），用于解决重名问题&#10;格式：学员ID 或 姓名|ID"
+            style="width: 100%;"
+            @blur="parseIdInput"
+          ></el-input>
+          <div style="margin-top: 4px; font-size: 12px; color: #8c8c8c;">
+            支持格式：12345 或 张三|12345
+          </div>
+        </el-form-item>
+
+        <!-- 报名预览 -->
+        <el-form-item v-if="allEnrollStudents.length > 0" label="报名预览">
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e8e8e8; border-radius: 4px; padding: 12px;">
+            <div v-for="(student, idx) in allEnrollStudents" :key="idx" style="display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
+              <span style="font-weight: 500; min-width: 80px;">{{ student.name }}</span>
+              <span style="color: #8c8c8c; font-size: 13px;">ID: {{ student.id }}</span>
+              <span style="color: #8c8c8c; font-size: 13px;">{{ student.phone }}</span>
+              <el-tag v-if="student.isDuplicate" type="warning" size="mini">重名</el-tag>
+              <el-tag v-if="student.fromIdInput" type="success" size="mini">ID报名</el-tag>
+            </div>
+          </div>
+          <div style="margin-top: 8px; font-size: 13px; color: #262626;">
+            共 <strong>{{ allEnrollStudents.length }}</strong> 人准备报名
+          </div>
+        </el-form-item>
+
+        <el-form-item v-if="currentClass?.fee_type === 'paid'" label="缴费状态">
+          <el-radio-group v-model="enrollForm.payment_status">
+            <el-radio label="paid">已缴费</el-radio>
+            <el-radio label="unpaid">待缴费</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEnrollDialog = false">取消</el-button>
+        <el-button type="primary" :disabled="allEnrollStudents.length === 0" @click="confirmEnroll">确认报名</el-button>
+      </template>
+    </el-dialog>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    SharedMenu.initPageLayout('training-class', {
+      title: '班级管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 班级管理'
+    });
+
+    createApp({
+      setup() {
+        // ===== 排课表相关 =====
+        const viewMode = ref('month');
+        // 生成4月1日-4月30日的日期
+        const scheduleDates = ref([]);
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        for (let i = 1; i <= 30; i++) {
+          const date = new Date(2026, 3, i);
+          const dayOfWeek = date.getDay();
+          scheduleDates.value.push({
+            day: i,
+            weekday: '星期' + weekdays[dayOfWeek],
+            isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+            isToday: i === 8
+          });
+        }
+
+        // 从班级数据生成老师列表
+        const scheduleTeachers = computed(() => {
+          const teacherMap = new Map();
+          classList.value.forEach(cls => {
+            if (!teacherMap.has(cls.teacher)) {
+              teacherMap.set(cls.teacher, {
+                name: cls.teacher,
+                room: cls.location
+              });
+            }
+          });
+          return Array.from(teacherMap.values());
+        });
+
+        // 根据班级数据生成排课表
+        const scheduleData = computed(() => {
+          const data = {};
+          classList.value.forEach(cls => {
+            if (!data[cls.teacher]) {
+              data[cls.teacher] = {};
+            }
+
+            const startDate = new Date(cls.start_date);
+            const endDate = new Date(cls.end_date);
+            const startDay = startDate.getDate();
+            const endDay = endDate.getDate();
+
+            let courseType = 'gangqian';
+            if (cls.category === 'skill') courseType = 'shengji';
+            else if (cls.category === 'certification') courseType = 'kaohe';
+            else if (cls.position_name === '养老护理') courseType = 'yiliao';
+
+            let dayCount = 1;
+            for (let day = startDay; day <= endDay; day++) {
+              data[cls.teacher][day] = {
+                type: courseType,
+                content: dayCount === 1 ? cls.name.split('-')[0].replace('2026年4月', '') : `第${dayCount}天`,
+                className: cls.name,
+                highlight: dayCount === 1 ? 'blue' : null
+              };
+              dayCount++;
+            }
+
+            if (data[cls.teacher][endDay]) {
+              data[cls.teacher][endDay] = {
+                type: 'kaohe',
+                content: '考核',
+                className: cls.name,
+                highlight: 'yellow'
+              };
+            }
+          });
+          return data;
+        });
+
+        const getScheduleCellClass = (teacher, date) => {
+          const data = scheduleData.value;
+          const cellData = data[teacher.name]?.[date.day];
+          if (!cellData) return '';
+
+          let classes = [`course-${cellData.type}`];
+          if (cellData.highlight) {
+            classes.push(`highlight-${cellData.highlight}`);
+          }
+          return classes.join(' ');
+        };
+
+        const getScheduleCourseContent = (teacher, date) => {
+          const data = scheduleData.value;
+          const cellData = data[teacher.name]?.[date.day];
+          return cellData ? cellData.content : '';
+        };
+
+        const handleScheduleCellClick = (teacher, date) => {
+          const data = scheduleData.value;
+          const cellData = data[teacher.name]?.[date.day];
+          if (cellData) {
+            ElementPlus.ElMessage.info(`${teacher.name} ${date.day}日: ${cellData.content} (${cellData.className})`);
+          }
+        };
+
+        const prevMonth = () => {
+          ElementPlus.ElMessage.info('上一月');
+        };
+
+        const nextMonth = () => {
+          ElementPlus.ElMessage.info('下一月');
+        };
+
+        // ===== 班级相关 =====
+        const stats = ref({
+          total: 12,
+          pending: 3,
+          active: 5,
+          completed: 4
+        });
+
+        const activeTab = ref('all');
+        const filterPosition = ref('');
+        const filterType = ref('');
+
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        const teacherList = ref([
+          { id: 1, name: '张美玲', title: '高级培训师' },
+          { id: 2, name: '李建国', title: '资深督导' },
+          { id: 3, name: '王秀英', title: '金牌月嫂' }
+        ]);
+
+        // 试卷列表
+        const examPaperList = ref([
+          { id: 1, name: '医疗护理员考核卷-A', question_count: 50, duration: 60, pass_score: 80 },
+          { id: 2, name: '医疗护理员考核卷-B', question_count: 50, duration: 60, pass_score: 80 },
+          { id: 3, name: '医疗护理员考核卷-C', question_count: 50, duration: 60, pass_score: 80 },
+          { id: 4, name: '月嫂岗前考核卷-A', question_count: 40, duration: 45, pass_score: 75 },
+          { id: 5, name: '月嫂岗前考核卷-B', question_count: 40, duration: 45, pass_score: 75 },
+          { id: 6, name: '育儿嫂技能考核卷', question_count: 45, duration: 50, pass_score: 70 }
+        ]);
+
+        // 课程模板列表
+        const templateList = ref([
+          {
+            id: 1,
+            name: '医疗护理员课程',
+            description: '3天医疗护理培训，包含实操和考核',
+            position_id: 3,
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            exam_papers: [1, 2, 3],
+            days: 3,
+            timeSlots: [
+              { time: '9:30', courses: ['开班仪式', '实操复习', '实操复习'] },
+              { time: '10:00', courses: ['七步洗手法、戴/摘口罩、手套、工作帽、清洁口腔', '协助更换体位、床头转移', '清洁会阴、更换纸尿裤、床上使用便器、使用灭火'] },
+              { time: '11:00', courses: ['摘取/佩戴义齿', '轮椅转运', '综合模拟'] },
+              { time: '12:00', courses: ['午休', '午休', '午休'] },
+              { time: '14:00', courses: ['协助进食/水', '身高、体重、体温、测量及报告', '考核'] },
+              { time: '15:00', courses: ['面部、手足的清洁', '测量及报告', '考核'] },
+              { time: '16:00', courses: ['床上洗头', '使用拐杖、助行器行走', '考核'] },
+              { time: '17:00', courses: ['温水擦浴', '心肺复苏', '考核'] }
+            ]
+          },
+          {
+            id: 2,
+            name: '月嫂岗前培训课程',
+            description: '5天岗前培训，包含理论和实操',
+            position_id: 1,
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            exam_papers: [4, 5],
+            days: 5,
+            timeSlots: [
+              { time: '9:00', courses: ['公司介绍与职业道德', '新生儿生理特点', '母乳喂养指导', '产后恢复操', '结业考核'] },
+              { time: '10:45', courses: ['服务规范与礼仪', '新生儿日常护理', '人工喂养方法', '产妇心理疏导', '实操考核'] },
+              { time: '12:00', courses: ['午餐午休', '午餐午休', '午餐午休', '午餐午休', '午餐午休'] },
+              { time: '13:30', courses: ['实操：抱姿与拍嗝', '实操：脐带护理', '实操：洗澡与抚触', '实操：月子餐制作', '综合模拟'] },
+              { time: '15:15', courses: ['实操：换尿布', '实操：红臀预防', '实操：衣物清洗', '实操：乳房护理', '结业仪式'] }
+            ]
+          }
+        ]);
+
+        const classList = ref([
+          {
+            id: 1,
+            name: '2026年4月月嫂新手班-A班',
+            position_id: 1,
+            position_name: '月嫂',
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            start_date: '2026-04-01',
+            end_date: '2026-04-10',
+            location: '总部培训室A',
+            teacher: '张美玲',
+            status: '进行中',
+            student_count: 25,
+            checked_in_count: 20,
+            min_count: 10,
+            max_count: 30,
+            current_day: 6,
+            total_days: 10,
+            progress: 60,
+            students: [
+              { id: 1, name: '王秀英' },
+              { id: 2, name: '李桂花' },
+              { id: 3, name: '张淑芬' },
+              { id: 4, name: '陈美华' },
+              { id: 5, name: '刘玉兰' }
+            ],
+            template_id: 1,
+            exam_papers: [1, 2, 3],
+            exam_paper_count: 3,
+            schedule: [
+              {
+                date: '2026-04-01',
+                day_number: 1,
+                courses: [
+                  { time: '9:30', name: '开班仪式' },
+                  { time: '10:00', name: '七步洗手法、戴/摘口罩、手套、工作帽、清洁口腔' },
+                  { time: '11:00', name: '摘取/佩戴义齿' },
+                  { time: '12:00', name: '午休' },
+                  { time: '14:00', name: '协助进食/水' },
+                  { time: '15:00', name: '面部、手足的清洁' },
+                  { time: '16:00', name: '床上洗头' },
+                  { time: '17:00', name: '温水擦浴' }
+                ]
+              }
+            ]
+          },
+          {
+            id: 2,
+            name: '2026年4月熟手强化班',
+            position_id: 1,
+            position_name: '月嫂',
+            category: 'skill',
+            fee_type: 'paid',
+            fee_amount: 800,
+            start_date: '2026-04-05',
+            end_date: '2026-04-09',
+            location: '总部培训室B',
+            teacher: '李建国',
+            status: '进行中',
+            student_count: 15,
+            checked_in_count: 10,
+            min_count: 5,
+            max_count: 20,
+            current_day: 3,
+            total_days: 5,
+            progress: 60,
+            students: [
+              { id: 6, name: '赵小芳' },
+              { id: 7, name: '钱小敏' },
+              { id: 8, name: '孙小琴' }
+            ]
+          },
+          {
+            id: 3,
+            name: '2026年4月月嫂新手班-B班',
+            position_id: 1,
+            position_name: '月嫂',
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            start_date: '2026-04-15',
+            end_date: '2026-04-24',
+            location: '总部培训室A',
+            teacher: '王秀英',
+            status: '待开班',
+            student_count: 8,
+            min_count: 10,
+            max_count: 30,
+            current_day: 0,
+            total_days: 10,
+            progress: 0,
+            students: [
+              { id: 9, name: '周小燕' },
+              { id: 10, name: '吴小玲' }
+            ]
+          },
+          {
+            id: 4,
+            name: '2026年4月育儿嫂技能班',
+            position_id: 2,
+            position_name: '育儿嫂',
+            category: 'skill',
+            fee_type: 'paid',
+            fee_amount: 1200,
+            start_date: '2026-04-20',
+            end_date: '2026-04-24',
+            location: '总部培训室B',
+            teacher: '李建国',
+            status: '待开班',
+            student_count: 3,
+            min_count: 5,
+            max_count: 20,
+            current_day: 0,
+            total_days: 5,
+            progress: 0,
+            students: [
+              { id: 11, name: '郑小芳' }
+            ]
+          },
+          {
+            id: 5,
+            name: '2026年3月月嫂新手班',
+            position_id: 1,
+            position_name: '月嫂',
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            start_date: '2026-03-01',
+            end_date: '2026-03-10',
+            location: '总部培训室A',
+            teacher: '张美玲',
+            status: '已结业',
+            student_count: 28,
+            checked_in_count: 28,
+            min_count: 10,
+            max_count: 30,
+            current_day: 10,
+            total_days: 10,
+            progress: 100,
+            students: []
+          }
+        ]);
+
+        const pendingCount = computed(() => classList.value.filter(c => c.status === '待开班').length);
+        const activeCount = computed(() => classList.value.filter(c => c.status === '进行中').length);
+        const completedCount = computed(() => classList.value.filter(c => c.status === '已结业').length);
+
+        const filteredClasses = computed(() => {
+          let list = classList.value;
+          if (activeTab.value !== 'all') {
+            const statusMap = { pending: '待开班', active: '进行中', completed: '已结业' };
+            list = list.filter(c => c.status === statusMap[activeTab.value]);
+          }
+          if (filterPosition.value) {
+            list = list.filter(c => c.position_id === filterPosition.value);
+          }
+          if (filterType.value) {
+            list = list.filter(c => c.category === filterType.value);
+          }
+          return list;
+        });
+
+        const getCategoryText = (category) => {
+          const map = { orientation: '岗前培训', skill: '技能培训', certification: '考证培训' };
+          return map[category] || category;
+        };
+
+        const getPositionName = (positionId) => {
+          const pos = positionList.value.find(p => p.id === positionId);
+          return pos?.name || '-';
+        };
+
+        const getStatusType = (status) => {
+          const map = { '待开班': 'warning', '进行中': 'primary', '已结业': 'success' };
+          return map[status] || 'info';
+        };
+
+        const showDialog = ref(false);
+        const showEnrollDialog = ref(false);
+        const currentClass = ref(null);
+
+        const form = reactive({
+          name: '',
+          start_date: null,
+          location: '',
+          teacher_id: '',
+          template_id: null
+        });
+
+        // 计算结束日期
+        const endDate = computed(() => {
+          if (form.start_date && selectedTemplate.value) {
+            const start = new Date(form.start_date);
+            const days = selectedTemplate.value.days;
+            const end = new Date(start);
+            end.setDate(start.getDate() + days - 1);
+            return end.toISOString().split('T')[0];
+          }
+          return null;
+        });
+
+        // 格式化日期显示
+        const formatDate = (date) => {
+          if (!date) return '';
+          const d = new Date(date);
+          return d.toISOString().split('T')[0];
+        };
+
+        const selectedTemplate = computed(() => {
+          return templateList.value.find(t => t.id === form.template_id);
+        });
+
+        const enrollForm = reactive({
+          nameInput: '',
+          idInput: '',
+          payment_status: 'unpaid'
+        });
+
+        // 模拟学员数据库（实际应从后端获取）
+        const allStudentsDB = ref([
+          { id: 101, name: '赵小芳', phone: '138****1111' },
+          { id: 102, name: '钱小敏', phone: '139****2222' },
+          { id: 103, name: '孙小琴', phone: '137****3333' },
+          { id: 104, name: '李小红', phone: '136****4444' },
+          { id: 105, name: '张三', phone: '135****5555' },
+          { id: 106, name: '张三', phone: '134****6666' }, // 重名
+          { id: 107, name: '李四', phone: '133****7777' },
+          { id: 108, name: '王五', phone: '132****8888' },
+          { id: 109, name: '王五', phone: '131****9999' }, // 重名
+          { id: 110, name: '王五', phone: '130****0000' }  // 重名
+        ]);
+
+        // 解析姓名输入
+        const inputNameCount = ref(0);
+        const matchedStudents = ref([]);
+        const duplicateNames = ref([]);
+        const unmatchedNames = ref([]);
+        const idEnrollStudents = ref([]);
+
+        // 计算属性：所有准备报名的学员
+        const allEnrollStudents = computed(() => {
+          const result = [...matchedStudents.value, ...idEnrollStudents.value];
+          // 去重
+          const seen = new Set();
+          return result.filter(s => {
+            if (seen.has(s.id)) return false;
+            seen.add(s.id);
+            return true;
+          });
+        });
+
+        const handleCreate = () => {
+          form.name = '';
+          form.start_date = null;
+          form.location = '';
+          form.teacher_id = '';
+          form.template_id = null;
+          showDialog.value = true;
+        };
+
+        const onStartDateChange = (val) => {
+          // 开始日期改变时，结束日期会自动重新计算
+        };
+
+        const onTemplateChange = (val) => {
+          // 切换课程时，如果班级名称为空，自动生成
+          const template = templateList.value.find(t => t.id === val);
+          if (template && !form.name) {
+            const pos = positionList.value.find(p => p.id === template.position_id);
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            form.name = `2026年${month}月${pos?.name || ''}班级`;
+          }
+        };
+
+        const confirmCreate = () => {
+          if (!form.name) {
+            ElementPlus.ElMessage.warning('请输入班级名称');
+            return;
+          }
+          if (!form.template_id) {
+            ElementPlus.ElMessage.warning('请选择关联课程');
+            return;
+          }
+          const template = templateList.value.find(t => t.id === form.template_id);
+          const teacher = teacherList.value.find(t => t.id === form.teacher_id);
+          const pos = positionList.value.find(p => p.id === template?.position_id);
+
+          // 生成每日课程安排
+          const startDate = form.start_date ? new Date(form.start_date) : new Date();
+          const schedule = [];
+          if (template) {
+            for (let day = 0; day < template.days; day++) {
+              const currentDate = new Date(startDate);
+              currentDate.setDate(startDate.getDate() + day);
+              const dateStr = currentDate.toISOString().split('T')[0];
+
+              const daySchedule = {
+                date: dateStr,
+                day_number: day + 1,
+                courses: template.timeSlots.map(slot => ({
+                  time: slot.time,
+                  name: slot.courses[day] || ''
+                }))
+              };
+              schedule.push(daySchedule);
+            }
+          }
+
+          classList.value.unshift({
+            id: Date.now(),
+            name: form.name,
+            position_id: template?.position_id,
+            position_name: pos?.name || '',
+            category: template?.category,
+            fee_type: template?.fee_type,
+            fee_amount: template?.fee_amount,
+            start_date: form.start_date ? formatDate(form.start_date) : '',
+            end_date: endDate.value || '',
+            location: form.location,
+            teacher: teacher?.name || '',
+            status: '待开班',
+            student_count: 0,
+            checked_in_count: 0,
+            min_count: 0,
+            max_count: 999,
+            current_day: 0,
+            total_days: template?.days || 10,
+            progress: 0,
+            students: [],
+            template_id: form.template_id,
+            schedule: schedule,
+            exam_papers: template?.exam_papers || [],
+            exam_paper_count: template?.exam_papers?.length || 0
+          });
+          showDialog.value = false;
+          ElementPlus.ElMessage.success('班级创建成功');
+        };
+
+        const handleEnroll = (cls) => {
+          currentClass.value = cls;
+          enrollForm.nameInput = '';
+          enrollForm.idInput = '';
+          enrollForm.payment_status = cls.fee_type === 'free' ? 'paid' : 'unpaid';
+          inputNameCount.value = 0;
+          matchedStudents.value = [];
+          duplicateNames.value = [];
+          unmatchedNames.value = [];
+          idEnrollStudents.value = [];
+          showEnrollDialog.value = true;
+        };
+
+        // 解析姓名输入
+        const parseNameInput = () => {
+          if (!enrollForm.nameInput.trim()) {
+            matchedStudents.value = [];
+            duplicateNames.value = [];
+            unmatchedNames.value = [];
+            inputNameCount.value = 0;
+            return;
+          }
+
+          const names = enrollForm.nameInput
+            .split('\n')
+            .map(n => n.trim())
+            .filter(n => n);
+
+          inputNameCount.value = names.length;
+
+          const matched = [];
+          const duplicates = [];
+          const unmatched = [];
+
+          names.forEach(name => {
+            const found = allStudentsDB.value.filter(s => s.name === name);
+            if (found.length === 0) {
+              unmatched.push(name);
+            } else if (found.length > 1) {
+              duplicates.push(name);
+            } else {
+              matched.push({ ...found[0], isDuplicate: false, fromIdInput: false });
+            }
+          });
+
+          matchedStudents.value = matched;
+          duplicateNames.value = duplicates;
+          unmatchedNames.value = unmatched;
+        };
+
+        // 解析ID输入
+        const parseIdInput = () => {
+          if (!enrollForm.idInput.trim()) {
+            idEnrollStudents.value = [];
+            return;
+          }
+
+          const lines = enrollForm.idInput
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l);
+
+          const students = [];
+          lines.forEach(line => {
+            // 支持格式：ID 或 姓名|ID
+            let id;
+            if (line.includes('|')) {
+              id = parseInt(line.split('|')[1]);
+            } else {
+              id = parseInt(line);
+            }
+
+            if (!isNaN(id)) {
+              const found = allStudentsDB.value.find(s => s.id === id);
+              if (found) {
+                students.push({ ...found, isDuplicate: true, fromIdInput: true });
+              }
+            }
+          });
+
+          idEnrollStudents.value = students;
+        };
+
+        const confirmEnroll = () => {
+          const count = allEnrollStudents.value.length;
+          if (count === 0) {
+            ElementPlus.ElMessage.warning('请至少输入一个有效学员');
+            return;
+          }
+          if (currentClass.value) {
+            currentClass.value.student_count += count;
+          }
+          ElementPlus.ElMessage.success(`成功报名 ${count} 名学员`);
+          showEnrollDialog.value = false;
+        };
+
+        const viewDetail = (cls) => {
+          window.location.href = `training-class-detail.html?id=${cls.id}`;
+        };
+
+        const handleAttendance = (cls) => {
+          window.location.href = `training-class-detail.html?id=${cls.id}&tab=attendance`;
+        };
+
+        const arrangeExam = (cls) => {
+          ElementPlus.ElMessage.info(`为 ${cls.name} 安排考核`);
+        };
+
+        const viewResult = (cls) => {
+          ElementPlus.ElMessage.info(`查看 ${cls.name} 结业情况`);
+        };
+
+        return {
+          // 排课表相关
+          viewMode,
+          scheduleDates,
+          scheduleTeachers,
+          scheduleData,
+          getScheduleCellClass,
+          getScheduleCourseContent,
+          handleScheduleCellClick,
+          prevMonth,
+          nextMonth,
+          // 班级相关
+          stats,
+          activeTab,
+          filterPosition,
+          filterType,
+          positionList,
+          teacherList,
+          examPaperList,
+          templateList,
+          classList,
+          pendingCount,
+          activeCount,
+          completedCount,
+          filteredClasses,
+          getCategoryText,
+          getStatusType,
+          showDialog,
+          showEnrollDialog,
+          currentClass,
+          form,
+          endDate,
+          selectedTemplate,
+          enrollForm,
+          handleCreate,
+          onTemplateChange,
+          onStartDateChange,
+          formatDate,
+          confirmCreate,
+          handleEnroll,
+          confirmEnroll,
+          viewDetail,
+          handleAttendance,
+          arrangeExam,
+          viewResult,
+          allStudentsDB,
+          inputNameCount,
+          matchedStudents,
+          duplicateNames,
+          unmatchedNames,
+          idEnrollStudents,
+          allEnrollStudents,
+          parseNameInput,
+          parseIdInput,
+          getPositionName
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

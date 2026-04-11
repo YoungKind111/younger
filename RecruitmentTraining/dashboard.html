@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据看板 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 看板专用样式 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1200px) {
+      .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    
+    .chart-container {
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .funnel-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .funnel-chart {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .funnel-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      border-radius: 4px;
+      color: #fff;
+      font-weight: 500;
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    .funnel-bar:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .funnel-bar .label {
+      margin-right: 12px;
+    }
+    
+    .funnel-bar .value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .funnel-bar .rate {
+      position: absolute;
+      right: -100px;
+      color: #8c8c8c;
+      font-size: 13px;
+      width: 90px;
+      text-align: left;
+    }
+    
+    .funnel-arrow {
+      color: #bfbfbf;
+      font-size: 16px;
+      margin: 2px 0;
+    }
+    
+    .warning-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    
+    .warning-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .warning-item:last-child {
+      border-bottom: none;
+    }
+    
+    .warning-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #fff2f0;
+      color: #f5222d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    .warning-avatar.warning {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+    
+    .warning-info {
+      flex: 1;
+    }
+    
+    .warning-name {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .warning-desc {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+    
+    .warning-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    
+    .warning-tag.danger {
+      background: #fff1f0;
+      color: #f5222d;
+    }
+    
+    .warning-tag.warning {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+    
+    .rank-list {
+      counter-reset: rank;
+    }
+    
+    .rank-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .rank-item:last-child {
+      border-bottom: none;
+    }
+    
+    .rank-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #595959;
+      margin-right: 12px;
+    }
+    
+    .rank-item:nth-child(1) .rank-num {
+      background: #fff1f0;
+      color: #cf1322;
+    }
+    
+    .rank-item:nth-child(2) .rank-num {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+    
+    .rank-item:nth-child(3) .rank-num {
+      background: #ffffe6;
+      color: #d4b106;
+    }
+    
+    .rank-info {
+      flex: 1;
+    }
+    
+    .rank-name {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .rank-dept {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+    
+    .rank-value {
+      font-weight: 600;
+      color: #1890ff;
+    }
+    
+    .trend-chart {
+      height: 200px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      padding: 20px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .trend-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .trend-bar-inner {
+      width: 32px;
+      background: linear-gradient(to top, #1890ff, #69c0ff);
+      border-radius: 4px 4px 0 0;
+      transition: all 0.3s;
+    }
+    
+    .trend-bar:hover .trend-bar-inner {
+      background: linear-gradient(to top, #096dd9, #40a9ff);
+    }
+    
+    .trend-label {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+    
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    
+    @media (max-width: 992px) {
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .quick-action {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .quick-action:hover {
+      background: #e6f7ff;
+    }
+    
+    .quick-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-right: 12px;
+    }
+    
+    .quick-title {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .quick-desc {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 统计卡片区域 -->
+    <div class="dashboard-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">本月新增线索</span>
+          <div class="stat-icon blue">
+            <i class="el-icon-share"></i>
+          </div>
+        </div>
+        <div class="stat-value">1,286</div>
+        <div class="stat-footer">
+          <span class="stat-trend up">
+            <i class="el-icon-top"></i>
+            12.5%
+          </span>
+          <span class="text-muted">较上月</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">本月面试人数</span>
+          <div class="stat-icon green">
+            <i class="el-icon-chat-dot-square"></i>
+          </div>
+        </div>
+        <div class="stat-value">486</div>
+        <div class="stat-footer">
+          <span class="stat-trend up">
+            <i class="el-icon-top"></i>
+            8.3%
+          </span>
+          <span class="text-muted">较上月</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">本月签约人数</span>
+          <div class="stat-icon orange">
+            <i class="el-icon-document-checked"></i>
+          </div>
+        </div>
+        <div class="stat-value">268</div>
+        <div class="stat-footer">
+          <span class="stat-trend down">
+            <i class="el-icon-bottom"></i>
+            3.2%
+          </span>
+          <span class="text-muted">较上月</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">考核通过人数</span>
+          <div class="stat-icon purple">
+            <i class="el-icon-medal"></i>
+          </div>
+        </div>
+        <div class="stat-value">198</div>
+        <div class="stat-footer">
+          <span class="stat-trend up">
+            <i class="el-icon-top"></i>
+            15.7%
+          </span>
+          <span class="text-muted">较上月</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 快捷操作 -->
+    <div class="content-card mb-2">
+      <div class="card-body">
+        <div class="quick-actions">
+          <div class="quick-action" @click="goToPage('lead-public.html')">
+            <div class="quick-icon" style="background: #e6f7ff; color: #1890ff;">
+              <i class="el-icon-share"></i>
+            </div>
+            <div>
+              <div class="quick-title">线索分配</div>
+              <div class="quick-desc">待分配线索 42 条</div>
+            </div>
+          </div>
+          <div class="quick-action" @click="goToPage('interview.html')">
+            <div class="quick-icon" style="background: #f6ffed; color: #52c41a;">
+              <i class="el-icon-date"></i>
+            </div>
+            <div>
+              <div class="quick-title">面试安排</div>
+              <div class="quick-desc">今日面试 8 人</div>
+            </div>
+          </div>
+          <div class="quick-action" @click="goToPage('contract.html')">
+            <div class="quick-icon" style="background: #fff7e6; color: #fa8c16;">
+              <i class="el-icon-document-add"></i>
+            </div>
+            <div>
+              <div class="quick-title">签约办理</div>
+              <div class="quick-desc">待签约 5 人</div>
+            </div>
+          </div>
+          <div class="quick-action" @click="goToPage('certificate.html')">
+            <div class="quick-icon" style="background: #fff1f0; color: #f5222d;">
+              <i class="el-icon-warning"></i>
+            </div>
+            <div>
+              <div class="quick-title">证书预警</div>
+              <div class="quick-desc">即将过期 12 人</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 转化漏斗 + 招募绩效 -->
+    <div class="grid-2 mb-2">
+      <!-- 转化漏斗 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">转化漏斗</div>
+            <div class="card-subtitle">本月招募全流程转化数据</div>
+          </div>
+          <el-radio-group v-model="funnelPeriod" size="small">
+            <el-radio-button label="week">本周</el-radio-button>
+            <el-radio-button label="month">本月</el-radio-button>
+            <el-radio-button label="quarter">本季</el-radio-button>
+          </el-radio-group>
+        </div>
+        <div class="card-body">
+          <div class="funnel-wrapper">
+            <div class="funnel-chart">
+              <div class="funnel-bar" style="width: 320px; background: #1890ff;">
+                <span class="label">线索获取</span>
+                <span class="value">1,286</span>
+                <span class="rate">100% 转化率</span>
+              </div>
+              <div class="funnel-arrow"><i class="el-icon-bottom"></i></div>
+              <div class="funnel-bar" style="width: 280px; background: #36cfc9;">
+                <span class="label">邀约成功</span>
+                <span class="value">643</span>
+                <span class="rate">50.0% 转化率</span>
+              </div>
+              <div class="funnel-arrow"><i class="el-icon-bottom"></i></div>
+              <div class="funnel-bar" style="width: 240px; background: #73d13d;">
+                <span class="label">面试完成</span>
+                <span class="value">486</span>
+                <span class="rate">75.6% 转化率</span>
+              </div>
+              <div class="funnel-arrow"><i class="el-icon-bottom"></i></div>
+              <div class="funnel-bar" style="width: 200px; background: #ffc53d;">
+                <span class="label">面试通过</span>
+                <span class="value">340</span>
+                <span class="rate">70.0% 转化率</span>
+              </div>
+              <div class="funnel-arrow"><i class="el-icon-bottom"></i></div>
+              <div class="funnel-bar" style="width: 160px; background: #fa8c16;">
+                <span class="label">签约缴费</span>
+                <span class="value">268</span>
+                <span class="rate">78.8% 转化率</span>
+              </div>
+              <div class="funnel-arrow"><i class="el-icon-bottom"></i></div>
+              <div class="funnel-bar" style="width: 120px; background: #ff4d4f;">
+                <span class="label">考核通过</span>
+                <span class="value">198</span>
+                <span class="rate">73.9% 转化率</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 招募人员绩效排行 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">招募人员绩效排行</div>
+            <div class="card-subtitle">本月签约人数TOP10</div>
+          </div>
+          <el-link type="primary">查看全部</el-link>
+        </div>
+        <div class="card-body">
+          <div class="rank-list">
+            <div class="rank-item" v-for="(item, index) in rankList" :key="index">
+              <div class="rank-num">{{ index + 1 }}</div>
+              <div class="rank-info">
+                <div class="rank-name">{{ item.name }}</div>
+                <div class="rank-dept">{{ item.dept }}</div>
+              </div>
+              <div class="rank-value">{{ item.value }}人</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 证书到期预警 + 趋势分析 -->
+    <div class="grid-2">
+      <!-- 证书到期预警 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <i class="el-icon-warning text-danger" style="margin-right: 8px;"></i>
+              证书到期预警
+            </div>
+            <div class="card-subtitle">服务合格证即将过期人员</div>
+          </div>
+          <el-link type="primary">查看全部</el-link>
+        </div>
+        <div class="card-body">
+          <div class="warning-list">
+            <div class="warning-item" v-for="(item, index) in warningList" :key="index">
+              <div class="warning-avatar" :class="item.level">
+                <i :class="item.level === 'danger' ? 'el-icon-warning' : 'el-icon-time'"></i>
+              </div>
+              <div class="warning-info">
+                <div class="warning-name">{{ item.name }}</div>
+                <div class="warning-desc">{{ item.desc }}</div>
+              </div>
+              <div class="warning-tag" :class="item.level">{{ item.days }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <el-button type="primary" size="small" plain>
+            <i class="el-icon-message" style="margin-right: 4px;"></i>
+            批量发送提醒
+          </el-button>
+        </div>
+      </div>
+      
+      <!-- 月度趋势 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">月度招募趋势</div>
+            <div class="card-subtitle">近6个月数据对比</div>
+          </div>
+          <el-radio-group v-model="trendType" size="small">
+            <el-radio-button label="clue">线索</el-radio-button>
+            <el-radio-button label="interview">面试</el-radio-button>
+            <el-radio-button label="contract">签约</el-radio-button>
+          </el-radio-group>
+        </div>
+        <div class="card-body">
+          <div class="trend-chart">
+            <div class="trend-bar" v-for="(item, index) in trendData" :key="index">
+              <div class="trend-bar-inner" :style="{ height: item.height + 'px' }"></div>
+              <div class="trend-label">{{ item.month }}</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-around; text-align: center; padding-top: 16px;">
+            <div>
+              <div style="font-size: 24px; font-weight: 600; color: #1890ff;">1,286</div>
+              <div style="font-size: 12px; color: #8c8c8c;">本月线索</div>
+            </div>
+            <div>
+              <div style="font-size: 24px; font-weight: 600; color: #52c41a;">486</div>
+              <div style="font-size: 12px; color: #8c8c8c;">本月面试</div>
+            </div>
+            <div>
+              <div style="font-size: 24px; font-weight: 600; color: #fa8c16;">268</div>
+              <div style="font-size: 12px; color: #8c8c8c;">本月签约</div>
+            </div>
+            <div>
+              <div style="font-size: 24px; font-weight: 600; color: #722ed1;">198</div>
+              <div style="font-size: 12px; color: #8c8c8c;">本月通过</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('dashboard', {
+      title: '数据看板',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 数据看板'
+    });
+
+    createApp({
+      setup() {
+        // 漏斗图周期
+        const funnelPeriod = ref('month');
+
+        // 趋势图类型
+        const trendType = ref('clue');
+
+        // 绩效排行数据（模拟数据）
+        const rankList = ref([
+          { name: '李小红', dept: '招生一部', value: 32 },
+          { name: '王建国', dept: '招生二部', value: 28 },
+          { name: '张美玲', dept: '招生一部', value: 25 },
+          { name: '刘志强', dept: '招生三部', value: 22 },
+          { name: '陈秀英', dept: '招生二部', value: 20 },
+          { name: '杨建华', dept: '招生一部', value: 18 },
+          { name: '赵淑芳', dept: '招生三部', value: 16 },
+          { name: '黄伟明', dept: '招生二部', value: 15 },
+          { name: '周丽萍', dept: '招生一部', value: 14 },
+          { name: '吴建军', dept: '招生三部', value: 12 }
+        ]);
+
+        // 证书预警数据（模拟数据）
+        const warningList = ref([
+          { name: '王秀英', desc: '服务合格证 | 月嫂 | Y3等级', days: '已过期', level: 'danger' },
+          { name: '李桂花', desc: '服务合格证 | 月嫂 | Y4等级', days: '剩余3天', level: 'danger' },
+          { name: '张淑芬', desc: '服务合格证 | 育婴师 | Y2等级', days: '剩余7天', level: 'danger' },
+          { name: '陈美华', desc: '服务合格证 | 月嫂 | Y3等级', days: '剩余15天', level: 'warning' },
+          { name: '刘玉兰', desc: '服务合格证 | 月嫂 | Y5等级', days: '剩余23天', level: 'warning' },
+          { name: '杨秀珍', desc: '服务合格证 | 育婴师 | Y3等级', days: '剩余28天', level: 'warning' }
+        ]);
+
+        // 趋势数据（模拟数据）
+        const trendData = ref([
+          { month: '1月', height: 120 },
+          { month: '2月', height: 100 },
+          { month: '3月', height: 140 },
+          { month: '4月', height: 160 },
+          { month: '5月', height: 130 },
+          { month: '6月', height: 180 }
+        ]);
+
+        // 页面跳转方法
+        const goToPage = (url) => {
+          window.location.href = url;
+        };
+
+        return {
+          funnelPeriod,
+          trendType,
+          rankList,
+          warningList,
+          trendData,
+          goToPage
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

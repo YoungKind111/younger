@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面模板 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 页面特有样式写在这里 */
+    .demo-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    重要：保持简单的 #app 结构
+    shared-menu.js 会在 Vue 挂载前自动将其包装到布局中
+  -->
+  <div id="app"></div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 - 必须在 Vue 之前加载 -->
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+
+    // ============================================
+    // 步骤 1: 先初始化页面布局（在 Vue 创建之前！）
+    // ============================================
+    // 参数1: 当前激活的菜单ID，对应 shared-menu.js 中的菜单配置
+    // 参数2: 页面标题和面包屑配置
+    SharedMenu.initPageLayout('dashboard', {
+      title: '页面标题',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 当前页面'
+    });
+
+    // ============================================
+    // 步骤 2: 创建 Vue 应用
+    // ============================================
+    createApp({
+      template: `
+        <div>
+          <!-- 统计卡片示例 -->
+          <div class="grid-4 mb-2">
+            <div class="stat-card">
+              <div class="stat-header">
+                <span class="stat-title">今日数据</span>
+                <div class="stat-icon blue"><i class="el-icon-user"></i></div>
+              </div>
+              <div class="stat-value">128</div>
+              <div class="stat-footer">
+                <span class="stat-trend up"><i class="el-icon-top"></i> 12%</span>
+                <span>较昨日</span>
+              </div>
+            </div>
+            <!-- 更多卡片... -->
+          </div>
+
+          <!-- 内容卡片 + 对话框示例 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">数据列表</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                <i class="el-icon-plus"></i> 新增数据
+              </el-button>
+            </div>
+            <div class="card-body">
+              <p>点击上方按钮测试对话框是否正常弹出</p>
+
+              <!-- 测试表格 -->
+              <el-table :data="tableData" style="width: 100%; margin-top: 16px;">
+                <el-table-column prop="name" label="名称"></el-table-column>
+                <el-table-column prop="status" label="状态">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'active' ? 'success' : 'info'">
+                      {{ row.status === 'active' ? '启用' : '停用' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="handleEdit(row)">编辑</el-button>
+                    <el-button type="text" style="color: #f5222d;" @click="handleDelete(row)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 新增/编辑对话框 -->
+          <el-dialog
+            v-model="dialogVisible"
+            :title="isEdit ? '编辑数据' : '新增数据'"
+            width="500px"
+            :close-on-click-modal="false"
+          >
+            <el-form :model="form" label-width="80px">
+              <el-form-item label="名称">
+                <el-input v-model="form.name" placeholder="请输入名称"></el-input>
+              </el-form-item>
+              <el-form-item label="状态">
+                <el-radio-group v-model="form.status">
+                  <el-radio label="active">启用</el-radio>
+                  <el-radio label="inactive">停用</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="备注">
+                <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveData">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // 响应式数据
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+
+        // 表单数据 - 使用 ref 而不是 reactive，避免表单绑定问题
+        const form = ref({
+          name: '',
+          status: 'active',
+          remark: ''
+        });
+
+        // 表格数据
+        const tableData = ref([
+          { id: 1, name: '示例数据 1', status: 'active', remark: '备注信息' },
+          { id: 2, name: '示例数据 2', status: 'inactive', remark: '' },
+        ]);
+
+        // 新增
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          // 重置表单 - 使用新对象替换
+          form.value = { name: '', status: 'active', remark: '' };
+          dialogVisible.value = true;
+        };
+
+        // 编辑
+        const handleEdit = (row) => {
+          isEdit.value = true;
+          editingId.value = row.id;
+          // 复制数据到表单
+          form.value = { ...row };
+          dialogVisible.value = true;
+        };
+
+        // 保存
+        const saveData = () => {
+          if (!form.value.name) {
+            ElementPlus.ElMessage.warning('请输入名称');
+            return;
+          }
+
+          if (isEdit.value) {
+            // 编辑模式
+            const index = tableData.value.findIndex(item => item.id === editingId.value);
+            if (index > -1) {
+              tableData.value[index] = { ...tableData.value[index], ...form.value };
+            }
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            // 新增模式
+            const newId = Math.max(...tableData.value.map(item => item.id), 0) + 1;
+            tableData.value.push({ id: newId, ...form.value });
+            ElementPlus.ElMessage.success('添加成功');
+          }
+          dialogVisible.value = false;
+        };
+
+        // 删除
+        const handleDelete = (row) => {
+          ElementPlus.ElMessageBox.confirm(
+            `确定删除 "${row.name}" 吗？`,
+            '提示',
+            { type: 'warning' }
+          ).then(() => {
+            const index = tableData.value.findIndex(item => item.id === row.id);
+            if (index > -1) {
+              tableData.value.splice(index, 1);
+            }
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        return {
+          dialogVisible,
+          isEdit,
+          form,
+          tableData,
+          handleAdd,
+          handleEdit,
+          handleDelete,
+          saveData
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

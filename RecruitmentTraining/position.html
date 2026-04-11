@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>岗位管理 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .position-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+
+    .position-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-color: #1890ff;
+    }
+
+    .position-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .position-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .position-code {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-left: 8px;
+    }
+
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #595959;
+    }
+
+    .version-tag.active {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">岗位管理</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ positionList.length }} 个岗位</span>
+        </div>
+        <el-button type="primary" @click="handleCreate">
+          <i class="el-icon-plus"></i> 新增岗位
+        </el-button>
+      </div>
+      <div class="card-body">
+        <div v-for="pos in positionList" :key="pos.id" class="position-card">
+          <div class="position-header">
+            <div>
+              <span class="position-name">{{ pos.name }}</span>
+              <span class="position-code">{{ pos.code }}</span>
+            </div>
+            <div>
+              <el-button type="text" @click="handleEdit(pos)">编辑</el-button>
+              <el-button type="text" style="color: #f5222d;" @click="handleDelete(pos)">删除</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增/编辑岗位对话框 -->
+    <el-dialog v-model="showDialog" :title="isEdit ? '编辑岗位' : '新增岗位'" width="500px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="岗位名称">
+          <el-input v-model="form.name" placeholder="例如：月嫂"></el-input>
+        </el-form-item>
+        <el-form-item label="岗位编码">
+          <el-input v-model="form.code" placeholder="例如：yuesao"></el-input>
+        </el-form-item>
+        <el-form-item label="岗位说明">
+          <el-input v-model="form.description" type="textarea" :rows="3"></el-input>
+        </el-form-item>
+        <el-form-item label="岗位等级">
+          <div style="margin-bottom: 8px;">
+            <el-tag
+              v-for="(level, index) in form.levels"
+              :key="index"
+              closable
+              @close="removeLevel(index)"
+              style="margin-right: 8px; margin-bottom: 8px;"
+            >
+              {{ level }}
+            </el-tag>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <el-input
+              v-model="newLevel"
+              placeholder="输入等级名称，例如：Y3-1"
+              style="width: 200px;"
+              @keyup.enter="addLevel"
+            ></el-input>
+            <el-button type="primary" @click="addLevel">
+              <i class="el-icon-plus"></i> 添加
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmSave">保存</el-button>
+      </template>
+    </el-dialog>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, reactive } = Vue;
+
+    SharedMenu.initPageLayout('position', {
+      title: '岗位管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 岗位管理'
+    });
+
+    createApp({
+      setup() {
+        const positionList = ref([
+          {
+            id: 1,
+            name: '月嫂',
+            code: 'yuesao',
+            description: '月嫂服务岗位',
+            is_active: true,
+            training_count: 3,
+            qualified_count: 156,
+            levels: ['Y3-1', 'Y3-2', 'Y4-1', 'Y4-2', 'Y5', 'Y6', 'Y7']
+          },
+          {
+            id: 2,
+            name: '育婴师',
+            code: 'yuying',
+            description: '育儿嫂服务岗位',
+            is_active: true,
+            training_count: 2,
+            qualified_count: 89
+          },
+          {
+            id: 3,
+            name: '养老护理',
+            code: 'yanglao',
+            description: '养老护理服务岗位',
+            is_active: false,
+            training_count: 0,
+            qualified_count: 45
+          }
+        ]);
+
+        const showDialog = ref(false);
+        const isEdit = ref(false);
+
+        const form = reactive({
+          id: null,
+          name: '',
+          code: '',
+          description: '',
+          levels: []
+        });
+
+        const newLevel = ref('');
+
+        const handleCreate = () => {
+          isEdit.value = false;
+          form.id = null;
+          form.name = '';
+          form.code = '';
+          form.description = '';
+          form.levels = [];
+          newLevel.value = '';
+          showDialog.value = true;
+        };
+
+        const handleEdit = (pos) => {
+          isEdit.value = true;
+          Object.assign(form, {
+            ...pos,
+            levels: pos.levels ? [...pos.levels] : []
+          });
+          newLevel.value = '';
+          showDialog.value = true;
+        };
+
+        const addLevel = () => {
+          if (!newLevel.value.trim()) {
+            ElementPlus.ElMessage.warning('请输入等级名称');
+            return;
+          }
+          if (!form.levels) {
+            form.levels = [];
+          }
+          if (form.levels.includes(newLevel.value.trim())) {
+            ElementPlus.ElMessage.warning('该等级已存在');
+            return;
+          }
+          form.levels.push(newLevel.value.trim());
+          newLevel.value = '';
+        };
+
+        const removeLevel = (index) => {
+          form.levels.splice(index, 1);
+        };
+
+        const handleDelete = (pos) => {
+          ElementPlus.ElMessageBox.confirm(
+            `确定删除岗位 "${pos.name}" 吗？`,
+            '确认删除',
+            { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+          ).then(() => {
+            positionList.value = positionList.value.filter(p => p.id !== pos.id);
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        const confirmSave = () => {
+          if (!form.name) {
+            ElementPlus.ElMessage.warning('请输入岗位名称');
+            return;
+          }
+          if (isEdit.value) {
+            const idx = positionList.value.findIndex(p => p.id === form.id);
+            if (idx !== -1) {
+              positionList.value[idx] = {
+                ...positionList.value[idx],
+                name: form.name,
+                code: form.code,
+                description: form.description,
+                levels: form.levels ? [...form.levels] : []
+              };
+            }
+          } else {
+            positionList.value.push({
+              id: Date.now(),
+              name: form.name,
+              code: form.code,
+              description: form.description,
+              levels: form.levels ? [...form.levels] : [],
+              is_active: true,
+              training_count: 0,
+              qualified_count: 0
+            });
+          }
+          showDialog.value = false;
+          ElementPlus.ElMessage.success('保存成功');
+        };
+
+        return {
+          positionList,
+          showDialog,
+          isEdit,
+          form,
+          newLevel,
+          handleCreate,
+          handleEdit,
+          handleDelete,
+          confirmSave,
+          addLevel,
+          removeLevel
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

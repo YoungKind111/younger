@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考核管理 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border-left: 4px solid #1890ff;
+    }
+
+    .stat-card:nth-child(2) { border-left-color: #fa8c16; }
+    .stat-card:nth-child(3) { border-left-color: #52c41a; }
+    .stat-card:nth-child(4) { border-left-color: #f5222d; }
+    .stat-card:nth-child(5) { border-left-color: #722ed1; }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+
+    .exam-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+
+    .exam-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .exam-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .exam-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .exam-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .exam-info-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 6px;
+    }
+
+    .exam-info-item {
+      text-align: center;
+    }
+
+    .exam-info-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .exam-info-value.pass {
+      color: #52c41a;
+    }
+
+    .exam-info-value.fail {
+      color: #f5222d;
+    }
+
+    .exam-info-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .candidate-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .candidate-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+    }
+
+    .candidate-tag.pending {
+      background: #f5f5f5;
+      color: #595959;
+    }
+
+    .candidate-tag.scoring {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+
+    .candidate-tag.passed {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .candidate-tag.failed {
+      background: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+    }
+
+    .tabs-custom {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-item {
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-item:hover {
+      background: #f5f5f5;
+    }
+
+    .tab-item.active {
+      background: #1890ff;
+      color: #fff;
+    }
+
+    .score-detail-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .score-detail-table th,
+    .score-detail-table td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .score-detail-table th {
+      background: #fafafa;
+      font-weight: 500;
+    }
+
+    .score-input-cell {
+      width: 80px;
+    }
+
+    .recruiter-score-section {
+      background: #fff7e6;
+      border: 1px solid #ffd591;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .recruiter-score-title {
+      font-weight: 500;
+      color: #d46b08;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value text-primary">{{ stats.today }}</div>
+        <div class="stat-label">今日考核</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-warning">{{ stats.pendingScore }}</div>
+        <div class="stat-label">待录入成绩</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-success">{{ stats.waitingCert }}</div>
+        <div class="stat-label">待发证</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-danger">{{ stats.thisMonth }}</div>
+        <div class="stat-label">本月通过</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.passRate }}%</div>
+        <div class="stat-label">通过率</div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="card-header">
+        <div class="tabs-custom">
+          <div class="tab-item" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">
+            全部 ({{ examList.length }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'pending' }" @click="activeTab = 'pending'">
+            待考核 ({{ pendingCount }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'scoring' }" @click="activeTab = 'scoring'">
+            评分中 ({{ scoringCount }})
+          </div>
+          <div class="tab-item" :class="{ active: activeTab === 'completed' }" @click="activeTab = 'completed'">
+            已完成 ({{ completedCount }})
+          </div>
+        </div>
+        <el-button type="primary" @click="handleCreate">
+          <i class="el-icon-plus"></i> 安排考核
+        </el-button>
+      </div>
+
+      <div class="card-body">
+        <div v-for="exam in filteredExams" :key="exam.id" class="exam-card">
+          <div class="exam-header">
+            <div>
+              <div class="exam-title">
+                {{ exam.name }}
+                <el-tag size="small" style="margin-left: 8px;">{{ exam.position_name }}</el-tag>
+              </div>
+              <div class="exam-subtitle">
+                <i class="el-icon-date"></i> {{ exam.date }} {{ exam.time }}
+                <span style="margin-left: 16px;"><i class="el-icon-location"></i> {{ exam.location }}</span>
+              </div>
+            </div>
+            <el-tag :type="getStatusType(exam.status)" size="small">{{ exam.status }}</el-tag>
+          </div>
+
+          <div class="exam-info-grid">
+            <div class="exam-info-item">
+              <div class="exam-info-value">{{ exam.candidate_count }}</div>
+              <div class="exam-info-label">考生人数</div>
+            </div>
+            <div class="exam-info-item">
+              <div class="exam-info-value">{{ exam.theory_completed }}/{{ exam.candidate_count }}</div>
+              <div class="exam-info-label">理论完成</div>
+            </div>
+            <div class="exam-info-item">
+              <div class="exam-info-value">{{ exam.practice_completed }}/{{ exam.candidate_count }}</div>
+              <div class="exam-info-label">实操完成</div>
+            </div>
+            <div class="exam-info-item">
+              <div class="exam-info-value pass">{{ exam.pass_count }}</div>
+              <div class="exam-info-label">通过</div>
+            </div>
+            <div class="exam-info-item">
+              <div class="exam-info-value fail">{{ exam.fail_count }}</div>
+              <div class="exam-info-label">未通过</div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="candidate-list">
+              <span v-for="c in exam.candidates.slice(0, 6)" :key="c.id" class="candidate-tag" :class="c.status">
+                {{ c.name }}
+              </span>
+              <span v-if="exam.candidates.length > 6" class="candidate-tag pending">
+                +{{ exam.candidates.length - 6 }}
+              </span>
+            </div>
+            <div>
+              <el-button type="text" @click="viewDetail(exam)">查看详情</el-button>
+              <el-button v-if="exam.status === '待考核'" type="text" @click="startExam(exam)">开始考核</el-button>
+              <el-button v-if="exam.status === '评分中'" type="text" @click="enterScore(exam)">录入成绩</el-button>
+              <el-button v-if="exam.status === '已完成'" type="text" @click="generateCert(exam)">生成证书</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 安排考核对话框 -->
+    <el-dialog v-model="showDialog" title="安排考核" width="700px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="考核名称">
+          <el-input v-model="form.name" placeholder="例如：2026年4月第一批月嫂考核"></el-input>
+        </el-form-item>
+        <el-form-item label="考核岗位">
+          <el-select v-model="form.position_id" placeholder="选择岗位" style="width: 100%;">
+            <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="来源班级">
+          <el-select v-model="form.class_ids" multiple placeholder="选择培训班（可多选）" style="width: 100%;">
+            <el-option v-for="cls in completedClasses" :key="cls.id" :label="cls.name" :value="cls.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="考核时间">
+          <el-date-picker v-model="form.date" type="date" placeholder="选择日期" style="width: 200px;"></el-date-picker>
+          <el-time-picker v-model="form.start_time" placeholder="开始时间" style="width: 120px; margin-left: 8px;"></el-time-picker>
+          <el-time-picker v-model="form.end_time" placeholder="结束时间" style="width: 120px; margin-left: 8px;"></el-time-picker>
+        </el-form-item>
+        <el-form-item label="考核地点">
+          <el-select v-model="form.location" placeholder="选择地点" style="width: 100%;">
+            <el-option label="总部培训室A" value="总部培训室A"></el-option>
+            <el-option label="总部培训室B" value="总部培训室B"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="监考人员">
+          <el-select v-model="form.examiners" multiple placeholder="选择监考人员" style="width: 100%;">
+            <el-option v-for="t in teacherList" :key="t.id" :label="t.name" :value="t.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmCreate">确认安排</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    SharedMenu.initPageLayout('exam-manage', {
+      title: '考核管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 考核管理'
+    });
+
+    createApp({
+      setup() {
+        const stats = ref({
+          today: 2,
+          pendingScore: 12,
+          waitingCert: 8,
+          thisMonth: 45,
+          passRate: 82
+        });
+
+        const activeTab = ref('all');
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        const teacherList = ref([
+          { id: 1, name: '张美玲' },
+          { id: 2, name: '李建国' },
+          { id: 3, name: '王秀英' }
+        ]);
+
+        const completedClasses = ref([
+          { id: 1, name: '2026年4月月嫂新手班-A班' },
+          { id: 2, name: '2026年4月嫂新手班-B班' }
+        ]);
+
+        const examList = ref([
+          {
+            id: 1,
+            name: '2026年4月第一批月嫂考核',
+            position_id: 1,
+            position_name: '月嫂',
+            date: '2026-04-10',
+            time: '09:00-17:00',
+            location: '总部培训室A',
+            status: '评分中',
+            candidate_count: 25,
+            theory_completed: 25,
+            practice_completed: 20,
+            pass_count: 0,
+            fail_count: 0,
+            candidates: [
+              { id: 1, name: '王秀英', status: 'scoring' },
+              { id: 2, name: '李桂花', status: 'scoring' },
+              { id: 3, name: '张淑芬', status: 'scoring' },
+              { id: 4, name: '陈美华', status: 'scoring' },
+              { id: 5, name: '刘玉兰', status: 'scoring' }
+            ]
+          },
+          {
+            id: 2,
+            name: '2026年3月第三批月嫂考核',
+            position_id: 1,
+            position_name: '月嫂',
+            date: '2026-03-25',
+            time: '09:00-17:00',
+            location: '总部培训室A',
+            status: '已完成',
+            candidate_count: 30,
+            theory_completed: 30,
+            practice_completed: 30,
+            pass_count: 26,
+            fail_count: 4,
+            candidates: [
+              { id: 6, name: '赵小芳', status: 'passed' },
+              { id: 7, name: '钱小敏', status: 'passed' },
+              { id: 8, name: '孙小琴', status: 'passed' },
+              { id: 9, name: '周小燕', status: 'passed' },
+              { id: 10, name: '吴小玲', status: 'failed' }
+            ]
+          },
+          {
+            id: 3,
+            name: '2026年4月第二批月嫂考核',
+            position_id: 1,
+            position_name: '月嫂',
+            date: '2026-04-15',
+            time: '09:00-17:00',
+            location: '总部培训室B',
+            status: '待考核',
+            candidate_count: 18,
+            theory_completed: 0,
+            practice_completed: 0,
+            pass_count: 0,
+            fail_count: 0,
+            candidates: [
+              { id: 11, name: '郑小芳', status: 'pending' },
+              { id: 12, name: '王小燕', status: 'pending' },
+              { id: 13, name: '李小红', status: 'pending' }
+            ]
+          }
+        ]);
+
+        const pendingCount = computed(() => examList.value.filter(e => e.status === '待考核').length);
+        const scoringCount = computed(() => examList.value.filter(e => e.status === '评分中').length);
+        const completedCount = computed(() => examList.value.filter(e => e.status === '已完成').length);
+
+        const filteredExams = computed(() => {
+          if (activeTab.value === 'all') return examList.value;
+          const statusMap = { pending: '待考核', scoring: '评分中', completed: '已完成' };
+          return examList.value.filter(e => e.status === statusMap[activeTab.value]);
+        });
+
+        const getStatusType = (status) => {
+          const map = { '待考核': 'warning', '评分中': 'primary', '已完成': 'success' };
+          return map[status] || 'info';
+        };
+
+        const showDialog = ref(false);
+        const form = reactive({
+          name: '',
+          position_id: '',
+          class_ids: [],
+          date: '',
+          start_time: '',
+          end_time: '',
+          location: '',
+          examiners: []
+        });
+
+        const handleCreate = () => {
+          form.name = '';
+          form.position_id = '';
+          form.class_ids = [];
+          form.date = '';
+          form.start_time = '';
+          form.end_time = '';
+          form.location = '';
+          form.examiners = [];
+          showDialog.value = true;
+        };
+
+        const confirmCreate = () => {
+          if (!form.name || !form.position_id) {
+            ElementPlus.ElMessage.warning('请填写完整信息');
+            return;
+          }
+          ElementPlus.ElMessage.success('考核安排成功');
+          showDialog.value = false;
+        };
+
+        const viewDetail = (exam) => {
+          window.location.href = `exam-detail.html?id=${exam.id}`;
+        };
+
+        const startExam = (exam) => {
+          ElementPlus.ElMessage.success(`考核 ${exam.name} 已开始`);
+          exam.status = '评分中';
+        };
+
+        const enterScore = (exam) => {
+          window.location.href = `exam-scoring.html?id=${exam.id}`;
+        };
+
+        const generateCert = (exam) => {
+          ElementPlus.ElMessage.success('证书生成任务已提交');
+        };
+
+        return {
+          stats,
+          activeTab,
+          positionList,
+          teacherList,
+          completedClasses,
+          examList,
+          pendingCount,
+          scoringCount,
+          completedCount,
+          filteredExams,
+          getStatusType,
+          showDialog,
+          form,
+          handleCreate,
+          confirmCreate,
+          viewDetail,
+          startExam,
+          enterScore,
+          generateCert
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

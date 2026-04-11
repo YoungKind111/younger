@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考核评分 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .exam-info-bar {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .exam-info-left {
+      display: flex;
+      gap: 32px;
+    }
+
+    .exam-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .exam-info-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+
+    .exam-info-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .candidate-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .candidate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .candidate-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .candidate-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .candidate-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .candidate-class {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+
+    .candidate-total {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .total-score {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .total-score.pass {
+      color: #52c41a;
+    }
+
+    .total-score.fail {
+      color: #f5222d;
+    }
+
+    .pass-badge {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .pass-badge.pass {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .pass-badge.fail {
+      background: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+    }
+
+    .score-form {
+      padding: 20px;
+    }
+
+    .score-section {
+      margin-bottom: 24px;
+    }
+
+    .score-section-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 16px;
+      padding-left: 8px;
+      border-left: 3px solid #1890ff;
+    }
+
+    .score-section-title.bonus {
+      border-left-color: #fa8c16;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px dashed #e8e8e8;
+    }
+
+    .score-row:last-child {
+      border-bottom: none;
+    }
+
+    .score-item-name {
+      width: 120px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .score-item-type {
+      width: 100px;
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .score-item-max {
+      width: 80px;
+      font-size: 13px;
+      color: #595959;
+    }
+
+    .score-item-input {
+      flex: 1;
+    }
+
+    .score-input-number {
+      width: 120px;
+    }
+
+    .score-result {
+      width: 80px;
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .recruiter-notice {
+      background: #fff7e6;
+      border: 1px solid #ffd591;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #d46b08;
+    }
+
+    .candidate-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .candidate-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 13px;
+      border: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .candidate-tab:hover {
+      border-color: #1890ff;
+    }
+
+    .candidate-tab.active {
+      background: #1890ff;
+      color: #fff;
+      border-color: #1890ff;
+    }
+
+    .candidate-tab.completed::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #52c41a;
+      border-radius: 50%;
+    }
+
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .progress-text {
+      font-size: 13px;
+      color: #595959;
+    }
+
+    .batch-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .theory-exam-result {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .theory-score-display {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1890ff;
+    }
+
+    .practice-detail-btn {
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="exam-info-bar">
+      <div class="exam-info-left">
+        <div class="exam-info-item">
+          <span class="exam-info-label">考核名称</span>
+          <span class="exam-info-value">{{ examInfo.name }}</span>
+        </div>
+        <div class="exam-info-item">
+          <span class="exam-info-label">考核岗位</span>
+          <span class="exam-info-value">{{ examInfo.position_name }}</span>
+        </div>
+        <div class="exam-info-item">
+          <span class="exam-info-label">考核时间</span>
+          <span class="exam-info-value">{{ examInfo.date }} {{ examInfo.time }}</span>
+        </div>
+        <div class="exam-info-item">
+          <span class="exam-info-label">考生人数</span>
+          <span class="exam-info-value">{{ candidates.length }}人</span>
+        </div>
+      </div>
+      <div>
+        <el-button type="success" size="large" @click="saveAllScores" :disabled="!hasUnsavedScores">
+          <i class="el-icon-check"></i> 保存所有成绩
+        </el-button>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <span class="progress-text">评分进度</span>
+      <el-progress :percentage="scoringProgress" style="flex: 1; max-width: 300px;"></el-progress>
+      <span class="progress-text">{{ scoredCount }}/{{ candidates.length }}人已完成</span>
+    </div>
+
+    <div class="candidate-tabs">
+      <div
+        v-for="c in candidates"
+        :key="c.id"
+        class="candidate-tab"
+        :class="{ active: currentCandidate?.id === c.id, completed: c.is_completed }"
+        @click="selectCandidate(c)"
+      >
+        {{ c.name }}
+      </div>
+    </div>
+
+    <div v-if="currentCandidate" class="candidate-card">
+      <div class="candidate-header">
+        <div class="candidate-info">
+          <div class="candidate-avatar">{{ currentCandidate.name.charAt(0) }}</div>
+          <div>
+            <div class="candidate-name">{{ currentCandidate.name }}</div>
+            <div class="candidate-class">{{ currentCandidate.class_name }}</div>
+          </div>
+        </div>
+        <div class="candidate-total">
+          <div>
+            <div style="font-size: 12px; color: #8c8c8c; text-align: right;">基础分</div>
+            <div class="total-score" :class="currentCandidate.base_score >= 70 ? 'pass' : 'fail'">
+              {{ currentCandidate.base_score }}
+            </div>
+          </div>
+          <div v-if="currentCandidate.bonus_score > 0" style="text-align: center;">
+            <div style="font-size: 12px; color: #8c8c8c;">加分</div>
+            <div style="font-size: 18px; color: #fa8c16;">+{{ currentCandidate.bonus_score }}</div>
+          </div>
+          <div style="border-left: 1px solid #e8e8e8; padding-left: 16px; margin-left: 8px;">
+            <div style="font-size: 12px; color: #8c8c8c; text-align: right;">总分</div>
+            <div class="total-score" :class="currentCandidate.total_score >= 70 ? 'pass' : 'fail'">
+              {{ currentCandidate.total_score }}
+            </div>
+          </div>
+          <div class="pass-badge" :class="currentCandidate.total_score >= 70 ? 'pass' : 'fail'">
+            {{ currentCandidate.total_score >= 70 ? '通过' : '未通过' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="score-form">
+        <!-- 基础分考核项 -->
+        <div class="score-section">
+          <div class="score-section-title">基础考核项 (满分100分)</div>
+
+          <div v-for="item in currentCandidate.score_items" :key="item.item_id" class="score-row">
+            <div class="score-item-name">{{ item.name }}</div>
+            <div class="score-item-type">{{ getTypeText(item.type) }}</div>
+            <div class="score-item-max">/{{ item.max_score }}分</div>
+            <div class="score-item-input">
+              <!-- 系统计算项 -->
+              <div v-if="item.type === 'system'" class="theory-exam-result">
+                <span class="theory-score-display">{{ item.score || 0 }}</span>
+                <span style="color: #8c8c8c; font-size: 13px;">系统自动计算</span>
+              </div>
+
+              <!-- 线上考试 -->
+              <div v-else-if="item.type === 'online_exam'" class="theory-exam-result">
+                <span class="theory-score-display">{{ item.score || 0 }}</span>
+                <el-button type="text" @click="viewTheoryDetail(item)">
+                  查看考试详情
+                </el-button>
+              </div>
+
+              <!-- 人工评分 -->
+              <el-input-number
+                v-else
+                v-model="item.score"
+                :min="0"
+                :max="item.max_score"
+                :step="item.max_score <= 10 ? 0.5 : 1"
+                class="score-input-number"
+                @change="onScoreChange"
+              ></el-input-number>
+            </div>
+            <div class="score-result" :class="(item.score || 0) >= item.max_score * 0.6 ? 'text-success' : 'text-warning'">
+              {{ getItemResult(item) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 加分项 -->
+        <div class="score-section">
+          <div class="score-section-title bonus">加分项 (考核前录入)</div>
+
+          <div v-if="!recruiterScoreEntered" class="recruiter-notice">
+            <i class="el-icon-warning"></i>
+            <span>招生评分由招生老师在考核前录入，如未录入请联系相关招生老师</span>
+          </div>
+
+          <div v-for="item in currentCandidate.bonus_items" :key="item.item_id" class="score-row">
+            <div class="score-item-name">{{ item.name }}</div>
+            <div class="score-item-type">{{ item.timing === 'before_exam' ? '考核前' : '考核后' }}</div>
+            <div class="score-item-max">/{{ item.max_score }}分</div>
+            <div class="score-item-input">
+              <el-input-number
+                v-model="item.score"
+                :min="0"
+                :max="item.max_score"
+                class="score-input-number"
+                @change="onScoreChange"
+              ></el-input-number>
+            </div>
+            <div class="score-result text-warning">
+              +{{ item.score || 0 }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 总分汇总 -->
+        <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 4px;">及格线: {{ examInfo.pass_score }}分</div>
+              <div style="font-size: 13px; color: #8c8c8c;">
+                必过项:
+                <span v-for="(item, idx) in requiredItems" :key="item">
+                  {{ idx > 0 ? '、' : '' }}{{ item }}
+                </span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; color: #595959; margin-bottom: 4px;">
+                基础分: {{ currentCandidate.base_score }} + 加分: {{ currentCandidate.bonus_score }} = 总分:
+                <span style="font-size: 24px; font-weight: 600;" :class="currentCandidate.total_score >= 70 ? 'text-success' : 'text-danger'">
+                  {{ currentCandidate.total_score }}
+                </span>
+              </div>
+              <el-button type="primary" @click="saveCurrentScores">
+                保存当前评分
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 实操评分详情弹窗 -->
+    <el-dialog v-model="showPracticeDialog" title="实操评分详情" width="600px">
+      <el-form :model="practiceForm" label-width="120px">
+        <el-form-item v-for="(item, index) in practiceForm.items" :key="index" :label="item.name">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <el-input-number v-model="item.score" :min="0" :max="100" style="width: 120px;"></el-input-number>
+            <span style="color: #8c8c8c;">分</span>
+            <el-input v-model="item.remark" placeholder="备注" style="flex: 1;"></el-input>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showPracticeDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmPracticeScore">确认</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 理论考试详情弹窗 -->
+    <el-dialog v-model="showTheoryDialog" title="理论考试详情" width="700px">
+      <div v-if="currentTheoryDetail">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 6px;">
+          <div>
+            <div style="font-weight: 500;">考试得分: {{ currentTheoryDetail.score }}分</div>
+            <div style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">正确: {{ currentTheoryDetail.correct }}/{{ currentTheoryDetail.total }}</div>
+          </div>
+          <div>
+            <div style="font-weight: 500;">用时: {{ currentTheoryDetail.duration }}</div>
+            <div style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">交卷时间: {{ currentTheoryDetail.submit_time }}</div>
+          </div>
+        </div>
+        <el-table :data="currentTheoryDetail.questions" style="width: 100%">
+          <el-table-column type="index" width="50"></el-table-column>
+          <el-table-column label="题型" prop="type" width="100"></el-table-column>
+          <el-table-column label="题目" prop="title" min-width="200"></el-table-column>
+          <el-table-column label="结果" width="80">
+            <template #default="{ row }">
+              <el-tag :type="row.is_correct ? 'success' : 'danger'" size="small">
+                {{ row.is_correct ? '正确' : '错误' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    SharedMenu.initPageLayout('exam-scoring', {
+      title: '考核评分',
+      breadcrumb: '<a href="dashboard.html">首页</a> / <a href="exam-manage.html">考核管理</a> / 考核评分'
+    });
+
+    createApp({
+      setup() {
+        const examInfo = ref({
+          id: 1,
+          name: '2026年4月第一批月嫂考核',
+          position_name: '月嫂',
+          date: '2026-04-10',
+          time: '09:00-17:00',
+          location: '总部培训室A',
+          pass_score: 70,
+          required_items: ['理论考试', '实操考核']
+        });
+
+        const candidates = ref([
+          {
+            id: 1,
+            name: '王秀英',
+            class_name: '2026年4月月嫂新手班-A班',
+            is_completed: false,
+            base_score: 0,
+            bonus_score: 0,
+            total_score: 0,
+            score_items: [
+              { item_id: 'certificate', name: '证书', type: 'system', max_score: 5, score: 5 },
+              { item_id: 'order_volume', name: '单量', type: 'system', max_score: 5, score: 3 },
+              { item_id: 'special_skill', name: '月子餐', type: 'manual', max_score: 10, score: null },
+              { item_id: 'theory', name: '理论考试', type: 'online_exam', max_score: 30, score: 27 },
+              { item_id: 'practice', name: '实操考核', type: 'manual', max_score: 30, score: null },
+              { item_id: 'scenario', name: '情景模拟', type: 'manual', max_score: 20, score: null }
+            ],
+            bonus_items: [
+              { item_id: 'recruiter_score', name: '招生评分', timing: 'before_exam', max_score: 10, score: 8 }
+            ]
+          },
+          {
+            id: 2,
+            name: '李桂花',
+            class_name: '2026年4月月嫂新手班-A班',
+            is_completed: true,
+            base_score: 82,
+            bonus_score: 5,
+            total_score: 87,
+            score_items: [
+              { item_id: 'certificate', name: '证书', type: 'system', max_score: 5, score: 5 },
+              { item_id: 'order_volume', name: '单量', type: 'system', max_score: 5, score: 5 },
+              { item_id: 'special_skill', name: '月子餐', type: 'manual', max_score: 10, score: 9 },
+              { item_id: 'theory', name: '理论考试', type: 'online_exam', max_score: 30, score: 26 },
+              { item_id: 'practice', name: '实操考核', type: 'manual', max_score: 30, score: 28 },
+              { item_id: 'scenario', name: '情景模拟', type: 'manual', max_score: 20, score: 18 }
+            ],
+            bonus_items: [
+              { item_id: 'recruiter_score', name: '招生评分', timing: 'before_exam', max_score: 10, score: 5 }
+            ]
+          },
+          {
+            id: 3,
+            name: '张淑芬',
+            class_name: '2026年4月月嫂新手班-A班',
+            is_completed: false,
+            base_score: 0,
+            bonus_score: 0,
+            total_score: 0,
+            score_items: [
+              { item_id: 'certificate', name: '证书', type: 'system', max_score: 5, score: 0 },
+              { item_id: 'order_volume', name: '单量', type: 'system', max_score: 5, score: 3 },
+              { item_id: 'special_skill', name: '月子餐', type: 'manual', max_score: 10, score: null },
+              { item_id: 'theory', name: '理论考试', type: 'online_exam', max_score: 30, score: 24 },
+              { item_id: 'practice', name: '实操考核', type: 'manual', max_score: 30, score: null },
+              { item_id: 'scenario', name: '情景模拟', type: 'manual', max_score: 20, score: null }
+            ],
+            bonus_items: [
+              { item_id: 'recruiter_score', name: '招生评分', timing: 'before_exam', max_score: 10, score: 6 }
+            ]
+          }
+        ]);
+
+        const currentCandidate = ref(null);
+        const hasUnsavedScores = ref(false);
+        const recruiterScoreEntered = ref(true);
+
+        const scoredCount = computed(() => candidates.value.filter(c => c.is_completed).length);
+        const scoringProgress = computed(() => Math.round((scoredCount.value / candidates.value.length) * 100));
+
+        const requiredItems = computed(() => examInfo.value.required_items || []);
+
+        const getTypeText = (type) => {
+          const map = {
+            'system': '系统计算',
+            'manual': '人工评分',
+            'online_exam': '线上考试'
+          };
+          return map[type] || type;
+        };
+
+        const getItemResult = (item) => {
+          if (!item.score && item.score !== 0) return '待评分';
+          const rate = item.score / item.max_score;
+          if (rate >= 0.8) return '优秀';
+          if (rate >= 0.6) return '合格';
+          return '偏低';
+        };
+
+        const calculateTotal = (candidate) => {
+          let base = 0;
+          candidate.score_items.forEach(item => {
+            base += (item.score || 0);
+          });
+
+          let bonus = 0;
+          candidate.bonus_items.forEach(item => {
+            bonus += (item.score || 0);
+          });
+
+          candidate.base_score = base;
+          candidate.bonus_score = bonus;
+          candidate.total_score = base + bonus;
+        };
+
+        const selectCandidate = (candidate) => {
+          currentCandidate.value = candidate;
+        };
+
+        const onScoreChange = () => {
+          if (currentCandidate.value) {
+            calculateTotal(currentCandidate.value);
+            hasUnsavedScores.value = true;
+          }
+        };
+
+        const saveCurrentScores = () => {
+          if (!currentCandidate.value) return;
+
+          // 检查必过项
+          const unpassedRequired = currentCandidate.value.score_items.filter(item =>
+            requiredItems.value.includes(item.name) && (item.score || 0) < item.max_score * 0.6
+          );
+
+          if (unpassedRequired.length > 0) {
+            ElementPlus.ElMessage.warning(`${unpassedRequired.map(i => i.name).join('、')} 未达到及格线`);
+          }
+
+          currentCandidate.value.is_completed = true;
+          hasUnsavedScores.value = false;
+          ElementPlus.ElMessage.success(`${currentCandidate.value.name} 的评分已保存`);
+
+          // 自动选择下一个
+          const currentIndex = candidates.value.findIndex(c => c.id === currentCandidate.value.id);
+          if (currentIndex < candidates.value.length - 1) {
+            selectCandidate(candidates.value[currentIndex + 1]);
+          }
+        };
+
+        const saveAllScores = () => {
+          ElementPlus.ElMessage.success('所有成绩已保存');
+          hasUnsavedScores.value = false;
+        };
+
+        const showPracticeDialog = ref(false);
+        const practiceForm = reactive({
+          items: []
+        });
+
+        const showTheoryDialog = ref(false);
+        const currentTheoryDetail = ref(null);
+
+        const viewTheoryDetail = (item) => {
+          currentTheoryDetail.value = {
+            score: item.score || 0,
+            correct: 45,
+            total: 50,
+            duration: '45分钟',
+            submit_time: '2026-04-10 10:30',
+            questions: [
+              { type: '单选', title: '新生儿黄疸的正常消退时间是？', is_correct: true },
+              { type: '多选', title: '以下哪些是月子餐的原则？', is_correct: true },
+              { type: '判断', title: '产妇产后可以立即进行剧烈运动', is_correct: false }
+            ]
+          };
+          showTheoryDialog.value = true;
+        };
+
+        const confirmPracticeScore = () => {
+          const total = practiceForm.items.reduce((sum, item) => sum + (item.score || 0), 0);
+          const avg = Math.round(total / practiceForm.items.length * 30 / 100);
+
+          const practiceItem = currentCandidate.value?.score_items.find(i => i.item_id === 'practice');
+          if (practiceItem) {
+            practiceItem.score = avg;
+            onScoreChange();
+          }
+          showPracticeDialog.value = false;
+        };
+
+        // 初始化
+        selectCandidate(candidates.value[0]);
+
+        return {
+          examInfo,
+          candidates,
+          currentCandidate,
+          hasUnsavedScores,
+          recruiterScoreEntered,
+          scoredCount,
+          scoringProgress,
+          requiredItems,
+          showPracticeDialog,
+          practiceForm,
+          showTheoryDialog,
+          currentTheoryDetail,
+          getTypeText,
+          getItemResult,
+          selectCandidate,
+          onScoreChange,
+          saveCurrentScores,
+          saveAllScores,
+          viewTheoryDetail,
+          confirmPracticeScore
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

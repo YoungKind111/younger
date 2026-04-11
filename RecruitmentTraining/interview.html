@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>已邀约线索 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 面试管理专用样式 */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .calendar-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .view-switch {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: #f0f0f0;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .calendar-weekday {
+      background: #fafafa;
+      padding: 12px;
+      text-align: center;
+      font-weight: 500;
+      color: #595959;
+    }
+    
+    .calendar-day {
+      background: #fff;
+      min-height: 120px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .calendar-day:hover {
+      background: #f6ffed;
+    }
+    
+    .calendar-day.other-month {
+      background: #fafafa;
+      color: #bfbfbf;
+    }
+    
+    .calendar-day.today {
+      background: #e6f7ff;
+    }
+    
+    .calendar-day.selected {
+      background: #f6ffed;
+      box-shadow: inset 0 0 0 2px #52c41a;
+    }
+    
+    .day-number {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .day-number.today {
+      color: #1890ff;
+    }
+    
+    .day-events {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .day-event {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .day-event.invited { background: #f6ffed; color: #52c41a; border-left: 3px solid #52c41a; }
+            .day-event.signed { background: #e6f7ff; color: #1890ff; border-left: 3px solid #1890ff; }
+    .day-event.rejected { background: #fff1f0; color: #f5222d; border-left: 3px solid #f5222d; }
+        
+    .day-event-more {
+      font-size: 12px;
+      color: #8c8c8c;
+      text-align: center;
+      padding: 2px;
+    }
+    
+    .interview-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .interview-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+      transition: all 0.3s;
+    }
+    
+    .interview-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-color: #1890ff;
+    }
+    
+    .interview-time {
+      width: 80px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    .interview-time-hour {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .interview-time-period {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .interview-content {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .interview-info h4 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .interview-info p {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .interview-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-badge.invited { background: #f6ffed; color: #52c41a; }
+    .status-badge.signed { background: #e6f7ff; color: #1890ff; }
+    .status-badge.rejected { background: #fff1f0; color: #f5222d; }
+
+    /* 跟进记录列表样式 */
+    .follow-records-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .follow-record-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .follow-record-time {
+      color: #8c8c8c;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .follow-record-type {
+      display: inline-block;
+      padding: 0px 4px;
+      border-radius: 3px;
+      font-size: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .follow-record-type.phone {
+      background: #e6f7ff;
+      color: #096dd9;
+    }
+
+    .follow-record-type.wechat {
+      background: #f6ffed;
+      color: #389e0d;
+    }
+
+    .follow-record-type.visit {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+
+    .follow-record-type.system {
+      background: #f5f5f5;
+      color: #8c8c8c;
+    }
+
+    .follow-record-content {
+      color: #262626;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .follow-record-more {
+      font-size: 11px;
+      color: #8c8c8c;
+      padding-top: 2px;
+    }
+
+    /* 时间线样式 */
+    .timeline-custom {
+      padding-left: 8px;
+    }
+
+    .timeline-item-custom {
+      position: relative;
+      padding-bottom: 16px;
+      padding-left: 20px;
+      border-left: 2px solid #e8e8e8;
+    }
+
+    .timeline-item-custom::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1890ff;
+      border: 2px solid #fff;
+    }
+
+    .timeline-item-custom.success::before {
+      background: #52c41a;
+    }
+
+    .timeline-item-custom.warning::before {
+      background: #fa8c16;
+    }
+
+    .timeline-time-custom {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+
+    .timeline-content-custom {
+      color: #262626;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .timeline-type-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .timeline-type-tag.phone {
+      background: #e6f7ff;
+      color: #096dd9;
+    }
+
+    .timeline-type-tag.wechat {
+      background: #f6ffed;
+      color: #389e0d;
+    }
+
+    .timeline-type-tag.visit {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+        
+    .assessment-form {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .assessment-section {
+      margin-bottom: 24px;
+    }
+    
+    .assessment-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+      padding: 12px 16px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .assessment-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .assessment-item:last-child {
+      border-bottom: none;
+    }
+    
+    .assessment-name {
+      flex: 1;
+      font-size: 14px;
+      color: #262626;
+    }
+    
+    .assessment-name small {
+      display: block;
+      color: #8c8c8c;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    
+    .assessment-score {
+      width: 200px;
+    }
+    
+    .assessment-result {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+    
+    .result-option {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid #d9d9d9;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .result-option:hover {
+      border-color: #1890ff;
+    }
+    
+    .result-option.selected {
+      border-color: #1890ff;
+      background: #e6f7ff;
+    }
+    
+    .result-option.expert.selected { border-color: #52c41a; background: #f6ffed; }
+    .result-option.train.selected { border-color: #fa8c16; background: #fff7e6; }
+    .result-option.reject.selected { border-color: #f5222d; background: #fff1f0; }
+    
+    .result-option h4 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .result-option p {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 992px) {
+      .stats-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .stat-number {
+      text-align: center;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+    }
+    
+    .stat-number-value {
+      font-size: 32px;
+      font-weight: 600;
+    }
+    
+    .stat-number-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 日历视图 -->
+    <div class="content-card mb-2">
+      <div class="calendar-header">
+        <div class="calendar-nav">
+          <el-button-group>
+            <el-button @click="prevMonth"><i class="el-icon-arrow-left"></i></el-button>
+            <el-button @click="goToday">今天</el-button>
+            <el-button @click="nextMonth"><i class="el-icon-arrow-right"></i></el-button>
+          </el-button-group>
+          <span class="calendar-title">{{ currentYear }}年{{ currentMonth }}月</span>
+        </div>
+      </div>
+      
+      <!-- 日历网格 -->
+      <div class="calendar-grid">
+        <div class="calendar-weekday">日</div>
+        <div class="calendar-weekday">一</div>
+        <div class="calendar-weekday">二</div>
+        <div class="calendar-weekday">三</div>
+        <div class="calendar-weekday">四</div>
+        <div class="calendar-weekday">五</div>
+        <div class="calendar-weekday">六</div>
+        
+        <div 
+          v-for="day in calendarDays" 
+          :key="day.date"
+          class="calendar-day"
+          :class="{ 
+            'other-month': !day.isCurrentMonth, 
+            'today': day.isToday,
+            'selected': selectedDate === day.date 
+          }"
+          @click="selectDate(day)"
+        >
+          <div class="day-number" :class="{ 'today': day.isToday }">{{ day.day }}</div>
+          <div class="day-events">
+            <div
+              v-for="(event, idx) in day.events.slice(0, 4)"
+              :key="idx"
+              class="day-event"
+              :class="event.status"
+              :title="event.time + ' ' + event.name"
+            >
+              <span style="font-weight: 500;">{{ event.time }}</span> {{ event.name }}
+            </div>
+            <div v-if="day.events.length > 3" class="day-event-more">
+              +{{ day.events.length - 3 }} 更多
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- 当天邀约详情弹窗 -->
+    <el-dialog
+      v-model="showDetailDialog"
+      :title="selectedDate + ' 邀约详情'"
+      width="700px"
+    >
+      <div v-if="selectedDateLeads.length > 0">
+        <el-table :data="selectedDateLeads" style="width: 100%">
+          <el-table-column label="护理人员" min-width="150">
+            <template #default="{ row }">
+              <div style="font-weight: 500; color: #262626;">{{ row.name }}</div>
+              <div style="font-size: 12px; color: #8c8c8c;">{{ row.phone }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="目标岗位" width="100">
+            <template #default="{ row }">
+              <el-tag size="small" type="info">{{ row.position }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="邀约时间" width="100">
+            <template #default="{ row }">
+              {{ row.inviteTime }}
+            </template>
+          </el-table-column>
+          <el-table-column label="发起邀约人" width="120">
+            <template #default="{ row }">
+              <div style="display: flex; align-items: center;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #1890ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-right: 8px;">
+                  {{ row.assignTo.charAt(0) }}
+                </div>
+                <span>{{ row.assignTo }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="来源渠道" width="100">
+            <template #default="{ row }">
+              <span style="font-size: 12px; color: #595959;">{{ row.source }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="跟进记录" min-width="200">
+            <template #default="{ row }">
+              <div v-if="row.followRecords && row.followRecords.length > 0" class="follow-records-list">
+                <div
+                  v-for="(record, idx) in row.followRecords.slice(0, 2)"
+                  :key="idx"
+                  class="follow-record-item"
+                >
+                  <span class="follow-record-time">{{ record.time.split(' ')[0].slice(5) }}</span>
+                  <span class="follow-record-type" :class="record.type">{{ record.typeText }}</span>
+                  <span class="follow-record-content" :title="record.content">{{ record.content }}</span>
+                </div>
+                <div v-if="row.followRecords.length > 2" class="follow-record-more">
+                  +{{ row.followRecords.length - 2 }} 条记录
+                </div>
+              </div>
+              <span v-else style="color: #8c8c8c; font-size: 13px;">暂无跟进记录</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="80" fixed="right">
+            <template #default="{ row }">
+              <el-tag v-if="row.status === 'signed'" type="success" size="small">已入册</el-tag>
+              <el-tag v-else-if="row.status === 'rejected'" type="danger" size="small">已拒绝</el-tag>
+              <el-tag v-else type="info" size="small">已邀约</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80" fixed="right">
+            <template #default="{ row }">
+              <el-button type="text" size="small" @click="viewFollowDetail(row)">详情</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div style="margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 6px;">
+          <span style="color: #8c8c8c;">当日共计 </span>
+          <strong style="color: #1890ff;">{{ selectedDateLeads.length }}</strong>
+          <span style="color: #8c8c8c;"> 位邀约</span>
+        </div>
+      </div>
+      <div v-else style="text-align: center; padding: 60px; color: #8c8c8c;">
+        <i class="el-icon-calendar" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+        <p>该日期暂无邀约记录</p>
+      </div>
+      <template #footer>
+        <el-button @click="showDetailDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 跟进记录详情弹窗 -->
+    <el-dialog
+      v-model="showFollowDialog"
+      title="跟进记录详情"
+      width="500px"
+    >
+      <div v-if="currentLead" style="padding: 10px 0;">
+        <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="color: #262626; font-weight: 500;">{{ currentLead.name }}</div>
+              <div style="color: #8c8c8c; font-size: 13px; margin-top: 4px;">{{ currentLead.phone }} | {{ currentLead.position }}</div>
+            </div>
+            <div>
+              <el-tag v-if="currentLead.status === 'signed'" type="success">已入册</el-tag>
+              <el-tag v-else-if="currentLead.status === 'rejected'" type="danger">已拒绝</el-tag>
+              <el-tag v-else type="info">已邀约</el-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px;">
+            跟进记录 ({{ currentLead.followRecords?.length || 0 }})
+          </div>
+          <div class="timeline-custom">
+            <div
+              v-for="(record, index) in currentLead.followRecords"
+              :key="index"
+              class="timeline-item-custom"
+            >
+              <div class="timeline-time-custom">{{ record.time }}</div>
+              <div class="timeline-content-custom">
+                {{ record.content }}
+                <span class="timeline-type-tag" :class="record.type">{{ record.typeText }}</span>
+              </div>
+            </div>
+            <div v-if="!currentLead.followRecords || currentLead.followRecords.length === 0" style="color: #8c8c8c; padding: 20px 0;">
+              暂无跟进记录
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showFollowDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('interview', {
+      title: '已邀约线索',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 已邀约线索'
+    });
+
+    createApp({
+      setup() {
+        // 日历相关 - 默认当前日期
+        const today = new Date();
+        const currentYear = ref(today.getFullYear());
+        const currentMonth = ref(today.getMonth() + 1);
+        const selectedDate = ref('');
+        const showDetailDialog = ref(false);
+
+        // 跟进记录详情弹窗
+        const showFollowDialog = ref(false);
+        const currentLead = ref(null);
+
+        // 生成示例日期（基于当前日期）
+        const getSampleDate = (dayOffset) => {
+          const d = new Date();
+          d.setDate(d.getDate() + dayOffset);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
+        // 已邀约线索列表
+        const invitedLeadList = ref([
+          {
+            id: 1,
+            name: '王秀英',
+            phone: '138****5678',
+            position: '月嫂',
+            inviteTime: '09:30',
+            assignTo: '李小红',
+            source: '微信广告',
+            date: getSampleDate(-2),
+            status: 'signed',
+            followRecords: [
+              { time: getSampleDate(-3) + ' 16:00', content: '电话邀约到店面试', type: 'phone', typeText: '电话' },
+              { time: getSampleDate(-2) + ' 09:30', content: '邀约到店，完成面试评估', type: 'visit', typeText: '面访' },
+              { time: getSampleDate(-2) + ' 11:00', content: '办理入册签约，缴纳押金', type: 'system', typeText: '系统' }
+            ]
+          },
+          {
+            id: 2,
+            name: '李桂花',
+            phone: '139****1234',
+            position: '育婴师',
+            inviteTime: '10:30',
+            assignTo: '李小红',
+            source: '转介绍',
+            date: getSampleDate(-2),
+            status: 'rejected',
+            followRecords: [
+              { time: getSampleDate(-4) + ' 14:30', content: '微信沟通邀约', type: 'wechat', typeText: '微信' },
+              { time: getSampleDate(-2) + ' 10:30', content: '邀约到店面试', type: 'visit', typeText: '面访' },
+              { time: getSampleDate(-2) + ' 12:00', content: '拒绝入册 - 已入职其他公司', type: 'system', typeText: '系统' }
+            ]
+          },
+          {
+            id: 3,
+            name: '张淑芬',
+            phone: '137****9876',
+            position: '月嫂',
+            inviteTime: '14:00',
+            assignTo: '王建国',
+            source: '抖音',
+            date: getSampleDate(-1),
+            status: 'invited',
+            followRecords: [
+              { time: getSampleDate(-2) + ' 10:00', content: '电话邀约到店', type: 'phone', typeText: '电话' },
+              { time: getSampleDate(-1) + ' 14:00', content: '邀约到店，等待面试', type: 'visit', typeText: '面访' }
+            ]
+          },
+          {
+            id: 4,
+            name: '陈美华',
+            phone: '136****2468',
+            position: '老年护工',
+            inviteTime: '09:00',
+            assignTo: '张美玲',
+            source: '地推',
+            date: getSampleDate(0),
+            status: 'invited',
+            followRecords: [
+              { time: getSampleDate(-1) + ' 15:30', content: '电话邀约确认', type: 'phone', typeText: '电话' }
+            ]
+          },
+          {
+            id: 5,
+            name: '刘玉兰',
+            phone: '135****1357',
+            position: '月嫂',
+            inviteTime: '15:30',
+            assignTo: '刘志强',
+            source: '微信广告',
+            date: getSampleDate(1),
+            status: 'invited',
+            followRecords: [
+              { time: getSampleDate(0) + ' 11:00', content: '微信沟通邀约', type: 'wechat', typeText: '微信' }
+            ]
+          }
+        ]);
+        
+        // 日历天数
+        const calendarDays = computed(() => {
+          const days = [];
+          const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1);
+          const lastDay = new Date(currentYear.value, currentMonth.value, 0);
+          const prevLastDay = new Date(currentYear.value, currentMonth.value - 1, 0);
+          
+          // 上月日期
+          const firstDayWeek = firstDay.getDay();
+          for (let i = firstDayWeek - 1; i >= 0; i--) {
+            const day = prevLastDay.getDate() - i;
+            days.push({
+              day,
+              date: `${prevLastDay.getFullYear()}-${String(prevLastDay.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+              isCurrentMonth: false,
+              isToday: false,
+              events: []
+            });
+          }
+          
+          // 当月日期
+          const today = new Date();
+          for (let i = 1; i <= lastDay.getDate(); i++) {
+            const date = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const isToday = today.getFullYear() === currentYear.value && 
+                           today.getMonth() + 1 === currentMonth.value && 
+                           today.getDate() === i;
+            
+            // 获取该日期的已邀约线索
+            const events = invitedLeadList.value
+              .filter(lead => lead.date === date)
+              .map(lead => ({
+                time: lead.inviteTime,
+                name: lead.name,
+                status: lead.status || 'invited'
+              }));
+            
+            days.push({
+              day: i,
+              date,
+              isCurrentMonth: true,
+              isToday,
+              events
+            });
+          }
+          
+          // 下月日期
+          const remaining = 42 - days.length;
+          for (let i = 1; i <= remaining; i++) {
+            days.push({
+              day: i,
+              date: `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+              isCurrentMonth: false,
+              isToday: false,
+              events: []
+            });
+          }
+          
+          return days;
+        });
+        
+        // 选中日期的线索
+        const selectedDateLeads = computed(() => {
+          if (!selectedDate.value) return [];
+          return invitedLeadList.value.filter(item => item.date === selectedDate.value);
+        });
+        
+        // 选择日期
+        const selectDate = (day) => {
+          if (!day.isCurrentMonth) return;
+          selectedDate.value = day.date;
+          showDetailDialog.value = true;
+        };
+        
+        // 上月
+        const prevMonth = () => {
+          if (currentMonth.value === 1) {
+            currentMonth.value = 12;
+            currentYear.value--;
+          } else {
+            currentMonth.value--;
+          }
+        };
+        
+        // 下月
+        const nextMonth = () => {
+          if (currentMonth.value === 12) {
+            currentMonth.value = 1;
+            currentYear.value++;
+          } else {
+            currentMonth.value++;
+          }
+        };
+        
+        // 今天
+        const goToday = () => {
+          const today = new Date();
+          currentYear.value = today.getFullYear();
+          currentMonth.value = today.getMonth() + 1;
+        };
+
+        // 初始化不自动选择日期，只确保显示当前月份
+        // selectedDate 保持为空，不默认选中任何一天
+
+        // 查看跟进详情
+        const viewFollowDetail = (row) => {
+          currentLead.value = row;
+          showFollowDialog.value = true;
+        };
+
+        return {
+          currentYear,
+          currentMonth,
+          selectedDate,
+          showDetailDialog,
+          showFollowDialog,
+          currentLead,
+          invitedLeadList,
+          calendarDays,
+          selectedDateLeads,
+          selectDate,
+          prevMonth,
+          nextMonth,
+          goToday,
+          viewFollowDetail
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

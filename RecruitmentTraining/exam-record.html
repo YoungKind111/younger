@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考试记录 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .record-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      transition: all 0.3s;
+    }
+
+    .record-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .record-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .record-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .record-score {
+      text-align: right;
+    }
+
+    .score-value {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .score-value.pass {
+      color: #52c41a;
+    }
+
+    .score-value.fail {
+      color: #f5222d;
+    }
+
+    .score-total {
+      font-size: 14px;
+      color: #8c8c8c;
+    }
+
+    .record-stats {
+      display: flex;
+      gap: 24px;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .record-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .record-stat-label {
+      color: #8c8c8c;
+    }
+
+    .record-stat-value {
+      color: #262626;
+      font-weight: 500;
+    }
+
+    .detail-section {
+      margin-top: 16px;
+    }
+
+    .detail-title {
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .question-result {
+      background: #fafafa;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+    }
+
+    .question-result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .question-number {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .question-status {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .question-status.correct {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .question-status.wrong {
+      background: #fff1f0;
+      color: #f5222d;
+    }
+
+    .question-content {
+      color: #595959;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .answer-section {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+    }
+
+    .answer-label {
+      color: #8c8c8c;
+    }
+
+    .answer-value {
+      color: #262626;
+      font-weight: 500;
+    }
+
+    .answer-value.correct {
+      color: #52c41a;
+    }
+
+    .answer-value.wrong {
+      color: #f5222d;
+    }
+
+    .student-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .student-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .student-phone {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="filter-bar">
+      <div class="filter-item">
+        <span class="filter-label">考卷</span>
+        <el-select v-model="filterPaper" placeholder="全部考卷" clearable style="width: 180px;">
+          <el-option v-for="paper in paperList" :key="paper.id" :label="paper.name" :value="paper.id"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">学员</span>
+        <el-input v-model="searchStudent" placeholder="姓名/手机号" clearable style="width: 150px;"></el-input>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">考试结果</span>
+        <el-select v-model="filterResult" placeholder="全部" clearable style="width: 100px;">
+          <el-option label="及格" value="pass"></el-option>
+          <el-option label="不及格" value="fail"></el-option>
+        </el-select>
+      </div>
+      <el-button type="primary" @click="handleSearch">查询</el-button>
+      <el-button @click="handleReset">重置</el-button>
+      <el-button @click="exportRecords">
+        <i class="el-icon-download"></i> 导出记录
+      </el-button>
+    </div>
+
+    <div class="content-card">
+      <div class="card-body">
+        <div v-for="record in filteredList" :key="record.id" class="record-card">
+          <div class="record-header">
+            <div class="student-info">
+              <div class="student-avatar">{{ record.student_name.charAt(0) }}</div>
+              <div>
+                <div class="student-name">{{ record.student_name }}</div>
+                <div class="student-phone">{{ record.student_phone }}</div>
+              </div>
+            </div>
+            <div class="record-score">
+              <div class="score-value" :class="record.is_pass ? 'pass' : 'fail'">
+                {{ record.score }}
+              </div>
+              <div class="score-total">/ {{ record.total_score }}分</div>
+            </div>
+          </div>
+
+          <div class="record-subtitle">
+            {{ record.paper_name }} | {{ record.exam_time }}
+          </div>
+
+          <div class="record-stats">
+            <div class="record-stat">
+              <span class="record-stat-label">用时：</span>
+              <span class="record-stat-value">{{ record.duration }}分钟</span>
+            </div>
+            <div class="record-stat">
+              <span class="record-stat-label">正确：</span>
+              <span class="record-stat-value" style="color: #52c41a;">{{ record.correct_count }}/{{ record.total_count }}题</span>
+            </div>
+            <div class="record-stat">
+              <span class="record-stat-label">单选：</span>
+              <span class="record-stat-value">{{ record.single_correct }}/{{ record.single_count }}</span>
+            </div>
+            <div class="record-stat">
+              <span class="record-stat-label">多选：</span>
+              <span class="record-stat-value">{{ record.multiple_correct }}/{{ record.multiple_count }}</span>
+            </div>
+            <div class="record-stat">
+              <span class="record-stat-label">判断：</span>
+              <span class="record-stat-value">{{ record.judge_correct }}/{{ record.judge_count }}</span>
+            </div>
+            <div class="record-stat">
+              <el-tag :type="record.is_pass ? 'success' : 'danger'" size="small">
+                {{ record.is_pass ? '及格' : '不及格' }}
+              </el-tag>
+            </div>
+            <div class="record-stat" style="margin-left: auto;">
+              <el-button type="text" @click="viewDetail(record)">查看详情</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 考试详情对话框 -->
+    <el-dialog v-model="showDetail" title="考试详情" width="800px">
+      <div v-if="currentRecord" class="detail-section">
+        <div class="detail-title">基本信息</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px;">
+          <div>
+            <span style="color: #8c8c8c;">学员：</span>
+            <span style="font-weight: 500;">{{ currentRecord.student_name }}</span>
+          </div>
+          <div>
+            <span style="color: #8c8c8c;">考卷：</span>
+            <span>{{ currentRecord.paper_name }}</span>
+          </div>
+          <div>
+            <span style="color: #8c8c8c;">考试时间：</span>
+            <span>{{ currentRecord.exam_time }}</span>
+          </div>
+          <div>
+            <span style="color: #8c8c8c;">得分：</span>
+            <span :style="{ color: currentRecord.is_pass ? '#52c41a' : '#f5222d', fontWeight: 500, fontSize: '16px' }">
+              {{ currentRecord.score }}/{{ currentRecord.total_score }}
+            </span>
+          </div>
+          <div>
+            <span style="color: #8c8c8c;">用时：</span>
+            <span>{{ currentRecord.duration }}分钟</span>
+          </div>
+          <div>
+            <span style="color: #8c8c8c;">结果：</span>
+            <el-tag :type="currentRecord.is_pass ? 'success' : 'danger'" size="small">
+              {{ currentRecord.is_pass ? '及格' : '不及格' }}
+            </el-tag>
+          </div>
+        </div>
+
+        <div class="detail-title">答题情况</div>
+        <div v-for="(question, idx) in currentRecord.questions" :key="idx" class="question-result">
+          <div class="question-result-header">
+            <span class="question-number">第{{ idx + 1 }}题</span>
+            <span class="question-status" :class="question.is_correct ? 'correct' : 'wrong'">
+              {{ question.is_correct ? '正确' : '错误' }}
+            </span>
+          </div>
+          <div class="question-content">{{ question.title }}</div>
+          <div class="answer-section">
+            <div>
+              <span class="answer-label">学员答案：</span>
+              <span class="answer-value" :class="question.is_correct ? 'correct' : 'wrong'">
+                {{ question.student_answer || '未作答' }}
+              </span>
+            </div>
+            <div>
+              <span class="answer-label">正确答案：</span>
+              <span class="answer-value correct">{{ question.correct_answer }}</span>
+            </div>
+            <div>
+              <span class="answer-label">分值：</span>
+              <span class="answer-value">{{ question.is_correct ? question.score : 0 }}/{{ question.score }}分</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('exam-record', {
+      title: '考试记录',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 考试记录'
+    });
+
+    createApp({
+      setup() {
+        const filterPaper = ref('');
+        const searchStudent = ref('');
+        const filterResult = ref('');
+
+        const paperList = ref([
+          { id: 1, name: '月嫂岗前培训考核' },
+          { id: 2, name: '月嫂技能认证考试' },
+          { id: 3, name: '育儿嫂岗前考核' }
+        ]);
+
+        const recordList = ref([
+          {
+            id: 1,
+            student_name: '王秀英',
+            student_phone: '138****5678',
+            paper_name: '月嫂岗前培训考核',
+            paper_id: 1,
+            score: 85,
+            total_score: 100,
+            duration: 45,
+            exam_time: '2026-04-10 14:30:22',
+            is_pass: true,
+            correct_count: 26,
+            total_count: 30,
+            single_correct: 12,
+            single_count: 15,
+            multiple_correct: 8,
+            multiple_count: 10,
+            judge_correct: 6,
+            judge_count: 5,
+            questions: [
+              { title: '新生儿黄疸通常在出生后几天出现？', student_answer: 'A', correct_answer: 'A', is_correct: true, score: 3 },
+              { title: '以下哪些是新生儿护理的注意事项？', student_answer: 'ABD', correct_answer: 'ABD', is_correct: true, score: 5 },
+              { title: '产妇月子期间可以洗澡洗头。', student_answer: '正确', correct_answer: '正确', is_correct: true, score: 2 },
+              { title: '母乳喂养的正确姿势是？', student_answer: 'B', correct_answer: 'C', is_correct: false, score: 3 }
+            ]
+          },
+          {
+            id: 2,
+            student_name: '李桂花',
+            student_phone: '139****1234',
+            paper_name: '月嫂岗前培训考核',
+            paper_id: 1,
+            score: 92,
+            total_score: 100,
+            duration: 38,
+            exam_time: '2026-04-10 15:12:08',
+            is_pass: true,
+            correct_count: 28,
+            total_count: 30,
+            single_correct: 14,
+            single_count: 15,
+            multiple_correct: 9,
+            multiple_count: 10,
+            judge_correct: 5,
+            judge_count: 5,
+            questions: []
+          },
+          {
+            id: 3,
+            student_name: '张淑芬',
+            student_phone: '137****9876',
+            paper_name: '月嫂岗前培训考核',
+            paper_id: 1,
+            score: 58,
+            total_score: 100,
+            duration: 55,
+            exam_time: '2026-04-10 16:05:33',
+            is_pass: false,
+            correct_count: 19,
+            total_count: 30,
+            single_correct: 10,
+            single_count: 15,
+            multiple_correct: 5,
+            multiple_count: 10,
+            judge_correct: 4,
+            judge_count: 5,
+            questions: []
+          },
+          {
+            id: 4,
+            student_name: '陈美华',
+            student_phone: '136****2468',
+            paper_name: '月嫂技能认证考试',
+            paper_id: 2,
+            score: 88,
+            total_score: 100,
+            duration: 72,
+            exam_time: '2026-04-12 09:15:46',
+            is_pass: true,
+            correct_count: 44,
+            total_count: 50,
+            single_correct: 18,
+            single_count: 20,
+            multiple_correct: 15,
+            multiple_count: 20,
+            judge_correct: 11,
+            judge_count: 10,
+            questions: []
+          }
+        ]);
+
+        const filteredList = computed(() => {
+          let list = recordList.value;
+          if (filterPaper.value) {
+            list = list.filter(r => r.paper_id === filterPaper.value);
+          }
+          if (searchStudent.value) {
+            list = list.filter(r =>
+              r.student_name.includes(searchStudent.value) ||
+              r.student_phone.includes(searchStudent.value)
+            );
+          }
+          if (filterResult.value) {
+            list = list.filter(r => filterResult.value === 'pass' ? r.is_pass : !r.is_pass);
+          }
+          return list;
+        });
+
+        const showDetail = ref(false);
+        const currentRecord = ref(null);
+
+        const handleSearch = () => {};
+        const handleReset = () => {
+          filterPaper.value = '';
+          searchStudent.value = '';
+          filterResult.value = '';
+        };
+
+        const viewDetail = (record) => {
+          currentRecord.value = record;
+          showDetail.value = true;
+        };
+
+        const exportRecords = () => {
+          ElementPlus.ElMessage.success('考试记录导出成功');
+        };
+
+        return {
+          filterPaper,
+          searchStudent,
+          filterResult,
+          paperList,
+          filteredList,
+          showDetail,
+          currentRecord,
+          handleSearch,
+          handleReset,
+          viewDetail,
+          exportRecords
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

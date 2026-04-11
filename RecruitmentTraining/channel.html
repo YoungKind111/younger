@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>渠道管理 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .channel-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 1200px) { .channel-stats { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .channel-stats { grid-template-columns: repeat(2, 1fr); } }
+    .channel-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; border-left: 4px solid #1890ff; }
+    .channel-card:nth-child(2) { border-left-color: #52c41a; }
+    .channel-card:nth-child(3) { border-left-color: #fa8c16; }
+    .channel-card:nth-child(4) { border-left-color: #722ed1; }
+    .channel-card:nth-child(5) { border-left-color: #13c2c2; }
+    .channel-card-value { font-size: 28px; font-weight: 600; color: #262626; }
+    .channel-card-label { font-size: 13px; color: #8c8c8c; margin-top: 8px; }
+    .channel-item { display: flex; align-items: center; padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s; }
+    .channel-item:hover { background: #e6f7ff; }
+    .channel-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; }
+    .channel-icon.wechat { background: #e6f7ff; color: #07c160; }
+    .channel-icon.douyin { background: #fff1f0; color: #000; }
+    .channel-icon.ditui { background: #fff7e6; color: #fa8c16; }
+    .channel-icon.intro { background: #f9f0ff; color: #722ed1; }
+    .channel-icon.website { background: #e6fffb; color: #08979c; }
+    .channel-info { flex: 1; }
+    .channel-name { font-size: 16px; font-weight: 500; color: #262626; }
+    .channel-desc { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
+    .channel-stats-mini { display: flex; gap: 24px; text-align: center; }
+    .channel-stat-value { font-size: 18px; font-weight: 600; color: #1890ff; }
+    .channel-stat-label { font-size: 12px; color: #8c8c8c; }
+    .channel-actions { margin-left: 24px; display: flex; align-items: center; gap: 8px; }
+    .referrer-item { display: flex; align-items: center; padding: 12px 16px; background: #fff; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e8e8e8; }
+    .referrer-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-right: 12px; }
+    .referrer-info { flex: 1; }
+    .referrer-name { font-weight: 500; color: #262626; }
+    .referrer-phone { font-size: 12px; color: #8c8c8c; }
+    .referrer-stats { display: flex; gap: 16px; text-align: center; }
+    .referrer-stat-value { font-size: 16px; font-weight: 600; }
+    .referrer-stat-value.clues { color: #1890ff; }
+    .referrer-stat-value.signed { color: #52c41a; }
+    .referrer-stat-value.worked { color: #fa8c16; }
+    .referrer-stat-value.reward { color: #f5222d; }
+    .referrer-stat-label { font-size: 11px; color: #8c8c8c; }
+    .qr-code-placeholder { width: 200px; height: 200px; background: #f5f5f5; border: 2px dashed #d9d9d9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 16px; color: #8c8c8c; }
+    .link-section { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-top: 16px; }
+    .link-value { font-size: 13px; color: #262626; word-break: break-all; font-family: monospace; background: #fff; padding: 8px; border-radius: 4px; }
+    .settlement-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .settlement-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .settlement-stat { text-align: center; }
+    .settlement-stat-value { font-size: 20px; font-weight: 600; color: #262626; }
+    .settlement-stat-value.amount { color: #f5222d; }
+    .settlement-stat-label { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+
+    // 先初始化布局，再创建 Vue 应用
+    SharedMenu.initPageLayout('channel', {
+      title: '渠道管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 渠道管理'
+    });
+
+    createApp({
+      template: `
+        <div>
+          <!-- 统计卡片 -->
+          <div class="content-card mb-2">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="card-title">数据统计</span>
+              <div class="filter-item">
+                <span class="filter-label">月份:</span>
+                <el-date-picker
+                  v-model="statsMonth"
+                  type="month"
+                  placeholder="选择月份"
+                  value-format="YYYY-MM"
+                  style="width: 120px;"
+                  @change="updateStats"
+                ></el-date-picker>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="channel-stats" style="margin-bottom: 0;">
+                <div class="channel-card">
+                  <div class="channel-card-value text-primary">{{ stats.totalChannels }}</div>
+                  <div class="channel-card-label">渠道总数</div>
+                </div>
+                <div class="channel-card">
+                  <div class="channel-card-value text-success">{{ stats.totalReferrers }}</div>
+                  <div class="channel-card-label">推荐人总数</div>
+                </div>
+                <div class="channel-card">
+                  <div class="channel-card-value text-warning">{{ stats.totalClues }}</div>
+                  <div class="channel-card-label">当月线索</div>
+                </div>
+                <div class="channel-card">
+                  <div class="channel-card-value">{{ stats.totalSigned }}</div>
+                  <div class="channel-card-label">当月签约</div>
+                </div>
+                <div class="channel-card">
+                  <div class="channel-card-value text-danger">¥{{ stats.totalReward }}</div>
+                  <div class="channel-card-label">当月奖励(元)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid-2">
+            <!-- 左侧：渠道列表 -->
+            <div class="content-card">
+              <div class="card-header">
+                <div class="card-title">渠道列表</div>
+                <el-button type="primary" size="small" @click="handleAddChannel">
+                  + 新增渠道
+                </el-button>
+              </div>
+              <div class="card-body">
+                <el-tabs v-model="activeChannelType" style="margin-bottom: 16px;">
+                  <el-tab-pane label="全部" name="all"></el-tab-pane>
+                  <el-tab-pane label="线上" name="online"></el-tab-pane>
+                  <el-tab-pane label="线下" name="offline"></el-tab-pane>
+                  <el-tab-pane label="转介绍" name="intro"></el-tab-pane>
+                </el-tabs>
+                
+                <div v-for="channel in filteredChannels" :key="channel.id" class="channel-item">
+                  <div class="channel-icon" :class="channel.iconClass">
+                    <i :class="channel.icon"></i>
+                  </div>
+                  <div class="channel-info">
+                    <div class="channel-name">
+                      {{ channel.name }}
+                      <el-tag v-if="channel.status === 'active'" type="success" size="small">启用中</el-tag>
+                      <el-tag v-else type="info" size="small">已停用</el-tag>
+                    </div>
+                    <div class="channel-desc">{{ channel.desc }}</div>
+                  </div>
+                  <div class="channel-stats-mini">
+                    <div>
+                      <div class="channel-stat-value">{{ channel.clueCount }}</div>
+                      <div class="channel-stat-label">线索</div>
+                    </div>
+                    <div>
+                      <div class="channel-stat-value">{{ channel.signedCount }}</div>
+                      <div class="channel-stat-label">签约</div>
+                    </div>
+                  </div>
+                  <div class="channel-actions">
+                    <el-button type="text" @click="viewChannelDetail(channel)">详情</el-button>
+                    <el-button type="text" @click="manageReferrers(channel)">推荐人</el-button>
+                    <el-button type="text" @click="editChannel(channel)">编辑</el-button>
+                    <el-button type="text" style="color: #f5222d;" @click="deleteChannel(channel)">删除</el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 右侧：详情 -->
+            <div class="content-card">
+              <div class="card-header">
+                <span class="card-title">{{ currentChannel ? currentChannel.name + ' - 渠道详情' : '渠道详情' }}</span>
+              </div>
+              <div class="card-body">
+                <div v-if="!currentChannel" style="text-align: center; padding: 60px; color: #8c8c8c;">
+                  <i class="el-icon-share" style="font-size: 64px; margin-bottom: 16px; display: block;"></i>
+                  <p>请从左侧选择一个渠道查看详情</p>
+                </div>
+                
+                <div v-else-if="currentView === 'detail'">
+                  <div style="text-align: center; padding: 24px;">
+                    <div class="qr-code-placeholder">
+                      <i class="el-icon-full-screen" style="font-size: 48px; margin-bottom: 8px;"></i>
+                      <span>渠道专属二维码</span>
+                    </div>
+                    <p style="color: #8c8c8c; font-size: 13px;">微信扫一扫即可报名，自动关联渠道</p>
+                  </div>
+                  
+                  <div class="link-section">
+                    <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px;">H5报名链接（带渠道参数）</div>
+                    <div class="link-value">{{ currentChannel.link }}</div>
+                    <div style="margin-top: 12px;">
+                      <el-button type="primary" size="small" @click="copyLink">复制链接</el-button>
+                      <el-button size="small" @click="downloadQR">下载二维码</el-button>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: #e6f7ff; border-radius: 6px; font-size: 13px; color: #096dd9;">
+                      <i class="el-icon-info"></i> 如需关联推荐人，请使用<strong>推荐人专属链接</strong>或在报名表中填写<strong>邀请码</strong>
+                    </div>
+                  </div>
+                  
+                  <div style="margin-top: 24px;">
+                    <div style="font-weight: 600; margin-bottom: 16px;">推荐奖励规则</div>
+                    <div style="background: #f5f5f5; padding: 16px; border-radius: 8px;">
+                      <div style="margin-bottom: 12px;">
+                        <span style="width: 100px; display: inline-block; color: #595959;">签约奖励</span>
+                        <el-input-number v-model="currentChannel.rewardSign" :min="0" :step="100" size="small" style="width: 120px;"></el-input-number>
+                        <span style="margin-left: 8px;">元/人</span>
+                      </div>
+                      <div>
+                        <span style="width: 100px; display: inline-block; color: #595959;">上户奖励</span>
+                        <el-input-number v-model="currentChannel.rewardWork" :min="0" :step="100" size="small" style="width: 120px;"></el-input-number>
+                        <span style="margin-left: 8px;">元/人</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style="margin-top: 24px;">
+                    <div style="font-weight: 600; margin-bottom: 16px;">本月统计</div>
+                    <div class="settlement-stats">
+                      <div class="settlement-stat">
+                        <div class="settlement-stat-value">{{ currentChannel.monthClues }}</div>
+                        <div class="settlement-stat-label">新增线索</div>
+                      </div>
+                      <div class="settlement-stat">
+                        <div class="settlement-stat-value">{{ currentChannel.monthSigned }}</div>
+                        <div class="settlement-stat-label">签约人数</div>
+                      </div>
+                      <div class="settlement-stat">
+                        <div class="settlement-stat-value">{{ currentChannel.monthWorked }}</div>
+                        <div class="settlement-stat-label">上户人数</div>
+                      </div>
+                      <div class="settlement-stat">
+                        <div class="settlement-stat-value amount">¥{{ currentChannel.monthReward }}</div>
+                        <div class="settlement-stat-label">奖励金额</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div v-else-if="currentView === 'referrers'">
+                  <div style="margin-bottom: 16px; display: flex; justify-content: space-between;">
+                    <el-input v-model="referrerSearch" placeholder="搜索推荐人" clearable style="width: 200px;"></el-input>
+                    <el-button type="primary" size="small" @click="handleAddReferrer">+ 添加推荐人</el-button>
+                  </div>
+
+                  <div v-for="referrer in currentChannel.referrers" :key="referrer.id" class="referrer-item">
+                    <div class="referrer-avatar">{{ referrer.name.charAt(0) }}</div>
+                    <div class="referrer-info">
+                      <div class="referrer-name">{{ referrer.name }}</div>
+                      <div class="referrer-phone">{{ referrer.phone }}</div>
+                      <div v-if="referrer.inviteCode" style="margin-top: 4px;">
+                        <el-tag size="mini" type="info">邀请码: {{ referrer.inviteCode }}</el-tag>
+                      </div>
+                    </div>
+                    <div class="referrer-stats">
+                      <div>
+                        <div class="referrer-stat-value clues">{{ referrer.clueCount }}</div>
+                        <div class="referrer-stat-label">线索</div>
+                      </div>
+                      <div>
+                        <div class="referrer-stat-value signed">{{ referrer.signedCount }}</div>
+                        <div class="referrer-stat-label">签约</div>
+                      </div>
+                      <div>
+                        <div class="referrer-stat-value worked">{{ referrer.workedCount }}</div>
+                        <div class="referrer-stat-label">上户</div>
+                      </div>
+                      <div>
+                        <div class="referrer-stat-value reward">¥{{ referrer.totalReward }}</div>
+                        <div class="referrer-stat-label">奖励</div>
+                      </div>
+                    </div>
+                    <div style="margin-left: 16px; display: flex; gap: 8px;">
+                      <el-button type="text" @click="viewReferrerDetail(referrer)">明细</el-button>
+                      <el-button type="text" @click="showReferrerLink(referrer)">推广链接</el-button>
+                      <el-button type="text" @click="editReferrer(referrer)">编辑</el-button>
+                      <el-button type="text" style="color: #f5222d;" @click="deleteReferrer(referrer)">删除</el-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 渠道对话框 -->
+          <el-dialog v-model="channelDialogVisible" :title="isEdit ? '编辑渠道' : '新增渠道'" width="500px">
+            <el-form ref="channelFormRef" :model="channelForm" label-width="100px">
+              <el-form-item label="渠道名称" prop="name">
+                <el-input v-model="channelForm.name" placeholder="请输入渠道名称"></el-input>
+              </el-form-item>
+              <el-form-item label="渠道类型" prop="type">
+                <el-select v-model="channelForm.type" style="width: 100%;">
+                  <el-option label="线上推广" value="online"></el-option>
+                  <el-option label="线下地推" value="offline"></el-option>
+                  <el-option label="转介绍" value="intro"></el-option>
+                  <el-option label="合作伙伴" value="partner"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="渠道描述" prop="desc">
+                <el-input v-model="channelForm.desc" type="textarea" :rows="2" placeholder="渠道描述"></el-input>
+              </el-form-item>
+              <el-form-item label="渠道状态" prop="status">
+                <el-radio-group v-model="channelForm.status">
+                  <el-radio label="active">启用</el-radio>
+                  <el-radio label="inactive">停用</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="签约奖励" prop="rewardSign">
+                <el-input-number v-model="channelForm.rewardSign" :min="0" :step="100" style="width: 150px;"></el-input-number>
+                <span style="margin-left: 8px;">元/人</span>
+              </el-form-item>
+              <el-form-item label="上户奖励" prop="rewardWork">
+                <el-input-number v-model="channelForm.rewardWork" :min="0" :step="100" style="width: 150px;"></el-input-number>
+                <span style="margin-left: 8px;">元/人</span>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="channelDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveChannel">保存</el-button>
+            </template>
+          </el-dialog>
+          
+          <!-- 推荐人对话框 -->
+          <el-dialog v-model="referrerDialogVisible" :title="isEditReferrer ? '编辑推荐人' : '添加推荐人'" width="500px">
+            <el-form :model="referrerForm" label-width="100px">
+              <el-form-item label="所属渠道">
+                <el-input :value="currentChannel?.name" disabled></el-input>
+              </el-form-item>
+              <el-form-item label="姓名">
+                <el-input v-model="referrerForm.name" placeholder="请输入推荐人姓名"></el-input>
+              </el-form-item>
+              <el-form-item label="手机号码">
+                <el-input v-model="referrerForm.phone" placeholder="请输入手机号码" maxlength="11"></el-input>
+              </el-form-item>
+              <el-form-item label="身份证号">
+                <el-input v-model="referrerForm.idCard" placeholder="请输入身份证号"></el-input>
+              </el-form-item>
+              <el-form-item label="银行卡号">
+                <el-input v-model="referrerForm.bankCard" placeholder="请输入银行卡号"></el-input>
+              </el-form-item>
+              <el-form-item label="开户行">
+                <el-select v-model="referrerForm.bankName" style="width: 100%;" placeholder="请选择开户行">
+                  <el-option label="中国工商银行" value="中国工商银行"></el-option>
+                  <el-option label="中国农业银行" value="中国农业银行"></el-option>
+                  <el-option label="中国银行" value="中国银行"></el-option>
+                  <el-option label="中国建设银行" value="中国建设银行"></el-option>
+                  <el-option label="招商银行" value="招商银行"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="开户支行">
+                <el-input v-model="referrerForm.bankBranch" placeholder="如：北京市朝阳区XX支行"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="referrerDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveReferrer">保存</el-button>
+            </template>
+          </el-dialog>
+          
+          <!-- 推荐人明细对话框 -->
+          <el-dialog v-model="referrerDetailVisible" title="推荐人明细" width="700px">
+            <div v-if="currentReferrer">
+              <div style="display: flex; align-items: center; margin-bottom: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
+                <div class="referrer-avatar" style="width: 48px; height: 48px; font-size: 18px;">{{ currentReferrer.name.charAt(0) }}</div>
+                <div style="margin-left: 12px;">
+                  <div style="font-weight: 600; font-size: 16px;">{{ currentReferrer.name }}</div>
+                  <div style="font-size: 13px; color: #8c8c8c;">{{ currentReferrer.phone }}</div>
+                </div>
+                <div style="margin-left: auto; text-align: right;">
+                  <div style="font-size: 24px; font-weight: 600; color: #f5222d;">¥{{ currentReferrer.totalReward }}</div>
+                  <div style="font-size: 12px; color: #8c8c8c;">累计奖励</div>
+                </div>
+              </div>
+
+              <el-tabs v-model="referrerTab">
+                <el-tab-pane label="推荐记录" name="records">
+                  <el-table :data="currentReferrer.records || []" style="width: 100%">
+                    <el-table-column label="被推荐人" min-width="120">
+                      <template #default="{ row }">
+                        <div style="font-weight: 500;">{{ row.name }}</div>
+                        <div style="font-size: 12px; color: #8c8c8c;">{{ row.phone }}</div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="状态" width="100">
+                      <template #default="{ row }">
+                        <el-tag :type="row.status === '已上户' ? 'success' : row.status === '已签约' ? 'warning' : 'info'" size="small">{{ row.status }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="奖励" width="100">
+                      <template #default="{ row }">
+                        <span style="color: #f5222d;">¥{{ row.reward }}</span>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </el-dialog>
+
+          <!-- 推荐人推广链接对话框 -->
+          <el-dialog v-model="referrerLinkVisible" title="推荐人专属推广链接" width="550px">
+            <div v-if="currentReferrer">
+              <div style="display: flex; align-items: center; margin-bottom: 20px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
+                <div class="referrer-avatar" style="width: 48px; height: 48px; font-size: 18px;">{{ currentReferrer.name.charAt(0) }}</div>
+                <div style="margin-left: 12px;">
+                  <div style="font-weight: 600; font-size: 16px;">{{ currentReferrer.name }}</div>
+                  <div style="font-size: 13px; color: #8c8c8c;">{{ currentReferrer.phone }}</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 20px;">
+                <div style="font-weight: 500; margin-bottom: 12px; color: #262626;">专属邀请码</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1; padding: 12px 16px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; font-family: monospace; font-size: 18px; font-weight: 600; color: #1890ff; text-align: center; letter-spacing: 2px;">
+                    {{ currentReferrer.inviteCode }}
+                  </div>
+                  <el-button type="primary" @click="copyInviteCode">复制</el-button>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+                  <i class="el-icon-info"></i> 被推荐人在报名表中填写此邀请码，即可关联到该推荐人
+                </div>
+              </div>
+
+              <div style="margin-bottom: 20px;">
+                <div style="font-weight: 500; margin-bottom: 12px; color: #262626;">专属报名链接</div>
+                <div style="padding: 12px; background: #f5f5f5; border-radius: 6px;">
+                  <div style="font-size: 13px; color: #262626; word-break: break-all; font-family: monospace; margin-bottom: 12px;">
+                    {{ currentReferrer.referralLink }}
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <el-button type="primary" size="small" @click="copyReferralLink"><i class="el-icon-document-copy"></i> 复制链接</el-button>
+                    <el-button size="small" @click="downloadReferrerQR"><i class="el-icon-download"></i> 下载二维码</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding: 12px; background: #fff7e6; border-radius: 6px; border: 1px solid #ffd591;">
+                <div style="font-weight: 500; margin-bottom: 8px; color: #d46b08;"><i class="el-icon-share"></i> 推广方式</div>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #595959; line-height: 1.8;">
+                  <li>分享专属链接给潜在护理人员</li>
+                  <li>被推荐人扫码或点击链接报名，自动关联推荐关系</li>
+                  <li>被推荐人也可在普通报名表中填写邀请码</li>
+                  <li>推荐人成功上户后自动计算奖励</li>
+                </ul>
+              </div>
+            </div>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // 月份筛选（默认当月）
+        const today = new Date();
+        const statsMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
+
+        // 统计数据
+        const stats = reactive({ totalChannels: 0, totalReferrers: 0, totalClues: 0, totalSigned: 0, totalReward: 0 });
+
+        // 更新统计数据
+        const updateStats = () => {
+          const [year, month] = statsMonth.value.split('-');
+          const monthPrefix = `${year}-${month}`;
+
+          // 统计各渠道的当月数据
+          let totalClues = 0;
+          let totalSigned = 0;
+          let totalReward = 0;
+          let totalReferrers = 0;
+
+          channels.value.forEach(channel => {
+            // 累加当月数据
+            totalClues += channel.monthClues || 0;
+            totalSigned += channel.monthSigned || 0;
+            totalReward += channel.monthReward || 0;
+            totalReferrers += channel.referrers?.length || 0;
+          });
+
+          stats.totalChannels = channels.value.length;
+          stats.totalReferrers = totalReferrers;
+          stats.totalClues = totalClues;
+          stats.totalSigned = totalSigned;
+          stats.totalReward = totalReward;
+        };
+
+        const activeChannelType = ref('all');
+        const currentView = ref('detail');
+        const currentChannel = ref(null);
+        const currentReferrer = ref(null);
+        const referrerTab = ref('records');
+        const referrerSearch = ref('');
+        
+        const channelDialogVisible = ref(false);
+        const referrerDialogVisible = ref(false);
+        const referrerDetailVisible = ref(false);
+        const referrerLinkVisible = ref(false);
+
+        const isEdit = ref(false);
+        const isEditReferrer = ref(false);
+        const editingChannelId = ref(null);
+        const editingReferrerId = ref(null);
+        
+        const channelForm = ref({ name: '', type: 'online', desc: '', status: 'active', rewardSign: 200, rewardWork: 500 });
+        const referrerForm = reactive({ name: '', phone: '', idCard: '', bankCard: '', bankName: '', bankBranch: '' });
+        
+        const channels = ref([
+          {
+            id: 1, name: '微信广告', icon: 'el-icon-chat-dot-round', iconClass: 'wechat', type: 'online', desc: '微信朋友圈广告投放', status: 'active', clueCount: 486, signedCount: 98, link: 'https://xxx.com/form?channel=wechat&code=WX001', rewardSign: 200, rewardWork: 500, monthClues: 45, monthSigned: 12, monthWorked: 8, monthReward: 6400,
+            referrers: [
+              { id: 1, name: '张阿姨', phone: '138****1234', inviteCode: 'WX001A', referralLink: 'https://xxx.com/form?channel=wechat&code=WX001&referrer=WX001A', clueCount: 12, signedCount: 3, workedCount: 2, totalReward: 1400 }
+            ]
+          },
+          {
+            id: 2, name: '抖音推广', icon: 'el-icon-video-play', iconClass: 'douyin', type: 'online', desc: '抖音短视频广告投放', status: 'active', clueCount: 352, signedCount: 68, link: 'https://xxx.com/form?channel=douyin&code=DY001', rewardSign: 200, rewardWork: 500, monthClues: 38, monthSigned: 8, monthWorked: 5, monthReward: 4100,
+            referrers: []
+          },
+          {
+            id: 3, name: '地推活动', icon: 'el-icon-location', iconClass: 'ditui', type: 'offline', desc: '线下地推人员推广', status: 'active', clueCount: 218, signedCount: 52, link: 'https://xxx.com/form?channel=ditui&code=DT001', rewardSign: 300, rewardWork: 600, monthClues: 25, monthSigned: 6, monthWorked: 4, monthReward: 4200,
+            referrers: [
+              { id: 2, name: '李大哥', phone: '139****5678', inviteCode: 'DT001A', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001A', clueCount: 15, signedCount: 4, workedCount: 3, totalReward: 2400 },
+              { id: 3, name: '王姐', phone: '137****9012', inviteCode: 'DT001B', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001B', clueCount: 10, signedCount: 2, workedCount: 1, totalReward: 900 }
+            ]
+          },
+          {
+            id: 4, name: '老带新转介绍', icon: 'el-icon-user', iconClass: 'intro', type: 'intro', desc: '在岗护理人员推荐', status: 'active', clueCount: 156, signedCount: 42, link: 'https://xxx.com/form?channel=intro&code=ZJ001', rewardSign: 500, rewardWork: 1000, monthClues: 18, monthSigned: 5, monthWorked: 4, monthReward: 6500,
+            referrers: [
+              { id: 4, name: '刘阿姨', phone: '136****2468', inviteCode: 'ZJ001A', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001A', clueCount: 8, signedCount: 3, workedCount: 3, totalReward: 4500, records: [{ name: '陈美华', phone: '135****1357', status: '已上户', reward: 1500 }] },
+              { id: 5, name: '孙大姐', phone: '135****7890', inviteCode: 'ZJ001B', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001B', clueCount: 5, signedCount: 2, workedCount: 1, totalReward: 1500 }
+            ]
+          },
+          {
+            id: 5, name: '官网注册', icon: 'el-icon-monitor', iconClass: 'website', type: 'online', desc: '官方网站自然流量', status: 'active', clueCount: 44, signedCount: 8, link: 'https://xxx.com/form?channel=website&code=GW001', rewardSign: 0, rewardWork: 0, monthClues: 5, monthSigned: 1, monthWorked: 0, monthReward: 0,
+            referrers: []
+          }
+        ]);
+        
+        const filteredChannels = computed(() => {
+          if (activeChannelType.value === 'all') return channels.value;
+          return channels.value.filter(c => c.type === activeChannelType.value);
+        });
+        
+        const handleAddChannel = () => {
+          isEdit.value = false;
+          editingChannelId.value = null;
+          channelForm.value = { name: '', type: 'online', desc: '', status: 'active', rewardSign: 200, rewardWork: 500 };
+          channelDialogVisible.value = true;
+        };
+        
+        const editChannel = (channel) => {
+          isEdit.value = true;
+          editingChannelId.value = channel.id;
+          channelForm.value = {
+            name: channel.name,
+            type: channel.type,
+            desc: channel.desc,
+            status: channel.status,
+            rewardSign: channel.rewardSign,
+            rewardWork: channel.rewardWork
+          };
+          channelDialogVisible.value = true;
+        };
+        
+        const saveChannel = () => {
+          if (!channelForm.value.name) {
+            ElementPlus.ElMessage.warning('请输入渠道名称');
+            return;
+          }
+
+          if (isEdit.value) {
+            const index = channels.value.findIndex(c => c.id === editingChannelId.value);
+            if (index > -1) {
+              channels.value[index] = { ...channels.value[index], ...channelForm.value };
+            }
+            ElementPlus.ElMessage.success('渠道更新成功');
+          } else {
+            const newId = Math.max(...channels.value.map(c => c.id)) + 1;
+            const iconClassMap = { 'online': 'wechat', 'offline': 'ditui', 'intro': 'intro', 'partner': 'partner' };
+            const iconMap = { 'online': 'el-icon-chat-dot-round', 'offline': 'el-icon-location', 'intro': 'el-icon-user', 'partner': 'el-icon-office-building' };
+            const code = 'CH' + String(Math.floor(Math.random() * 900) + 100);
+            channels.value.push({
+              id: newId, ...channelForm.value,
+              icon: iconMap[channelForm.value.type],
+              iconClass: iconClassMap[channelForm.value.type],
+              clueCount: 0, signedCount: 0,
+              link: `https://xxx.com/form?channel=${channelForm.value.type}&code=${code}`,
+              monthClues: 0, monthSigned: 0, monthWorked: 0, monthReward: 0,
+              referrers: []
+            });
+            stats.totalChannels++;
+            ElementPlus.ElMessage.success('渠道添加成功');
+          }
+          channelDialogVisible.value = false;
+        };
+        
+        const deleteChannel = (channel) => {
+          ElementPlus.ElMessageBox.confirm(`确定删除渠道 "${channel.name}" 吗？`, '提示', { type: 'warning' }).then(() => {
+            const index = channels.value.findIndex(c => c.id === channel.id);
+            if (index > -1) {
+              stats.totalReferrers -= channels.value[index].referrers?.length || 0;
+              channels.value.splice(index, 1);
+              stats.totalChannels--;
+              if (currentChannel.value?.id === channel.id) currentChannel.value = null;
+            }
+            ElementPlus.ElMessage.success('渠道已删除');
+          });
+        };
+        
+        const viewChannelDetail = (channel) => {
+          currentChannel.value = channel;
+          currentView.value = 'detail';
+        };
+        
+        const manageReferrers = (channel) => {
+          currentChannel.value = channel;
+          currentView.value = 'referrers';
+        };
+        
+        const handleAddReferrer = () => {
+          isEditReferrer.value = false;
+          editingReferrerId.value = null;
+          referrerForm.name = '';
+          referrerForm.phone = '';
+          referrerForm.idCard = '';
+          referrerForm.bankCard = '';
+          referrerForm.bankName = '';
+          referrerForm.bankBranch = '';
+          referrerDialogVisible.value = true;
+        };
+        
+        const editReferrer = (referrer) => {
+          isEditReferrer.value = true;
+          editingReferrerId.value = referrer.id;
+          referrerForm.name = referrer.name;
+          referrerForm.phone = referrer.phone;
+          referrerForm.idCard = referrer.idCard || '';
+          referrerForm.bankCard = referrer.bankCard || '';
+          referrerForm.bankName = referrer.bankName || '';
+          referrerForm.bankBranch = referrer.bankBranch || '';
+          referrerDialogVisible.value = true;
+        };
+        
+        const saveReferrer = () => {
+          if (!referrerForm.name || !referrerForm.phone) {
+            ElementPlus.ElMessage.warning('请填写完整信息');
+            return;
+          }
+
+          const channelIndex = channels.value.findIndex(c => c.id === currentChannel.value.id);
+          if (channelIndex === -1) return;
+
+          if (isEditReferrer.value) {
+            const referrerIndex = channels.value[channelIndex].referrers.findIndex(r => r.id === editingReferrerId.value);
+            if (referrerIndex > -1) {
+              Object.assign(channels.value[channelIndex].referrers[referrerIndex], referrerForm);
+            }
+            ElementPlus.ElMessage.success('推荐人更新成功');
+          } else {
+            const newId = Math.max(...channels.value[channelIndex].referrers.map(r => r.id), 0) + 1;
+            // 生成邀请码: 渠道code + 字母序号
+            const channelCode = currentChannel.value.link.match(/code=([^&]+)/)?.[1] || 'REF';
+            const letter = String.fromCharCode(65 + channels.value[channelIndex].referrers.length); // A, B, C...
+            const inviteCode = channelCode + letter;
+            const referralLink = `https://xxx.com/form?channel=${currentChannel.value.type}&code=${channelCode}&referrer=${inviteCode}`;
+
+            channels.value[channelIndex].referrers.push({
+              id: newId,
+              ...referrerForm,
+              inviteCode,
+              referralLink,
+              clueCount: 0,
+              signedCount: 0,
+              workedCount: 0,
+              totalReward: 0
+            });
+            stats.totalReferrers++;
+            ElementPlus.ElMessage.success('推荐人添加成功，已生成专属邀请码');
+          }
+          referrerDialogVisible.value = false;
+          currentChannel.value = channels.value[channelIndex];
+        };
+
+        const showReferrerLink = (referrer) => {
+          currentReferrer.value = referrer;
+          referrerLinkVisible.value = true;
+        };
+
+        const copyInviteCode = () => {
+          ElementPlus.ElMessage.success(`邀请码 ${currentReferrer.value.inviteCode} 已复制`);
+        };
+
+        const copyReferralLink = () => {
+          ElementPlus.ElMessage.success('推广链接已复制');
+        };
+
+        const downloadReferrerQR = () => {
+          ElementPlus.ElMessage.success('二维码下载中...');
+        };
+        
+        const deleteReferrer = (referrer) => {
+          ElementPlus.ElMessageBox.confirm(`确定删除推荐人 "${referrer.name}" 吗？`, '提示', { type: 'warning' }).then(() => {
+            const channelIndex = channels.value.findIndex(c => c.id === currentChannel.value.id);
+            if (channelIndex > -1) {
+              const referrerIndex = channels.value[channelIndex].referrers.findIndex(r => r.id === referrer.id);
+              if (referrerIndex > -1) {
+                channels.value[channelIndex].referrers.splice(referrerIndex, 1);
+                currentChannel.value = channels.value[channelIndex];
+                stats.totalReferrers--;
+              }
+            }
+            ElementPlus.ElMessage.success('推荐人已删除');
+          });
+        };
+        
+        const viewReferrerDetail = (referrer) => {
+          currentReferrer.value = referrer;
+          referrerDetailVisible.value = true;
+        };
+        
+        const copyLink = () => { ElementPlus.ElMessage.success('链接已复制'); };
+        const downloadQR = () => { ElementPlus.ElMessage.success('二维码下载中...'); };
+
+        currentChannel.value = channels.value[0];
+
+        // 初始化统计数据
+        updateStats();
+
+        return {
+          stats, statsMonth, activeChannelType, currentView, currentChannel, currentReferrer, referrerTab, referrerSearch,
+          channelDialogVisible, referrerDialogVisible, referrerDetailVisible, referrerLinkVisible,
+          isEdit, isEditReferrer, channelForm, referrerForm, channels, filteredChannels,
+          handleAddChannel, editChannel, saveChannel, deleteChannel, viewChannelDetail, manageReferrers,
+          handleAddReferrer, editReferrer, saveReferrer, deleteReferrer, viewReferrerDetail,
+          showReferrerLink, copyInviteCode, copyReferralLink, downloadReferrerQR,
+          copyLink, downloadQR, updateStats
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

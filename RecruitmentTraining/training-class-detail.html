@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班级详情 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .info-card {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .schedule-day {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .schedule-day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .schedule-day-title {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .schedule-day-status {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .schedule-day-status.completed {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .schedule-day-status.current {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+
+    .schedule-day-status.pending {
+      background: #f5f5f5;
+      color: #8c8c8c;
+    }
+
+    .schedule-sessions {
+      padding: 12px 16px;
+    }
+
+    .schedule-session {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .schedule-session:last-child {
+      margin-bottom: 0;
+    }
+
+    .session-time {
+      width: 120px;
+      font-size: 13px;
+      color: #595959;
+    }
+
+    .session-content {
+      flex: 1;
+    }
+
+    .session-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .session-teacher {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+
+    .session-status {
+      width: 80px;
+      text-align: center;
+    }
+
+    .session-actions {
+      width: 150px;
+      text-align: right;
+    }
+
+    .student-table {
+      width: 100%;
+    }
+
+    .attendance-calendar {
+      display: grid;
+      grid-template-columns: 100px repeat(10, 1fr);
+      gap: 1px;
+      background: #e8e8e8;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      background: #fafafa;
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .calendar-cell {
+      background: #fff;
+      padding: 8px;
+      text-align: center;
+      font-size: 12px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .calendar-cell.present {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .calendar-cell.absent {
+      background: #fff1f0;
+      color: #f5222d;
+    }
+
+    .calendar-cell.leave {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+
+    .student-name-cell {
+      background: #fafafa;
+      padding: 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+    }
+
+    .avatar-small {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      margin-right: 8px;
+    }
+
+    /* 课程表表格样式 */
+    .course-table-wrapper {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e8e8e8;
+    }
+
+    .course-table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .course-table th,
+    .course-table td {
+      border: 1px solid #e8e8e8;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .course-table th {
+      background: #fce4ec;
+      color: #c2185b;
+      font-weight: 500;
+    }
+
+    .course-table td:first-child {
+      background: #fff5f7;
+      font-weight: 500;
+      color: #595959;
+      white-space: nowrap;
+      width: 80px;
+    }
+
+    .quick-attendance {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .attendance-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .attendance-btn:hover {
+      border-color: #1890ff;
+    }
+
+    .attendance-btn.active-present {
+      background: #f6ffed;
+      border-color: #52c41a;
+      color: #52c41a;
+    }
+
+    .attendance-btn.active-absent {
+      background: #fff1f0;
+      border-color: #f5222d;
+      color: #f5222d;
+    }
+
+    .attendance-btn.active-leave {
+      background: #fff7e6;
+      border-color: #fa8c16;
+      color: #fa8c16;
+    }
+
+    /* 签到状态颜色 */
+    .attendance-present { color: #52c41a; font-weight: 500; }
+    .attendance-absent { color: #f5222d; font-weight: 500; }
+    .attendance-leave { color: #fa8c16; font-weight: 500; }
+
+    /* 签到统计表格 */
+    .attendance-table {
+      width: 100%;
+    }
+
+    .attendance-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #595959;
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 13px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .attendance-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: center;
+    }
+
+    .attendance-day-cell {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    /* Rate组件样式 */
+    .el-rate__icon {
+      font-size: 14px;
+    }
+
+    /* 档案抽屉样式 */
+    .archive-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+
+    .archive-tag:hover {
+      transform: scale(1.05);
+    }
+
+    .tag-status-unobtained { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; }
+    .tag-status-trained { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .tag-status-certified { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+
+    .certificate-card-archive {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .certificate-card-archive.expiring {
+      background: #fff7e6;
+      border-color: #ffd591;
+    }
+
+    .certificate-card-archive.expired {
+      background: #fff1f0;
+      border-color: #ffa39e;
+    }
+
+    .certificate-icon-archive {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      background: #52c41a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-right: 16px;
+    }
+
+    .certificate-card-archive.expiring .certificate-icon-archive { background: #fa8c16; }
+    .certificate-card-archive.expired .certificate-icon-archive { background: #f5222d; }
+
+    .certificate-status-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .certificate-status-tag.valid { background: #f6ffed; color: #52c41a; }
+    .certificate-status-tag.expiring { background: #fff7e6; color: #fa8c16; }
+    .certificate-status-tag.expired { background: #fff1f0; color: #f5222d; }
+
+    .timeline-icon-archive.clue { background: #e6f7ff; color: #1890ff; }
+    .timeline-icon-archive.interview { background: #f6ffed; color: #52c41a; }
+    .timeline-icon-archive.contract { background: #fff7e6; color: #fa8c16; }
+    .timeline-icon-archive.training { background: #f9f0ff; color: #722ed1; }
+    .timeline-icon-archive.exam { background: #e6fffb; color: #13c2c2; }
+    .timeline-icon-archive.work { background: #fff1f0; color: #f5222d; }
+
+    /* 证书照片悬停效果 */
+    .photo-overlay:hover {
+      opacity: 1 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="page-header">
+      <div>
+        <div class="page-title">{{ classInfo.name }}</div>
+        <div class="page-subtitle">
+          {{ classInfo.position_name }} | {{ classInfo.start_date }} 至 {{ classInfo.end_date }} | 讲师：{{ classInfo.teacher }}
+        </div>
+      </div>
+      <div>
+        <el-tag :type="getStatusType(classInfo.status)" size="large">{{ classInfo.status }}</el-tag>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">培训岗位</span>
+          <span class="info-value">{{ classInfo.position_name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">课程类型</span>
+          <span class="info-value">{{ getCategoryText(classInfo.category) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">培训费用</span>
+          <span class="info-value">{{ classInfo.fee_type === 'free' ? '免费' : '¥' + classInfo.fee_amount }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">学员人数</span>
+          <span class="info-value">{{ classInfo.student_count }}/{{ classInfo.max_count }}人</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">培训地点</span>
+          <span class="info-value">{{ classInfo.location }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">培训进度</span>
+          <span class="info-value">第{{ classInfo.current_day }}/{{ classInfo.total_days }}天 ({{ classInfo.progress }}%)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">主讲师</span>
+          <span class="info-value">{{ classInfo.teacher }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <el-tabs v-model="activeTab">
+        <el-tab-pane label="名单" name="attendance">
+          <el-table :data="studentList" style="width: 100%" :stripe="true">
+            <el-table-column label="学员信息" min-width="160" fixed="left">
+              <template #default="{ row }">
+                <div class="flex-center">
+                  <div class="avatar-small">{{ row.name.charAt(0) }}</div>
+                  <div>
+                    <div style="font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                      {{ row.name }}
+                      <el-tag :type="row.level === '新手' ? 'warning' : 'success'" size="small" effect="light" style="font-size: 11px; height: 18px; line-height: 16px; padding: 0 4px;">
+                        {{ row.level }}
+                      </el-tag>
+                    </div>
+                    <div style="font-size: 12px; color: #8c8c8c;">{{ row.phone }}</div>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="报名时间" prop="enroll_time" width="110" align="center"></el-table-column>
+            <el-table-column label="初评等级" width="90" align="center">
+              <template #default="{ row }">
+                <span v-if="row.initial_level" style="font-weight: 500; color: #262626;">{{ row.initial_level }}</span>
+                <span v-else style="color: #8c8c8c;">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="出勤率" width="80" align="center">
+              <template #default="{ row }">
+                <span :class="row.attendance_rate >= 80 ? 'text-success' : 'text-warning'">
+                  {{ row.attendance_rate }}%
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column v-for="day in displayDays" :key="day" :label="day" width="60" align="center">
+              <template #default="{ row }">
+                <el-checkbox
+                  v-model="row.attendance[day - 1]"
+                  :true-label="'present'"
+                  :false-label="''"
+                  @change="(val) => handleAttendanceChange(row, day - 1, val)"
+                  size="large"
+                ></el-checkbox>
+              </template>
+            </el-table-column>
+            <el-table-column label="签到备注" min-width="150">
+              <template #default="{ row }">
+                <el-input
+                  v-model="row.attendance_remark"
+                  size="small"
+                  placeholder="请输入签到备注"
+                  type="textarea"
+                  :rows="1"
+                ></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+
+        </el-tab-pane>
+
+        <el-tab-pane label="考卷" name="exam">
+          <!-- 线上考卷部分 -->
+          <div style="margin-bottom: 24px;">
+            <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <i class="el-icon-document" style="margin-right: 8px; color: #1890ff;"></i>线上考卷
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 13px; color: #8c8c8c;">学员答题开关</span>
+                <el-switch
+                  v-model="examEnabled"
+                  active-text="开启"
+                  inactive-text="关闭"
+                  active-color="#52c41a"
+                  inactive-color="#d9d9d9"
+                  @change="handleExamEnableChange"
+                ></el-switch>
+              </div>
+            </div>
+
+            <!-- 开关状态提示 -->
+            <div v-if="examEnabled" style="margin-bottom: 16px; padding: 12px 16px; background: #f6ffed; border-radius: 6px; border-left: 4px solid #52c41a;">
+              <i class="el-icon-success" style="color: #52c41a; margin-right: 8px;"></i>
+              <span style="color: #262626;">考卷已<strong style="color: #52c41a;">开启</strong>，学员可在小程序端进行答题</span>
+            </div>
+            <div v-else style="margin-bottom: 16px; padding: 12px 16px; background: #f5f5f5; border-radius: 6px; border-left: 4px solid #8c8c8c;">
+              <i class="el-icon-info" style="color: #8c8c8c; margin-right: 8px;"></i>
+              <span style="color: #8c8c8c;">考卷已<strong>关闭</strong>，学员暂时无法在小程序端答题</span>
+            </div>
+
+            <div v-if="!classInfo.exam_papers || classInfo.exam_papers.length === 0" style="text-align: center; padding: 40px;">
+              <i class="el-icon-document-checked" style="font-size: 48px; color: #d9d9d9; margin-bottom: 12px;"></i>
+              <p style="color: #8c8c8c;">暂未关联考核试卷</p>
+            </div>
+
+            <div v-else>
+              <div style="margin-bottom: 16px; padding: 12px 16px; background: #e6f7ff; border-radius: 6px; border-left: 4px solid #1890ff;">
+                <span style="color: #595959;">该班级已关联 <strong style="color: #1890ff; font-size: 18px;">{{ classInfo.exam_papers.length }}</strong> 套考卷，学员考核时将随机抽取其中 1 套</span>
+              </div>
+
+              <el-table :data="examPaperList.filter(p => classInfo.exam_papers.includes(p.id))" style="width: 100%">
+                <el-table-column label="试卷名称" min-width="200">
+                  <template #default="{ row }">
+                    <div style="font-weight: 500;">{{ row.name }}</div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="题目数量" width="100" align="center">
+                  <template #default="{ row }">
+                    {{ row.question_count }}题
+                  </template>
+                </el-table-column>
+                <el-table-column label="考试时长" width="100" align="center">
+                  <template #default="{ row }">
+                    {{ row.duration }}分钟
+                  </template>
+                </el-table-column>
+                <el-table-column label="及格分数" width="100" align="center">
+                  <template #default="{ row }">
+                    <span style="color: #52c41a; font-weight: 500;">{{ row.pass_score }}分</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 考卷成绩部分 -->
+          <div>
+            <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e8e8e8;">
+              <i class="el-icon-trophy" style="margin-right: 8px; color: #1890ff;"></i>考卷成绩
+            </div>
+            <div v-if="studentList.length === 0" style="text-align: center; padding: 40px;">
+              <i class="el-icon-document-checked" style="font-size: 48px; color: #d9d9d9; margin-bottom: 12px;"></i>
+              <p style="color: #8c8c8c;">暂无学员</p>
+            </div>
+
+            <div v-else>
+              <!-- 搜索框 -->
+              <div style="margin-bottom: 16px;">
+                <el-input
+                  v-model="examScoreSearchKeyword"
+                  placeholder="请输入学员姓名搜索"
+                  clearable
+                  style="width: 280px;"
+                  @input="handleExamScoreSearch"
+                >
+                  <template #prefix>
+                    <i class="el-icon-search"></i>
+                  </template>
+                </el-input>
+              </div>
+
+              <el-table :data="paginatedExamScoreList" style="width: 100%" :stripe="true">
+                <el-table-column label="学员信息" min-width="140" fixed="left">
+                  <template #default="{ row }">
+                    <div class="flex-center">
+                      <div class="avatar-small">{{ row.name.charAt(0) }}</div>
+                      <div>
+                        <div style="font-weight: 500;">{{ row.name }}</div>
+                        <div style="font-size: 12px; color: #8c8c8c;">{{ row.phone }}</div>
+                      </div>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="考试状态" width="100" align="center">
+                  <template #default="{ row }">
+                    <el-tag v-if="row.exam_score !== undefined" type="success" size="small">已考试</el-tag>
+                    <el-tag v-else type="info" size="small">未考试</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="使用试卷" min-width="180" align="center">
+                  <template #default="{ row }">
+                    <span v-if="row.exam_paper_name">{{ row.exam_paper_name }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="考试分数" width="100" align="center">
+                  <template #default="{ row }">
+                    <span v-if="row.exam_score !== undefined" :style="{ color: row.exam_score >= 70 ? '#52c41a' : '#f5222d', fontWeight: 'bold', fontSize: '16px' }">{{ row.exam_score }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="是否及格" width="100" align="center">
+                  <template #default="{ row }">
+                    <el-tag v-if="row.exam_score !== undefined" :type="row.exam_score >= 70 ? 'success' : 'danger'" size="small">
+                      {{ row.exam_score >= 70 ? '及格' : '不及格' }}
+                    </el-tag>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="考试时间" width="150" align="center">
+                  <template #default="{ row }">
+                    <span v-if="row.exam_time">{{ row.exam_time }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="viewExamDetail(row)">查看详情</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <!-- 分页 -->
+              <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                <el-pagination
+                  v-model:current-page="examScoreCurrentPage"
+                  v-model:page-size="examScorePageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="filteredExamScoreList.length"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  @size-change="handleExamScoreSizeChange"
+                  @current-change="handleExamScoreCurrentChange"
+                />
+              </div>
+
+              <div style="margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #1890ff;">{{ studentList.filter(s => s.exam_score !== undefined).length }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">已考试人数</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #52c41a;">{{ studentList.filter(s => s.exam_score >= 70).length }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">及格人数</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #f5222d;">{{ studentList.filter(s => s.exam_score < 80 && s.exam_score !== undefined).length }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">不及格人数</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #595959;">{{ studentList.filter(s => s.exam_score === undefined).length }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">未考试人数</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="考核" name="assessment">
+          <el-table :data="assessmentList" style="width: 100%" :stripe="true" border>
+            <el-table-column label="学员信息" min-width="200" fixed="left">
+              <template #default="{ row }">
+                <div class="flex-center">
+                  <div class="avatar-small">{{ row.name.charAt(0) }}</div>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                      {{ row.name }}
+                      <el-tag :type="row.level === '新手' ? 'warning' : 'success'" size="small" effect="light" style="font-size: 11px; height: 18px; line-height: 16px; padding: 0 4px;">
+                        {{ row.level }}
+                      </el-tag>
+                      <el-button type="text" size="small" style="padding: 0 4px; font-size: 12px;" @click="openStaffArchive(row)">
+                        <i class="el-icon-folder-opened"></i> 档案
+                      </el-button>
+                    </div>
+                    <div style="font-size: 12px; color: #8c8c8c;">{{ row.phone }}</div>
+                    <div style="font-size: 12px; color: #595959; margin-top: 4px;">
+                      初评等级：<el-tag type="info" size="small" effect="light" style="font-size: 11px; height: 18px; line-height: 16px; padding: 0 4px;">{{ row.initial_assessment_level || '-' }}</el-tag>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="试卷名称" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag v-if="row.paper_type" type="primary" size="small">{{ row.paper_type }}</el-tag>
+                <span v-else style="color: #8c8c8c;">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="试卷分数" width="90" align="center">
+              <template #default="{ row }">
+                <el-input v-model.number="row.paper_score" size="small" style="width: 55px; text-align: center;" @blur="updateTheoryScore(row)" placeholder="-"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="考核评分项（总分 100 分）" align="center">
+              <el-table-column label="证书5分" width="75" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_certificate" size="small" style="width: 50px; text-align: center;" @blur="updateAssessmentTotal(row)" placeholder="-"></el-input>
+                </template>
+              </el-table-column>
+              <el-table-column label="单量5分" width="75" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_volume" size="small" style="width: 50px; text-align: center;" @blur="updateAssessmentTotal(row)" placeholder="-"></el-input>
+                </template>
+              </el-table-column>
+              <el-table-column label="月子餐10分" width="90" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_meal" size="small" style="width: 55px; text-align: center;" @blur="updateAssessmentTotal(row)" placeholder="-"></el-input>
+                </template>
+              </el-table-column>
+              <el-table-column label="理论30分" width="85" align="center">
+                <template #default="{ row }">
+                  <span style="color: #8c8c8c;">{{ row.score_theory !== undefined && row.score_theory !== null ? row.score_theory : '-' }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="实操30分" width="85" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_practice" size="small" style="width: 55px; text-align: center;" @blur="updateAssessmentTotal(row)"></el-input>
+                </template>
+              </el-table-column>
+              <el-table-column label="情景20分" width="85" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_scenario" size="small" style="width: 55px; text-align: center;" @blur="updateAssessmentTotal(row)"></el-input>
+                </template>
+              </el-table-column>
+            </el-table-column>
+            <el-table-column label="加分项" align="center">
+              <el-table-column label="培训评分" width="85" align="center">
+                <template #default="{ row }">
+                  <el-input v-model.number="row.score_training" size="small" style="width: 55px; text-align: center;" @blur="updateAssessmentTotal(row)"></el-input>
+                </template>
+              </el-table-column>
+            </el-table-column>
+            <el-table-column label="总分" width="70" align="center">
+              <template #default="{ row }">
+                <span style="font-weight: 600; color: #1890ff;">{{ row.total_score !== undefined && row.total_score !== null ? row.total_score : '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="70分及格" width="110" align="center">
+              <template #default="{ row }">
+                <el-tag v-if="row.is_pass !== undefined && row.is_pass !== null" :type="row.is_pass ? 'success' : 'danger'" size="small">
+                  {{ row.is_pass ? '通过' : '不通过' }}
+                </el-tag>
+                <span v-else style="color: #8c8c8c;">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" align="center" fixed="right">
+              <template #default="{ row }">
+                <el-button type="primary" size="small" @click="completeAssessment(row)">完成考核</el-button>
+              </template>
+            </el-table-column>
+            <el-table-column label="考核等级" width="100" align="center">
+              <template #default="{ row }">
+                <el-select v-model="row.assessment_level" size="small" style="width: 85px;" placeholder="请选择">
+                  <el-option label="Y3-1" value="Y3-1"></el-option>
+                  <el-option label="Y3-2" value="Y3-2"></el-option>
+                  <el-option label="Y4-1" value="Y4-1"></el-option>
+                  <el-option label="Y4-2" value="Y4-2"></el-option>
+                  <el-option label="Y5" value="Y5"></el-option>
+                  <el-option label="Y6" value="Y6"></el-option>
+                  <el-option label="Y7" value="Y7"></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="考核老师评语" min-width="150">
+              <template #default="{ row }">
+                <el-input v-model="row.comment" size="small" placeholder="请输入考核评语" type="textarea" :rows="1"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="讲师评语" min-width="150">
+              <template #default="{ row }">
+                <el-input v-model="row.teacher_comment" size="small" placeholder="请输入讲师评语" type="textarea" :rows="1"></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="课程表" name="schedule">
+          <div class="course-table-wrapper">
+            <table class="course-table">
+              <thead>
+                <tr>
+                  <th style="background: #fce4ec; color: #c2185b;">时间</th>
+                  <th v-for="day in scheduleList" :key="day.day_number" style="background: #fce4ec; color: #c2185b;">第{{ day.day_number }}天</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(timeSlot, idx) in timeSlots" :key="idx">
+                  <td>{{ timeSlot.time }}</td>
+                  <td v-for="day in scheduleList" :key="day.day_number">
+                    {{ getCourseByTime(day, timeSlot.time) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+
+    <!-- 考试详情对话框 -->
+    <el-dialog v-model="showExamDetailDialog" title="考试详情" width="800px" :close-on-click-modal="false">
+      <div v-if="currentStudent" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+        <!-- 学员信息头部 -->
+        <div style="margin-bottom: 20px; padding: 16px; background: #f0f5ff; border-radius: 8px; border-left: 4px solid #1890ff;">
+          <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 8px;">
+            {{ currentStudent.name }}
+          </div>
+          <div style="display: flex; gap: 24px; font-size: 13px; color: #595959;">
+            <span>使用试卷：<strong>{{ currentStudent.exam_paper_name }}</strong></span>
+            <span>考试时间：{{ currentStudent.exam_time }}</span>
+            <span>总得分：<strong style="color: #1890ff; font-size: 16px;">{{ currentStudent.exam_score }}分</strong></span>
+          </div>
+        </div>
+
+        <!-- 答题详情 -->
+        <div v-if="currentStudent.exam_answers && currentStudent.exam_answers.length > 0">
+          <div v-for="(item, index) in currentStudent.exam_answers" :key="index" style="margin-bottom: 20px; padding: 16px; border: 1px solid #e8e8e8; border-radius: 8px;">
+            <!-- 题目 -->
+            <div style="margin-bottom: 12px;">
+              <span style="color: #f5222d; font-weight: 500;">*</span>
+              <span style="font-weight: 500; color: #262626;">{{ index + 1 }}. {{ item.question }}</span>
+              <span style="float: right; color: #8c8c8c; font-size: 13px;">分值{{ item.score }}分</span>
+            </div>
+
+            <!-- 选项 -->
+            <div style="margin-left: 16px; margin-bottom: 12px;">
+              <div v-for="option in item.options" :key="option.key" style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <el-radio v-model="item.user_answer" :label="option.key" disabled style="margin-right: 0;">
+                  <span :style="{ color: getOptionColor(item, option.key) }">{{ option.key }}. {{ option.text }}</span>
+                </el-radio>
+                <!-- 正确答案标记 -->
+                <el-tag v-if="option.key === item.correct_answer" type="success" size="small" effect="dark" style="margin-left: 8px;">正确答案</el-tag>
+              </div>
+            </div>
+
+            <!-- 答题结果 -->
+            <div :style="{ padding: '10px 16px', borderRadius: '6px', background: item.is_correct ? '#f6ffed' : '#fff1f0', border: '1px solid ' + (item.is_correct ? '#b7eb8f' : '#ffa39e'), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i :class="item.is_correct ? 'el-icon-check' : 'el-icon-close'" :style="{ color: item.is_correct ? '#52c41a' : '#f5222d', fontSize: '18px', fontWeight: 'bold' }"></i>
+                <span :style="{ color: item.is_correct ? '#52c41a' : '#f5222d', fontWeight: 500 }">
+                  {{ item.is_correct ? '回答正确' : '回答错误' }}
+                </span>
+                <span v-if="!item.is_correct" style="color: #8c8c8c; font-size: 13px;">
+                  （正确答案：{{ item.correct_answer }}）
+                </span>
+              </div>
+              <span :style="{ color: item.is_correct ? '#52c41a' : '#f5222d', fontWeight: 600, fontSize: '16px' }">
+                {{ item.is_correct ? '+' + item.score : '0' }}分
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div v-else style="text-align: center; padding: 40px; color: #8c8c8c;">
+          暂无答题详情
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="showExamDetailDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 考核成绩录入对话框 -->
+    <el-dialog v-model="showAssessmentDialog" :title="isEditAssessment ? '编辑考核成绩' : '录入考核成绩'" width="700px">
+      <el-form :model="assessmentForm" label-width="120px">
+        <el-form-item label="选择学员" v-if="!isEditAssessment">
+          <el-select v-model="assessmentForm.student_id" placeholder="请选择学员" style="width: 100%;">
+            <el-option v-for="s in studentList" :key="s.id" :label="s.name" :value="s.id">
+              {{ s.name }} - {{ s.phone }}
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="试卷类型">
+          <el-select v-model="assessmentForm.paper_type" placeholder="请选择试卷类型" style="width: 100%;">
+            <el-option label="初级卷A" value="初级卷A"></el-option>
+            <el-option label="初级卷B" value="初级卷B"></el-option>
+            <el-option label="初级卷C" value="初级卷C"></el-option>
+            <el-option label="中级卷A" value="中级卷A"></el-option>
+            <el-option label="中级卷B" value="中级卷B"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-divider content-position="left">岗前考核评分项（总分100分）</el-divider>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="证书(5分)">
+              <el-input-number v-model="assessmentForm.score_certificate" :min="0" :max="5" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="单量(5分)">
+              <el-input-number v-model="assessmentForm.score_volume" :min="0" :max="5" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="月子餐(10分)">
+              <el-input-number v-model="assessmentForm.score_meal" :min="0" :max="10" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="理论(30分)">
+              <el-input-number v-model="assessmentForm.score_theory" :min="0" :max="30" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="实操(30分)">
+              <el-input-number v-model="assessmentForm.score_practice" :min="0" :max="30" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="情景(20分)">
+              <el-input-number v-model="assessmentForm.score_scenario" :min="0" :max="20" :step="1" style="width: 100%;"></el-input-number>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-divider content-position="left">加分项</el-divider>
+
+        <el-form-item label="培训评分">
+          <el-input-number v-model="assessmentForm.score_training" :min="0" :max="10" :step="1" style="width: 100%;"></el-input-number>
+        </el-form-item>
+
+        <el-divider content-position="left"></el-divider>
+
+        <el-form-item label="总分">
+          <div style="font-size: 24px; font-weight: 600; color: #1890ff;">{{ calculateAssessmentTotal }}</div>
+        </el-form-item>
+
+        <el-form-item label="是否通过(70分及格)">
+          <el-tag :type="calculateAssessmentTotal >= 70 ? 'success' : 'danger'" size="large">
+            {{ calculateAssessmentTotal >= 70 ? '通过' : '不通过' }}
+          </el-tag>
+        </el-form-item>
+
+        <el-form-item label="考核老师评语">
+          <el-input
+            v-model="assessmentForm.comment"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入考核评语"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="showAssessmentDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveAssessment">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 学员档案抽屉 -->
+    <el-drawer
+      v-model="showStaffArchiveDrawer"
+      title="学员档案详情"
+      size="700px"
+    >
+      <template v-if="currentStaffArchive">
+        <!-- 基本信息 -->
+        <div style="text-align: center; padding: 24px; background: linear-gradient(135deg, #e6f7ff 0%, #f6ffed 100%); border-radius: 8px; margin-bottom: 24px;">
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 500; margin: 0 auto 16px;">
+            {{ currentStaffArchive.name.charAt(0) }}
+          </div>
+          <div style="font-size: 20px; font-weight: 600; color: #262626;">{{ currentStaffArchive.name }}</div>
+          <div style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">{{ currentStaffArchive.phone }}</div>
+          <div style="display: flex; justify-content: center; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+            <span class="cell-tag blue">{{ classInfo.position_name }}</span>
+            <el-tag :type="currentStaffArchive.level === '新手' ? 'warning' : 'success'" size="small">{{ currentStaffArchive.level }}</el-tag>
+            <el-tag type="info" size="small">初评: {{ currentStaffArchive.initial_assessment_level || '-' }}</el-tag>
+          </div>
+        </div>
+
+        <el-tabs v-model="archiveActiveTab">
+          <!-- 标签图谱 -->
+          <el-tab-pane label="标签图谱" name="tags">
+            <div style="padding: 16px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+                <span
+                  v-for="tag in currentStaffArchive.tags || defaultTags"
+                  :key="tag.id"
+                  class="archive-tag"
+                  :class="'tag-status-' + tag.status"
+                >
+                  {{ tag.name }}
+                  <i
+                    :class="tag.status === 'certified' ? 'el-icon-check' : tag.status === 'trained' ? 'el-icon-time' : 'el-icon-close'"
+                    style="margin-left: 4px;"
+                  ></i>
+                </span>
+              </div>
+
+              <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+                <div style="font-weight: 600; margin-bottom: 12px;">标签状态说明</div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                  <span class="archive-tag tag-status-unobtained">未获得</span>
+                  <span class="archive-tag tag-status-trained">已培训</span>
+                  <span class="archive-tag tag-status-certified">已持证</span>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 证书信息 -->
+          <el-tab-pane label="证书信息" name="certificates">
+            <div style="padding: 16px;">
+              <!-- 资格证书列表 -->
+              <div style="margin-bottom: 32px;">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-collection" style="margin-right: 8px; color: #1890ff;"></i>资格证书
+                </div>
+
+                <div v-if="currentStaffArchive.certificates && currentStaffArchive.certificates.length" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                  <div v-for="(cert, certIndex) in currentStaffArchive.certificates" :key="cert.id" style="display: flex; align-items: center; padding: 16px 20px; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; transition: all 0.3s;"
+                       @mouseenter="$event.currentTarget.style.borderColor='#52c41a'; $event.currentTarget.style.boxShadow='0 2px 8px rgba(82,196,26,0.15)'"
+                       @mouseleave="$event.currentTarget.style.borderColor='#e8e8e8'; $event.currentTarget.style.boxShadow='none'">
+                    <i class="el-icon-circle-check" style="color: #52c41a; font-size: 20px; margin-right: 12px;"></i>
+                    <span style="font-size: 15px; color: #262626; font-weight: 500;">{{ cert.name }}</span>
+                  </div>
+                </div>
+
+                <div v-else style="text-align: center; padding: 40px; color: #8c8c8c; background: #fafafa; border-radius: 8px;">
+                  <i class="el-icon-medal" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                  暂无证书信息
+                </div>
+              </div>
+
+              <!-- 资格证照片 -->
+              <div v-if="hasCertificatePhotos">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-picture-outline" style="margin-right: 8px; color: #1890ff;"></i>资格证照片
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                  <div v-for="(photoItem, idx) in allCertificatePhotos" :key="idx" style="position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff;"
+                       @click="previewCertificatePhoto(photoItem.url)">
+                    <img :src="photoItem.url" style="width: 100%; height: 140px; object-fit: cover; display: block;" />
+                    <!-- 悬停遮罩 -->
+                    <div class="photo-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
+                      <i class="el-icon-zoom-in" style="color: #fff; font-size: 32px;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 成长轨迹 -->
+          <el-tab-pane label="成长轨迹" name="timeline">
+            <div style="padding: 16px;">
+              <div v-for="(item, index) in currentStaffArchive.timeline || defaultTimeline" :key="index" style="display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #f0f0f0;">
+                <div :class="'timeline-icon-archive ' + item.type" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                  <i :class="item.icon"></i>
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 500; color: #262626;">{{ item.title }}</div>
+                  <div style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">{{ item.desc }}</div>
+                </div>
+                <div style="font-size: 12px; color: #8c8c8c; flex-shrink: 0;">{{ item.time }}</div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 上户记录 -->
+          <el-tab-pane label="上户记录" name="work">
+            <div style="padding: 16px;">
+              <el-table :data="currentStaffArchive.workRecords || []" style="width: 100%">
+                <el-table-column label="服务时间" width="180">
+                  <template #default="{ row }">{{ row.period }}</template>
+                </el-table-column>
+                <el-table-column label="服务类型" width="120">
+                  <template #default="{ row }">{{ row.type }}</template>
+                </el-table-column>
+                <el-table-column label="客户评价" width="120">
+                  <template #default="{ row }">
+                    <el-rate v-model="row.rating" disabled show-score text-color="#ff9900"></el-rate>
+                  </template>
+                </el-table-column>
+                <el-table-column label="评价内容">
+                  <template #default="{ row }">{{ row.comment }}</template>
+                </el-table-column>
+              </el-table>
+
+              <div v-if="!(currentStaffArchive.workRecords && currentStaffArchive.workRecords.length)" style="text-align: center; padding: 40px; color: #8c8c8c;">
+                <i class="el-icon-office-building" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                暂无上户记录
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
+    </el-drawer>
+
+    <!-- 证书照片预览对话框 -->
+    <el-dialog v-model="showCertificatePhotoDialog" title="证书照片预览" width="600px" center>
+      <div style="text-align: center; padding: 20px;">
+        <img :src="currentCertificatePhoto" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+      </div>
+      <template #footer>
+        <el-button @click="showCertificatePhotoDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 签到对话框 -->
+    <el-dialog v-model="showCheckinDialog" title="课程签到" width="700px">
+      <div style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 6px;">
+        <strong>{{ currentSession?.name }}</strong>
+        <span style="margin-left: 16px; color: #8c8c8c;">{{ currentDay?.date }} {{ currentSession?.time_range }}</span>
+      </div>
+
+      <div class="quick-attendance">
+        <div class="attendance-btn" :class="{ 'active-present': batchStatus === 'present' }" @click="batchStatus = 'present'">
+          <i class="el-icon-check"></i> 全到
+        </div>
+        <div class="attendance-btn" :class="{ 'active-absent': batchStatus === 'absent' }" @click="batchStatus = 'absent'">
+          <i class="el-icon-close"></i> 全缺
+        </div>
+        <div class="attendance-btn" :class="{ 'active-leave': batchStatus === 'leave' }" @click="batchStatus = 'leave'">
+          <i class="el-icon-remove-outline"></i> 全请
+        </div>
+      </div>
+
+      <el-table :data="checkinList" style="width: 100%">
+        <el-table-column label="学员" min-width="120">
+          <template #default="{ row }">
+            <div class="flex-center">
+              <div class="avatar-small">{{ row.name.charAt(0) }}</div>
+              <span>{{ row.name }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="出勤状态" width="200">
+          <template #default="{ row }">
+            <el-radio-group v-model="row.status" size="small">
+              <el-radio-button label="present">到</el-radio-button>
+              <el-radio-button label="absent">缺</el-radio-button>
+              <el-radio-button label="leave">假</el-radio-button>
+            </el-radio-group>
+          </template>
+        </el-table-column>
+        <el-table-column label="备注" min-width="150">
+          <template #default="{ row }">
+            <el-input v-model="row.remark" size="small" placeholder="备注"></el-input>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="showCheckinDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmCheckin">保存签到</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    SharedMenu.initPageLayout('training-class-detail', {
+      title: '班级详情',
+      breadcrumb: '<a href="dashboard.html">首页</a> / <a href="training-class.html">培训班管理</a> / 班级详情'
+    });
+
+    createApp({
+      setup() {
+        const activeTab = ref('attendance');
+
+        // 考卷开启状态
+        const examEnabled = ref(false);
+
+        const classInfo = ref({
+          id: 1,
+          name: '2026年4月月嫂新手班-A班',
+          position_name: '月嫂',
+          category: 'orientation',
+          fee_type: 'free',
+          fee_amount: 0,
+          start_date: '2026-04-01',
+          end_date: '2026-04-10',
+          location: '总部培训室A',
+          teacher: '张美玲',
+          status: '进行中',
+          student_count: 25,
+          min_count: 10,
+          max_count: 30,
+          current_day: 6,
+          total_days: 10,
+          progress: 60,
+          exam_papers: [1, 2, 3]
+        });
+
+        // 试卷列表
+        const examPaperList = ref([
+          { id: 1, name: '医疗护理员考核卷-A', question_count: 50, duration: 60, pass_score: 70 },
+          { id: 2, name: '医疗护理员考核卷-B', question_count: 50, duration: 60, pass_score: 70 },
+          { id: 3, name: '医疗护理员考核卷-C', question_count: 50, duration: 60, pass_score: 70 }
+        ]);
+
+        const scheduleList = ref([
+          {
+            day_number: 1,
+            date: '04.01(周二)',
+            status: 'completed',
+            sessions: [
+              { id: 1, name: '母婴护理基础理论', time_range: '09:00-12:00', teacher: '张美玲', status: 'completed' },
+              { id: 2, name: '新生儿护理实操', time_range: '14:00-17:00', teacher: '张美玲', status: 'completed' }
+            ]
+          },
+          {
+            day_number: 2,
+            date: '04.02(周三)',
+            status: 'completed',
+            sessions: [
+              { id: 3, name: '产妇护理要点', time_range: '09:00-12:00', teacher: '李建国', status: 'completed' },
+              { id: 4, name: '母乳喂养指导', time_range: '14:00-17:00', teacher: '李建国', status: 'completed' }
+            ]
+          },
+          {
+            day_number: 3,
+            date: '04.03(周四)',
+            status: 'completed',
+            sessions: [
+              { id: 5, name: '月子餐营养搭配', time_range: '09:00-12:00', teacher: '王秀英', status: 'completed' },
+              { id: 6, name: '月子餐实操', time_range: '14:00-17:00', teacher: '王秀英', status: 'completed' }
+            ]
+          },
+          {
+            day_number: 4,
+            date: '04.04(周五)',
+            status: 'completed',
+            sessions: [
+              { id: 7, name: '产后康复知识', time_range: '09:00-12:00', teacher: '张美玲', status: 'completed' },
+              { id: 8, name: '实操练习', time_range: '14:00-17:00', teacher: '张美玲', status: 'completed' }
+            ]
+          },
+          {
+            day_number: 5,
+            date: '04.05(周六)',
+            status: 'completed',
+            sessions: [
+              { id: 9, name: '新生儿常见疾病护理', time_range: '09:00-12:00', teacher: '李建国', status: 'completed' },
+              { id: 10, name: '急救技能培训', time_range: '14:00-17:00', teacher: '李建国', status: 'completed' }
+            ]
+          },
+          {
+            day_number: 6,
+            date: '04.06(周日)',
+            status: 'current',
+            sessions: [
+              { id: 11, name: '服务礼仪与沟通技巧', time_range: '09:00-12:00', teacher: '王秀英', status: 'completed' },
+              { id: 12, name: '情景模拟演练', time_range: '14:00-17:00', teacher: '王秀英', status: 'current' }
+            ]
+          },
+          {
+            day_number: 7,
+            date: '04.07(周一)',
+            status: 'pending',
+            sessions: [
+              { id: 13, name: '综合复习', time_range: '09:00-12:00', teacher: '张美玲', status: 'pending' },
+              { id: 14, name: '答疑与总结', time_range: '14:00-17:00', teacher: '张美玲', status: 'pending' }
+            ]
+          }
+        ]);
+
+        const studentList = ref([
+          {
+            id: 1, name: '王秀英', phone: '138****5678', level: '熟手', initial_level: 'Y6', enroll_time: '2026-03-25', payment_status: 'paid', attendance_rate: 100, attendance: ['present', 'present', 'present', 'present', 'present', 'present', '', '', '', ''], attendance_remark: '表现优秀，全勤', teacher_rating: 5, teacher_comment: '学习态度认真',
+            exam_score: 85, exam_paper_name: '医疗护理员考核卷-A', exam_time: '2026-04-06 15:30',
+            exam_answers: [
+              {
+                question: '双胞胎宝宝居住环境的适宜温度是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '20 - 24℃' },
+                  { key: 'B', text: '22 - 26℃' },
+                  { key: 'C', text: '24 - 28℃' },
+                  { key: 'D', text: '26 - 30℃' }
+                ],
+                user_answer: 'C',
+                correct_answer: 'C',
+                is_correct: true
+              },
+              {
+                question: '为区分双胞胎宝宝，以下做法错误的是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '准备颜色不同的衣物' },
+                  { key: 'B', text: '用相同颜色贴纸标记奶瓶' },
+                  { key: 'C', text: '记录每个宝宝的喂养时间' },
+                  { key: 'D', text: '根据身体特征区分' }
+                ],
+                user_answer: 'B',
+                correct_answer: 'B',
+                is_correct: true
+              },
+              {
+                question: '双胞胎宝宝母乳喂养时，应（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '尽早开奶' },
+                  { key: 'B', text: '等宝宝饿了再喂' },
+                  { key: 'C', text: '大量少餐' },
+                  { key: 'D', text: '只喂一个宝宝' }
+                ],
+                user_answer: 'A',
+                correct_answer: 'A',
+                is_correct: true
+              }
+            ]
+          },
+          {
+            id: 2, name: '李桂花', phone: '139****1234', level: '新手', initial_level: 'Y3-1', enroll_time: '2026-03-26', payment_status: 'paid', attendance_rate: 95, attendance: ['present', 'present', '', 'present', 'present', 'present', '', '', '', ''], attendance_remark: '请假一天，已补课', teacher_rating: 4, teacher_comment: '整体表现良好的',
+            exam_score: 78, exam_paper_name: '医疗护理员考核卷-B', exam_time: '2026-04-06 15:45',
+            exam_answers: [
+              {
+                question: '双胞胎宝宝居住环境的适宜温度是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '20 - 24℃' },
+                  { key: 'B', text: '22 - 26℃' },
+                  { key: 'C', text: '24 - 28℃' },
+                  { key: 'D', text: '26 - 30℃' }
+                ],
+                user_answer: 'B',
+                correct_answer: 'C',
+                is_correct: false
+              },
+              {
+                question: '为区分双胞胎宝宝，以下做法错误的是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '准备颜色不同的衣物' },
+                  { key: 'B', text: '用相同颜色贴纸标记奶瓶' },
+                  { key: 'C', text: '记录每个宝宝的喂养时间' },
+                  { key: 'D', text: '根据身体特征区分' }
+                ],
+                user_answer: 'B',
+                correct_answer: 'B',
+                is_correct: true
+              }
+            ]
+          },
+          {
+            id: 3, name: '张淑芬', phone: '137****9876', level: '熟手', initial_level: 'Y4-2', enroll_time: '2026-03-26', payment_status: 'paid', attendance_rate: 100, attendance: ['present', 'present', 'present', 'present', 'present', 'present', '', '', '', ''], attendance_remark: '', teacher_rating: 5, teacher_comment: '实操能力强',
+            exam_score: 92, exam_paper_name: '医疗护理员考核卷-C', exam_time: '2026-04-06 16:00',
+            exam_answers: [
+              {
+                question: '新生儿黄疸的正常消退时间是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '3-5天' },
+                  { key: 'B', text: '7-10天' },
+                  { key: 'C', text: '2-3周' },
+                  { key: 'D', text: '1个月' }
+                ],
+                user_answer: 'C',
+                correct_answer: 'C',
+                is_correct: true
+              },
+              {
+                question: '产后产妇适宜的室内温度是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '18-20℃' },
+                  { key: 'B', text: '20-22℃' },
+                  { key: 'C', text: '24-26℃' },
+                  { key: 'D', text: '28-30℃' }
+                ],
+                user_answer: 'C',
+                correct_answer: 'C',
+                is_correct: true
+              }
+            ]
+          },
+          {
+            id: 4, name: '陈美华', phone: '136****2468', level: '新手', initial_level: 'Y3-2', enroll_time: '2026-03-27', payment_status: 'paid', attendance_rate: 90, attendance: ['present', 'present', 'present', '', 'present', 'present', '', '', '', ''], attendance_remark: '缺勤一次，需关注', teacher_rating: 3, teacher_comment: '需加强出勤'
+          },
+          {
+            id: 5, name: '刘玉兰', phone: '135****1357', level: '熟手', initial_level: 'Y5', enroll_time: '2026-03-27', payment_status: 'paid', attendance_rate: 100, attendance: ['present', 'present', 'present', 'present', 'present', 'present', '', '', '', ''], attendance_remark: '', teacher_rating: 5, teacher_comment: '非常优秀',
+            exam_score: 88, exam_paper_name: '医疗护理员考核卷-A', exam_time: '2026-04-06 15:20',
+            exam_answers: [
+              {
+                question: '新生儿脐带护理，以下做法正确的是（）',
+                score: 0.5,
+                options: [
+                  { key: 'A', text: '用酒精每天消毒' },
+                  { key: 'B', text: '保持干燥清洁' },
+                  { key: 'C', text: '用纱布包裹' },
+                  { key: 'D', text: '涂抹护肤霜' }
+                ],
+                user_answer: 'B',
+                correct_answer: 'B',
+                is_correct: true
+              }
+            ]
+          }
+        ]);
+
+        const selectedDay = ref(6);
+        const selectedSession = ref('');
+
+        const displayDays = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+        const availableSessions = computed(() => {
+          const day = scheduleList.value.find(d => d.day_number === selectedDay.value);
+          return day ? day.sessions : [];
+        });
+
+        // 时间段定义
+        const timeSlots = ref([
+          { time: '9:30' },
+          { time: '10:00' },
+          { time: '11:00' },
+          { time: '12:00' },
+          { time: '14:00' },
+          { time: '15:00' },
+          { time: '16:00' },
+          { time: '17:00' }
+        ]);
+
+        // 根据时间获取课程
+        const getCourseByTime = (day, time) => {
+          const courseMap = {
+            '9:30': ['开班仪式', '实操复习', '实操复习'],
+            '10:00': ['七步洗手法、戴/摘口罩、手套、工作帽、清洁口腔', '协助更换体位、床头转移', '清洁会阴、更换纸尿裤、床上使用便器、使用灭火'],
+            '11:00': ['摘取/佩戴义齿', '轮椅转运', '综合模拟'],
+            '12:00': ['午休', '午休', '午休'],
+            '14:00': ['协助进食/水', '身高、体重、体温、测量及报告', '考核'],
+            '15:00': ['面部、手足的清洁', '测量及报告', '考核'],
+            '16:00': ['床上洗头', '使用拐杖、助行器行走', '考核'],
+            '17:00': ['温水擦浴', '心肺复苏', '考核']
+          };
+          const dayIndex = day.day_number - 1;
+          const courses = courseMap[time];
+          if (courses && courses[dayIndex]) {
+            return courses[dayIndex];
+          }
+          return '';
+        };
+
+        const showCheckinDialog = ref(false);
+        const currentDay = ref(null);
+        const currentSession = ref(null);
+        const batchStatus = ref('');
+        const checkinList = ref([]);
+
+        // 考试详情对话框
+        const showExamDetailDialog = ref(false);
+        const currentStudent = ref(null);
+
+        // 考卷成绩搜索和分页
+        const examScoreSearchKeyword = ref('');
+        const examScoreCurrentPage = ref(1);
+        const examScorePageSize = ref(10);
+
+        // 学员档案抽屉
+        const showStaffArchiveDrawer = ref(false);
+        const currentStaffArchive = ref(null);
+        const archiveActiveTab = ref('tags');
+
+        // 默认标签数据
+        const defaultTags = [
+          { id: 'bath', name: '宝宝洗澡', status: 'certified' },
+          { id: 'umbilical', name: '脐带护理', status: 'certified' },
+          { id: 'jaundice', name: '黄疸观察', status: 'trained' },
+          { id: 'maternal', name: '产妇护理', status: 'certified' },
+          { id: 'feeding', name: '喂养规范', status: 'certified' },
+          { id: 'emotion', name: '情绪疏导', status: 'unobtained' },
+          { id: 'nutrition', name: '营养搭配', status: 'trained' }
+        ];
+
+        // 默认成长轨迹
+        const defaultTimeline = [
+          { type: 'clue', icon: 'el-icon-user', title: '录入线索', desc: '通过招募活动录入系统', time: '2026-01-15' },
+          { type: 'interview', icon: 'el-icon-chat-dot-round', title: '面试通过', desc: '初次面试评估合格', time: '2026-01-18' },
+          { type: 'contract', icon: 'el-icon-document-checked', title: '签订合同', desc: '完成入职合同签署', time: '2026-01-20' },
+          { type: 'training', icon: 'el-icon-reading', title: '岗前培训', desc: '参加月嫂岗前培训班', time: '2026-04-01' }
+        ];
+
+        // 打开学员档案抽屉
+        // 证书照片预览
+        const showCertificatePhotoDialog = ref(false);
+        const currentCertificatePhoto = ref('');
+
+        const previewCertificatePhoto = (photo) => {
+          currentCertificatePhoto.value = photo;
+          showCertificatePhotoDialog.value = true;
+        };
+
+        const openStaffArchive = (student) => {
+          // 合并学员基本信息和档案数据
+          currentStaffArchive.value = {
+            ...student,
+            // 模拟档案数据，实际应从后端获取
+            tags: defaultTags,
+            certificates: [
+              {
+                id: 1,
+                name: '母婴护理服务合格证',
+                no: 'MY2026' + String(student.id).padStart(4, '0'),
+                validity: '2027-04-06',
+                status: 'valid',
+                photos: [
+                  'https://picsum.photos/seed/cert1a_' + student.id + '/400/300',
+                  'https://picsum.photos/seed/cert1b_' + student.id + '/400/300'
+                ]
+              },
+              {
+                id: 2,
+                name: '育婴师资格证',
+                no: 'YY2026' + String(student.id).padStart(4, '0'),
+                validity: '2027-03-28',
+                status: student.level === '熟手' ? 'valid' : 'expiring',
+                photos: [
+                  'https://picsum.photos/seed/cert2_' + student.id + '/400/300'
+                ]
+              }
+            ],
+            timeline: defaultTimeline,
+            workRecords: student.level === '熟手' ? [
+              { period: '2025.10-2025.12', type: '月嫂服务', rating: 5, comment: '服务专业，客户非常满意' },
+              { period: '2025.07-2025.09', type: '育儿嫂', rating: 4, comment: '照顾宝宝细心周到' }
+            ] : []
+          };
+          archiveActiveTab.value = 'tags';
+          showStaffArchiveDrawer.value = true;
+        };
+
+        // 考核数据
+        const assessmentList = ref([
+          {
+            id: 1,
+            student_id: 2,
+            name: '李桂花',
+            phone: '139****1234',
+            level: '新手',
+            paper_type: '初级卷C',
+            paper_score: null,
+            score_certificate: null,
+            score_volume: null,
+            score_meal: null,
+            score_theory: null,
+            score_practice: null,
+            score_scenario: null,
+            score_training: null,
+            total_score: null,
+            is_pass: null,
+            initial_assessment_level: 'Y3-1',
+            assessment_level: '',
+            comment: ''
+          },
+          {
+            id: 2,
+            student_id: 4,
+            name: '陈美华',
+            phone: '136****2468',
+            level: '新手',
+            paper_type: '初级卷C',
+            paper_score: null,
+            score_certificate: null,
+            score_volume: null,
+            score_meal: null,
+            score_theory: null,
+            score_practice: null,
+            score_scenario: null,
+            score_training: null,
+            total_score: null,
+            is_pass: null,
+            initial_assessment_level: 'Y3-2',
+            assessment_level: '',
+            comment: ''
+          },
+          {
+            id: 3,
+            student_id: 5,
+            name: '刘玉兰',
+            phone: '135****1357',
+            level: '熟手',
+            paper_type: '初级卷B',
+            paper_score: null,
+            score_certificate: null,
+            score_volume: null,
+            score_meal: null,
+            score_theory: null,
+            score_practice: null,
+            score_scenario: null,
+            score_training: null,
+            total_score: null,
+            is_pass: null,
+            initial_assessment_level: 'Y4-1',
+            assessment_level: '',
+            comment: ''
+          }
+        ]);
+
+        const showAssessmentDialog = ref(false);
+        const isEditAssessment = ref(false);
+        const assessmentForm = reactive({
+          id: null,
+          student_id: '',
+          paper_type: '',
+          score_certificate: 0,
+          score_volume: 0,
+          score_meal: 0,
+          score_theory: 0,
+          score_practice: 0,
+          score_scenario: 0,
+          score_training: 0,
+          comment: ''
+        });
+
+        const calculateAssessmentTotal = computed(() => {
+          return (
+            (assessmentForm.score_certificate || 0) +
+            (assessmentForm.score_volume || 0) +
+            (assessmentForm.score_meal || 0) +
+            (assessmentForm.score_theory || 0) +
+            (assessmentForm.score_practice || 0) +
+            (assessmentForm.score_scenario || 0) +
+            (assessmentForm.score_training || 0)
+          );
+        });
+
+        // 判断是否有证书照片
+        const hasCertificatePhotos = computed(() => {
+          if (!currentStaffArchive.value?.certificates) return false;
+          return currentStaffArchive.value.certificates.some(cert => cert.photos && cert.photos.length > 0);
+        });
+
+        // 获取所有证书照片（平铺展示）
+        const allCertificatePhotos = computed(() => {
+          if (!currentStaffArchive.value?.certificates) return [];
+          const photos = [];
+          currentStaffArchive.value.certificates.forEach(cert => {
+            if (cert.photos && cert.photos.length) {
+              cert.photos.forEach(photo => {
+                photos.push({
+                  url: photo,
+                  certName: cert.name
+                });
+              });
+            }
+          });
+          return photos;
+        });
+
+        const saveAssessment = () => {
+          if (!assessmentForm.student_id && !isEditAssessment.value) {
+            ElementPlus.ElMessage.warning('请选择学员');
+            return;
+          }
+          if (!assessmentForm.paper_type) {
+            ElementPlus.ElMessage.warning('请选择试卷类型');
+            return;
+          }
+
+          const student = studentList.value.find(s => s.id === assessmentForm.student_id);
+          const total = calculateAssessmentTotal.value;
+
+          if (isEditAssessment.value) {
+            const idx = assessmentList.value.findIndex(a => a.id === assessmentForm.id);
+            if (idx !== -1) {
+              assessmentList.value[idx] = {
+                ...assessmentList.value[idx],
+                paper_type: assessmentForm.paper_type,
+                score_certificate: assessmentForm.score_certificate,
+                score_volume: assessmentForm.score_volume,
+                score_meal: assessmentForm.score_meal,
+                score_theory: assessmentForm.score_theory,
+                score_practice: assessmentForm.score_practice,
+                score_scenario: assessmentForm.score_scenario,
+                score_training: assessmentForm.score_training,
+                total_score: total,
+                is_pass: total >= 70,
+                comment: assessmentForm.comment
+              };
+            }
+            ElementPlus.ElMessage.success('考核成绩更新成功');
+          } else {
+            assessmentList.value.push({
+              id: Date.now(),
+              student_id: assessmentForm.student_id,
+              name: student?.name || '',
+              phone: student?.phone || '',
+              paper_type: assessmentForm.paper_type,
+              score_certificate: assessmentForm.score_certificate,
+              score_volume: assessmentForm.score_volume,
+              score_meal: assessmentForm.score_meal,
+              score_theory: assessmentForm.score_theory,
+              score_practice: assessmentForm.score_practice,
+              score_scenario: assessmentForm.score_scenario,
+              score_training: assessmentForm.score_training,
+              total_score: total,
+              is_pass: total >= 70,
+              comment: assessmentForm.comment
+            });
+            ElementPlus.ElMessage.success('考核成绩录入成功');
+          }
+          showAssessmentDialog.value = false;
+        };
+
+        const editAssessment = (row) => {
+          isEditAssessment.value = true;
+          assessmentForm.id = row.id;
+          assessmentForm.student_id = row.student_id;
+          assessmentForm.paper_type = row.paper_type;
+          assessmentForm.score_certificate = row.score_certificate || 0;
+          assessmentForm.score_volume = row.score_volume || 0;
+          assessmentForm.score_meal = row.score_meal || 0;
+          assessmentForm.score_theory = row.score_theory || 0;
+          assessmentForm.score_practice = row.score_practice || 0;
+          assessmentForm.score_scenario = row.score_scenario || 0;
+          assessmentForm.score_training = row.score_training || 0;
+          assessmentForm.comment = row.comment || '';
+          showAssessmentDialog.value = true;
+        };
+
+        const updateTheoryScore = (row) => {
+          // 试卷满分100，理论满分30，按30%计算
+          if (row.paper_score !== undefined && row.paper_score !== null) {
+            row.score_theory = Math.round(row.paper_score * 0.3);
+          }
+        };
+
+const updateAssessmentTotal = (row) => {
+          // 只更新总分，不判断是否通过（需要点击完成考核按钮）
+          const total = (row.score_certificate || 0) + (row.score_volume || 0) + (row.score_meal || 0) +
+                        (row.score_theory || 0) + (row.score_practice || 0) + (row.score_scenario || 0) +
+                        (row.score_training || 0);
+          row.total_score = total;
+        };
+
+const completeAssessment = (row) => {
+          ElementPlus.ElMessageBox.confirm(
+            '确定要完成该学员的考核吗？完成后将计算总分并判定是否通过。',
+            '确认完成考核',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            // 先计算理论分数
+            updateTheoryScore(row);
+            // 计算总分
+            const total = (row.score_certificate || 0) + (row.score_volume || 0) + (row.score_meal || 0) +
+                          (row.score_theory || 0) + (row.score_practice || 0) + (row.score_scenario || 0) +
+                          (row.score_training || 0);
+            row.total_score = total;
+            // 判断是否通过
+            row.is_pass = total >= 70;
+            ElementPlus.ElMessage.success('考核完成，总分：' + total + '分');
+          }).catch(() => {
+            // 取消操作
+          });
+        };
+
+        // 过滤后的考卷成绩列表
+        const filteredExamScoreList = computed(() => {
+          if (!examScoreSearchKeyword.value) {
+            return studentList.value;
+          }
+          const keyword = examScoreSearchKeyword.value.toLowerCase();
+          return studentList.value.filter(s => s.name.toLowerCase().includes(keyword));
+        });
+
+        // 分页后的考卷成绩列表
+        const paginatedExamScoreList = computed(() => {
+          const start = (examScoreCurrentPage.value - 1) * examScorePageSize.value;
+          const end = start + examScorePageSize.value;
+          return filteredExamScoreList.value.slice(start, end);
+        });
+
+        // 搜索处理
+        const handleExamScoreSearch = () => {
+          examScoreCurrentPage.value = 1;
+        };
+
+        // 每页条数变化
+        const handleExamScoreSizeChange = (val) => {
+          examScorePageSize.value = val;
+          examScoreCurrentPage.value = 1;
+        };
+
+        // 页码变化
+        const handleExamScoreCurrentChange = (val) => {
+          examScoreCurrentPage.value = val;
+        };
+
+        // 考卷开关切换
+        const handleExamEnableChange = (val) => {
+          if (val) {
+            ElementPlus.ElMessage.success('考卷已开启，学员现在可以在小程序端答题');
+          } else {
+            ElementPlus.ElMessage.info('考卷已关闭，学员暂时无法在小程序端答题');
+          }
+        };
+
+        const getStatusType = (status) => {
+          const map = { '待开班': 'warning', '进行中': 'primary', '已结业': 'success' };
+          return map[status] || 'info';
+        };
+
+        const getCategoryText = (category) => {
+          const map = { orientation: '岗前培训', skill: '技能培训', certification: '考证培训' };
+          return map[category] || category;
+        };
+
+        const getAttendanceText = (status) => {
+          const map = { present: '到', absent: '缺', leave: '假', '': '-' };
+          return map[status] || '-';
+        };
+
+        const getAttendanceClass = (status) => {
+          const map = { present: 'attendance-present', absent: 'attendance-absent', leave: 'attendance-leave', '': '' };
+          return map[status] || '';
+        };
+
+        const getInitialLevelType = (level) => {
+          const map = { '金牌': 'danger', '银牌': 'warning', '铜牌': 'info' };
+          return map[level] || '';
+        };
+
+        const saveAttendanceData = () => {
+          ElementPlus.ElMessage.success('签到备注和讲师评价保存成功');
+        };
+
+        // 处理考勤复选框变化
+        const handleAttendanceChange = (row, dayIndex, val) => {
+          // val 是 'present' 表示勾选，'' 表示未勾选
+          row.attendance[dayIndex] = val;
+          // 重新计算出勤率（勾选为到，未勾选为缺）
+          const presentCount = row.attendance.filter(a => a === 'present').length;
+          const totalDays = row.attendance.filter(a => a !== '').length;
+          if (totalDays > 0) {
+            row.attendance_rate = Math.round((presentCount / totalDays) * 100);
+          }
+        };
+
+        const startCheckin = (day, session) => {
+          currentDay.value = day;
+          currentSession.value = session;
+          checkinList.value = studentList.value.map(s => ({
+            id: s.id,
+            name: s.name,
+            status: 'present',
+            remark: ''
+          }));
+          showCheckinDialog.value = true;
+        };
+
+        const confirmCheckin = () => {
+          ElementPlus.ElMessage.success('签到保存成功');
+          showCheckinDialog.value = false;
+          if (currentSession.value) {
+            currentSession.value.status = 'completed';
+          }
+        };
+
+        const viewCheckin = (day, session) => {
+          ElementPlus.ElMessage.info(`查看 ${day.date} ${session.name} 的签到记录`);
+        };
+
+        const viewExamDetail = (student) => {
+          if (student.exam_score === undefined) {
+            ElementPlus.ElMessage.warning('该学员尚未参加考试');
+            return;
+          }
+          currentStudent.value = student;
+          showExamDetailDialog.value = true;
+        };
+
+        // 获取选项颜色
+        const getOptionColor = (item, optionKey) => {
+          // 用户答对了
+          if (item.is_correct && optionKey === item.user_answer) {
+            return '#52c41a'; // 绿色 - 正确
+          }
+          // 用户答错了，显示用户的错误选择
+          if (!item.is_correct && optionKey === item.user_answer) {
+            return '#f5222d'; // 红色 - 错误
+          }
+          // 用户答错了，显示正确答案
+          if (!item.is_correct && optionKey === item.correct_answer) {
+            return '#52c41a'; // 绿色 - 正确答案
+          }
+          return '#262626'; // 默认黑色
+        };
+
+        return {
+          activeTab,
+          classInfo,
+          examPaperList,
+          scheduleList,
+          timeSlots,
+          studentList,
+          selectedDay,
+          selectedSession,
+          displayDays,
+          availableSessions,
+          showCheckinDialog,
+          currentDay,
+          currentSession,
+          batchStatus,
+          checkinList,
+          showExamDetailDialog,
+          currentStudent,
+          examScoreSearchKeyword,
+          examScoreCurrentPage,
+          examScorePageSize,
+          filteredExamScoreList,
+          paginatedExamScoreList,
+          // 考卷开关
+          examEnabled,
+          handleExamEnableChange,
+          // 考核相关
+          assessmentList,
+          showAssessmentDialog,
+          isEditAssessment,
+          assessmentForm,
+          calculateAssessmentTotal,
+          // 证书照片相关
+          hasCertificatePhotos,
+          allCertificatePhotos,
+          saveAssessment,
+          editAssessment,
+          updateAssessmentTotal,
+          updateTheoryScore,
+          completeAssessment,
+          // 学员档案
+          showStaffArchiveDrawer,
+          currentStaffArchive,
+          archiveActiveTab,
+          openStaffArchive,
+          defaultTags,
+          defaultTimeline,
+          // 证书照片预览
+          showCertificatePhotoDialog,
+          currentCertificatePhoto,
+          previewCertificatePhoto,
+          getStatusType,
+          getCategoryText,
+          getAttendanceText,
+          getAttendanceClass,
+          getInitialLevelType,
+          getCourseByTime,
+          getOptionColor,
+          startCheckin,
+          confirmCheckin,
+          viewCheckin,
+          saveAttendanceData,
+          handleAttendanceChange,
+          viewExamDetail,
+          handleExamScoreSearch,
+          handleExamScoreSizeChange,
+          handleExamScoreCurrentChange
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

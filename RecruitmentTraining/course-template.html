@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课程管理 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .template-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+
+    .template-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .template-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .template-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .template-meta {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .template-preview {
+      background: #fafafa;
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .course-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 600px;
+    }
+
+    .course-table th,
+    .course-table td {
+      border: 1px solid #e8e8e8;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .course-table th {
+      background: #fce4ec;
+      color: #c2185b;
+      font-weight: 500;
+    }
+
+    .course-table td:first-child {
+      background: #fff5f7;
+      font-weight: 500;
+      color: #595959;
+      white-space: nowrap;
+      width: 120px;
+    }
+
+    .course-table .rest-row td {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+
+    .course-table .rest-row td:first-child {
+      background: #fff7e6;
+    }
+
+    .course-table .exam-row td {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .course-table .exam-row td:first-child {
+      background: #f6ffed;
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .schedule-form {
+      margin-top: 16px;
+    }
+
+    .time-slot-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+    }
+
+    .time-slot-time {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .course-inputs {
+      display: grid;
+      grid-template-columns: repeat(var(--days-count, 3), 1fr);
+      gap: 8px;
+      flex: 1;
+    }
+
+    .course-input {
+      width: 100%;
+      min-width: 100px;
+    }
+
+    .slot-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .days-selector {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: #f0f5ff;
+      border-radius: 6px;
+    }
+
+    .day-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: #1890ff;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* 考核标准配置样式 */
+    .config-section {
+      margin-bottom: 24px;
+    }
+
+    .config-section-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 16px;
+      padding-left: 8px;
+      border-left: 3px solid #1890ff;
+    }
+
+    .exam-item-row {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .exam-item-info {
+      flex: 1;
+    }
+
+    .exam-item-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .exam-item-type {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+
+    .exam-item-score {
+      width: 100px;
+      text-align: center;
+    }
+
+    .score-input {
+      width: 80px;
+    }
+
+    .pass-score-setting {
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    /* 考核标准配置新样式 */
+    .score-table-wrapper {
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .score-table th,
+    .score-table td {
+      border: 1px solid #e8e8e8;
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .score-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .score-table tbody tr:hover {
+      background: #f5f5f5;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .item-type {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .bonus-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .bonus-group {
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 16px;
+      background: #fafafa;
+    }
+
+    .bonus-group-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .pass-score-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .pass-score-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .pass-score-value {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="filter-bar">
+      <div class="filter-item">
+        <span class="filter-label">课程名称</span>
+        <el-input v-model="searchName" placeholder="请输入课程名称" clearable style="width: 200px;"></el-input>
+      </div>
+      <el-button type="primary" @click="handleSearch">查询</el-button>
+      <el-button @click="handleReset">重置</el-button>
+
+            <div class="card-header">
+        <div></div>
+        <el-button type="primary" @click="handleCreate">
+          <i class="el-icon-plus"></i> 新建课程
+        </el-button>
+      </div>
+      
+    </div>
+
+    <div class="content-card">
+
+
+      <div class="card-body">
+        <div v-for="template in filteredList" :key="template.id" class="template-card">
+          <div class="template-header">
+            <div>
+              <div class="template-title">{{ template.name }}</div>
+              <div class="template-meta">
+                {{ template.description }} | 共 {{ template.days }} 天 | {{ template.timeSlots.length }} 个时段
+              </div>
+            </div>
+          </div>
+
+          <div class="template-actions">
+            <el-button type="text" @click="handleEdit(template)">编辑</el-button>
+            <el-button type="text" @click="handleConfig(template)">配置考核标准</el-button>
+            <el-button type="text" class="el-button--danger" @click="handleDelete(template)">删除</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑课程对话框 -->
+    <el-dialog v-model="showDialog" :title="isEdit ? '编辑课程' : '新建课程'" width="1000px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="课程名称">
+          <el-input v-model="form.name" placeholder="例如：医疗护理员课程"></el-input>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" placeholder="简要描述该课程"></el-input>
+        </el-form-item>
+        <el-form-item label="培训岗位">
+          <el-select v-model="form.position_id" placeholder="选择培训岗位" style="width: 100%;">
+            <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="课程分类">
+          <el-radio-group v-model="form.category">
+            <el-radio-button label="orientation">岗前培训</el-radio-button>
+            <el-radio-button label="skill">技能培训</el-radio-button>
+            <el-radio-button label="certification">考证培训</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="收费类型">
+          <el-radio-group v-model="form.fee_type">
+            <el-radio-button label="free">免费</el-radio-button>
+            <el-radio-button label="paid">收费</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="form.fee_type === 'paid'" label="培训费用">
+          <el-input-number v-model="form.fee_amount" :min="0" :step="100" style="width: 150px;"></el-input-number>
+          <span style="margin-left: 8px;">元</span>
+        </el-form-item>
+        <el-form-item label="考核试卷">
+          <el-select v-model="form.exam_papers" multiple placeholder="选择考核试卷（可多选）" style="width: 100%;">
+            <el-option v-for="paper in examPaperList" :key="paper.id" :label="paper.name" :value="paper.id">
+              <span>{{ paper.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px;">{{ paper.question_count }}题 / {{ paper.duration }}分钟</span>
+            </el-option>
+          </el-select>
+          <div v-if="form.exam_papers && form.exam_papers.length > 0" style="margin-top: 8px; font-size: 13px; color: #8c8c8c;">
+            已选择 {{ form.exam_papers.length }} 套试卷
+          </div>
+        </el-form-item>
+        <el-form-item label="培训天数">
+          <el-input-number v-model="form.days" :min="1" :max="30" @change="onDaysChange"></el-input-number>
+          <span style="margin-left: 8px; color: #8c8c8c;">天</span>
+        </el-form-item>
+
+        <el-form-item label="课程安排">
+          <div class="days-selector">
+            <span v-for="day in form.days" :key="day" class="day-tag">第{{ day }}天</span>
+          </div>
+
+          <div class="schedule-form">
+            <div v-for="(slot, idx) in form.timeSlots" :key="idx" class="time-slot-row">
+              <div class="time-slot-time">
+                <el-time-picker
+                  v-model="slot.startTime"
+                  placeholder="时间"
+                  format="HH:mm"
+                  value-format="HH:mm"
+                  style="width: 110px;"
+                ></el-time-picker>
+              </div>
+
+              <div class="course-inputs" :style="{ '--days-count': form.days }">
+                <el-input
+                  v-for="(course, dayIdx) in slot.courses"
+                  :key="dayIdx"
+                  v-model="slot.courses[dayIdx]"
+                  :placeholder="'第' + (dayIdx + 1) + '天课程'"
+                  class="course-input"
+                ></el-input>
+              </div>
+
+              <div class="slot-actions">
+                <el-button type="text" @click="moveSlot(idx, -1)" :disabled="idx === 0">
+                  <i class="el-icon-arrow-up"></i>
+                </el-button>
+                <el-button type="text" @click="moveSlot(idx, 1)" :disabled="idx === form.timeSlots.length - 1">
+                  <i class="el-icon-arrow-down"></i>
+                </el-button>
+                <el-button type="text" class="el-button--danger" @click="removeSlot(idx)">
+                  <i class="el-icon-delete"></i>
+                </el-button>
+              </div>
+            </div>
+
+            <el-button type="dashed" @click="addSlot" style="width: 100%; margin-top: 8px;">
+              <i class="el-icon-plus"></i> 添加时段
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmSave">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 配置考核标准对话框 -->
+    <el-dialog v-model="showConfigDialog" title="配置考核标准" width="900px">
+      <div v-if="currentTemplate">
+        <div style="margin-bottom: 16px; padding: 12px; background: #f0f5ff; border-radius: 6px;">
+          <strong>{{ currentTemplate.name }}</strong>
+          <span style="color: #8c8c8c; margin-left: 12px;">{{ currentTemplate.description }}</span>
+        </div>
+
+        <!-- 定级评分项（必考项） -->
+        <div class="config-section">
+          <div class="config-section-title">必考项（考评老师评分）- 满分100分</div>
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th>考核项</th>
+                  <th style="width: 120px;">总分</th>
+                  <th style="width: 80px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in configForm.exam_items" :key="item.item_id">
+                  <td>
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-type">{{ getTypeText(item.type) }}</div>
+                  </td>
+                  <td>
+                    <el-input-number v-model="item.max_score" :min="0" :max="100" size="small" style="width: 80px;"></el-input-number>
+                    <span style="margin-left: 4px;">分</span>
+                  </td>
+                  <td>
+                    <el-button type="text" style="color: #f5222d;" @click="removeExamItem(index)">删除</el-button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" style="text-align: center; background: #f5f5f5;">
+                    <el-button type="dashed" @click="showAddItemDialog = true">
+                      <i class="el-icon-plus"></i> 添加考核项
+                    </el-button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- 加分项 -->
+        <div class="config-section">
+          <div class="config-section-title">加分项</div>
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th>考核项</th>
+                  <th style="width: 120px;">总分</th>
+                  <th style="width: 80px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in configForm.bonus_items" :key="item.item_id">
+                  <td>
+                    <div class="item-name">{{ item.name }}</div>
+                  </td>
+                  <td>
+                    <el-input-number v-model="item.max_score" :min="0" :max="20" size="small" style="width: 80px;"></el-input-number>
+                    <span style="margin-left: 4px;">分</span>
+                  </td>
+                  <td>
+                    <el-button type="text" style="color: #f5222d;" @click="removeBonusItem(item)">删除</el-button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" style="text-align: center; background: #f5f5f5;">
+                    <el-button type="dashed" @click="addBonusItem()">
+                      <i class="el-icon-plus"></i> 添加加分项
+                    </el-button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- 及格分数线 -->
+        <div class="pass-score-setting">
+          <div class="pass-score-header">
+            <span class="pass-score-label">是否通过</span>
+            <div class="pass-score-value">
+              <el-input-number v-model="configForm.pass_score" :min="60" :max="100" size="small"></el-input-number>
+              <span style="margin-left: 4px;">分及格</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showConfigDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmConfig">保存配置</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 添加考核项对话框 -->
+    <el-dialog v-model="showAddItemDialog" title="添加考核项" width="400px">
+      <el-form :model="newItemForm" label-width="100px">
+        <el-form-item label="考核项名称">
+          <el-input v-model="newItemForm.name" placeholder="例如：实操考核"></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="newItemForm.type" style="width: 100%;">
+            <el-option label="人工评分" value="manual"></el-option>
+            <el-option
+              label="线上考试"
+              value="online_exam"
+              :disabled="hasOnlineExamItem"
+            >
+              <span v-if="hasOnlineExamItem">线上考试（已存在）</span>
+              <span v-else>线上考试</span>
+            </el-option>
+          </el-select>
+          <div v-if="hasOnlineExamItem" style="margin-top: 4px; font-size: 12px; color: #fa8c16;">
+            <i class="el-icon-warning"></i> 每个课程只能有一个线上考试类型
+          </div>
+        </el-form-item>
+        <el-form-item label="分值">
+          <el-input-number v-model="newItemForm.max_score" :min="0" :max="100" style="width: 150px;"></el-input-number>
+          <span style="margin-left: 8px;">分</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddItemDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddItem">添加</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 添加加分项对话框 -->
+    <el-dialog v-model="showAddBonusDialog" title="添加加分项" width="400px">
+      <el-form :model="newBonusForm" label-width="100px">
+        <el-form-item label="加分项名称">
+          <el-input v-model="newBonusForm.name" placeholder="例如：招生评分"></el-input>
+        </el-form-item>
+        <el-form-item label="分值">
+          <el-input-number v-model="newBonusForm.max_score" :min="0" :max="20" style="width: 150px;"></el-input-number>
+          <span style="margin-left: 8px;">分</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddBonusDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddBonus">添加</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+
+    SharedMenu.initPageLayout('course-template', {
+      title: '课程管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 课程管理'
+    });
+
+    createApp({
+      setup() {
+        const searchName = ref('');
+
+        // 岗位列表
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        // 试卷列表
+        const examPaperList = ref([
+          { id: 1, name: '医疗护理员考核卷-A', question_count: 50, duration: 60 },
+          { id: 2, name: '医疗护理员考核卷-B', question_count: 50, duration: 60 },
+          { id: 3, name: '医疗护理员考核卷-C', question_count: 50, duration: 60 },
+          { id: 4, name: '月嫂岗前考核卷-A', question_count: 40, duration: 45 },
+          { id: 5, name: '月嫂岗前考核卷-B', question_count: 40, duration: 45 },
+          { id: 6, name: '育儿嫂技能考核卷', question_count: 45, duration: 50 }
+        ]);
+
+        const templateList = ref([
+          {
+            id: 1,
+            name: '医疗护理员课程',
+            description: '3天医疗护理培训，包含实操和考核',
+            position_id: 3,
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            exam_papers: [1, 2, 3],
+            days: 3,
+            status: 'active',
+            timeSlots: [
+              { time: '9:30', startTime: '09:30', courses: ['开班仪式', '实操复习', '实操复习'] },
+              { time: '10:00', startTime: '10:00', courses: ['七步洗手法、戴/摘口罩、手套、工作帽、清洁口腔', '协助更换体位、床头转移', '清洁会阴、更换纸尿裤、床上使用便器、使用灭火'] },
+              { time: '11:00', startTime: '11:00', courses: ['摘取/佩戴义齿', '轮椅转运', '综合模拟'] },
+              { time: '12:00', startTime: '12:00', courses: ['午休', '午休', '午休'] },
+              { time: '14:00', startTime: '14:00', courses: ['协助进食/水', '身高、体重、体温、测量及报告', '考核'] },
+              { time: '15:00', startTime: '15:00', courses: ['面部、手足的清洁', '测量及报告', '考核'] },
+              { time: '16:00', startTime: '16:00', courses: ['床上洗头', '使用拐杖、助行器行走', '考核'] },
+              { time: '17:00', startTime: '17:00', courses: ['温水擦浴', '心肺复苏', '考核'] }
+            ],
+            pass_score: 70,
+            exam_items: [
+              { item_id: 'theory', name: '理论考试', type: 'online_exam', max_score: 40 },
+              { item_id: 'practice', name: '实操考核', type: 'manual', max_score: 50 },
+              { item_id: 'scenario', name: '情景模拟', type: 'manual', max_score: 10 }
+            ],
+            bonus_items: [
+              { item_id: 'eq_score', name: '情商', max_score: 2 },
+              { item_id: 'honor_score', name: '荣誉', max_score: 2 },
+              { item_id: 'special_exp_score', name: '特殊履历', max_score: 2 }
+            ],
+            required_items: ['theory', 'practice']
+          },
+          {
+            id: 2,
+            name: '月嫂岗前培训课程',
+            description: '5天岗前培训，包含理论和实操',
+            position_id: 1,
+            category: 'orientation',
+            fee_type: 'free',
+            fee_amount: 0,
+            exam_papers: [4, 5],
+            days: 5,
+            status: 'active',
+            timeSlots: [
+              { time: '9:00', startTime: '09:00', courses: ['公司介绍与职业道德', '新生儿生理特点', '母乳喂养指导', '产后恢复操', '结业考核'] },
+              { time: '10:45', startTime: '10:45', courses: ['服务规范与礼仪', '新生儿日常护理', '人工喂养方法', '产妇心理疏导', '实操考核'] },
+              { time: '12:00', startTime: '12:00', courses: ['午餐午休', '午餐午休', '午餐午休', '午餐午休', '午餐午休'] },
+              { time: '13:30', startTime: '13:30', courses: ['实操：抱姿与拍嗝', '实操：脐带护理', '实操：洗澡与抚触', '实操：月子餐制作', '综合模拟'] },
+              { time: '15:15', startTime: '15:15', courses: ['实操：换尿布', '实操：红臀预防', '实操：衣物清洗', '实操：乳房护理', '结业仪式'] }
+            ],
+            pass_score: 75,
+            exam_items: [
+              { item_id: 'attendance', name: '出勤率', type: 'manual', max_score: 10 },
+              { item_id: 'daily_performance', name: '日常表现', type: 'manual', max_score: 10 },
+              { item_id: 'theory', name: '理论考试', type: 'online_exam', max_score: 30 },
+              { item_id: 'practice', name: '实操考核', type: 'manual', max_score: 30 },
+              { item_id: 'scenario', name: '情景模拟', type: 'manual', max_score: 20 }
+            ],
+            bonus_items: [
+              { item_id: 'eq_score', name: '情商', max_score: 2 },
+              { item_id: 'honor_score', name: '荣誉', max_score: 2 },
+              { item_id: 'special_exp_score', name: '特殊履历', max_score: 2 }
+            ],
+            required_items: ['theory', 'practice']
+          }
+        ]);
+
+        const showDialog = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+
+        const form = reactive({
+          name: '',
+          description: '',
+          position_id: '',
+          category: 'orientation',
+          fee_type: 'free',
+          fee_amount: 0,
+          exam_papers: [],
+          days: 3,
+          timeSlots: []
+        });
+
+        const initForm = () => {
+          form.name = '';
+          form.description = '';
+          form.position_id = '';
+          form.category = 'orientation';
+          form.fee_type = 'free';
+          form.fee_amount = 0;
+          form.exam_papers = [];
+          form.days = 3;
+          form.timeSlots = [
+            { startTime: '09:00', courses: ['', '', ''] }
+          ];
+        };
+
+        const onDaysChange = (val) => {
+          // 调整每个时段的课程数组长度
+          form.timeSlots.forEach(slot => {
+            const currentLength = slot.courses.length;
+            if (val > currentLength) {
+              // 增加天数，补充空字符串
+              for (let i = currentLength; i < val; i++) {
+                slot.courses.push('');
+              }
+            } else if (val < currentLength) {
+              // 减少天数，截断数组
+              slot.courses = slot.courses.slice(0, val);
+            }
+          });
+        };
+
+        const addSlot = () => {
+          const courses = new Array(form.days).fill('');
+          form.timeSlots.push({
+            startTime: '',
+            courses: courses
+          });
+        };
+
+        const removeSlot = (idx) => {
+          form.timeSlots.splice(idx, 1);
+        };
+
+        const moveSlot = (idx, direction) => {
+          const newIdx = idx + direction;
+          if (newIdx >= 0 && newIdx < form.timeSlots.length) {
+            const temp = form.timeSlots[idx];
+            form.timeSlots[idx] = form.timeSlots[newIdx];
+            form.timeSlots[newIdx] = temp;
+          }
+        };
+
+        const isRestSlot = (slot) => {
+          return slot.courses.some(c => c && c.includes('午'));
+        };
+
+        const isExamSlot = (slot) => {
+          return slot.courses.some(c => c && c.includes('考核'));
+        };
+
+        const handleCreate = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          initForm();
+          showDialog.value = true;
+        };
+
+        const handleEdit = (template) => {
+          isEdit.value = true;
+          editingId.value = template.id;
+          form.name = template.name;
+          form.description = template.description;
+          form.position_id = template.position_id || '';
+          form.category = template.category || 'orientation';
+          form.fee_type = template.fee_type || 'free';
+          form.fee_amount = template.fee_amount || 0;
+          form.exam_papers = template.exam_papers || [];
+          form.days = template.days;
+          form.timeSlots = template.timeSlots.map(slot => ({
+            startTime: slot.startTime,
+                        courses: [...slot.courses]
+          }));
+          showDialog.value = true;
+        };
+
+        const handleCopy = (template) => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.name = template.name + ' - 副本';
+          form.description = template.description;
+          form.days = template.days;
+          form.timeSlots = template.timeSlots.map(slot => ({
+            startTime: slot.startTime,
+                        courses: [...slot.courses]
+          }));
+          showDialog.value = true;
+        };
+
+        const confirmSave = () => {
+          if (!form.name) {
+            ElementPlus.ElMessage.warning('请输入课程名称');
+            return;
+          }
+
+          // 格式化时间并生成time字段
+          const timeSlots = form.timeSlots.map(slot => ({
+            time: slot.startTime,
+            startTime: slot.startTime,
+            courses: [...slot.courses]
+          }));
+
+          if (isEdit.value) {
+            const idx = templateList.value.findIndex(t => t.id === editingId.value);
+            if (idx !== -1) {
+              templateList.value[idx] = {
+                ...templateList.value[idx],
+                name: form.name,
+                description: form.description,
+                position_id: form.position_id,
+                category: form.category,
+                fee_type: form.fee_type,
+                fee_amount: form.fee_amount,
+                exam_papers: form.exam_papers,
+                days: form.days,
+                timeSlots: timeSlots
+              };
+            }
+            ElementPlus.ElMessage.success('课程更新成功');
+          } else {
+            templateList.value.push({
+              id: Date.now(),
+              name: form.name,
+              description: form.description,
+              position_id: form.position_id,
+              category: form.category,
+              fee_type: form.fee_type,
+              fee_amount: form.fee_amount,
+              exam_papers: form.exam_papers,
+              days: form.days,
+              status: 'active',
+              timeSlots: timeSlots
+            });
+            ElementPlus.ElMessage.success('课程创建成功');
+          }
+          showDialog.value = false;
+        };
+
+        const toggleStatus = (template) => {
+          template.status = template.status === 'active' ? 'inactive' : 'active';
+          ElementPlus.ElMessage.success(template.status === 'active' ? '课程已启用' : '课程已停用');
+        };
+
+        const filteredList = computed(() => {
+          if (!searchName.value) return templateList.value;
+          return templateList.value.filter(t =>
+            t.name.toLowerCase().includes(searchName.value.toLowerCase())
+          );
+        });
+
+        const handleSearch = () => {
+          // 搜索逻辑由计算属性自动处理
+        };
+
+        const handleReset = () => {
+          searchName.value = '';
+        };
+
+        const handleDelete = (template) => {
+          ElementPlus.ElMessageBox.confirm('确定删除该课程吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            const idx = templateList.value.findIndex(t => t.id === template.id);
+            if (idx !== -1) {
+              templateList.value.splice(idx, 1);
+            }
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        // 考核标准配置
+        const showConfigDialog = ref(false);
+        const showAddItemDialog = ref(false);
+        const showAddBonusDialog = ref(false);
+        const currentTemplate = ref(null);
+
+        const configForm = reactive({
+          exam_items: [],
+          bonus_items: [],
+          pass_score: 70,
+          required_items: []
+        });
+
+        const newItemForm = reactive({
+          name: '',
+          type: 'manual',
+          max_score: 10
+        });
+
+        const newBonusForm = reactive({
+          name: '',
+          max_score: 5
+        });
+
+        const getTypeText = (type) => {
+          const map = {
+            'manual': '人工评分',
+            'online_exam': '线上考试',
+            'system': '系统计算'
+          };
+          return map[type] || type;
+        };
+
+        const handleConfig = (template) => {
+          currentTemplate.value = template;
+          configForm.exam_items = JSON.parse(JSON.stringify(template.exam_items || []));
+          configForm.bonus_items = JSON.parse(JSON.stringify(template.bonus_items || []));
+          configForm.pass_score = template.pass_score || 70;
+          configForm.required_items = template.required_items || [];
+          showConfigDialog.value = true;
+        };
+
+        const confirmConfig = () => {
+          if (currentTemplate.value) {
+            currentTemplate.value.exam_items = configForm.exam_items;
+            currentTemplate.value.bonus_items = configForm.bonus_items;
+            currentTemplate.value.pass_score = configForm.pass_score;
+            currentTemplate.value.required_items = configForm.required_items;
+          }
+          showConfigDialog.value = false;
+          ElementPlus.ElMessage.success('配置保存成功');
+        };
+
+        const removeExamItem = (index) => {
+          configForm.exam_items.splice(index, 1);
+        };
+
+        const removeBonusItem = (item) => {
+          const index = configForm.bonus_items.findIndex(i => i.item_id === item.item_id);
+          if (index !== -1) {
+            configForm.bonus_items.splice(index, 1);
+          }
+        };
+
+        const confirmAddItem = () => {
+          if (!newItemForm.name) {
+            ElementPlus.ElMessage.warning('请输入考核项名称');
+            return;
+          }
+          // 检查是否已存在"线上考试"类型
+          if (newItemForm.type === 'online_exam') {
+            const hasOnlineExam = configForm.exam_items.some(item => item.type === 'online_exam');
+            if (hasOnlineExam) {
+              ElementPlus.ElMessage.warning('已存在线上考试类型，每个课程只能有一个线上考试');
+              return;
+            }
+          }
+          configForm.exam_items.push({
+            item_id: 'item_' + Date.now(),
+            name: newItemForm.name,
+            type: newItemForm.type,
+            max_score: newItemForm.max_score
+          });
+          showAddItemDialog.value = false;
+          newItemForm.name = '';
+          newItemForm.type = 'manual';
+          newItemForm.max_score = 10;
+        };
+
+        const confirmAddBonus = () => {
+          if (!newBonusForm.name) {
+            ElementPlus.ElMessage.warning('请输入加分项名称');
+            return;
+          }
+          configForm.bonus_items.push({
+            item_id: 'bonus_' + Date.now(),
+            name: newBonusForm.name,
+            max_score: newBonusForm.max_score
+          });
+          showAddBonusDialog.value = false;
+          newBonusForm.name = '';
+          newBonusForm.max_score = 5;
+        };
+
+        // 添加加分项
+        const addBonusItem = () => {
+          newBonusForm.name = '';
+          newBonusForm.max_score = 5;
+          showAddBonusDialog.value = true;
+        };
+
+        // 计算属性：是否已存在线上考试类型
+        const hasOnlineExamItem = computed(() => {
+          return configForm.exam_items.some(item => item.type === 'online_exam');
+        });
+
+        return {
+          searchName,
+          filteredList,
+          templateList,
+          showDialog,
+          isEdit,
+          form,
+          onDaysChange,
+          addSlot,
+          removeSlot,
+          moveSlot,
+          isRestSlot,
+          isExamSlot,
+          handleCreate,
+          handleEdit,
+          handleCopy,
+          confirmSave,
+          toggleStatus,
+          handleDelete,
+          handleSearch,
+          handleReset,
+          // 考核标准配置相关
+          showConfigDialog,
+          showAddItemDialog,
+          showAddBonusDialog,
+          currentTemplate,
+          configForm,
+          newItemForm,
+          newBonusForm,
+          getTypeText,
+          handleConfig,
+          confirmConfig,
+          removeExamItem,
+          removeBonusItem,
+          confirmAddItem,
+          confirmAddBonus,
+          addBonusItem,
+          hasOnlineExamItem
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

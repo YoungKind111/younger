@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>运营交接 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: #fffbe6;
+      color: #faad14;
+      border: 1px solid #ffe58f;
+    }
+
+    .status-success {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .status-rejected {
+      background: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+    }
+
+    .status-skipped {
+      background: #f5f5f5;
+      color: #8c8c8c;
+      border: 1px solid #d9d9d9;
+    }
+
+    .check-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 14px;
+    }
+
+    .check-yes {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .check-no {
+      background: #f5f5f5;
+      color: #8c8c8c;
+    }
+
+    .empty-text {
+      color: #bfbfbf;
+      font-style: italic;
+    }
+
+    .staff-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .staff-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .tag-newbie {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #e6f7ff;
+      color: #1890ff;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .tag-veteran {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #f6ffed;
+      color: #52c41a;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .handover-time {
+      color: #595959;
+    }
+
+    .class-link {
+      color: #1890ff;
+      cursor: pointer;
+    }
+
+    .class-link:hover {
+      text-decoration: underline;
+    }
+
+    .receiver-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 档案抽屉样式 */
+    .archive-header {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, #e6f7ff 0%, #f6ffed 100%);
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .archive-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 500;
+      margin: 0 auto 16px;
+    }
+
+    .archive-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .archive-id {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .archive-tags {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .archive-section {
+      margin-bottom: 20px;
+    }
+
+    .archive-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1890ff;
+      border-left: 4px solid #1890ff;
+      padding-left: 12px;
+      margin-bottom: 16px;
+    }
+
+    .archive-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .archive-item {
+      display: flex;
+    }
+
+    .archive-label {
+      width: 100px;
+      color: #8c8c8c;
+      flex-shrink: 0;
+    }
+
+    .archive-value {
+      color: #262626;
+      font-weight: 500;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .timeline-item:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .timeline-icon.clue { background: #e6f7ff; color: #1890ff; }
+    .timeline-icon.interview { background: #f6ffed; color: #52c41a; }
+    .timeline-icon.contract { background: #fff7e6; color: #fa8c16; }
+    .timeline-icon.training { background: #f9f0ff; color: #722ed1; }
+    .timeline-icon.exam { background: #e6fffb; color: #13c2c2; }
+    .timeline-icon.work { background: #fff1f0; color: #f5222d; }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-title {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .timeline-desc {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: #8c8c8c;
+      flex-shrink: 0;
+    }
+
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+    }
+
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+
+    .tag-item:hover {
+      transform: scale(1.05);
+    }
+
+    .tag-status-unobtained { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; }
+    .tag-status-trained { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .tag-status-certified { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+
+    .cell-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .cell-tag.blue {
+      background: #e6f7ff;
+      color: #1890ff;
+      border: 1px solid #91d5ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">运营交接</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ filteredList.length }} 人</span>
+        </div>
+        <div>
+          <el-button type="primary" @click="handleBatchHandover">
+            <i class="el-icon-s-promotion"></i> 批量交接
+          </el-button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar">
+          <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 150px;">
+            <el-option label="待交接" value="pending"></el-option>
+            <el-option label="已交接" value="success"></el-option>
+            <el-option label="已拒收" value="rejected"></el-option>
+          </el-select>
+          <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 150px;">
+            <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
+          </el-select>
+          <el-select v-model="filterLevel" placeholder="全部等级" clearable :disabled="!filterPosition" style="width: 150px;">
+            <el-option v-for="level in levelList" :key="level" :label="level" :value="level"></el-option>
+          </el-select>
+          <el-date-picker v-model="filterPassTime" type="daterange" range-separator="至" start-placeholder="通过开始日期" end-placeholder="通过结束日期" value-format="YYYY-MM-DD" style="width: 280px;"></el-date-picker>
+          <el-input v-model="searchKeyword" placeholder="搜索姓名" style="width: 200px;" clearable>
+            <template #prefix>
+              <i class="el-icon-search"></i>
+            </template>
+          </el-input>
+        </div>
+
+        <el-table :data="pagedList" style="width: 100%" v-loading="loading" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" fixed></el-table-column>
+          <el-table-column label="姓名" width="140" fixed>
+            <template #default="{ row }">
+              <div class="staff-info">
+                <span class="staff-name">{{ row.name }}</span>
+                <span :class="row.type === 'newbie' ? 'tag-newbie' : 'tag-veteran'">
+                  {{ row.type === 'newbie' ? '新手' : '熟手' }}
+                </span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="岗位" width="100">
+            <template #default="{ row }">{{ row.position_name }}</template>
+          </el-table-column>
+          <el-table-column label="所属班级" min-width="200">
+            <template #default="{ row }">
+              <span class="class-link" @click="viewClassDetail(row.class_id)">{{ row.class_name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="通过等级" width="100" align="center">
+            <template #default="{ row }">{{ row.assessment_level || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="通过时间" width="120" align="center">
+            <template #default="{ row }">
+              <span v-if="row.pass_time && row.pass_time !== '-'">{{ row.pass_time }}</span>
+              <span v-else class="empty-text">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="初始简历" width="100" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_resume" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="信用保证金" width="100" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_deposit" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="服务协议" width="100" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_contract" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="体检报告" width="100" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_health_report" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="个人服务群" width="120" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_service_group" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="移交群主" width="120" align="center">
+            <template #default="{ row }">
+              <el-checkbox v-model="row.has_group_owner" @change="saveDocStatus(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="交接时间" width="160">
+            <template #default="{ row }">
+              <span v-if="row.handover_time" class="handover-time">{{ row.handover_time }}</span>
+              <span v-else class="empty-text">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="备注" min-width="180">
+            <template #default="{ row }">
+              <el-input
+                v-model="row.remark"
+                type="textarea"
+                :rows="1"
+                placeholder="请输入备注"
+                size="small"
+                @blur="saveRemark(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="管理老师是否接收" width="140" align="center">
+            <template #default="{ row }">
+              <span v-if="row.status === 'pending'" class="status-badge status-pending">待处理</span>
+              <span v-else-if="row.status === 'success'" class="status-badge status-success">已接收</span>
+              <span v-else-if="row.status === 'rejected'" class="status-badge status-rejected">已拒收</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="接收老师" width="120">
+            <template #default="{ row }">
+              <div v-if="row.receiver" class="receiver-info">
+                <i class="el-icon-user"></i>
+                <span>{{ row.receiver }}</span>
+              </div>
+              <span v-else class="empty-text">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" fixed="right">
+            <template #default="{ row }">
+              <el-button type="text" @click="viewArchive(row)">档案</el-button>
+              <el-button v-if="row.status === 'pending'" type="text" @click="handleHandover(row)">交接</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="filteredList.length"
+            layout="total, sizes, prev, pager, next, jumper"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- 档案详情抽屉 -->
+    <el-drawer v-model="showArchiveDrawer" title="人员档案详情" size="700px">
+      <template v-if="currentArchive">
+        <!-- 基本信息头部 -->
+        <div class="archive-header">
+          <div class="archive-avatar">{{ currentArchive.name.charAt(0) }}</div>
+          <div class="archive-name">{{ currentArchive.name }}</div>
+          <div class="archive-id">编号: {{ currentArchive.staff_no }} | 手机号: {{ currentArchive.phone }}</div>
+          <div class="archive-tags">
+            <span :class="currentArchive.type === 'newbie' ? 'tag-newbie' : 'tag-veteran'">
+              {{ currentArchive.type === 'newbie' ? '新手' : '熟手' }}
+            </span>
+            <span v-if="currentArchive.assessment_level" class="cell-tag blue">
+              {{ currentArchive.assessment_level }}
+            </span>
+            <span class="cell-tag blue">{{ currentArchive.position_name }}</span>
+          </div>
+        </div>
+
+        <el-tabs v-model="activeTab">
+          <!-- 基本信息 -->
+          <el-tab-pane label="基本信息" name="basic">
+            <div class="archive-section">
+              <div class="archive-section-title">个人信息</div>
+              <div class="archive-grid">
+                <div class="archive-item">
+                  <span class="archive-label">姓名：</span>
+                  <span class="archive-value">{{ currentArchive.name }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">年龄：</span>
+                  <span class="archive-value">{{ currentArchive.age }}岁</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">籍贯：</span>
+                  <span class="archive-value">{{ currentArchive.origin }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">学历：</span>
+                  <span class="archive-value">{{ currentArchive.education }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">从业年限：</span>
+                  <span class="archive-value">{{ currentArchive.experience }}年</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">岗位：</span>
+                  <span class="archive-value">{{ currentArchive.position_name }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">类型：</span>
+                  <span class="archive-value">{{ currentArchive.type === 'newbie' ? '新手' : '熟手' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">考核等级：</span>
+                  <span class="archive-value">{{ currentArchive.assessment_level || '-' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="archive-section">
+              <div class="archive-section-title">交接资料</div>
+              <div class="archive-grid">
+                <div class="archive-item">
+                  <span class="archive-label">初始简历：</span>
+                  <span class="archive-value">{{ currentArchive.has_resume ? '✓ 已提交' : '✗ 未提交' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">信用保证金：</span>
+                  <span class="archive-value">{{ currentArchive.has_deposit ? '✓ 已缴纳' : '✗ 未缴纳' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">服务协议：</span>
+                  <span class="archive-value">{{ currentArchive.has_contract ? '✓ 已签订' : '✗ 未签订' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">体检报告：</span>
+                  <span class="archive-value">{{ currentArchive.has_health_report ? '✓ 已提交' : '✗ 未提交' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">个人服务群：</span>
+                  <span class="archive-value">{{ currentArchive.has_service_group ? '✓ 已创建' : '✗ 未创建' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">移交群主：</span>
+                  <span class="archive-value">{{ currentArchive.has_group_owner ? '✓ 已移交' : '✗ 未移交' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="currentArchive.status !== 'pending'" class="archive-section">
+              <div class="archive-section-title">交接信息</div>
+              <div class="archive-grid">
+                <div class="archive-item">
+                  <span class="archive-label">交接状态：</span>
+                  <span class="archive-value">
+                    <span v-if="currentArchive.status === 'success'" style="color: #52c41a;">已交接</span>
+                    <span v-else-if="currentArchive.status === 'rejected'" style="color: #f5222d;">已拒收</span>
+                  </span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">交接时间：</span>
+                  <span class="archive-value">{{ currentArchive.handover_time || '-' }}</span>
+                </div>
+                <div class="archive-item">
+                  <span class="archive-label">接收老师：</span>
+                  <span class="archive-value">{{ currentArchive.receiver || '-' }}</span>
+                </div>
+                <div class="archive-item" v-if="currentArchive.remark">
+                  <span class="archive-label">备注：</span>
+                  <span class="archive-value">{{ currentArchive.remark }}</span>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 标签图谱 -->
+          <el-tab-pane label="标签图谱" name="tags">
+            <div style="padding: 16px;">
+              <div class="tag-cloud" style="padding: 0;">
+                <div
+                  v-for="tag in currentArchive.tags || []"
+                  :key="tag.id"
+                  class="tag-item"
+                  :class="'tag-status-' + tag.status"
+                >
+                  {{ tag.name }}
+                  <i
+                    :class="tag.status === 'certified' ? 'el-icon-check' : tag.status === 'trained' ? 'el-icon-time' : 'el-icon-close'"
+                    style="margin-left: 4px;"
+                  ></i>
+                </div>
+              </div>
+              <div v-if="!currentArchive.tags || currentArchive.tags.length === 0" style="text-align: center; padding: 40px; color: #8c8c8c;">
+                <i class="el-icon-price-tag" style="font-size: 48px; margin-bottom: 12px; display: block;"></i>
+                暂无标签信息
+              </div>
+
+              <div style="margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
+                <div style="font-weight: 600; margin-bottom: 12px;">标签状态说明</div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                  <span class="tag-item tag-status-unobtained">未获得</span>
+                  <span class="tag-item tag-status-trained">已培训</span>
+                  <span class="tag-item tag-status-certified">已持证</span>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 证书信息 -->
+          <el-tab-pane label="证书信息" name="certificates">
+            <div style="padding: 16px;">
+              <!-- 资格证书列表 -->
+              <div style="margin-bottom: 32px;">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-collection" style="margin-right: 8px; color: #1890ff;"></i>资格证书
+                </div>
+
+                <div v-if="currentArchive.certificates && currentArchive.certificates.length" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                  <div v-for="(cert, certIndex) in currentArchive.certificates" :key="cert.id" style="display: flex; align-items: center; padding: 16px 20px; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; transition: all 0.3s;"
+                       @mouseenter="$event.currentTarget.style.borderColor='#52c41a'; $event.currentTarget.style.boxShadow='0 2px 8px rgba(82,196,26,0.15)'"
+                       @mouseleave="$event.currentTarget.style.borderColor='#e8e8e8'; $event.currentTarget.style.boxShadow='none'">
+                    <i class="el-icon-circle-check" style="color: #52c41a; font-size: 20px; margin-right: 12px;"></i>
+                    <span style="font-size: 15px; color: #262626; font-weight: 500;">{{ cert.name }}</span>
+                  </div>
+                </div>
+
+                <div v-else style="text-align: center; padding: 40px; color: #8c8c8c; background: #fafafa; border-radius: 8px;">
+                  <i class="el-icon-medal" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                  暂无证书信息
+                </div>
+              </div>
+
+              <!-- 资格证照片 -->
+              <div v-if="currentArchive.certificates && currentArchive.certificates.some(c => c.photos && c.photos.length)">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-picture-outline" style="margin-right: 8px; color: #1890ff;"></i>资格证照片
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                  <div v-for="(photoItem, idx) in currentArchive.certificates.flatMap(c => c.photos ? c.photos.map(p => ({url: p, certName: c.name})) : [])" :key="idx" style="position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff;"
+                       @click="previewPhoto(photoItem.url)">
+                    <img :src="photoItem.url" style="width: 100%; height: 140px; object-fit: cover; display: block;" />
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;" class="photo-overlay">
+                      <i class="el-icon-zoom-in" style="color: #fff; font-size: 32px;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 成长轨迹 -->
+          <el-tab-pane label="成长轨迹" name="timeline">
+            <div style="padding: 8px 0;">
+              <div v-for="(item, index) in currentArchive.timeline || []" :key="index" class="timeline-item">
+                <div class="timeline-icon" :class="item.type">
+                  <i :class="item.icon"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">{{ item.title }}</div>
+                  <div class="timeline-desc">{{ item.desc }}</div>
+                </div>
+                <div class="timeline-time">{{ item.time }}</div>
+              </div>
+              <div v-if="!currentArchive.timeline || currentArchive.timeline.length === 0" style="text-align: center; padding: 40px; color: #8c8c8c;">
+                <i class="el-icon-time" style="font-size: 48px; margin-bottom: 12px; display: block;"></i>
+                暂无成长轨迹记录
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 上户记录 -->
+          <el-tab-pane label="上户记录" name="work">
+            <div style="padding: 16px;">
+              <el-table :data="currentArchive.workRecords || []" style="width: 100%">
+                <el-table-column label="服务时间" width="180">
+                  <template #default="{ row }">{{ row.period }}</template>
+                </el-table-column>
+                <el-table-column label="服务类型" width="120">
+                  <template #default="{ row }">{{ row.type }}</template>
+                </el-table-column>
+                <el-table-column label="客户评价" width="120">
+                  <template #default="{ row }">
+                    <el-rate v-model="row.rating" disabled show-score text-color="#ff9900"></el-rate>
+                  </template>
+                </el-table-column>
+                <el-table-column label="评价内容">
+                  <template #default="{ row }">{{ row.comment }}</template>
+                </el-table-column>
+              </el-table>
+              <div v-if="!currentArchive.workRecords || currentArchive.workRecords.length === 0" style="text-align: center; padding: 40px; color: #8c8c8c;">
+                <i class="el-icon-s-custom" style="font-size: 48px; margin-bottom: 12px; display: block;"></i>
+                暂无上户记录
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 12px;">
+          <el-button v-if="currentArchive.status === 'pending'" type="primary" style="flex: 1;" @click="handleHandoverFromDrawer">
+            <i class="el-icon-s-promotion"></i> 交接
+          </el-button>
+          <el-button style="flex: 1;" @click="showArchiveDrawer = false">关闭</el-button>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 照片预览对话框 -->
+    <el-dialog v-model="showPhotoDialog" title="照片预览" width="600px" center>
+      <div style="text-align: center; padding: 20px;">
+        <img :src="currentPhoto" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+      </div>
+      <template #footer>
+        <el-button @click="showPhotoDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 交接对话框 -->
+    <el-dialog v-model="showHandoverDialog" title="运营交接" width="600px">
+      <el-form :model="handoverForm" label-width="120px">
+        <el-form-item label="护理人员">
+          <div style="font-weight: 500;">{{ currentStaff?.name }}</div>
+          <div style="font-size: 13px; color: #8c8c8c;">{{ currentStaff?.position_name }} | {{ currentStaff?.assessment_level }}</div>
+        </el-form-item>
+        <el-form-item label="是否交接">
+          <el-radio-group v-model="handoverForm.handover_type">
+            <el-radio label="handover">正常交接</el-radio>
+            <el-radio label="reject">拒收</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="handoverForm.handover_type === 'reject'" label="拒收理由">
+          <el-input v-model="handoverForm.reject_reason" type="textarea" :rows="3" placeholder="请填写拒收理由"></el-input>
+        </el-form-item>
+        <el-form-item v-else label="接收老师">
+          <el-select v-model="handoverForm.receiver" placeholder="请选择接收老师" style="width: 100%;">
+            <el-option v-for="teacher in receiverList" :key="teacher.id" :label="teacher.name" :value="teacher.name"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showHandoverDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmHandover">确认</el-button>
+      </template>
+    </el-dialog>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('handover', {
+      title: '运营交接',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 招募管理 / 运营交接'
+    });
+
+    createApp({
+      setup() {
+        const filterStatus = ref('');
+        const filterPosition = ref('');
+        const filterLevel = ref('');
+        const filterPassTime = ref([]);
+        const searchKeyword = ref('');
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const loading = ref(false);
+        const selectedRows = ref([]);
+
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        const positionLevelMap = {
+          1: ['Y3-1', 'Y3-2', 'Y4-1', 'Y4-2', 'Y5'],
+          2: ['Y3-1', 'Y3-2', 'Y4-1', 'Y4-2'],
+          3: ['Y3-1', 'Y3-2', 'Y4']
+        };
+
+        const levelList = computed(() => {
+          if (!filterPosition.value) return [];
+          return positionLevelMap[filterPosition.value] || [];
+        });
+
+        const receiverList = ref([
+          { id: 1, name: '王运营' },
+          { id: 2, name: '李运营' },
+          { id: 3, name: '张运营' },
+          { id: 4, name: '刘运营' }
+        ]);
+
+        const handoverList = ref([
+          {
+            id: 101,
+            name: '王秀英',
+            type: 'newbie',
+            position_id: 1,
+            position_name: '月嫂',
+            class_id: 1,
+            class_name: '2026年4月月嫂新手班-A班',
+            assessment_level: 'Y3-2',
+            pass_time: '2026-04-10',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-10 15:30',
+            remark: '',
+            status: 'success',
+            reject_reason: '',
+            receiver: '王运营'
+          },
+          {
+            id: 102,
+            name: '李桂花',
+            type: 'newbie',
+            position_id: 1,
+            position_name: '月嫂',
+            class_id: 1,
+            class_name: '2026年4月月嫂新手班-A班',
+            assessment_level: 'Y3-1',
+            pass_time: '2026-04-09',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: false,
+            handover_time: '',
+            remark: '',
+            status: 'pending',
+            reject_reason: '',
+            receiver: ''
+          },
+          {
+            id: 103,
+            name: '张淑芬',
+            type: 'veteran',
+            position_id: 1,
+            position_name: '月嫂',
+            class_id: 2,
+            class_name: '2026年4月熟手强化班',
+            assessment_level: 'Y4-2',
+            pass_time: '2026-04-08',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-09 10:15',
+            remark: '',
+            status: 'success',
+            reject_reason: '',
+            receiver: '李运营'
+          },
+          {
+            id: 104,
+            name: '陈美华',
+            type: 'newbie',
+            position_id: 1,
+            position_name: '月嫂',
+            class_id: 1,
+            class_name: '2026年4月月嫂新手班-A班',
+            assessment_level: '-',
+            pass_time: '-',
+            has_resume: true,
+            has_deposit: false,
+            has_contract: false,
+            has_health_report: false,
+            has_service_group: false,
+            has_group_owner: false,
+            handover_time: '',
+            remark: '',
+            status: 'rejected',
+            reject_reason: '考核未通过',
+            receiver: ''
+          },
+          {
+            id: 105,
+            name: '刘玉兰',
+            type: 'veteran',
+            position_id: 1,
+            position_name: '月嫂',
+            class_id: 2,
+            class_name: '2026年4月熟手强化班',
+            assessment_level: 'Y5',
+            pass_time: '2026-04-07',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-08 14:20',
+            remark: '',
+            status: 'rejected',
+            reject_reason: '资料不完整，缺少体检报告详细页',
+            receiver: ''
+          },
+          {
+            id: 106,
+            name: '周小燕',
+            type: 'newbie',
+            position_id: 2,
+            position_name: '育儿嫂',
+            class_id: 3,
+            class_name: '2026年4月育儿嫂基础班',
+            assessment_level: 'Y3-2',
+            pass_time: '2026-04-10',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-10 16:00',
+            remark: '',
+            status: 'success',
+            reject_reason: '',
+            receiver: '张运营'
+          },
+          {
+            id: 107,
+            name: '赵小芳',
+            type: 'veteran',
+            position_id: 2,
+            position_name: '育儿嫂',
+            class_id: 4,
+            class_name: '2026年4月育儿嫂进阶班',
+            assessment_level: 'Y4-1',
+            pass_time: '2026-04-06',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: false,
+            has_service_group: false,
+            has_group_owner: false,
+            handover_time: '',
+            remark: '',
+            status: 'pending',
+            reject_reason: '',
+            receiver: ''
+          },
+          {
+            id: 108,
+            name: '钱小敏',
+            type: 'veteran',
+            position_id: 3,
+            position_name: '养老护理',
+            class_id: 5,
+            class_name: '2026年4月养老护理基础班',
+            assessment_level: 'Y4',
+            pass_time: '2026-04-05',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-06 09:30',
+            remark: '',
+            status: 'success',
+            reject_reason: '',
+            receiver: '王运营'
+          },
+          {
+            id: 109,
+            name: '孙小琴',
+            type: 'newbie',
+            position_id: 3,
+            position_name: '养老护理',
+            class_id: 5,
+            class_name: '2026年4月养老护理基础班',
+            assessment_level: 'Y3-1',
+            pass_time: '2026-04-08',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: false,
+            has_group_owner: false,
+            handover_time: '',
+            remark: '',
+            status: 'pending',
+            reject_reason: '',
+            receiver: ''
+          },
+          {
+            id: 110,
+            name: '李小红',
+            type: 'newbie',
+            position_id: 2,
+            position_name: '育儿嫂',
+            class_id: 3,
+            class_name: '2026年4月育儿嫂基础班',
+            assessment_level: 'Y3-2',
+            pass_time: '2026-04-09',
+            has_resume: true,
+            has_deposit: true,
+            has_contract: true,
+            has_health_report: true,
+            has_service_group: true,
+            has_group_owner: true,
+            handover_time: '2026-04-09 11:00',
+            remark: '',
+            status: 'success',
+            reject_reason: '',
+            receiver: '李运营'
+          }
+        ]);
+
+        const filteredList = computed(() => {
+          let list = handoverList.value;
+          if (filterStatus.value) {
+            list = list.filter(item => item.status === filterStatus.value);
+          }
+          if (filterPosition.value) {
+            list = list.filter(item => item.position_id === filterPosition.value);
+          }
+          if (filterLevel.value) {
+            list = list.filter(item => item.assessment_level === filterLevel.value);
+          }
+          if (filterPassTime.value && filterPassTime.value.length === 2) {
+            const [startDate, endDate] = filterPassTime.value;
+            list = list.filter(item => {
+              if (!item.pass_time || item.pass_time === '-') return false;
+              const passTime = new Date(item.pass_time);
+              return passTime >= new Date(startDate) && passTime <= new Date(endDate);
+            });
+          }
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            list = list.filter(item => item.name.toLowerCase().includes(keyword));
+          }
+          return list;
+        });
+
+        const pagedList = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          const end = start + pageSize.value;
+          return filteredList.value.slice(start, end);
+        });
+
+        const showHandoverDialog = ref(false);
+        const showArchiveDrawer = ref(false);
+        const showPhotoDialog = ref(false);
+        const currentStaff = ref(null);
+        const currentArchive = ref(null);
+        const currentPhoto = ref('');
+        const activeTab = ref('basic');
+
+        const handoverForm = ref({
+          handover_type: 'handover',
+          remark: '',
+          reject_reason: '',
+          receiver: ''
+        });
+
+        const handleSelectionChange = (selection) => {
+          selectedRows.value = selection;
+        };
+
+        const handleHandover = (row) => {
+          currentStaff.value = row;
+          handoverForm.value = {
+            handover_type: 'handover',
+            remark: '',
+            reject_reason: '',
+            receiver: ''
+          };
+          showHandoverDialog.value = true;
+        };
+
+        const viewArchive = (row) => {
+          // 生成模拟档案数据
+          currentArchive.value = {
+            ...row,
+            staff_no: 'YS' + String(row.id).padStart(6, '0'),
+            phone: '138****' + String(row.id).slice(-4),
+            age: row.type === 'veteran' ? 45 : 32,
+            origin: '湖南长沙',
+            education: '高中',
+            experience: row.type === 'veteran' ? 8 : 0,
+            // 标签数据
+            tags: [
+              { id: 'bath', name: '宝宝洗澡', status: 'certified' },
+              { id: 'umbilical', name: '脐带护理', status: 'certified' },
+              { id: 'jaundice', name: '黄疸观察', status: row.type === 'veteran' ? 'certified' : 'trained' },
+              { id: 'maternal', name: '产妇护理', status: row.type === 'veteran' ? 'certified' : 'trained' },
+              { id: 'feeding', name: '喂养规范', status: 'certified' },
+              { id: 'nutrition', name: '月子餐', status: row.type === 'veteran' ? 'certified' : 'unobtained' }
+            ],
+            // 证书数据
+            certificates: row.type === 'veteran' ? [
+              {
+                id: 1,
+                name: '母婴护理服务合格证',
+                no: 'MY2026' + String(row.id).padStart(4, '0'),
+                validity: '2027-04-06',
+                photos: [
+                  'https://picsum.photos/seed/cert' + row.id + 'a/400/300',
+                  'https://picsum.photos/seed/cert' + row.id + 'b/400/300'
+                ]
+              }
+            ] : [],
+            // 成长轨迹
+            timeline: [
+              {
+                type: 'clue',
+                icon: 'el-icon-share',
+                title: '线索录入',
+                desc: '通过招聘渠道获取人员信息',
+                time: '2026-01-15'
+              },
+              {
+                type: 'interview',
+                icon: 'el-icon-chat-dot-square',
+                title: '邀约到店',
+                desc: '完成面试，表现良好',
+                time: '2026-01-20'
+              },
+              {
+                type: 'contract',
+                icon: 'el-icon-document-checked',
+                title: '签约入册',
+                desc: '签订服务协议，缴纳信用保证金',
+                time: '2026-01-22'
+              },
+              {
+                type: 'training',
+                icon: 'el-icon-reading',
+                title: '参加培训',
+                desc: `完成${row.position_name}岗位培训`,
+                time: '2026-03-01'
+              },
+              {
+                type: 'exam',
+                icon: 'el-icon-trophy',
+                title: '考核评定',
+                desc: row.assessment_level ? `获得${row.assessment_level}等级` : '考核未通过',
+                time: '2026-04-10'
+              }
+            ],
+            // 上户记录
+            workRecords: row.type === 'veteran' ? [
+              {
+                period: '2025-06-01 至 2025-07-15',
+                type: '住家月嫂',
+                rating: 5,
+                comment: '服务专业，照顾宝宝细心周到，月子餐做得很好吃。'
+              },
+              {
+                period: '2025-03-10 至 2025-04-10',
+                type: '住家月嫂',
+                rating: 4.5,
+                comment: '总体满意，沟通顺畅，推荐。'
+              }
+            ] : []
+          };
+          activeTab.value = 'basic';
+          showArchiveDrawer.value = true;
+        };
+
+        const previewPhoto = (url) => {
+          currentPhoto.value = url;
+          showPhotoDialog.value = true;
+        };
+
+        const handleHandoverFromDrawer = () => {
+          showArchiveDrawer.value = false;
+          if (currentArchive.value) {
+            handleHandover(currentArchive.value);
+          }
+        };
+
+        const confirmHandover = () => {
+          if (!currentStaff.value) return;
+
+          const staff = handoverList.value.find(s => s.id === currentStaff.value.id);
+          if (staff) {
+            const type = handoverForm.value.handover_type;
+            if (type === 'handover') {
+              // 正常交接
+              staff.status = 'success';
+              staff.handover_time = new Date().toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+              }).replace(/\//g, '-');
+              staff.receiver = handoverForm.value.receiver;
+              staff.remark = '';
+              staff.reject_reason = '';
+            } else if (type === 'reject') {
+              // 拒收
+              staff.status = 'rejected';
+              staff.reject_reason = handoverForm.value.reject_reason;
+              staff.handover_time = '';
+              staff.receiver = '';
+              staff.remark = '';
+            }
+          }
+
+          showHandoverDialog.value = false;
+          ElementPlus.ElMessage.success('交接操作成功');
+        };
+
+        const handleBatchHandover = () => {
+          if (selectedRows.value.length === 0) {
+            ElementPlus.ElMessage.warning('请至少选择一名护理人员');
+            return;
+          }
+          ElementPlus.ElMessage.info(`已选择 ${selectedRows.value.length} 人，请逐个确认交接`);
+        };
+
+        const saveDocStatus = (row) => {
+          // 这里可以添加保存到后端的逻辑
+          // 目前只在前端更新状态
+        };
+
+        const saveRemark = (row) => {
+          // 这里可以添加保存备注到后端的逻辑
+          // 目前只在前端更新状态
+        };
+
+        const viewClassDetail = (classId) => {
+          window.location.href = `training-class-detail.html?id=${classId}`;
+        };
+
+        return {
+          filterStatus,
+          filterPosition,
+          filterLevel,
+          filterPassTime,
+          levelList,
+          searchKeyword,
+          currentPage,
+          pageSize,
+          loading,
+          positionList,
+          receiverList,
+          filteredList,
+          pagedList,
+          showHandoverDialog,
+          showArchiveDrawer,
+          showPhotoDialog,
+          currentStaff,
+          currentArchive,
+          currentPhoto,
+          handoverForm,
+          activeTab,
+          handleSelectionChange,
+          handleHandover,
+          confirmHandover,
+          handleBatchHandover,
+          saveDocStatus,
+          saveRemark,
+          viewArchive,
+          viewClassDetail,
+          handleHandoverFromDrawer,
+          previewPhoto
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

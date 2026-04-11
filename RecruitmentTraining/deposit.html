@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>押金台账 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 押金台账专用样式 */
+    .deposit-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .deposit-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+      .deposit-stats { grid-template-columns: 1fr; }
+    }
+
+    .deposit-stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid #f0f0f0;
+    }
+
+    .deposit-stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .deposit-stat-value.received { color: #52c41a; }
+    .deposit-stat-value.deducted { color: #f5222d; }
+    .deposit-stat-value.refunded { color: #fa8c16; }
+    .deposit-stat-value.balance { color: #1890ff; }
+    .deposit-stat-value.receivable { color: #722ed1; }
+
+    .deposit-stat-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+
+    .deposit-ledger {
+      margin-top: 16px;
+    }
+
+    .ledger-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      transition: all 0.3s;
+    }
+
+    .ledger-item:hover {
+      background: #f0f0f0;
+    }
+
+    .ledger-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-right: 16px;
+    }
+
+    .ledger-info {
+      flex: 1;
+    }
+
+    .ledger-name {
+      font-weight: 500;
+      color: #262626;
+      font-size: 15px;
+    }
+
+    .ledger-meta {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .ledger-amounts {
+      display: flex;
+      gap: 32px;
+      text-align: center;
+    }
+
+    .ledger-amount {
+      min-width: 70px;
+    }
+
+    .ledger-amount-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .ledger-amount-value.received { color: #52c41a; }
+    .ledger-amount-value.deducted { color: #f5222d; }
+    .ledger-amount-value.balance { color: #1890ff; }
+    .ledger-amount-value.receivable { color: #722ed1; }
+
+    .ledger-amount-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .ledger-actions {
+      margin-left: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    /* 交易记录时间线 */
+    .transaction-timeline {
+      padding-left: 16px;
+    }
+
+    .transaction-item {
+      position: relative;
+      padding-bottom: 16px;
+      padding-left: 20px;
+      border-left: 2px solid #e8e8e8;
+    }
+
+    .transaction-item::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1890ff;
+      border: 2px solid #fff;
+    }
+
+    .transaction-item.received::before { background: #52c41a; }
+    .transaction-item.pending::before { background: #fa8c16; }
+    .transaction-item.deducted::before { background: #f5222d; }
+    .transaction-item.refunded::before { background: #1890ff; }
+
+    .transaction-time {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+
+    .transaction-content {
+      color: #262626;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transaction-amount {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .transaction-amount.received { color: #52c41a; }
+    .transaction-amount.pending { color: #fa8c16; }
+    .transaction-amount.deducted { color: #f5222d; }
+    .transaction-amount.refunded { color: #1890ff; }
+
+    /* 明细抽屉样式 */
+    .detail-section {
+      margin-bottom: 24px;
+    }
+
+    .detail-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-label {
+      font-size: 13px;
+      color: #8c8c8c;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      color: #262626;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+  <!-- 计算公式提示 -->
+    <div style="padding: 12px 20px; background: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f; font-size: 13px; color: #262626; margin-bottom: 24px;">
+      <i class="el-icon-info" style="color: #52c41a; margin-right: 8px;"></i>
+      <span style="margin-right: 24px;"><strong>应收押金</strong> = 已收押金 + 待收押金</span>
+      <span><strong>剩余押金</strong> = 已收押金 - 已退押金 - 已扣押金</span>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="deposit-stats" style="grid-template-columns: repeat(6, 1fr);">
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value" style="color: #722ed1;">¥{{ stats.totalReceivable }}</div>
+        <div class="deposit-stat-label">应收押金</div>
+      </div>
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value received">¥{{ stats.totalReceived }}</div>
+        <div class="deposit-stat-label">累计收款</div>
+      </div>
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value" style="color: #fa8c16;">¥{{ stats.totalPending }}</div>
+        <div class="deposit-stat-label">待收押金</div>
+      </div>
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value deducted">¥{{ stats.totalDeducted }}</div>
+        <div class="deposit-stat-label">累计扣款</div>
+      </div>
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value refunded">¥{{ stats.totalRefunded }}</div>
+        <div class="deposit-stat-label">累计退款</div>
+      </div>
+      <div class="deposit-stat-card">
+        <div class="deposit-stat-value balance">¥{{ stats.totalBalance }}</div>
+        <div class="deposit-stat-label">累计剩余押金</div>
+      </div>
+    </div>
+
+  
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-item" style="flex: 1; max-width: 300px;">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索姓名/手机号"
+          clearable
+          prefix-icon="el-icon-search"
+        ></el-input>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">岗位:</span>
+        <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 120px;">
+          <el-option label="月嫂" value="月嫂"></el-option>
+          <el-option label="育婴师" value="育婴师"></el-option>
+          <el-option label="老年护工" value="老年护工"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">签约日期:</span>
+        <el-date-picker
+          v-model="filterDateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 220px;"
+        ></el-date-picker>
+      </div>
+      <div class="filter-item">
+        <el-button type="primary" @click="handleSearch">
+          <i class="el-icon-search"></i> 查询
+        </el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
+    </div>
+
+    <!-- 押金台账列表 -->
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">押金台账</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ total }} 条记录</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="deposit-ledger">
+          <div v-for="item in ledgerList" :key="item.id" class="ledger-item">
+            <div class="ledger-avatar">{{ item.name.charAt(0) }}</div>
+            <div class="ledger-info">
+              <div class="ledger-name">{{ item.name }}</div>
+              <div class="ledger-meta">{{ item.position }} | 签约日期: {{ item.contractDate }} | 手机号: {{ item.phone }}</div>
+            </div>
+            <div class="ledger-amounts">
+              <div class="ledger-amount">
+                <div class="ledger-amount-value" style="color: #722ed1;">¥2000</div>
+                <div class="ledger-amount-label">应收押金</div>
+              </div>
+              <div class="ledger-amount">
+                <div class="ledger-amount-value received">¥{{ item.received }}</div>
+                <div class="ledger-amount-label">已收押金</div>
+              </div>
+              <div class="ledger-amount">
+                <div class="ledger-amount-value" style="color: #fa8c16;">¥{{ item.pending }}</div>
+                <div class="ledger-amount-label">待收押金</div>
+              </div>
+              <div class="ledger-amount">
+                <div class="ledger-amount-value deducted">¥{{ item.deducted }}</div>
+                <div class="ledger-amount-label">已扣押金</div>
+              </div>
+              <div class="ledger-amount">
+                <div class="ledger-amount-value" style="color: #1890ff;">¥{{ item.refunded || 0 }}</div>
+                <div class="ledger-amount-label">已退押金</div>
+              </div>
+              <div class="ledger-amount">
+                <div class="ledger-amount-value balance">¥{{ item.received - (item.refunded || 0) - item.deducted }}</div>
+                <div class="ledger-amount-label">剩余押金</div>
+              </div>
+            </div>
+            <div class="ledger-actions">
+              <el-button type="text" @click="viewDetail(item)">明细</el-button>
+              <el-button type="text" style="color: #f5222d;" @click="handleDeduct(item)">扣款</el-button>
+              <el-button type="text" class="text-danger" @click="handleRefund(item)">退款</el-button>
+            </div>
+          </div>
+        </div>
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+
+    <!-- 明细抽屉 -->
+    <el-drawer
+      v-model="showDetailDrawer"
+      title="押金明细"
+      size="500px"
+    >
+      <template v-if="currentLedger">
+        <div class="detail-section">
+          <div class="detail-title">人员信息</div>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">姓名</span>
+              <span class="detail-value">{{ currentLedger.name }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">手机号</span>
+              <span class="detail-value">{{ currentLedger.phone }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">目标岗位</span>
+              <span class="detail-value">{{ currentLedger.position }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">签约日期</span>
+              <span class="detail-value">{{ currentLedger.contractDate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-title">押金余额</div>
+          <div style="display: flex; gap: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; flex-wrap: wrap;">
+            <div style="text-align: center; flex: 1; min-width: 100px;">
+              <div style="font-size: 12px; color: #8c8c8c;">应收押金</div>
+              <div style="font-size: 18px; font-weight: 600; color: #722ed1; margin-top: 4px;">¥2000</div>
+            </div>
+            <div style="text-align: center; flex: 1; min-width: 100px;">
+              <div style="font-size: 12px; color: #8c8c8c;">已收押金</div>
+              <div style="font-size: 18px; font-weight: 600; color: #52c41a; margin-top: 4px;">¥{{ currentLedger.received }}</div>
+            </div>
+            <div style="text-align: center; flex: 1; min-width: 100px;">
+              <div style="font-size: 12px; color: #8c8c8c;">已扣押金</div>
+              <div style="font-size: 18px; font-weight: 600; color: #f5222d; margin-top: 4px;">¥{{ currentLedger.deducted }}</div>
+            </div>
+            <div style="text-align: center; flex: 1; min-width: 100px;">
+              <div style="font-size: 12px; color: #8c8c8c;">已退押金</div>
+              <div style="font-size: 18px; font-weight: 600; color: #1890ff; margin-top: 4px;">¥{{ currentLedger.refunded || 0 }}</div>
+            </div>
+            <div style="text-align: center; flex: 1; min-width: 100px;">
+              <div style="font-size: 12px; color: #8c8c8c;">剩余押金</div>
+              <div style="font-size: 18px; font-weight: 600; color: #1890ff; margin-top: 4px;">¥{{ currentLedger.received - (currentLedger.refunded || 0) - currentLedger.deducted }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-title">交易记录</div>
+          <div class="transaction-timeline">
+            <div
+              v-for="(record, index) in currentLedger.transactions.filter(r => r.type !== 'pending')"
+              :key="index"
+              class="transaction-item"
+              :class="record.type"
+            >
+              <div class="transaction-time">{{ record.time }}</div>
+              <div class="transaction-content">
+                <span>{{ record.description }}</span>
+                <span class="transaction-amount" :class="record.type">
+                  {{ record.type === 'received' ? '+' : record.type === 'refunded' ? '-' : '' }}¥{{ record.amount }}
+                </span>
+              </div>
+            </div>
+<div v-if="!currentLedger.transactions || currentLedger.transactions.filter(r => r.type !== 'pending').length === 0" style="color: #8c8c8c; padding: 20px 0;">
+              暂无交易记录
+            </div>
+          </div>
+        </div>
+
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 12px;">
+          <el-button type="primary" style="flex: 1; background: #f5222d; border-color: #f5222d;" @click="handleDeduct(currentLedger)">
+            <i class="el-icon-minus"></i> 办理扣款
+          </el-button>
+          <el-button type="primary" style="flex: 1;" @click="handleRefund(currentLedger)">
+            <i class="el-icon-money"></i> 办理退款
+          </el-button>
+          <el-button style="flex: 1;" @click="showDetailDrawer = false">关闭</el-button>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 扣款对话框 -->
+    <el-dialog
+      v-model="showDeductDialog"
+      title="押金扣款"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <div style="padding: 20px;" v-if="currentLedger">
+        <div style="margin-bottom: 20px; padding: 16px; background: #fff2f0; border-radius: 8px; border: 1px solid #ffccc7;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="color: #262626; font-weight: 500;">{{ currentLedger.name }}</div>
+              <div style="color: #8c8c8c; font-size: 13px; margin-top: 4px;">{{ currentLedger.position }} | {{ currentLedger.phone }}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: #8c8c8c;">当前剩余押金</div>
+              <div style="font-size: 24px; font-weight: 600; color: #f5222d;">¥{{ currentLedger.received - (currentLedger.refunded || 0) - currentLedger.deducted }}</div>
+            </div>
+          </div>
+        </div>
+
+        <el-form :model="deductForm" label-width="100px">
+          <el-form-item label="扣款金额" required>
+            <el-input-number v-model="deductForm.amount" :min="0" :max="currentLedger.received - (currentLedger.refunded || 0) - currentLedger.deducted" :precision="2" style="width: 200px;"></el-input-number>
+            <span style="margin-left: 8px; color: #8c8c8c;">元</span>
+          </el-form-item>
+          <el-form-item label="扣款原因" required>
+            <el-select v-model="deductForm.reason" placeholder="请选择扣款原因" style="width: 100%;">
+              <el-option label="客户投诉" value="complaint"></el-option>
+              <el-option label="损坏物品" value="damage"></el-option>
+              <el-option label="违反规定" value="violation"></el-option>
+              <el-option label="其他原因" value="other"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注说明">
+            <el-input
+              v-model="deductForm.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入备注信息（可选）"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="showDeductDialog = false">取消</el-button>
+        <el-button type="primary" style="background: #f5222d; border-color: #f5222d;" @click="confirmDeduct" :disabled="!deductForm.amount || deductForm.amount <= 0">确认扣款</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 退款对话框 -->
+    <el-dialog
+      v-model="showRefundDialog"
+      title="押金退款"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <div style="padding: 20px;" v-if="currentLedger">
+        <div style="margin-bottom: 20px; padding: 16px; background: #e6f7ff; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div style="color: #262626; font-weight: 500;">{{ currentLedger.name }}</div>
+              <div style="color: #8c8c8c; font-size: 13px; margin-top: 4px;">{{ currentLedger.position }} | {{ currentLedger.phone }}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: #8c8c8c;">可退金额（剩余押金）</div>
+              <div style="font-size: 24px; font-weight: 600; color: #1890ff;">¥{{ currentLedger.received - (currentLedger.refunded || 0) - currentLedger.deducted }}</div>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: #8c8c8c; padding-top: 12px; border-top: 1px dashed #b7eb8f;">
+            <i class="el-icon-info"></i>
+            待收押金¥{{ currentLedger.pending }}将在后续订单中扣除，不在退款范围内
+          </div>
+        </div>
+
+        <el-form :model="refundForm" label-width="100px">
+          <el-form-item label="退款金额" required>
+            <el-input-number v-model="refundForm.amount" :min="0" :max="currentLedger.received - (currentLedger.refunded || 0) - currentLedger.deducted" :precision="2" style="width: 200px;"></el-input-number>
+            <span style="margin-left: 8px; color: #8c8c8c;">元</span>
+          </el-form-item>
+          <el-form-item label="退款方式" required>
+            <el-radio-group v-model="refundForm.method">
+              <el-radio label="cash">现金</el-radio>
+              <el-radio label="wechat">微信</el-radio>
+              <el-radio label="alipay">支付宝</el-radio>
+              <el-radio label="bank">银行转账</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="退款原因" required>
+            <el-select v-model="refundForm.reason" placeholder="请选择退款原因" style="width: 100%;">
+              <el-option label="正常离职" value="quit"></el-option>
+              <el-option label="合同期满" value="expire"></el-option>
+              <el-option label="客户投诉扣款后退还" value="complaint"></el-option>
+              <el-option label="其他原因" value="other"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注说明">
+            <el-input
+              v-model="refundForm.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入备注信息（可选）"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="showRefundDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmRefund" :disabled="!refundForm.amount || refundForm.amount <= 0">确认退款</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('deposit', {
+      title: '押金台账',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 押金台账'
+    });
+
+    createApp({
+      setup() {
+        // 统计数据
+        const stats = ref({
+          totalReceivable: 10000,
+          totalReceived: 5600,
+          totalPending: 4400,
+          totalDeducted: 0,
+          totalRefunded: 0,
+          totalBalance: 5600  // 剩余押金 = 已收 - 已退 - 已扣
+        });
+
+        // 筛选条件
+        const searchKeyword = ref('');
+        const filterPosition = ref('');
+        const filterDateRange = ref([]);
+
+        // 分页
+        const currentPage = ref(1);
+        const pageSize = ref(10);
+        const total = ref(156);
+
+        // 对话框控制
+        const showDetailDrawer = ref(false);
+        const showDeductDialog = ref(false);
+        const showRefundDialog = ref(false);
+
+        // 当前选中的台账
+        const currentLedger = ref(null);
+
+        // 扣款表单
+        const deductForm = ref({
+          amount: 0,
+          reason: '',
+          remark: ''
+        });
+
+        // 退款表单
+        const refundForm = ref({
+          amount: 0,
+          method: 'cash',
+          reason: '',
+          remark: ''
+        });
+
+        // 押金台账数据
+        const ledgerList = ref([
+          {
+            id: 1,
+            name: '王秀英',
+            phone: '138****5678',
+            position: '月嫂',
+            contractDate: '2026-04-01',
+            received: 700,
+            pending: 1300,
+            deducted: 0,
+            balance: 700,
+            refunded: 0,
+            transactions: [
+              { time: '2026-04-01 10:30', type: 'received', amount: 700, description: '签约收款-押金¥700' }
+            ]
+          },
+          {
+            id: 2,
+            name: '李桂花',
+            phone: '139****1234',
+            position: '育婴师',
+            contractDate: '2026-03-28',
+            received: 1400,
+            pending: 600,
+            deducted: 0,
+            balance: 1400,
+            refunded: 0,
+            transactions: [
+              { time: '2026-03-28 14:00', type: 'received', amount: 700, description: '签约收款-押金¥700' },
+              { time: '2026-04-05 09:30', type: 'deducted', amount: 700, description: '首单收押金¥700（熟手）' }
+            ]
+          },
+          {
+            id: 3,
+            name: '张淑芬',
+            phone: '137****9876',
+            position: '月嫂',
+            contractDate: '2026-03-25',
+            received: 1400,
+            pending: 600,
+            deducted: 0,
+            balance: 1400,
+            refunded: 0,
+            transactions: [
+              { time: '2026-03-25 11:00', type: 'received', amount: 700, description: '签约收款-押金¥700' },
+              { time: '2026-04-02 16:00', type: 'deducted', amount: 700, description: '首单收押金¥700（新手）' }
+            ]
+          },
+          {
+            id: 4,
+            name: '陈美华',
+            phone: '136****2468',
+            position: '老年护工',
+            contractDate: '2026-03-20',
+            received: 700,
+            pending: 1300,
+            deducted: 0,
+            balance: 700,
+            refunded: 0,
+            transactions: [
+              { time: '2026-03-20 15:30', type: 'received', amount: 700, description: '签约收款-押金¥700' }
+            ]
+          },
+          {
+            id: 5,
+            name: '刘玉兰',
+            phone: '135****1357',
+            position: '月嫂',
+            contractDate: '2026-03-18',
+            received: 1400,
+            pending: 600,
+            deducted: 0,
+            balance: 1400,
+            refunded: 0,
+            transactions: [
+              { time: '2026-03-18 10:00', type: 'received', amount: 700, description: '签约收款-押金¥700' },
+              { time: '2026-03-28 14:30', type: 'deducted', amount: 700, description: '首单收押金¥700（熟手）' }
+            ]
+          }
+        ]);
+
+        // 搜索
+        const handleSearch = () => {
+          ElementPlus.ElMessage.success('查询完成');
+        };
+
+        // 重置筛选
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterPosition.value = '';
+          filterDateRange.value = [];
+        };
+
+        // 导出
+        const handleExport = () => {
+          ElementPlus.ElMessage.success('正在导出，请稍候...');
+        };
+
+        // 查看明细
+        const viewDetail = (item) => {
+          currentLedger.value = item;
+          showDetailDrawer.value = true;
+        };
+
+        // 扣款
+        const handleDeduct = (item) => {
+          currentLedger.value = item;
+          // 最大可扣金额 = 剩余押金 = 已收 - 已退 - 已扣
+          const maxDeduct = item.received - (item.refunded || 0) - item.deducted;
+          deductForm.value = {
+            amount: maxDeduct,
+            reason: '',
+            remark: ''
+          };
+          showDeductDialog.value = true;
+        };
+
+        // 确认扣款
+        const confirmDeduct = () => {
+          if (!deductForm.value.amount || deductForm.value.amount <= 0) {
+            ElementPlus.ElMessage.warning('请输入扣款金额');
+            return;
+          }
+          if (!deductForm.value.reason) {
+            ElementPlus.ElMessage.warning('请选择扣款原因');
+            return;
+          }
+
+          // 验证：已退 + 已扣 + 本次扣款 不能超过 已收
+          const currentDeducted = currentLedger.value.deducted || 0;
+          const currentRefunded = currentLedger.value.refunded || 0;
+          const totalAfterDeduct = currentRefunded + currentDeducted + deductForm.value.amount;
+          if (totalAfterDeduct > currentLedger.value.received) {
+            ElementPlus.ElMessage.error(`扣款失败：已退押金(¥${currentRefunded}) + 已扣押金(¥${currentDeducted}) + 本次扣款(¥${deductForm.value.amount}) = ¥${totalAfterDeduct}，已超过已收押金(¥${currentLedger.value.received})`);
+            return;
+          }
+
+          const reasonMap = {
+            'complaint': '客户投诉',
+            'damage': '损坏物品',
+            'violation': '违反规定',
+            'other': '其他原因'
+          };
+
+          // 更新已扣押金和添加交易记录
+          currentLedger.value.deducted = currentDeducted + deductForm.value.amount;
+          if (!currentLedger.value.transactions) {
+            currentLedger.value.transactions = [];
+          }
+          currentLedger.value.transactions.unshift({
+            time: new Date().toLocaleString('zh-CN', { hour12: false }),
+            type: 'deducted',
+            amount: deductForm.value.amount,
+            description: `扣款-${reasonMap[deductForm.value.reason]}${deductForm.value.remark ? ' - ' + deductForm.value.remark : ''}`
+          });
+
+          // 更新统计数据：剩余押金 = 已收 - 已退 - 已扣
+          stats.value.totalDeducted += deductForm.value.amount;
+          stats.value.totalBalance = stats.value.totalReceived - stats.value.totalRefunded - stats.value.totalDeducted;
+
+          showDeductDialog.value = false;
+          ElementPlus.ElMessage.success(`扣款成功，扣款金额：¥${deductForm.value.amount}`);
+        };
+
+        // 退款
+        const handleRefund = (item) => {
+          currentLedger.value = item;
+          // 可退金额 = 剩余押金 = 已收 - 已退 - 已扣
+          const maxRefund = item.received - (item.refunded || 0) - item.deducted;
+          refundForm.value = {
+            amount: maxRefund,
+            method: 'cash',
+            reason: '',
+            remark: ''
+          };
+          showRefundDialog.value = true;
+        };
+
+        // 确认退款
+        const confirmRefund = () => {
+          if (!refundForm.value.amount || refundForm.value.amount <= 0) {
+            ElementPlus.ElMessage.warning('请输入退款金额');
+            return;
+          }
+          if (!refundForm.value.reason) {
+            ElementPlus.ElMessage.warning('请选择退款原因');
+            return;
+          }
+
+          // 验证：已退 + 已扣 + 本次退款 不能超过 已收
+          const currentRefunded = currentLedger.value.refunded || 0;
+          const totalAfterRefund = currentRefunded + currentLedger.value.deducted + refundForm.value.amount;
+          if (totalAfterRefund > currentLedger.value.received) {
+            ElementPlus.ElMessage.error(`退款失败：已退押金(¥${currentRefunded}) + 已扣押金(¥${currentLedger.value.deducted}) + 本次退款(¥${refundForm.value.amount}) = ¥${totalAfterRefund}，已超过已收押金(¥${currentLedger.value.received})`);
+            return;
+          }
+
+          const reasonMap = {
+            'quit': '正常离职',
+            'expire': '合同期满',
+            'complaint': '客户投诉扣款后退还',
+            'other': '其他原因'
+          };
+
+          // 更新已退押金和添加交易记录
+          currentLedger.value.refunded = currentRefunded + refundForm.value.amount;
+          if (!currentLedger.value.transactions) {
+            currentLedger.value.transactions = [];
+          }
+          currentLedger.value.transactions.unshift({
+            time: new Date().toLocaleString('zh-CN', { hour12: false }),
+            type: 'refunded',
+            amount: refundForm.value.amount,
+            description: `退款-${reasonMap[refundForm.value.reason]}${refundForm.value.remark ? ' - ' + refundForm.value.remark : ''}`
+          });
+
+          // 更新统计数据：剩余押金 = 已收 - 已退 - 已扣
+          stats.value.totalRefunded += refundForm.value.amount;
+          stats.value.totalBalance = stats.value.totalReceived - stats.value.totalRefunded - stats.value.totalDeducted;
+
+          showRefundDialog.value = false;
+          ElementPlus.ElMessage.success(`退款申请已提交，退款金额：¥${refundForm.value.amount}`);
+        };
+
+        // 分页变化
+        const handleSizeChange = (val) => {
+          pageSize.value = val;
+        };
+
+        const handleCurrentChange = (val) => {
+          currentPage.value = val;
+        };
+
+        return {
+          stats,
+          searchKeyword,
+          filterPosition,
+          filterDateRange,
+          currentPage,
+          pageSize,
+          total,
+          ledgerList,
+          showDetailDrawer,
+          showDeductDialog,
+          showRefundDialog,
+          currentLedger,
+          deductForm,
+          refundForm,
+          handleSearch,
+          handleReset,
+          handleExport,
+          viewDetail,
+          handleDeduct,
+          confirmDeduct,
+          handleRefund,
+          confirmRefund,
+          handleSizeChange,
+          handleCurrentChange
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

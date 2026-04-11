@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>护理人员报名登记</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    
+    .form-header {
+      background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+      color: #fff;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    
+    .form-logo {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 40px;
+    }
+    
+    .form-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .form-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .form-body {
+      padding: 30px;
+    }
+    
+    .form-section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 4px solid #1890ff;
+    }
+    
+    .section-desc {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    
+    .el-form-item {
+      margin-bottom: 20px;
+    }
+    
+    .el-form-item__label {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .required::before {
+      content: '*';
+      color: #f5222d;
+      margin-right: 4px;
+    }
+    
+    .position-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .position-option {
+      padding: 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .position-option:hover {
+      border-color: #1890ff;
+    }
+    
+    .position-option.active {
+      border-color: #1890ff;
+      background: #e6f7ff;
+    }
+    
+    .position-option i {
+      font-size: 32px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .position-option.muying { color: #eb2f96; }
+    .position-option.laonian { color: #fa8c16; }
+    .position-option.binghuan { color: #1890ff; }
+    .position-option.qita { color: #8c8c8c; }
+    
+    .position-option.active.muying { background: #fff0f6; }
+    .position-option.active.laonian { background: #fff7e6; }
+    .position-option.active.binghuan { background: #e6f7ff; }
+    .position-option.active.qita { background: #f5f5f5; }
+    
+    .position-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .position-desc {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .experience-options {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .experience-option {
+      flex: 1;
+      padding: 20px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .experience-option:hover {
+      border-color: #52c41a;
+    }
+    
+    .experience-option.active {
+      border-color: #52c41a;
+      background: #f6ffed;
+    }
+    
+    .experience-option i {
+      font-size: 36px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    
+    .experience-option.expert { color: #52c41a; }
+    .experience-option.novice { color: #fa8c16; }
+    
+    .experience-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .experience-desc {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    
+    .source-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    
+    .source-option {
+      padding: 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 13px;
+    }
+    
+    .source-option:hover {
+      border-color: #1890ff;
+    }
+    
+    .source-option.active {
+      border-color: #1890ff;
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+    
+    .agreement-section {
+      background: #f5f5f5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    
+    .agreement-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #262626;
+    }
+    
+    .agreement-content {
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.8;
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .form-actions {
+      padding: 20px 30px 30px;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 24px;
+    }
+    
+    .success-page {
+      text-align: center;
+      padding: 60px 30px;
+    }
+    
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: #f6ffed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 30px;
+    }
+    
+    .success-icon i {
+      font-size: 60px;
+      color: #52c41a;
+    }
+    
+    .success-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 12px;
+    }
+    
+    .success-desc {
+      font-size: 14px;
+      color: #8c8c8c;
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    
+    .success-info {
+      background: #f5f5f5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+    
+    .success-info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e8e8e8;
+    }
+    
+    .success-info-item:last-child {
+      border-bottom: none;
+    }
+    
+    .success-info-label {
+      color: #8c8c8c;
+    }
+    
+    .success-info-value {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .contact-section {
+      background: #e6f7ff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .contact-title {
+      font-weight: 600;
+      color: #1890ff;
+      margin-bottom: 12px;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #595959;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .back-btn {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      border-radius: 24px;
+    }
+    
+    .tips-section {
+      margin-top: 20px;
+      padding: 16px;
+      background: #fff7e6;
+      border-radius: 8px;
+      border-left: 4px solid #fa8c16;
+    }
+    
+    .tips-title {
+      font-weight: 600;
+      color: #d46b08;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .tips-list {
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.8;
+      padding-left: 16px;
+    }
+    
+    .tips-list li {
+      margin-bottom: 4px;
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+      }
+      
+      .form-container {
+        border-radius: 0;
+        min-height: 100vh;
+      }
+      
+      .form-header {
+        padding: 30px 20px;
+      }
+      
+      .form-body {
+        padding: 20px;
+      }
+      
+      .position-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .experience-options {
+        flex-direction: column;
+      }
+      
+      .source-options {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 报名表单 -->
+    <div v-if="!submitted" class="form-container">
+      <div class="form-header">
+        <div class="form-logo">
+          <i class="el-icon-first-aid-kit"></i>
+        </div>
+        <div class="form-title">护理人员报名登记</div>
+        <div class="form-subtitle">加入我们，成为专业的护理服务人员</div>
+      </div>
+      
+      <div class="form-body">
+        <!-- 基本信息 -->
+        <div class="form-section">
+          <div class="section-title">基本信息</div>
+          <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
+            <el-form-item label="姓名" prop="name" class="required">
+              <el-input 
+                v-model="form.name" 
+                placeholder="请输入您的真实姓名"
+                maxlength="20"
+                show-word-limit
+              ></el-input>
+            </el-form-item>
+            
+            <el-form-item label="手机号码" prop="phone" class="required">
+              <el-input 
+                v-model="form.phone" 
+                placeholder="请输入您的手机号码"
+                maxlength="11"
+              >
+                <template #append>
+                  <el-button @click="sendCode" :disabled="codeSending">
+                    {{ codeSending ? codeCountdown + 's' : '获取验证码' }}
+                  </el-button>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="验证码" prop="code" class="required">
+              <el-input 
+                v-model="form.code" 
+                placeholder="请输入短信验证码"
+                maxlength="6"
+              ></el-input>
+            </el-form-item>
+            
+            <el-form-item label="年龄" prop="age" class="required">
+              <el-input-number 
+                v-model="form.age" 
+                :min="18" 
+                :max="60"
+                style="width: 100%;"
+              ></el-input-number>
+              <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">
+                年龄要求：28-48岁，优秀者可放宽至26-49岁
+              </div>
+            </el-form-item>
+            
+            <el-form-item label="籍贯" prop="origin" class="required">
+              <el-cascader
+                v-model="form.origin"
+                :options="regionOptions"
+                placeholder="请选择您的籍贯"
+                style="width: 100%;"
+              ></el-cascader>
+            </el-form-item>
+            
+            <el-form-item label="学历" prop="education" class="required">
+              <el-select v-model="form.education" placeholder="请选择学历" style="width: 100%;">
+                <el-option label="初中及以下" value="junior"></el-option>
+                <el-option label="高中/中专" value="high"></el-option>
+                <el-option label="大专" value="college"></el-option>
+                <el-option label="本科及以上" value="bachelor"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </div>
+        
+        <!-- 岗位选择 -->
+        <div class="form-section">
+          <div class="section-title">意向岗位</div>
+          <div class="section-desc">请选择您希望从事的护理岗位（可多选）</div>
+          <div class="position-options">
+            <div 
+              v-for="pos in positions" 
+              :key="pos.value"
+              class="position-option"
+              :class="[pos.class, { active: form.positions.includes(pos.value) }]"
+              @click="togglePosition(pos.value)"
+            >
+              <i :class="pos.icon"></i>
+              <div class="position-name">{{ pos.label }}</div>
+              <div class="position-desc">{{ pos.desc }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 经验选择 -->
+        <div class="form-section">
+          <div class="section-title">从业经验</div>
+          <div class="experience-options">
+            <div 
+              class="experience-option expert"
+              :class="{ active: form.experience === 'expert' }"
+              @click="form.experience = 'expert'"
+            >
+              <i class="el-icon-medal"></i>
+              <div class="experience-name">有经验/有证</div>
+              <div class="experience-desc">有护理相关工作经验<br>或持有相关资格证书</div>
+            </div>
+            <div 
+              class="experience-option novice"
+              :class="{ active: form.experience === 'novice' }"
+              @click="form.experience = 'novice'"
+            >
+              <i class="el-icon-reading"></i>
+              <div class="experience-name">无经验</div>
+              <div class="experience-desc">无相关工作经验<br>愿意参加培训学习</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 来源渠道 -->
+        <div class="form-section">
+          <div class="section-title">来源渠道</div>
+          <div class="section-desc">您是如何了解到我们的？</div>
+          <div class="source-options">
+            <div 
+              v-for="src in sources" 
+              :key="src.value"
+              class="source-option"
+              :class="{ active: form.source === src.value }"
+              @click="form.source = src.value"
+            >
+              {{ src.label }}
+            </div>
+          </div>
+          <el-input 
+            v-if="form.source === 'intro'"
+            v-model="form.referrer"
+            placeholder="请输入推荐人姓名"
+            style="margin-top: 12px;"
+          ></el-input>
+        </div>
+        
+        <!-- 温馨提示 -->
+        <div class="tips-section">
+          <div class="tips-title">
+            <i class="el-icon-info" style="margin-right: 4px;"></i>
+            温馨提示
+          </div>
+          <ul class="tips-list">
+            <li>请确保填写的信息真实有效，我们将进行核实</li>
+            <li>年龄要求：28-48岁，优秀者可放宽至26-49岁</li>
+            <li>需要具备初中及以上学历，能独立完成护理日志</li>
+            <li>要求身体健康，无传染病，能适应24小时住家服务</li>
+            <li>面部/手部无直径>1cm的纹身</li>
+          </ul>
+        </div>
+        
+        <!-- 协议同意 -->
+        <div class="agreement-section">
+          <div class="agreement-title">
+            <el-checkbox v-model="form.agreed"></el-checkbox>
+            <span style="margin-left: 8px;">我已阅读并同意以下协议</span>
+          </div>
+          <div class="agreement-content">
+            <p><strong>个人信息收集声明：</strong></p>
+            <p>1. 您提供的个人信息将仅用于招聘审核、培训安排和就业对接。</p>
+            <p>2. 我们承诺保护您的个人隐私，不会将信息泄露给第三方。</p>
+            <p>3. 您同意我们对您的信息进行背景调查和资格审核。</p>
+            <p>4. 如信息不实，我们有权取消您的报名资格。</p>
+            <p style="margin-top: 12px;"><strong>培训协议要点：</strong></p>
+            <p>• 培训保证金：¥700（上户后分单扣除）</p>
+            <p>• 住宿押金：¥1,300（离职时退还）</p>
+            <p>• 培训周期：熟手5天+考核，新手10天</p>
+            <p>• 考核通过颁发《服务合格证》，有效期12个月</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <el-button 
+          type="primary" 
+          class="submit-btn"
+          :disabled="!form.agreed"
+          @click="submitForm"
+        >
+          提交报名
+        </el-button>
+      </div>
+    </div>
+    
+    <!-- 提交成功页面 -->
+    <div v-else class="form-container">
+      <div class="success-page">
+        <div class="success-icon">
+          <i class="el-icon-check"></i>
+        </div>
+        <div class="success-title">报名提交成功！</div>
+        <div class="success-desc">
+          感谢您选择加入我们！我们的招募专员将在1-3个工作日内与您联系，<br>
+          请保持手机畅通，注意接听来电。
+        </div>
+        
+        <div class="success-info">
+          <div class="success-info-item">
+            <span class="success-info-label">报名编号</span>
+            <span class="success-info-value">{{ submitResult.code }}</span>
+          </div>
+          <div class="success-info-item">
+            <span class="success-info-label">报名时间</span>
+            <span class="success-info-value">{{ submitResult.time }}</span>
+          </div>
+          <div class="success-info-item">
+            <span class="success-info-label">意向岗位</span>
+            <span class="success-info-value">{{ submitResult.positions }}</span>
+          </div>
+        </div>
+        
+        <div class="contact-section">
+          <div class="contact-title">
+            <i class="el-icon-phone" style="margin-right: 8px;"></i>
+            紧急联系
+          </div>
+          <div class="contact-item">
+            <i class="el-icon-phone-outline"></i>
+            <span>招募热线：400-XXX-XXXX</span>
+          </div>
+          <div class="contact-item">
+            <i class="el-icon-time"></i>
+            <span>工作时间：周一至周日 9:00-18:00</span>
+          </div>
+          <div class="contact-item">
+            <i class="el-icon-location-outline"></i>
+            <span>公司地址：XX市XX区XX路XX号</span>
+          </div>
+        </div>
+        
+        <el-button class="back-btn" @click="resetForm">
+          <i class="el-icon-arrow-left" style="margin-right: 8px;"></i>
+          返回继续报名
+        </el-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  
+  <script>
+    const { createApp, ref, reactive, onMounted } = Vue;
+    
+    createApp({
+      setup() {
+        // 从URL获取渠道和推荐人参数
+        const getUrlParams = () => {
+          const params = new URLSearchParams(window.location.search);
+          return {
+            channel: params.get('channel') || '',
+            code: params.get('code') || '',
+            referrer: params.get('referrer') || ''
+          };
+        };
+        
+        const urlParams = getUrlParams();
+        
+        // 表单数据
+        const form = reactive({
+          name: '',
+          phone: '',
+          code: '',
+          age: 35,
+          origin: [],
+          education: '',
+          positions: [],
+          experience: 'novice',
+          source: urlParams.channel || '',
+          referrer: urlParams.referrer || '',
+          referrerCode: urlParams.code || '',
+          agreed: false
+        });
+        
+        // 渠道信息（根据URL参数自动填充）
+        const channelInfo = ref({
+          name: '',
+          icon: ''
+        });
+        
+        // 表单校验规则
+        const rules = {
+          name: [
+            { required: true, message: '请输入姓名', trigger: 'blur' },
+            { min: 2, max: 20, message: '姓名长度2-20个字符', trigger: 'blur' }
+          ],
+          phone: [
+            { required: true, message: '请输入手机号码', trigger: 'blur' },
+            { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+          ],
+          code: [
+            { required: true, message: '请输入验证码', trigger: 'blur' },
+            { len: 6, message: '验证码为6位数字', trigger: 'blur' }
+          ],
+          age: [
+            { required: true, message: '请输入年龄', trigger: 'change' }
+          ],
+          origin: [
+            { required: true, message: '请选择籍贯', trigger: 'change' }
+          ],
+          education: [
+            { required: true, message: '请选择学历', trigger: 'change' }
+          ]
+        };
+        
+        // 表单引用
+        const formRef = ref(null);
+        
+        // 提交状态
+        const submitted = ref(false);
+        
+        // 提交结果
+        const submitResult = reactive({
+          code: '',
+          time: '',
+          positions: '',
+          channel: '',
+          referrer: ''
+        });
+        
+        // 页面加载时根据URL参数设置渠道信息
+        onMounted(() => {
+          if (urlParams.channel) {
+            // 根据渠道代码设置渠道名称
+            const channelMap = {
+              'wechat': '微信广告',
+              'douyin': '抖音推广',
+              'ditui': '地推活动',
+              'intro': '转介绍',
+              'website': '官网',
+              'partner': '合作伙伴'
+            };
+            channelInfo.value.name = channelMap[urlParams.channel] || urlParams.channel;
+            
+            // 如果URL中有推荐人信息，自动填充
+            if (urlParams.referrer) {
+              form.referrer = decodeURIComponent(urlParams.referrer);
+            }
+            
+            // 自动选中对应的来源
+            form.source = urlParams.channel;
+          }
+        });
+        
+        // 验证码发送状态
+        const codeSending = ref(false);
+        const codeCountdown = ref(60);
+        
+        // 岗位选项
+        const positions = [
+          { 
+            value: 'yuesao', 
+            label: '月嫂', 
+            desc: '产后妈妈和新生儿护理',
+            icon: 'el-icon-baby',
+            class: 'muying'
+          },
+          { 
+            value: 'yuying', 
+            label: '育婴师', 
+            desc: '0-3岁婴幼儿照料',
+            icon: 'el-icon-user',
+            class: 'muying'
+          },
+          { 
+            value: 'hugong', 
+            label: '老年护工', 
+            desc: '老年人日常生活照料',
+            icon: 'el-icon-first-aid-kit',
+            class: 'laonian'
+          },
+          { 
+            value: 'other', 
+            label: '其他', 
+            desc: '催乳师、康复护理等',
+            icon: 'el-icon-more',
+            class: 'qita'
+          }
+        ];
+        
+        // 来源选项
+        const sources = [
+          { value: 'wechat', label: '微信广告' },
+          { value: 'douyin', label: '抖音' },
+          { value: 'intro', label: '朋友推荐' },
+          { value: 'ditui', label: '地推活动' },
+          { value: 'website', label: '官网' },
+          { value: 'partner', label: '合作伙伴' },
+          { value: 'other', label: '其他' }
+        ];
+        
+        // 是否显示推荐人输入框
+        const showReferrerInput = computed(() => {
+          return form.source === 'intro' || form.source === 'ditui' || form.source === 'partner';
+        });
+        
+        // 地区选项（简化版）
+        const regionOptions = [
+          {
+            value: 'hunan',
+            label: '湖南省',
+            children: [
+              { value: 'changsha', label: '长沙市' },
+              { value: 'zhuzhou', label: '株洲市' },
+              { value: 'xiangtan', label: '湘潭市' }
+            ]
+          },
+          {
+            value: 'hubei',
+            label: '湖北省',
+            children: [
+              { value: 'wuhan', label: '武汉市' },
+              { value: 'yichang', label: '宜昌市' }
+            ]
+          },
+          {
+            value: 'sichuan',
+            label: '四川省',
+            children: [
+              { value: 'chengdu', label: '成都市' },
+              { value: 'mianyang', label: '绵阳市' }
+            ]
+          },
+          {
+            value: 'henan',
+            label: '河南省',
+            children: [
+              { value: 'zhengzhou', label: '郑州市' },
+              { value: 'luoyang', label: '洛阳市' }
+            ]
+          },
+          {
+            value: 'other',
+            label: '其他省份',
+            children: [
+              { value: 'other', label: '其他' }
+            ]
+          }
+        ];
+        
+        // 切换岗位选择
+        const togglePosition = (value) => {
+          const index = form.positions.indexOf(value);
+          if (index > -1) {
+            form.positions.splice(index, 1);
+          } else {
+            form.positions.push(value);
+          }
+        };
+        
+        // 发送验证码
+        const sendCode = () => {
+          if (!form.phone) {
+            ElementPlus.ElMessage.warning('请先输入手机号码');
+            return;
+          }
+          if (!/^1[3-9]\d{9}$/.test(form.phone)) {
+            ElementPlus.ElMessage.warning('请输入正确的手机号码');
+            return;
+          }
+          
+          codeSending.value = true;
+          ElementPlus.ElMessage.success('验证码已发送');
+          
+          const timer = setInterval(() => {
+            codeCountdown.value--;
+            if (codeCountdown.value <= 0) {
+              clearInterval(timer);
+              codeSending.value = false;
+              codeCountdown.value = 60;
+            }
+          }, 1000);
+        };
+        
+        // 提交表单
+        const submitForm = () => {
+          formRef.value.validate((valid) => {
+            if (!valid) {
+              ElementPlus.ElMessage.error('请完善必填信息');
+              return;
+            }
+            
+            if (form.positions.length === 0) {
+              ElementPlus.ElMessage.warning('请至少选择一个意向岗位');
+              return;
+            }
+            
+            // 模拟提交 - 包含渠道和推荐人信息
+            const now = new Date();
+            const channelPrefix = form.source ? form.source.toUpperCase().substring(0, 2) : 'BM';
+            submitResult.code = channelPrefix + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 900) + 100);
+            submitResult.time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            submitResult.positions = form.positions.map(p => {
+              const pos = positions.find(item => item.value === p);
+              return pos ? pos.label : p;
+            }).join('、');
+            
+            // 记录渠道和推荐人信息到结果
+            submitResult.channel = form.source;
+            submitResult.referrer = form.referrer;
+            
+            submitted.value = true;
+            ElementPlus.ElMessage.success('报名成功！');
+            
+            // 实际项目中这里会调用API提交数据，包括：
+            // - 用户填写的个人信息
+            // - 渠道标识(form.source)
+            // - 推荐人信息(form.referrer, form.referrerCode)
+            // 后台根据这些信息自动关联渠道和推荐人，用于后续奖励计算
+          });
+        };
+        
+        // 重置表单
+        const resetForm = () => {
+          submitted.value = false;
+          form.name = '';
+          form.phone = '';
+          form.code = '';
+          form.age = 35;
+          form.origin = [];
+          form.education = '';
+          form.positions = [];
+          form.experience = 'novice';
+          form.source = '';
+          form.referrer = '';
+          form.agreed = false;
+        };
+        
+        return {
+          form,
+          rules,
+          formRef,
+          submitted,
+          submitResult,
+          codeSending,
+          codeCountdown,
+          positions,
+          sources,
+          regionOptions,
+          togglePosition,
+          sendCode,
+          submitForm,
+          resetForm
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

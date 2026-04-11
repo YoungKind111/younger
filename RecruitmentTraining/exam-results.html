@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考核结果 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .student-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .student-name {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .tag-newbie {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #e6f7ff;
+      color: #1890ff;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .tag-veteran {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #f6ffed;
+      color: #52c41a;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .total-score {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .score-excellent {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 2px solid #52c41a;
+    }
+
+    .score-good {
+      background: #e6f7ff;
+      color: #1890ff;
+      border: 2px solid #1890ff;
+    }
+
+    .score-pass {
+      background: #fffbe6;
+      color: #faad14;
+      border: 2px solid #faad14;
+    }
+
+    .score-fail {
+      background: #fff1f0;
+      color: #f5222d;
+      border: 2px solid #f5222d;
+    }
+
+    .class-link {
+      color: #1890ff;
+      cursor: pointer;
+    }
+
+    .class-link:hover {
+      text-decoration: underline;
+    }
+
+    .empty-comment {
+      color: #bfbfbf;
+      font-style: italic;
+    }
+
+    .tag-pass {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .tag-fail {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .tag-pending {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: #f5f5f5;
+      color: #8c8c8c;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">考核结果</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ filteredResults.length }} 条记录</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar">
+          <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 150px;">
+            <el-option v-for="pos in positionList" :key="pos.id" :label="pos.name" :value="pos.id"></el-option>
+          </el-select>
+          <el-select v-model="filterStatus" placeholder="全部状态" clearable style="width: 150px;">
+            <el-option label="待开班" value="pending"></el-option>
+            <el-option label="进行中" value="active"></el-option>
+            <el-option label="已结业" value="completed"></el-option>
+          </el-select>
+          <el-input v-model="searchKeyword" placeholder="搜索学员姓名或班级" style="width: 220px;" clearable>
+            <template #prefix>
+              <i class="el-icon-search"></i>
+            </template>
+          </el-input>
+        </div>
+
+        <el-table :data="pagedResults" style="width: 100%" v-loading="loading">
+          <el-table-column label="学员姓名" width="140" fixed>
+            <template #default="{ row }">
+              <div class="student-info">
+                <span class="student-name">{{ row.student_name }}</span>
+                <span :class="row.student_type === 'newbie' ? 'tag-newbie' : 'tag-veteran'">
+                  {{ row.student_type === 'newbie' ? '新手' : '熟手' }}
+                </span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="所属班级" min-width="200">
+            <template #default="{ row }">
+              <span class="class-link" @click="viewClassDetail(row.class_id)">{{ row.class_name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="培训岗位" width="100">
+            <template #default="{ row }">
+              {{ row.position_name }}
+            </template>
+          </el-table-column>
+          <el-table-column label="讲师" width="100">
+            <template #default="{ row }">
+              {{ row.teacher }}
+            </template>
+          </el-table-column>
+          <el-table-column label="初评等级" width="100" align="center">
+            <template #default="{ row }">
+              {{ row.initial_level || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="考核等级" width="100" align="center">
+            <template #default="{ row }">
+              {{ row.assessment_level || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="总分" width="100" align="center">
+            <template #default="{ row }">
+              <span v-if="row.total_score === '-'" class="empty-comment">-</span>
+              <span v-else class="total-score" :class="getScoreClass(row.total_score)">
+                {{ row.total_score }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="是否通过" width="100" align="center">
+            <template #default="{ row }">
+              <span v-if="row.total_score === '-'" class="tag-pending">待考核</span>
+              <span v-else-if="row.is_pass" class="tag-pass">通过</span>
+              <span v-else class="tag-fail">未通过</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="讲师评语" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span v-if="row.teacher_comment">{{ row.teacher_comment }}</span>
+              <span v-else class="empty-comment">暂无评语</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="考核评语" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span v-if="row.comment">{{ row.comment }}</span>
+              <span v-else class="empty-comment">暂无评语</span>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="filteredResults.length"
+            layout="total, sizes, prev, pager, next, jumper"
+          />
+        </div>
+
+        <div v-if="filteredResults.length === 0" style="padding: 60px; text-align: center; color: #8c8c8c;">
+          <i class="el-icon-search" style="font-size: 64px; margin-bottom: 16px; display: block;"></i>
+          <div style="font-size: 16px;">未找到匹配的记录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('exam-results', {
+      title: '考核结果',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 考核结果'
+    });
+
+    createApp({
+      setup() {
+        const filterPosition = ref('');
+        const filterStatus = ref('');
+        const searchKeyword = ref('');
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const loading = ref(false);
+
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        const classList = ref([
+          {
+            id: 1,
+            name: '2026年4月月嫂新手班-A班',
+            position_id: 1,
+            position_name: '月嫂',
+            teacher: '张美玲',
+            location: '总部培训室A',
+            start_date: '2026-04-01',
+            end_date: '2026-04-10',
+            status: 'completed',
+            students: [
+              { id: 101, name: '王秀英', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 92, teacher_comment: '学习积极主动，课堂表现优秀，实操技能扎实。', comment: '学习态度认真，实操技能掌握良好，建议加强沟通技巧训练。' },
+              { id: 102, name: '李桂花', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 85, teacher_comment: '理论基础较好，但实操练习不够主动，需要加强。', comment: '理论基础扎实，实操需要更多练习，总体表现良好。' },
+              { id: 103, name: '张淑芬', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 95, teacher_comment: '经验丰富，学习能力强，是班级的优秀学员。', comment: '经验丰富，技能熟练，考核表现优秀。' },
+              { id: 104, name: '陈美华', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 68, teacher_comment: '上课注意力不集中，实操练习较少，需要督促。', comment: '理论成绩偏低，实操不够熟练，建议参加补考。' },
+              { id: 105, name: '刘玉兰', type: 'veteran', initial_level: 'Y4-2', assessment_level: 'Y5', total_score: 88, teacher_comment: '认真完成课堂任务，实操进步明显。', comment: '技能提升明显，综合表现良好。' }
+            ]
+          },
+          {
+            id: 2,
+            name: '2026年4月熟手强化班',
+            position_id: 1,
+            position_name: '月嫂',
+            teacher: '李建国',
+            location: '总部培训室B',
+            start_date: '2026-04-05',
+            end_date: '2026-04-09',
+            status: 'active',
+            students: [
+              { id: 201, name: '赵小芳', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '培训中表现良好，积极参与互动。', comment: '' },
+              { id: 202, name: '钱小敏', type: 'veteran', initial_level: 'Y4-2', assessment_level: '-', total_score: '-', teacher_comment: '学习态度认真，实操技能提升明显。', comment: '' },
+              { id: 203, name: '孙小琴', type: 'veteran', initial_level: 'Y5', assessment_level: '-', total_score: '-', teacher_comment: '经验丰富，能够很好地掌握新知识。', comment: '' }
+            ]
+          },
+          {
+            id: 3,
+            name: '2026年3月月嫂新手班',
+            position_id: 1,
+            position_name: '月嫂',
+            teacher: '张美玲',
+            location: '总部培训室A',
+            start_date: '2026-03-01',
+            end_date: '2026-03-10',
+            status: 'completed',
+            students: [
+              { id: 301, name: '周小燕', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-2', total_score: 90, teacher_comment: '学习能力强，课堂互动积极。', comment: '学习能力强，实操规范，表现优秀。' },
+              { id: 302, name: '吴小玲', type: 'newbie', initial_level: 'Y3-1', assessment_level: 'Y3-1', total_score: 82, teacher_comment: '认真完成课后作业，实操需加强。', comment: '掌握基础知识，实操技能有待提高。' },
+              { id: 303, name: '郑秀英', type: 'veteran', initial_level: 'Y4-1', assessment_level: 'Y4-2', total_score: 91, teacher_comment: '经验丰富，乐于帮助其他学员。', comment: '经验丰富，技能全面，考核通过。' },
+              { id: 304, name: '王小梅', type: 'newbie', initial_level: 'Y3-1', assessment_level: '-', total_score: 65, teacher_comment: '出勤不稳定，课后练习较少。', comment: '基础薄弱，需要加强学习，建议重修。' }
+            ]
+          }
+        ]);
+
+        // 将所有学员数据平铺成列表
+        const allResults = computed(() => {
+          const results = [];
+          classList.value.forEach(cls => {
+            cls.students.forEach(student => {
+              results.push({
+                class_id: cls.id,
+                class_name: cls.name,
+                position_id: cls.position_id,
+                position_name: cls.position_name,
+                teacher: cls.teacher,
+                status: cls.status,
+                student_id: student.id,
+                student_name: student.name,
+                student_type: student.type,
+                initial_level: student.initial_level,
+                assessment_level: student.assessment_level,
+                total_score: student.total_score,
+                is_pass: student.total_score !== '-' && student.total_score >= 70,
+                teacher_comment: student.teacher_comment,
+                comment: student.comment
+              });
+            });
+          });
+          return results;
+        });
+
+        const filteredResults = computed(() => {
+          let list = allResults.value;
+          if (filterPosition.value) {
+            list = list.filter(item => item.position_id === filterPosition.value);
+          }
+          if (filterStatus.value) {
+            const statusMap = { pending: '待开班', active: '进行中', completed: '已结业' };
+            list = list.filter(item => item.status === statusMap[filterStatus.value]);
+          }
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            list = list.filter(item =>
+              item.student_name.toLowerCase().includes(keyword) ||
+              item.class_name.toLowerCase().includes(keyword)
+            );
+          }
+          return list;
+        });
+
+        const pagedResults = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          const end = start + pageSize.value;
+          return filteredResults.value.slice(start, end);
+        });
+
+        const getScoreClass = (score) => {
+          if (score === '-') return '';
+          if (score >= 90) return 'score-excellent';
+          if (score >= 80) return 'score-good';
+          if (score >= 60) return 'score-pass';
+          return 'score-fail';
+        };
+
+        const viewClassDetail = (classId) => {
+          window.location.href = `training-class-detail.html?id=${classId}`;
+        };
+
+        return {
+          filterPosition,
+          filterStatus,
+          searchKeyword,
+          currentPage,
+          pageSize,
+          loading,
+          positionList,
+          filteredResults,
+          pagedResults,
+          getScoreClass,
+          viewClassDetail
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

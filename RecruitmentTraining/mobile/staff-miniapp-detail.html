@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>班级详情</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    .mobile-container {
+      width: 375px;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    .nav-header {
+      background: #fff;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .nav-back {
+      position: absolute;
+      left: 16px;
+      font-size: 20px;
+      color: #333;
+      cursor: pointer;
+    }
+    .nav-title { font-size: 17px; font-weight: 600; color: #333; }
+
+    .detail-header {
+      background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+      padding: 24px 20px;
+      color: #fff;
+    }
+    .detail-class-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .detail-class-status {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .score-section {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .score-title { font-size: 14px; color: #666; margin-bottom: 12px; }
+    .score-value {
+      font-size: 48px;
+      font-weight: 600;
+      color: #52c41a;
+      margin-bottom: 8px;
+    }
+    .score-result {
+      display: inline-block;
+      padding: 6px 16px;
+      background: #f6ffed;
+      color: #52c41a;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .score-fail { color: #f5222d; }
+    .result-fail { background: #fff1f0; color: #f5222d; }
+
+    .info-section {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 14px; color: #666; }
+    .info-value { font-size: 14px; color: #333; font-weight: 500; }
+
+    .score-breakdown {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .breakdown-item:last-child { border-bottom: none; }
+    .breakdown-name { font-size: 14px; color: #333; }
+    .breakdown-score { font-size: 14px; font-weight: 600; color: #333; }
+    .breakdown-full { font-size: 12px; color: #999; }
+
+    .certificate-section {
+      background: #fff;
+      margin: 12px;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .cert-icon { font-size: 64px; margin-bottom: 12px; }
+    .cert-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .cert-desc { font-size: 13px; color: #999; margin-bottom: 16px; }
+    .btn-download {
+      display: inline-block;
+      padding: 10px 32px;
+      background: #667eea;
+      color: #fff;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .bottom-padding { padding-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="mobile-container">
+    <div class="nav-header">
+      <span class="nav-back" onclick="history.back()">‹</span>
+      <span class="nav-title">班级详情</span>
+    </div>
+
+    <div class="detail-header">
+      <div class="detail-class-name">2026年3月月嫂进阶班-B班</div>
+      <span class="detail-class-status">已结业</span>
+    </div>
+
+    <div class="score-section">
+      <div class="score-title">考核成绩</div>
+      <div class="score-value">88</div>
+      <span class="score-result">通过考核</span>
+    </div>
+
+    <div class="info-section">
+      <div class="section-title">培训信息</div>
+      <div class="info-row">
+        <span class="info-label">培训时间</span>
+        <span class="info-value">2026-03-01 至 2026-03-10</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">培训地点</span>
+        <span class="info-value">总部培训室B</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">主讲师</span>
+        <span class="info-value">李建国</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">培训岗位</span>
+        <span class="info-value">月嫂</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">课程类型</span>
+        <span class="info-value">岗前培训</span>
+      </div>
+    </div>
+
+    <div class="score-breakdown">
+      <div class="section-title">成绩明细</div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">证书</span>
+        <span>
+          <span class="breakdown-score">5</span>
+          <span class="breakdown-full"> / 5分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">单量</span>
+        <span>
+          <span class="breakdown-score">5</span>
+          <span class="breakdown-full"> / 5分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">月子餐</span>
+        <span>
+          <span class="breakdown-score">10</span>
+          <span class="breakdown-full"> / 10分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">理论</span>
+        <span>
+          <span class="breakdown-score">18</span>
+          <span class="breakdown-full"> / 30分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">实操</span>
+        <span>
+          <span class="breakdown-score">28</span>
+          <span class="breakdown-full"> / 30分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">情景</span>
+        <span>
+          <span class="breakdown-score">18</span>
+          <span class="breakdown-full"> / 20分</span>
+        </span>
+      </div>
+      <div class="breakdown-item">
+        <span class="breakdown-name">培训评分</span>
+        <span>
+          <span class="breakdown-score">8</span>
+          <span class="breakdown-full"> / 10分</span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

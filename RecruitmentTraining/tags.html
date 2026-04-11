@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标签管理 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 标签管理专用样式 */
+    .tag-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1200px) {
+      .tag-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+      .tag-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .tag-stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border-left: 4px solid #1890ff;
+    }
+    
+    .tag-stat-card:nth-child(2) { border-left-color: #52c41a; }
+    .tag-stat-card:nth-child(3) { border-left-color: #fa8c16; }
+    .tag-stat-card:nth-child(4) { border-left-color: #722ed1; }
+    .tag-stat-card:nth-child(5) { border-left-color: #13c2c2; }
+    
+    .tag-stat-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .tag-stat-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+    
+    .category-tree {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .category-item {
+      margin-bottom: 8px;
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .category-header:hover {
+      background: #e6f7ff;
+    }
+    
+    .category-header.active {
+      background: #1890ff;
+      color: #fff;
+    }
+    
+    .category-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 16px;
+    }
+    
+    .category-header:not(.active) .category-icon.basic { background: #fff1f0; color: #f5222d; }
+    .category-header:not(.active) .category-icon.baby { background: #e6f7ff; color: #1890ff; }
+    .category-header:not(.active) .category-icon.mom { background: #f6ffed; color: #52c41a; }
+    .category-header:not(.active) .category-icon.meal { background: #fff7e6; color: #fa8c16; }
+    .category-header:not(.active) .category-icon.service { background: #f9f0ff; color: #722ed1; }
+    
+    .category-header.active .category-icon { background: rgba(255,255,255,0.2); color: #fff; }
+    
+    .category-info {
+      flex: 1;
+    }
+    
+    .category-name {
+      font-weight: 500;
+    }
+    
+    .category-count {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+    
+    .category-arrow {
+      transition: transform 0.3s;
+    }
+    
+    .category-arrow.expanded {
+      transform: rotate(90deg);
+    }
+    
+    .tag-group-list {
+      padding-left: 24px;
+      margin-top: 8px;
+    }
+    
+    .tag-group-item {
+      background: #fafafa;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    
+    .tag-group-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+    
+    .tag-group-name {
+      font-weight: 500;
+      color: #262626;
+      flex: 1;
+    }
+    
+    .tag-group-count {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-right: 12px;
+    }
+    
+    .tag-list {
+      padding: 0 16px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .tag-chip:hover {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+    
+    .tag-chip.selected {
+      background: #e6f7ff;
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+    
+    .tag-chip .weight {
+      margin-left: 6px;
+      padding: 2px 6px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #8c8c8c;
+    }
+    
+    .tag-detail-panel {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+    }
+    
+    .tag-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .tag-detail-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .tag-detail-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .tag-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .tag-meta-item {
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 6px;
+    }
+    
+    .tag-meta-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+    
+    .tag-meta-value {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .tag-criteria {
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .tag-criteria-title {
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 8px;
+    }
+    
+    .tag-criteria-content {
+      color: #595959;
+      line-height: 1.8;
+    }
+    
+    .tag-usage-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .usage-stat {
+      text-align: center;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    
+    .usage-stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1890ff;
+    }
+    
+    .usage-stat-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .tag-personnel-list {
+      margin-top: 16px;
+    }
+    
+    .personnel-mini {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .personnel-mini:last-child {
+      border-bottom: none;
+    }
+    
+    .personnel-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      margin-right: 12px;
+    }
+    
+    .personnel-info {
+      flex: 1;
+    }
+    
+    .personnel-name {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .personnel-level {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+    
+    .personnel-status {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .tag-status-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .status-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.unobtained { background: #bfbfbf; }
+    .status-dot.trained { background: #fa8c16; }
+    .status-dot.certified { background: #52c41a; }
+    .status-dot.expiring { background: #f5222d; }
+    .status-dot.expired { background: #595959; }
+    
+    .status-label {
+      font-size: 12px;
+      color: #595959;
+    }
+    
+    .status-arrow {
+      color: #bfbfbf;
+      font-size: 20px;
+    }
+    
+    .tag-importance-indicator {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    
+    .importance-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e8e8e8;
+    }
+    
+    .importance-dot.active { background: #f5222d; }
+    
+    .red-line-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: #fff1f0;
+      color: #cf1322;
+      border: 1px solid #ffa39e;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 岗位选择 Tabs -->
+    <div class="content-card" style="margin-bottom: 16px;">
+      <div class="card-body">
+        <el-radio-group v-model="selectedPosition" size="large" @change="handlePositionChange">
+          <el-radio-button v-for="pos in positions" :key="pos.id" :label="pos.id">
+            <i :class="pos.icon" style="margin-right: 4px;"></i>
+            {{ pos.name }}
+            <span style="margin-left: 4px; color: #8c8c8c; font-size: 12px;">({{ pos.tagCount }}个标签)</span>
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="tag-stats">
+      <div class="tag-stat-card">
+        <div class="tag-stat-value">{{ currentStats.categories }}</div>
+        <div class="tag-stat-label">一级分类</div>
+      </div>
+      <div class="tag-stat-card">
+        <div class="tag-stat-value">{{ currentStats.groups }}</div>
+        <div class="tag-stat-label">标签组</div>
+      </div>
+      <div class="tag-stat-card">
+        <div class="tag-stat-value">{{ currentStats.tags }}</div>
+        <div class="tag-stat-label">标签总数</div>
+      </div>
+      <div class="tag-stat-card">
+        <div class="tag-stat-value">{{ currentStats.redLine }}</div>
+        <div class="tag-stat-label">红线标签</div>
+      </div>
+      <div class="tag-stat-card">
+        <div class="tag-stat-value">{{ currentStats.required }}</div>
+        <div class="tag-stat-label">必选项</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- 左侧：标签体系树 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div class="card-title">标签体系</div>
+          <el-button type="primary" size="small" @click="showAddDialog = true">
+            <i class="el-icon-plus"></i> 新增标签
+          </el-button>
+        </div>
+        <div class="card-body">
+          <div class="category-tree">
+            <div 
+              v-for="category in categories" 
+              :key="category.id"
+              class="category-item"
+            >
+              <div 
+                class="category-header"
+                :class="{ active: selectedCategory === category.id }"
+                @click="selectCategory(category)"
+              >
+                <div class="category-icon" :class="category.iconClass">
+                  <i :class="category.icon"></i>
+                </div>
+                <div class="category-info">
+                  <div class="category-name">{{ category.name }}</div>
+                  <div class="category-count">{{ category.tagCount }}个标签</div>
+                </div>
+                <i 
+                  class="el-icon-arrow-right category-arrow"
+                  :class="{ expanded: expandedCategories.includes(category.id) }"
+                  @click.stop="toggleCategory(category.id)"
+                ></i>
+              </div>
+              
+              <div v-if="expandedCategories.includes(category.id)" class="tag-group-list">
+                <div 
+                  v-for="group in category.groups" 
+                  :key="group.id"
+                  class="tag-group-item"
+                >
+                  <div class="tag-group-header" @click="toggleGroup(group.id)">
+                    <span class="tag-group-name">{{ group.name }}</span>
+                    <span class="tag-group-count">{{ group.tags.length }}个标签</span>
+                    <i 
+                      class="el-icon-arrow-down"
+                      :style="{ transform: expandedGroups.includes(group.id) ? 'rotate(180deg)' : '' }"
+                    ></i>
+                  </div>
+                  
+                  <div v-if="expandedGroups.includes(group.id)" class="tag-list">
+                    <span 
+                      v-for="tag in group.tags" 
+                      :key="tag.id"
+                      class="tag-chip"
+                      :class="{ selected: selectedTag?.id === tag.id }"
+                      @click="selectTag(tag, group, category)"
+                    >
+                      {{ tag.name }}
+                      <span class="weight">{{ tag.weight }}分</span>
+                      <i v-if="tag.isRedLine" class="el-icon-warning" style="color: #f5222d; margin-left: 4px;"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧：标签详情 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div class="card-title">标签详情</div>
+          <div v-if="selectedTag" class="action-btns">
+            <el-button type="text" @click="handleEdit">编辑</el-button>
+            <el-button type="text" class="text-danger" @click="handleDelete">删除</el-button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div v-if="selectedTag" class="tag-detail-panel">
+            <div class="tag-detail-header">
+              <div>
+                <div class="tag-detail-title">
+                  {{ selectedTag.name }}
+                  <span v-if="selectedTag.isRedLine" class="red-line-badge">红线</span>
+                  <span v-if="selectedTag.isRequired" class="cell-tag blue" style="margin-left: 8px;">必选项</span>
+                </div>
+                <div class="tag-detail-subtitle">
+                  {{ selectedCategoryInfo?.name }} / {{ selectedGroupInfo?.name }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="tag-meta-grid">
+              <div class="tag-meta-item">
+                <div class="tag-meta-label">评分权重</div>
+                <div class="tag-meta-value" style="color: #1890ff; font-size: 18px;">{{ selectedTag.weight }}分</div>
+              </div>
+              <div class="tag-meta-item">
+                <div class="tag-meta-label">责任部门</div>
+                <div class="tag-meta-value">{{ selectedTag.department || selectedCategoryInfo?.department }}</div>
+              </div>
+              <div class="tag-meta-item">
+                <div class="tag-meta-label">适用场景</div>
+                <div class="tag-meta-value">{{ selectedTag.applicable?.join('、') || '合格证、质量追溯' }}</div>
+              </div>
+              <div class="tag-meta-item">
+                <div class="tag-meta-label">已持证人数</div>
+                <div class="tag-meta-value" style="color: #52c41a;">{{ selectedTag.certifiedCount || 0 }}人</div>
+              </div>
+            </div>
+            
+            <div class="tag-criteria">
+              <div class="tag-criteria-title">
+                <i class="el-icon-info" style="color: #52c41a; margin-right: 8px;"></i>
+                评估标准
+              </div>
+              <div class="tag-criteria-content">
+                {{ selectedTag.criteria || selectedTag.description || '面试时按对应标准核查，上户后发现不达标影响服务的，责任归属招生部准入核查失职' }}
+              </div>
+            </div>
+            
+            <!-- 标签状态流转 -->
+            <div style="margin-bottom: 24px;">
+              <div style="font-weight: 600; margin-bottom: 12px;">标签状态流转</div>
+              <div class="tag-status-flow">
+                <div class="status-node">
+                  <div class="status-dot unobtained"></div>
+                  <span class="status-label">未获得</span>
+                </div>
+                <i class="el-icon-right status-arrow"></i>
+                <div class="status-node">
+                  <div class="status-dot trained"></div>
+                  <span class="status-label">已培训</span>
+                </div>
+                <i class="el-icon-right status-arrow"></i>
+                <div class="status-node">
+                  <div class="status-dot certified"></div>
+                  <span class="status-label">已持证</span>
+                </div>
+                <i class="el-icon-right status-arrow"></i>
+                <div class="status-node">
+                  <div class="status-dot expiring"></div>
+                  <span class="status-label">即将过期</span>
+                </div>
+                <i class="el-icon-right status-arrow"></i>
+                <div class="status-node">
+                  <div class="status-dot expired"></div>
+                  <span class="status-label">已过期</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 使用统计 -->
+            <div>
+              <div style="font-weight: 600; margin-bottom: 12px;">使用统计</div>
+              <div class="tag-usage-stats">
+                <div class="usage-stat">
+                  <div class="usage-stat-value">{{ selectedTag.unobtainedCount || 0 }}</div>
+                  <div class="usage-stat-label">未获得</div>
+                </div>
+                <div class="usage-stat">
+                  <div class="usage-stat-value">{{ selectedTag.trainedCount || 0 }}</div>
+                  <div class="usage-stat-label">已培训</div>
+                </div>
+                <div class="usage-stat">
+                  <div class="usage-stat-value">{{ selectedTag.certifiedCount || 0 }}</div>
+                  <div class="usage-stat-label">已持证</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 最近持证人员 -->
+            <div v-if="selectedTag.recentPersonnel && selectedTag.recentPersonnel.length > 0" class="tag-personnel-list">
+              <div style="font-weight: 600; margin-bottom: 12px;">最近持证人员</div>
+              <div v-for="person in selectedTag.recentPersonnel" :key="person.id" class="personnel-mini">
+                <div class="personnel-avatar">{{ person.name.charAt(0) }}</div>
+                <div class="personnel-info">
+                  <div class="personnel-name">{{ person.name }}</div>
+                  <div class="personnel-level">{{ person.level }} | 获证时间: {{ person.certDate }}</div>
+                </div>
+                <span class="personnel-status" :class="person.status === '在岗中' ? 'cell-tag green' : 'cell-tag'">
+                  {{ person.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else style="text-align: center; padding: 60px 20px; color: #8c8c8c;">
+            <i class="el-icon-price-tag" style="font-size: 64px; margin-bottom: 16px; display: block;"></i>
+            <p>请从左侧选择一个标签查看详情</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 新增/编辑标签对话框 -->
+    <el-dialog
+      v-model="showAddDialog"
+      :title="isEdit ? '编辑标签' : '新增标签'"
+      width="600px"
+    >
+      <el-form :model="tagForm" label-width="100px">
+        <el-form-item label="所属分类">
+          <el-cascader
+            v-model="tagForm.categoryPath"
+            :options="categoryOptions"
+            :props="{ value: 'id', label: 'name', children: 'groups' }"
+            style="width: 100%;"
+            placeholder="请选择分类和标签组"
+          ></el-cascader>
+        </el-form-item>
+        <el-form-item label="标签名称">
+          <el-input v-model="tagForm.name" placeholder="请输入标签名称"></el-input>
+        </el-form-item>
+        <el-form-item label="评分权重">
+          <el-slider v-model="tagForm.weight" :max="20" show-stops></el-slider>
+          <span style="color: #8c8c8c; font-size: 12px;">当前权重: {{ tagForm.weight }}分</span>
+        </el-form-item>
+        <el-form-item label="评估标准">
+          <el-input 
+            v-model="tagForm.criteria" 
+            type="textarea" 
+            :rows="3"
+            placeholder="请输入评估标准和要求"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="选项设置">
+          <el-checkbox v-model="tagForm.isRequired">必选项</el-checkbox>
+          <el-checkbox v-model="tagForm.isRedLine">红线标签（不通过则淘汰）</el-checkbox>
+        </el-form-item>
+        <el-form-item label="责任部门">
+          <el-select v-model="tagForm.department" style="width: 100%;">
+            <el-option label="招生部" value="招生部"></el-option>
+            <el-option label="培训组" value="培训组"></el-option>
+            <el-option label="督导组" value="督导组"></el-option>
+            <el-option label="运营组" value="运营组"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="适用场景">
+          <el-checkbox-group v-model="tagForm.applicable">
+            <el-checkbox label="合格证">合格证</el-checkbox>
+            <el-checkbox label="质量追溯">质量追溯</el-checkbox>
+            <el-checkbox label="派单匹配">派单匹配</el-checkbox>
+            <el-checkbox label="面试评估">面试评估</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmSave">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('tags', {
+      title: '标签管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 人员档案 / 标签管理'
+    });
+
+    createApp({
+      setup() {
+        // 岗位列表
+        const positions = ref([
+          { id: 'yuesao', name: '月嫂', icon: 'el-icon-baby', tagCount: 76 },
+          { id: 'yuying', name: '育婴师', icon: 'el-icon-user', tagCount: 52 },
+          { id: 'hugong', name: '老年护工', icon: 'el-icon-user-solid', tagCount: 48 },
+          { id: 'binghuan', name: '病患护理', icon: 'el-icon-first-aid-kit', tagCount: 56 },
+          { id: 'cuiru', name: '催乳师', icon: 'el-icon-milk-tea', tagCount: 32 },
+          { id: 'chanfu', name: '产后康复师', icon: 'el-icon-refresh', tagCount: 38 }
+        ]);
+
+        // 当前选中的岗位
+        const selectedPosition = ref('yuesao');
+
+        // 按岗位区分的标签数据
+        const positionTagsData = ref({
+          // 月嫂标签体系
+          yuesao: {
+            categories: 5,
+            groups: 18,
+            tags: 76,
+            redLine: 8,
+            required: 38,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 15,
+                groups: [
+                  {
+                    id: 'age',
+                    name: '年龄条件',
+                    tags: [
+                      { id: 'age-1', name: '符合28-48岁', weight: 10, isRequired: true, isRedLine: false, criteria: '28-48岁，优秀者可放宽至26-49岁', certifiedCount: 245, unobtainedCount: 12, trainedCount: 8 }
+                    ]
+                  },
+                  { id: 'physical', name: '身体条件', tags: [
+                    { id: 'vision', name: '视力达标（≤500度）', weight: 8, isRequired: true },
+                    { id: 'hearing', name: '听力正常', weight: 8, isRequired: true },
+                    { id: 'surgery', name: '无近期手术史', weight: 8, isRequired: true },
+                    { id: 'night', name: '可熬夜适配', weight: 8, isRequired: true }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true, criteria: '无乙肝、肺结核、梅毒、HIV等传染性疾病', certifiedCount: 268 },
+                    { id: 'history', name: '无重大病史', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'appearance', name: '外貌形象', tags: [
+                    { id: 'tattoo', name: '无面部/手部纹身', weight: 5, isRequired: true },
+                    { id: 'scar', name: '无明显疤痕', weight: 3, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'baby',
+                name: '宝宝护理',
+                icon: 'el-icon-baby',
+                iconClass: 'baby',
+                department: '培训组+督导组',
+                tagCount: 28,
+                groups: [
+                  { id: 'bath', name: '宝宝洗澡护理', tags: [
+                    { id: 'bath-1', name: '水温测试', weight: 5, isRequired: true },
+                    { id: 'bath-2', name: '洗澡姿势', weight: 5, isRequired: true },
+                    { id: 'bath-3', name: '擦洗顺序', weight: 4, isRequired: true },
+                    { id: 'bath-4', name: '保暖措施', weight: 4, isRequired: true }
+                  ]},
+                  { id: 'umbilical', name: '脐带护理', tags: [
+                    { id: 'umbilical-1', name: '消毒流程', weight: 5, isRequired: true },
+                    { id: 'umbilical-2', name: '棉签使用', weight: 4, isRequired: true },
+                    { id: 'umbilical-3', name: '感染观察', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'jaundice', name: '黄疸观察', tags: [
+                    { id: 'jaundice-1', name: '识别黄疸', weight: 8, isRequired: true, isRedLine: true, criteria: '能识别生理性黄疸和病理性黄疸', certifiedCount: 198 },
+                    { id: 'jaundice-2', name: '建议就医', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'emergency', name: '急救技能', tags: [
+                    { id: 'choking', name: '呛奶急救', weight: 10, isRequired: true, isRedLine: true, criteria: '掌握拍背体位、清理口鼻、呼叫流程' },
+                    { id: 'cpr', name: '心肺复苏', weight: 8, isRequired: false }
+                  ]},
+                  { id: 'feeding', name: '喂养规范', tags: [
+                    { id: 'feeding-1', name: '按需喂养', weight: 5, isRequired: true },
+                    { id: 'feeding-2', name: '拍嗝技巧', weight: 5, isRequired: true },
+                    { id: 'feeding-3', name: '奶具消毒', weight: 4, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'mom',
+                name: '妈妈护理',
+                icon: 'el-icon-female',
+                iconClass: 'mom',
+                department: '培训组+督导组',
+                tagCount: 18,
+                groups: [
+                  { id: 'maternal', name: '产妇护理基础', tags: [
+                    { id: 'wound', name: '伤口护理', weight: 6, isRequired: true },
+                    { id: 'emotion', name: '情绪观察', weight: 5, isRequired: true },
+                    { id: 'cleaning', name: '会阴清洁', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'recovery', name: '产后恢复', tags: [
+                    { id: 'exercise', name: '恢复操指导', weight: 4, isRequired: false },
+                    { id: 'diet', name: '饮食调理', weight: 5, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'meal',
+                name: '月子餐制作',
+                icon: 'el-icon-food',
+                iconClass: 'meal',
+                department: '培训组+督导组',
+                tagCount: 15,
+                groups: [
+                  { id: 'nutrition', name: '营养搭配', tags: [
+                    { id: 'nutrition-1', name: '营养均衡', weight: 5, isRequired: true },
+                    { id: 'nutrition-2', name: '阶段调理', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'cooking', name: '烹饪技能', tags: [
+                    { id: 'cooking-1', name: '基础烹饪', weight: 5, isRequired: true },
+                    { id: 'cooking-2', name: '汤品制作', weight: 4, isRequired: true },
+                    { id: 'cooking-3', name: '面点制作', weight: 3, isRequired: false }
+                  ]},
+                  { id: 'taboo', name: '饮食禁忌', tags: [
+                    { id: 'taboo-1', name: '禁忌识别', weight: 6, isRequired: true },
+                    { id: 'taboo-2', name: '回奶食物', weight: 5, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 13,
+                groups: [
+                  { id: 'attitude', name: '服务态度', tags: [
+                    { id: 'responsibility', name: '责任心', weight: 8, isRequired: true },
+                    { id: 'patience', name: '耐心', weight: 7, isRequired: true },
+                    { id: 'care', name: '爱心', weight: 8, isRequired: true }
+                  ]},
+                  { id: 'communication', name: '沟通能力', tags: [
+                    { id: 'expression', name: '表达清晰', weight: 6, isRequired: true },
+                    { id: 'listening', name: '善于倾听', weight: 6, isRequired: true }
+                  ]}
+                ]
+              }
+            ]
+          },
+          // 育婴师标签体系
+          yuying: {
+            categories: 4,
+            groups: 14,
+            tags: 52,
+            redLine: 5,
+            required: 28,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 12,
+                groups: [
+                  { id: 'age', name: '年龄条件', tags: [
+                    { id: 'age-1', name: '符合25-50岁', weight: 10, isRequired: true, criteria: '25-50岁' }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true },
+                    { id: 'history', name: '无重大病史', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'education', name: '学历要求', tags: [
+                    { id: 'edu-1', name: '初中及以上', weight: 8, isRequired: true },
+                    { id: 'edu-2', name: '有育儿经验优先', weight: 5, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'baby',
+                name: '婴幼儿护理',
+                icon: 'el-icon-baby',
+                iconClass: 'baby',
+                department: '培训组+督导组',
+                tagCount: 22,
+                groups: [
+                  { id: 'bath', name: '宝宝洗澡护理', tags: [
+                    { id: 'bath-1', name: '水温测试', weight: 5, isRequired: true },
+                    { id: 'bath-2', name: '洗澡姿势', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'feeding', name: '喂养规范', tags: [
+                    { id: 'feeding-1', name: '奶粉冲调', weight: 6, isRequired: true },
+                    { id: 'feeding-2', name: '辅食添加', weight: 8, isRequired: true, isRedLine: true },
+                    { id: 'feeding-3', name: '拍嗝技巧', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'earlyedu', name: '早期教育', tags: [
+                    { id: 'early-1', name: '大动作训练', weight: 6, isRequired: true },
+                    { id: 'early-2', name: '精细动作训练', weight: 6, isRequired: true },
+                    { id: 'early-3', name: '语言启蒙', weight: 5, isRequired: false },
+                    { id: 'early-4', name: '认知训练', weight: 5, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'safety',
+                name: '安全防护',
+                icon: 'el-icon-warning',
+                iconClass: 'service',
+                department: '培训组',
+                tagCount: 10,
+                groups: [
+                  { id: 'emergency', name: '急救技能', tags: [
+                    { id: 'choking', name: '异物卡喉急救', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'cpr', name: '婴幼儿心肺复苏', weight: 8, isRequired: true }
+                  ]},
+                  { id: 'prevention', name: '意外预防', tags: [
+                    { id: 'fall', name: '防跌落', weight: 5, isRequired: true },
+                    { id: 'burn', name: '防烫伤', weight: 5, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 8,
+                groups: [
+                  { id: 'attitude', name: '服务态度', tags: [
+                    { id: 'responsibility', name: '责任心', weight: 8, isRequired: true },
+                    { id: 'patience', name: '耐心', weight: 8, isRequired: true }
+                  ]}
+                ]
+              }
+            ]
+          },
+          // 老年护工标签体系
+          hugong: {
+            categories: 4,
+            groups: 12,
+            tags: 48,
+            redLine: 6,
+            required: 30,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 10,
+                groups: [
+                  { id: 'age', name: '年龄条件', tags: [
+                    { id: 'age-1', name: '符合35-55岁', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true },
+                    { id: 'physical', name: '体力良好', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'character', name: '性格要求', tags: [
+                    { id: 'patient', name: '性格温和有耐心', weight: 8, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'elderly',
+                name: '老年护理',
+                icon: 'el-icon-user-solid',
+                iconClass: 'mom',
+                department: '培训组+督导组',
+                tagCount: 20,
+                groups: [
+                  { id: 'dailycare', name: '日常照护', tags: [
+                    { id: 'daily-1', name: '协助进食', weight: 6, isRequired: true },
+                    { id: 'daily-2', name: '协助洗漱', weight: 6, isRequired: true },
+                    { id: 'daily-3', name: '协助如厕', weight: 6, isRequired: true },
+                    { id: 'daily-4', name: '更衣协助', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'mobility', name: '移动协助', tags: [
+                    { id: 'mob-1', name: '床椅转移', weight: 8, isRequired: true },
+                    { id: 'mob-2', name: '助行器使用', weight: 6, isRequired: true },
+                    { id: 'mob-3', name: '轮椅操作', weight: 5, isRequired: false }
+                  ]},
+                  { id: 'special', name: '特殊护理', tags: [
+                    { id: 'bedsore', name: '压疮预防', weight: 8, isRequired: true, isRedLine: true },
+                    { id: 'incontinence', name: '失禁护理', weight: 6, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'disease',
+                name: '疾病护理',
+                icon: 'el-icon-first-aid-kit',
+                iconClass: 'baby',
+                department: '培训组',
+                tagCount: 12,
+                groups: [
+                  { id: 'chronic', name: '慢性病护理', tags: [
+                    { id: 'diabetes', name: '糖尿病护理', weight: 6, isRequired: false },
+                    { id: 'hypertension', name: '高血压护理', weight: 6, isRequired: false },
+                    { id: 'stroke', name: '中风后遗症护理', weight: 8, isRequired: false }
+                  ]},
+                  { id: 'medication', name: '用药协助', tags: [
+                    { id: 'med-1', name: '服药提醒', weight: 8, isRequired: true },
+                    { id: 'med-2', name: '胰岛素注射', weight: 6, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 6,
+                groups: [
+                  { id: 'communication', name: '沟通陪伴', tags: [
+                    { id: 'chat', name: '耐心倾听', weight: 7, isRequired: true },
+                    { id: 'mental', name: '心理疏导', weight: 5, isRequired: false }
+                  ]}
+                ]
+              }
+            ]
+          },
+          // 病患护理标签体系
+          binghuan: {
+            categories: 4,
+            groups: 15,
+            tags: 56,
+            redLine: 8,
+            required: 35,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 12,
+                groups: [
+                  { id: 'age', name: '年龄条件', tags: [
+                    { id: 'age-1', name: '符合30-55岁', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true },
+                    { id: 'physical', name: '体力良好', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'cert', name: '资质要求', tags: [
+                    { id: 'cert-1', name: '持护理员证', weight: 10, isRequired: true, isRedLine: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'patient',
+                name: '病患护理',
+                icon: 'el-icon-first-aid-kit',
+                iconClass: 'baby',
+                department: '培训组+督导组',
+                tagCount: 28,
+                groups: [
+                  { id: 'bedcare', name: '卧床护理', tags: [
+                    { id: 'bed-1', name: '翻身拍背', weight: 8, isRequired: true },
+                    { id: 'bed-2', name: '体位摆放', weight: 6, isRequired: true },
+                    { id: 'bed-3', name: '床上擦浴', weight: 6, isRequired: true },
+                    { id: 'bed-4', name: '更换床单位', weight: 5, isRequired: true }
+                  ]},
+                  { id: 'observation', name: '病情观察', tags: [
+                    { id: 'obs-1', name: '体温测量', weight: 6, isRequired: true },
+                    { id: 'obs-2', name: '脉搏测量', weight: 6, isRequired: true },
+                    { id: 'obs-3', name: '血压测量', weight: 6, isRequired: true },
+                    { id: 'obs-4', name: '异常识别', weight: 10, isRequired: true, isRedLine: true }
+                  ]},
+                  { id: 'tube', name: '管道护理', tags: [
+                    { id: 'tube-1', name: '鼻饲护理', weight: 8, isRequired: false },
+                    { id: 'tube-2', name: '导尿管护理', weight: 8, isRequired: false },
+                    { id: 'tube-3', name: '引流管护理', weight: 8, isRequired: false }
+                  ]},
+                  { id: 'wound', name: '伤口护理', tags: [
+                    { id: 'wound-1', name: '换药协助', weight: 8, isRequired: false },
+                    { id: 'wound-2', name: '伤口观察', weight: 8, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'rehab',
+                name: '康复辅助',
+                icon: 'el-icon-refresh',
+                iconClass: 'meal',
+                department: '培训组',
+                tagCount: 10,
+                groups: [
+                  { id: 'rehab-train', name: '康复训练', tags: [
+                    { id: 'rehab-1', name: '肢体被动运动', weight: 6, isRequired: false },
+                    { id: 'rehab-2', name: '辅助行走', weight: 6, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 6,
+                groups: [
+                  { id: 'professional', name: '职业素养', tags: [
+                    { id: 'confidentiality', name: '保护隐私', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'hygiene', name: '手卫生规范', weight: 8, isRequired: true }
+                  ]}
+                ]
+              }
+            ]
+          },
+          // 催乳师标签体系
+          cuiru: {
+            categories: 3,
+            groups: 10,
+            tags: 32,
+            redLine: 4,
+            required: 22,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 8,
+                groups: [
+                  { id: 'age', name: '年龄条件', tags: [
+                    { id: 'age-1', name: '符合28-50岁', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true }
+                  ]},
+                  { id: 'cert', name: '资质要求', tags: [
+                    { id: 'cert-1', name: '持催乳师证', weight: 10, isRequired: true, isRedLine: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'skill',
+                name: '催乳技能',
+                icon: 'el-icon-milk-tea',
+                iconClass: 'mom',
+                department: '培训组+督导组',
+                tagCount: 18,
+                groups: [
+                  { id: 'massage', name: '按摩手法', tags: [
+                    { id: 'mass-1', name: '穴位按摩', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'mass-2', name: '经络疏通', weight: 8, isRequired: true },
+                    { id: 'mass-3', name: '乳腺疏通', weight: 10, isRequired: true, isRedLine: true }
+                  ]},
+                  { id: 'problem', name: '问题处理', tags: [
+                    { id: 'prob-1', name: '生理性胀奶处理', weight: 8, isRequired: true },
+                    { id: 'prob-2', name: '乳腺炎识别', weight: 8, isRequired: true },
+                    { id: 'prob-3', name: '少奶调理', weight: 8, isRequired: true },
+                    { id: 'prob-4', name: '回奶指导', weight: 6, isRequired: true }
+                  ]},
+                  { id: 'guidance', name: '喂养指导', tags: [
+                    { id: 'guide-1', name: '正确衔乳指导', weight: 8, isRequired: true },
+                    { id: 'guide-2', name: '喂奶姿势指导', weight: 6, isRequired: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 6,
+                groups: [
+                  { id: 'communication', name: '沟通指导', tags: [
+                    { id: 'comm-1', name: '心理疏导', weight: 6, isRequired: true },
+                    { id: 'comm-2', name: '喂养宣教', weight: 6, isRequired: true }
+                  ]}
+                ]
+              }
+            ]
+          },
+          // 产后康复师标签体系
+          chanfu: {
+            categories: 3,
+            groups: 12,
+            tags: 38,
+            redLine: 3,
+            required: 24,
+            categoriesList: [
+              {
+                id: 'basic',
+                name: '基础准入条件',
+                icon: 'el-icon-user-solid',
+                iconClass: 'basic',
+                department: '招生部（招募组）',
+                tagCount: 10,
+                groups: [
+                  { id: 'age', name: '年龄条件', tags: [
+                    { id: 'age-1', name: '符合28-50岁', weight: 10, isRequired: true }
+                  ]},
+                  { id: 'health', name: '健康合规', tags: [
+                    { id: 'infectious', name: '无传染病', weight: 15, isRequired: true, isRedLine: true }
+                  ]},
+                  { id: 'cert', name: '资质要求', tags: [
+                    { id: 'cert-1', name: '持产后康复证', weight: 10, isRequired: true, isRedLine: true }
+                  ]}
+                ]
+              },
+              {
+                id: 'recovery',
+                name: '康复技能',
+                icon: 'el-icon-refresh',
+                iconClass: 'meal',
+                department: '培训组+督导组',
+                tagCount: 22,
+                groups: [
+                  { id: 'body', name: '形体恢复', tags: [
+                    { id: 'body-1', name: '腹直肌修复', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'body-2', name: '骨盆修复', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'body-3', name: '盆底肌修复', weight: 10, isRequired: true },
+                    { id: 'body-4', name: '子宫复旧', weight: 8, isRequired: true }
+                  ]},
+                  { id: 'therapy', name: '理疗手法', tags: [
+                    { id: 'ther-1', name: '经络疏通', weight: 6, isRequired: true },
+                    { id: 'ther-2', name: '精油按摩', weight: 6, isRequired: true },
+                    { id: 'ther-3', name: '仪器操作', weight: 6, isRequired: true }
+                  ]},
+                  { id: 'guidance', name: '康复指导', tags: [
+                    { id: 'guide-1', name: '产后运动指导', weight: 6, isRequired: true },
+                    { id: 'guide-2', name: '饮食调理指导', weight: 6, isRequired: true },
+                    { id: 'guide-3', name: '心理调适指导', weight: 5, isRequired: false }
+                  ]}
+                ]
+              },
+              {
+                id: 'service',
+                name: '服务素养',
+                icon: 'el-icon-service',
+                iconClass: 'service',
+                department: '培训组+运营组',
+                tagCount: 6,
+                groups: [
+                  { id: 'professional', name: '职业素养', tags: [
+                    { id: 'confidentiality', name: '保护隐私', weight: 10, isRequired: true, isRedLine: true },
+                    { id: 'hygiene', name: '手卫生规范', weight: 8, isRequired: true }
+                  ]}
+                ]
+              }
+            ]
+          }
+        });
+
+        // 计算当前岗位的统计数据
+        const currentStats = computed(() => {
+          const data = positionTagsData.value[selectedPosition.value];
+          return data ? {
+            categories: data.categories,
+            groups: data.groups,
+            tags: data.tags,
+            redLine: data.redLine,
+            required: data.required
+          } : { categories: 0, groups: 0, tags: 0, redLine: 0, required: 0 };
+        });
+
+        // 当前岗位的分类列表
+        const categories = computed(() => {
+          const data = positionTagsData.value[selectedPosition.value];
+          return data ? data.categoriesList : [];
+        });
+
+        // 选中的分类和标签
+        const selectedCategory = ref('');
+        const selectedTag = ref(null);
+        const selectedGroupInfo = ref(null);
+        const selectedCategoryInfo = ref(null);
+
+        // 展开状态
+        const expandedCategories = ref(['basic']);
+        const expandedGroups = ref([]);
+
+        // 对话框控制
+        const showAddDialog = ref(false);
+        const isEdit = ref(false);
+
+        // 标签表单
+        const tagForm = ref({
+          categoryPath: [],
+          name: '',
+          weight: 5,
+          criteria: '',
+          isRequired: false,
+          isRedLine: false,
+          department: '',
+          applicable: ['合格证', '质量追溯']
+        });
+
+        // 岗位切换处理
+        const handlePositionChange = (positionId) => {
+          selectedPosition.value = positionId;
+          // 重置选中状态
+          selectedTag.value = null;
+          selectedGroupInfo.value = null;
+          selectedCategoryInfo.value = null;
+          // 默认展开第一个分类
+          const data = positionTagsData.value[positionId];
+          if (data && data.categoriesList.length > 0) {
+            expandedCategories.value = [data.categoriesList[0].id];
+            selectCategory(data.categoriesList[0]);
+          }
+        };
+
+        // 级联选择器选项
+        const categoryOptions = computed(() => {
+          return categories.value.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            groups: cat.groups.map(g => ({
+              id: g.id,
+              name: g.name
+            }))
+          }));
+        });
+        
+        // 选择分类
+        const selectCategory = (category) => {
+          selectedCategory.value = category.id;
+          selectedCategoryInfo.value = category;
+          // 默认展开该分类
+          if (!expandedCategories.value.includes(category.id)) {
+            expandedCategories.value.push(category.id);
+          }
+        };
+        
+        // 切换分类展开
+        const toggleCategory = (categoryId) => {
+          const index = expandedCategories.value.indexOf(categoryId);
+          if (index > -1) {
+            expandedCategories.value.splice(index, 1);
+          } else {
+            expandedCategories.value.push(categoryId);
+          }
+        };
+        
+        // 切换标签组展开
+        const toggleGroup = (groupId) => {
+          const index = expandedGroups.value.indexOf(groupId);
+          if (index > -1) {
+            expandedGroups.value.splice(index, 1);
+          } else {
+            expandedGroups.value.push(groupId);
+          }
+        };
+        
+        // 选择标签
+        const selectTag = (tag, group, category) => {
+          selectedTag.value = tag;
+          selectedGroupInfo.value = group;
+          selectedCategoryInfo.value = category;
+        };
+        
+        // 编辑标签
+        const handleEdit = () => {
+          isEdit.value = true;
+          tagForm.name = selectedTag.value.name;
+          tagForm.weight = selectedTag.value.weight;
+          tagForm.criteria = selectedTag.value.criteria || '';
+          tagForm.isRequired = selectedTag.value.isRequired;
+          tagForm.isRedLine = selectedTag.value.isRedLine;
+          tagForm.department = selectedTag.value.department || selectedCategoryInfo.value?.department;
+          showAddDialog.value = true;
+        };
+        
+        // 删除标签
+        const handleDelete = () => {
+          ElementPlus.ElMessageBox.confirm(`确定删除标签 "${selectedTag.value.name}" 吗？`, '删除确认', {
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            ElementPlus.ElMessage.success('标签已删除');
+            selectedTag.value = null;
+          });
+        };
+        
+        // 保存标签
+        const confirmSave = () => {
+          ElementPlus.ElMessage.success(isEdit.value ? '标签已更新' : '标签已创建');
+          showAddDialog.value = false;
+        };
+        
+        // 默认展开第一个分类
+        selectCategory(categories.value[0]);
+
+        return {
+          positions,
+          selectedPosition,
+          currentStats,
+          positionTagsData,
+          handlePositionChange,
+          selectedCategory,
+          selectedTag,
+          selectedGroupInfo,
+          selectedCategoryInfo,
+          expandedCategories,
+          expandedGroups,
+          showAddDialog,
+          isEdit,
+          tagForm,
+          categories,
+          categoryOptions,
+          selectCategory,
+          toggleCategory,
+          toggleGroup,
+          selectTag,
+          handleEdit,
+          handleDelete,
+          confirmSave
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

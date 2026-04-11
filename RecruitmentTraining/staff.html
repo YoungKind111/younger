@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人员档案 - 护理招募培训系统</title>
+  <!-- Element Plus 样式 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <!-- 共享样式 -->
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* 人员档案专用样式 */
+    .staff-stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1200px) {
+      .staff-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+      .staff-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .staff-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    
+    .staff-card:hover, .staff-card.active {
+      border-color: #1890ff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .staff-card-value {
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    .staff-card-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+    
+    .staff-avatar-large {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 500;
+      margin: 0 auto 16px;
+    }
+    
+    .staff-detail-header {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, #e6f7ff 0%, #f6ffed 100%);
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .staff-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .staff-id {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .staff-tags {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+    }
+    
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    
+    .tag-item:hover {
+      transform: scale(1.05);
+    }
+    
+    /* 标签状态颜色 */
+    .tag-status-unobtained { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; }
+    .tag-status-trained { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .tag-status-certified { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+    .tag-status-expiring { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+    .tag-status-expired { background: #f5f5f5; color: #595959; border: 1px solid #d9d9d9; text-decoration: line-through; }
+    
+    .certificate-card {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .certificate-card.expiring {
+      background: #fff7e6;
+      border-color: #ffd591;
+    }
+    
+    .certificate-card.expired {
+      background: #fff1f0;
+      border-color: #ffa39e;
+    }
+    
+    .certificate-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      background: #52c41a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-right: 16px;
+    }
+    
+    .certificate-card.expiring .certificate-icon { background: #fa8c16; }
+    .certificate-card.expired .certificate-icon { background: #f5222d; }
+    
+    .certificate-info {
+      flex: 1;
+    }
+    
+    .certificate-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .certificate-no {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .certificate-validity {
+      text-align: right;
+    }
+    
+    .certificate-date {
+      font-size: 14px;
+      color: #262626;
+    }
+    
+    .certificate-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .certificate-status.valid { background: #f6ffed; color: #52c41a; }
+    .certificate-status.expiring { background: #fff7e6; color: #fa8c16; }
+    .certificate-status.expired { background: #fff1f0; color: #f5222d; }
+    
+    .timeline-section {
+      padding: 16px;
+    }
+    
+    .timeline-item-staff {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .timeline-item-staff:last-child {
+      border-bottom: none;
+    }
+    
+    .timeline-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    
+    .timeline-icon.clue { background: #e6f7ff; color: #1890ff; }
+    .timeline-icon.interview { background: #f6ffed; color: #52c41a; }
+    .timeline-icon.contract { background: #fff7e6; color: #fa8c16; }
+    .timeline-icon.training { background: #f9f0ff; color: #722ed1; }
+    .timeline-icon.exam { background: #e6fffb; color: #13c2c2; }
+    .timeline-icon.work { background: #fff1f0; color: #f5222d; }
+    
+    .timeline-content-staff {
+      flex: 1;
+    }
+    
+    .timeline-title {
+      font-weight: 500;
+      color: #262626;
+    }
+    
+    .timeline-desc {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    
+    .timeline-time {
+      font-size: 12px;
+      color: #8c8c8c;
+      flex-shrink: 0;
+    }
+    
+    .resume-preview {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 32px;
+    }
+    
+    .resume-header {
+      text-align: center;
+      border-bottom: 2px solid #1890ff;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .resume-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+    }
+    
+    .resume-subtitle {
+      font-size: 14px;
+      color: #8c8c8c;
+      margin-top: 8px;
+    }
+    
+    .resume-section {
+      margin-bottom: 24px;
+    }
+    
+    .resume-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1890ff;
+      border-left: 4px solid #1890ff;
+      padding-left: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .resume-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .resume-item {
+      display: flex;
+    }
+    
+    .resume-label {
+      width: 100px;
+      color: #8c8c8c;
+      flex-shrink: 0;
+    }
+    
+    .resume-value {
+      color: #262626;
+      font-weight: 500;
+    }
+    
+    .tag-category {
+      margin-bottom: 20px;
+    }
+    
+    .tag-category-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+      padding: 8px 12px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    
+    .staff-level-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .staff-level-badge.y1 { background: #f5f5f5; color: #595959; }
+    .staff-level-badge.y2 { background: #e6f7ff; color: #096dd9; }
+    .staff-level-badge.y3 { background: #f6ffed; color: #389e0d; }
+    .staff-level-badge.y4 { background: #fff7e6; color: #d46b08; }
+    .staff-level-badge.y5 { background: #fff1f0; color: #cf1322; }
+
+    /* 证书照片悬停效果 */
+    .photo-overlay:hover {
+      opacity: 1 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-item" style="flex: 1; max-width: 300px;">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索姓名/手机号/编号"
+          clearable
+          prefix-icon="el-icon-search"
+        ></el-input>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">岗位:</span>
+        <el-select v-model="filterPosition" placeholder="全部岗位" clearable style="width: 120px;">
+          <el-option label="月嫂" value="yuesao"></el-option>
+          <el-option label="育婴师" value="yuying"></el-option>
+          <el-option label="老年护工" value="hugong"></el-option>
+          <el-option label="病患护理" value="binghuan"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <el-button type="primary" @click="handleSearch">
+          <i class="el-icon-search"></i> 查询
+        </el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
+    </div>
+    
+    <!-- 人员列表 -->
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">人员档案</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ filteredStaffList.length }} 人</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <el-table :data="filteredStaffList" style="width: 100%">
+          <el-table-column label="人员信息" min-width="180">
+            <template #default="{ row }">
+              <div class="flex-center">
+                <div class="staff-avatar-large" style="width: 40px; height: 40px; font-size: 16px; margin: 0 12px 0 0;">
+                  {{ row.name.charAt(0) }}
+                </div>
+                <div>
+                  <div class="cell-main">{{ row.name }}</div>
+                  <div class="cell-sub">{{ row.staffNo }} | {{ row.phone }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="岗位" min-width="160">
+            <template #default="{ row }">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div
+                  v-for="pos in row.positions"
+                  :key="pos.name"
+                  style="display: flex; align-items: center; gap: 8px;"
+                >
+                  <span class="cell-tag blue" style="flex-shrink: 0;">{{ pos.name }}</span>
+                  <span v-if="pos.level" style="font-size: 13px; color: #1890ff; font-weight: 500;">{{ pos.level }}</span>
+                  <span v-else style="font-size: 13px; color: #8c8c8c;">-</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="技能标签" min-width="280">
+            <template #default="{ row }">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div
+                  v-for="pos in row.positions"
+                  :key="pos.name"
+                  style="display: flex; align-items: center; gap: 8px;"
+                >
+                  <span style="font-size: 12px; color: #8c8c8c; white-space: nowrap;">{{ pos.name }}:</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <span
+                      v-for="tag in pos.tags.slice(0, 4)"
+                      :key="tag.id"
+                      class="tag-item"
+                      :class="'tag-status-' + tag.status"
+                      style="padding: 1px 6px; font-size: 11px;"
+                    >
+                      {{ tag.name }}
+                    </span>
+                    <span v-if="pos.tags.length > 4" style="color: #8c8c8c; font-size: 11px;">+{{ pos.tags.length - 4 }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="入册时间" width="120">
+            <template #default="{ row }">
+              <div class="cell-main">{{ row.registerDate }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="{ row }">
+              <div class="action-btns">
+                <el-dropdown size="small" @command="(cmd) => handleViewDetail(row, cmd)">
+                  <el-button type="text">档案<i class="el-icon-arrow-down el-icon--right"></i></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item v-for="pos in row.positions" :key="pos.name" :command="pos.name">{{ pos.name }}</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+                <el-dropdown size="small" @command="(cmd) => handleEditTags(row, cmd)">
+                  <el-button type="text" class="text-primary">标签<i class="el-icon-arrow-down el-icon--right"></i></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item v-for="pos in row.positions" :key="pos.name" :command="pos.name">{{ pos.name }}</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+                <el-dropdown size="small" @command="(cmd) => handleViewResume(row, cmd)">
+                  <el-button type="text">简历<i class="el-icon-arrow-down el-icon--right"></i></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item v-for="pos in row.positions" :key="pos.name" :command="pos.name">{{ pos.name }}</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="total"
+            layout="total, prev, pager, next"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 人员详情抽屉 -->
+    <el-drawer
+      v-model="showDetailDrawer"
+      title="人员档案详情"
+      size="700px"
+    >
+      <template v-if="currentStaff">
+        <!-- 基本信息 -->
+        <div class="staff-detail-header">
+          <div class="staff-avatar-large">{{ currentStaff.name.charAt(0) }}</div>
+          <div class="staff-name">{{ currentStaff.name }}</div>
+          <div class="staff-id">编号: {{ currentStaff.staffNo }} | 手机号: {{ currentStaff.phone }}</div>
+          <div class="staff-tags">
+            <span
+              v-for="pos in currentStaff.positions"
+              :key="pos.name"
+              class="cell-tag blue"
+            >
+              {{ pos.name }}
+            </span>
+          </div>
+        </div>
+
+        <el-tabs v-model="activeTab">
+          <!-- 标签图谱 -->
+          <el-tab-pane label="标签图谱" name="tags">
+            <div style="margin-bottom: 16px;">
+              <el-radio-group v-model="currentPosition" size="small">
+                <el-radio-button
+                  v-for="pos in currentStaff.positions"
+                  :key="pos.name"
+                  :label="pos.name"
+                >{{ pos.name }}</el-radio-button>
+              </el-radio-group>
+            </div>
+            <div v-for="pos in currentStaff.positions.filter(p => p.name === currentPosition)" :key="pos.name">
+              <div class="tag-cloud" style="padding: 0;">
+                <div
+                  v-for="tag in pos.tags"
+                  :key="tag.id"
+                  class="tag-item"
+                  :class="'tag-status-' + tag.status"
+                >
+                  {{ tag.name }}
+                  <i
+                    :class="tag.status === 'certified' ? 'el-icon-check' : tag.status === 'trained' ? 'el-icon-time' : 'el-icon-close'"
+                    style="margin-left: 4px;"
+                  ></i>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
+              <div style="font-weight: 600; margin-bottom: 12px;">标签状态说明</div>
+              <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <span class="tag-item tag-status-unobtained">未获得</span>
+                <span class="tag-item tag-status-trained">已培训</span>
+                <span class="tag-item tag-status-certified">已持证</span>
+              </div>
+            </div>
+          </el-tab-pane>
+          
+          <!-- 证书信息 -->
+          <el-tab-pane label="证书信息" name="certificates">
+            <div style="padding: 16px;">
+              <!-- 资格证书列表 -->
+              <div style="margin-bottom: 32px;">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-collection" style="margin-right: 8px; color: #1890ff;"></i>资格证书
+                </div>
+
+                <div v-if="currentStaff.certificates && currentStaff.certificates.length" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                  <div v-for="(cert, certIndex) in currentStaff.certificates" :key="cert.id" style="display: flex; align-items: center; padding: 16px 20px; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; transition: all 0.3s;"
+                       @mouseenter="$event.currentTarget.style.borderColor='#52c41a'; $event.currentTarget.style.boxShadow='0 2px 8px rgba(82,196,26,0.15)'"
+                       @mouseleave="$event.currentTarget.style.borderColor='#e8e8e8'; $event.currentTarget.style.boxShadow='none'">
+                    <i class="el-icon-circle-check" style="color: #52c41a; font-size: 20px; margin-right: 12px;"></i>
+                    <span style="font-size: 15px; color: #262626; font-weight: 500;">{{ cert.name }}</span>
+                  </div>
+                </div>
+
+                <div v-else style="text-align: center; padding: 40px; color: #8c8c8c; background: #fafafa; border-radius: 8px;">
+                  <i class="el-icon-medal" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                  暂无证书信息
+                </div>
+              </div>
+
+              <!-- 资格证照片 -->
+              <div v-if="hasCertificatePhotos">
+                <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+                  <i class="el-icon-picture-outline" style="margin-right: 8px; color: #1890ff;"></i>资格证照片
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                  <div v-for="(photoItem, idx) in allCertificatePhotos" :key="idx" style="position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff;"
+                       @click="previewCertificatePhoto(photoItem.url)">
+                    <img :src="photoItem.url" style="width: 100%; height: 140px; object-fit: cover; display: block;" />
+                    <!-- 悬停遮罩 -->
+                    <div class="photo-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
+                      <i class="el-icon-zoom-in" style="color: #fff; font-size: 32px;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+          
+          <!-- 成长轨迹 -->
+          <el-tab-pane label="成长轨迹" name="timeline">
+            <div class="timeline-section">
+              <div v-for="(item, index) in currentStaff.timeline" :key="index" class="timeline-item-staff">
+                <div class="timeline-icon" :class="item.type">
+                  <i :class="item.icon"></i>
+                </div>
+                <div class="timeline-content-staff">
+                  <div class="timeline-title">{{ item.title }}</div>
+                  <div class="timeline-desc">{{ item.desc }}</div>
+                </div>
+                <div class="timeline-time">{{ item.time }}</div>
+              </div>
+            </div>
+          </el-tab-pane>
+          
+          <!-- 上户记录 -->
+          <el-tab-pane label="上户记录" name="work">
+            <el-table :data="currentStaff.workRecords" style="width: 100%">
+              <el-table-column label="服务时间" width="180">
+                <template #default="{ row }">{{ row.period }}</template>
+              </el-table-column>
+              <el-table-column label="服务类型" width="120">
+                <template #default="{ row }">{{ row.type }}</template>
+              </el-table-column>
+              <el-table-column label="客户评价" width="120">
+                <template #default="{ row }">
+                  <el-rate v-model="row.rating" disabled show-score text-color="#ff9900"></el-rate>
+                </template>
+              </el-table-column>
+              <el-table-column label="评价内容">
+                <template #default="{ row }">{{ row.comment }}</template>
+              </el-table-column>
+            </el-table>
+          </el-tab-pane>
+        </el-tabs>
+        
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 12px;">
+          <el-dropdown style="flex: 1;" @command="(cmd) => handleEditTags(currentStaff, cmd)">
+            <el-button type="primary" style="width: 100%;">
+              <i class="el-icon-price-tag"></i> 编辑标签 <i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="pos in currentStaff.positions" :key="pos.name" :command="pos.name">{{ pos.name }}</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown style="flex: 1;" @command="(cmd) => handleViewResume(currentStaff, cmd)">
+            <el-button style="width: 100%;">
+              <i class="el-icon-document"></i> 查看简历 <i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="pos in currentStaff.positions" :key="pos.name" :command="pos.name">{{ pos.name }}</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 证书照片预览对话框 -->
+    <el-dialog v-model="showCertificatePhotoDialog" title="证书照片预览" width="600px" center>
+      <div style="text-align: center; padding: 20px;">
+        <img :src="currentCertificatePhoto" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+      </div>
+      <template #footer>
+        <el-button @click="showCertificatePhotoDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑标签对话框 -->
+    <el-dialog
+      v-model="showTagDialog"
+      :title="'编辑技能标签 - ' + currentPosition"
+      width="700px"
+    >
+      <div v-if="currentStaff">
+        <div style="margin-bottom: 16px; padding: 12px; background: #e6f7ff; border-radius: 6px;">
+          <strong>{{ currentStaff.name }}</strong> -
+          <span style="color: #1890ff;">{{ currentPosition }}</span>
+        </div>
+        
+        <div v-for="category in tagCategories" :key="category.id" class="tag-category">
+          <div class="tag-category-title">{{ category.name }}</div>
+          <el-checkbox-group v-model="selectedTags">
+            <el-checkbox 
+              v-for="tag in category.tags" 
+              :key="tag.id"
+              :label="tag.id"
+              border
+              size="small"
+              style="margin: 4px;"
+            >
+              {{ tag.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showTagDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmEditTags">保存</el-button>
+      </template>
+    </el-dialog>
+    
+    <!-- 简历预览对话框 -->
+    <el-dialog
+      v-model="showResumeDialog"
+      :title="'服务人员简历 - ' + currentPosition"
+      width="800px"
+    >
+      <div v-if="currentStaff" class="resume-preview">
+        <div class="resume-header">
+          <div class="resume-title">母婴护理服务人员简历</div>
+          <div class="resume-subtitle">编号: {{ currentStaff.staffNo }} | 岗位: <span v-for="pos in currentStaff.positions" :key="pos.name">{{ pos.name }} </span></div>
+        </div>
+        
+        <div class="resume-section">
+          <div class="resume-section-title">基本信息</div>
+          <div class="resume-grid">
+            <div class="resume-item">
+              <span class="resume-label">姓名：</span>
+              <span class="resume-value">{{ currentStaff.name }}</span>
+            </div>
+            <div class="resume-item">
+              <span class="resume-label">年龄：</span>
+              <span class="resume-value">{{ currentStaff.age }}岁</span>
+            </div>
+            <div class="resume-item">
+              <span class="resume-label">籍贯：</span>
+              <span class="resume-value">{{ currentStaff.origin }}</span>
+            </div>
+            <div class="resume-item">
+              <span class="resume-label">学历：</span>
+              <span class="resume-value">{{ currentStaff.education }}</span>
+            </div>
+            <div class="resume-item">
+              <span class="resume-label">从业年限：</span>
+              <span class="resume-value">{{ currentStaff.experience }}年</span>
+            </div>
+            <div class="resume-item">
+              <span class="resume-label">岗位数：</span>
+              <span class="resume-value">{{ currentStaff.positions.length }}个</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="resume-section">
+          <div class="resume-section-title">专业证书</div>
+          <div v-for="cert in currentStaff.certificates" :key="cert.id" style="margin-bottom: 8px;">
+            <i class="el-icon-check" style="color: #52c41a; margin-right: 8px;"></i>
+            {{ cert.name }} (有效期至: {{ cert.validity }})
+          </div>
+        </div>
+        
+        <div class="resume-section">
+          <div class="resume-section-title">{{ currentPosition }} - 技能特长</div>
+          <div v-for="pos in currentStaff.positions.filter(p => p.name === currentPosition)" :key="pos.name">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span
+                v-for="tag in pos.tags.filter(t => t.status === 'certified')"
+                :key="tag.id"
+                class="tag-item tag-status-certified"
+              >
+                {{ tag.name }}
+              </span>
+              <span v-if="pos.tags.filter(t => t.status === 'certified').length === 0" style="color: #8c8c8c;">暂无已持证技能</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="resume-section">
+          <div class="resume-section-title">服务经历</div>
+          <div v-for="(record, index) in currentStaff.workRecords.slice(0, 3)" :key="index" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #e8e8e8;">
+            <div style="display: flex; justify-content: space-between;">
+              <strong>{{ record.period }}</strong>
+              <el-rate v-model="record.rating" disabled style="display: inline-block;"></el-rate>
+            </div>
+            <div style="color: #8c8c8c; margin-top: 4px;">{{ record.comment }}</div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showResumeDialog = false">关闭</el-button>
+        <el-button type="primary" @click="downloadResume">
+          <i class="el-icon-download"></i> 下载PDF
+        </el-button>
+      </template>
+    </el-dialog>
+    
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <!-- Element Plus -->
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <!-- 共享菜单 -->
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 初始化页面布局（必须在 createApp 之前！）
+    SharedMenu.initPageLayout('staff', {
+      title: '人员档案',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 人员档案'
+    });
+
+    createApp({
+      setup() {
+        // 筛选条件
+        const searchKeyword = ref('');
+        const filterPosition = ref('');
+
+        // 分页
+        const currentPage = ref(1);
+        const pageSize = ref(10);
+        const total = ref(268);
+
+        // 当前人员
+        const currentStaff = ref(null);
+
+        // 对话框控制
+        const showDetailDrawer = ref(false);
+        const showTagDialog = ref(false);
+        const showResumeDialog = ref(false);
+
+        // 标签页
+        const activeTab = ref('tags');
+
+        // 选中的标签
+        const selectedTags = ref([]);
+        
+        // 标签分类
+        const tagCategories = ref([
+          {
+            id: 'basic',
+            name: '基础准入条件',
+            tags: [
+              { id: 'age', name: '年龄条件' },
+              { id: 'vision', name: '视力达标' },
+              { id: 'hearing', name: '听力正常' },
+              { id: 'health', name: '无传染病' },
+              { id: 'appearance', name: '形象良好' }
+            ]
+          },
+          {
+            id: 'baby',
+            name: '宝宝护理',
+            tags: [
+              { id: 'bath', name: '宝宝洗澡' },
+              { id: 'umbilical', name: '脐带护理' },
+              { id: 'jaundice', name: '黄疸观察' },
+              { id: 'choking', name: '呛奶急救' },
+              { id: 'feeding', name: '喂养规范' }
+            ]
+          },
+          {
+            id: 'mom',
+            name: '妈妈护理',
+            tags: [
+              { id: 'maternal', name: '产妇护理' },
+              { id: 'emotion', name: '情绪疏导' },
+              { id: 'recovery', name: '产后恢复' }
+            ]
+          },
+          {
+            id: 'meal',
+            name: '月子餐制作',
+            tags: [
+              { id: 'nutrition', name: '营养搭配' },
+              { id: 'cooking', name: '烹饪技能' },
+              { id: 'dietary', name: '饮食禁忌' }
+            ]
+          }
+        ]);
+        
+        // 人员列表（模拟数据）
+        const staffList = ref([
+          {
+            id: 1,
+            name: '王秀英',
+            staffNo: 'YS2026001',
+            phone: '138****5678',
+            age: 42,
+            origin: '湖南长沙',
+            education: '高中',
+            experience: 5,
+            registerDate: '2026-01-15',
+            positions: [
+              {
+                name: '月嫂',
+                level: 'Y6',
+                tags: [
+                  { id: 'bath', name: '宝宝洗澡', status: 'certified' },
+                  { id: 'umbilical', name: '脐带护理', status: 'certified' },
+                  { id: 'jaundice', name: '黄疸观察', status: 'certified' },
+                  { id: 'maternal', name: '产妇护理', status: 'certified' }
+                ]
+              },
+              {
+                name: '育婴师',
+                level: '',
+                tags: [
+                  { id: 'feeding', name: '喂养规范', status: 'certified' },
+                  { id: 'earlyedu', name: '早教启蒙', status: 'trained' }
+                ]
+              }
+            ],
+            certificates: [
+              {
+                id: 1,
+                name: '母婴护理服务合格证',
+                no: 'MY2026001001',
+                validity: '2027-04-06',
+                status: 'valid',
+                photos: [
+                  'https://picsum.photos/seed/staff1_cert1a/400/300',
+                  'https://picsum.photos/seed/staff1_cert1b/400/300'
+                ]
+              }
+            ],
+            timeline: [],
+            workRecords: []
+          },
+          {
+            id: 2,
+            name: '李桂花',
+            staffNo: 'YS2026002',
+            phone: '139****1234',
+            age: 38,
+            origin: '湖北武汉',
+            education: '中专',
+            experience: 3,
+            registerDate: '2026-02-20',
+            positions: [
+              {
+                name: '育婴师',
+                level: 'Y4-2',
+                tags: [
+                  { id: 'feeding', name: '喂养规范', status: 'certified' },
+                  { id: 'bath', name: '宝宝洗澡', status: 'certified' },
+                  { id: 'earlyedu', name: '早教启蒙', status: 'certified' }
+                ]
+              }
+            ],
+            certificates: [
+              {
+                id: 1,
+                name: '育婴师资格证',
+                no: 'YY2026001002',
+                validity: '2027-03-28',
+                status: 'valid',
+                photos: [
+                  'https://picsum.photos/seed/staff2_cert1/400/300'
+                ]
+              }
+            ],
+            timeline: [],
+            workRecords: []
+          },
+          {
+            id: 3,
+            name: '张淑芬',
+            staffNo: 'YS2026003',
+            phone: '137****9876',
+            age: 45,
+            origin: '四川成都',
+            education: '初中',
+            experience: 0,
+            registerDate: '2026-03-05',
+            positions: [
+              {
+                name: '月嫂',
+                level: '',
+                tags: [
+                  { id: 'bath', name: '宝宝洗澡', status: 'trained' },
+                  { id: 'feeding', name: '喂养规范', status: 'unobtained' }
+                ]
+              }
+            ],
+            certificates: [],
+            timeline: [],
+            workRecords: []
+          },
+          {
+            id: 4,
+            name: '陈美华',
+            staffNo: 'YS2026004',
+            phone: '136****2468',
+            age: 35,
+            origin: '河南郑州',
+            education: '高中',
+            experience: 2,
+            registerDate: '2025-08-10',
+            positions: [
+              {
+                name: '老年护工',
+                level: 'Y5',
+                tags: [
+                  { id: 'dailycare', name: '日常照护', status: 'certified' },
+                  { id: 'rehab', name: '康复辅助', status: 'certified' }
+                ]
+              },
+              {
+                name: '病患护理',
+                level: '',
+                tags: [
+                  { id: 'bedcare', name: '卧床护理', status: 'trained' }
+                ]
+              }
+            ],
+            certificates: [
+              {
+                id: 1,
+                name: '老年护理服务合格证',
+                no: 'LN2025001045',
+                validity: '2026-05-01',
+                status: 'expiring',
+                photos: [
+                  'https://picsum.photos/seed/staff4_cert1/400/300'
+                ]
+              }
+            ],
+            timeline: [],
+            workRecords: []
+          },
+          {
+            id: 5,
+            name: '刘玉兰',
+            staffNo: 'YS2026005',
+            phone: '135****1357',
+            age: 48,
+            origin: '江西南昌',
+            education: '高中',
+            experience: 8,
+            registerDate: '2025-06-22',
+            positions: [
+              {
+                name: '月嫂',
+                level: 'Y7',
+                tags: [
+                  { id: 'bath', name: '宝宝洗澡', status: 'certified' },
+                  { id: 'umbilical', name: '脐带护理', status: 'certified' },
+                  { id: 'jaundice', name: '黄疸观察', status: 'certified' },
+                  { id: 'choking', name: '呛奶急救', status: 'certified' },
+                  { id: 'maternal', name: '产妇护理', status: 'certified' },
+                  { id: 'nutrition', name: '月子餐', status: 'certified' }
+                ]
+              },
+              {
+                name: '育婴师',
+                level: 'Y4-1',
+                tags: [
+                  { id: 'feeding', name: '喂养规范', status: 'certified' },
+                  { id: 'earlyedu', name: '早教启蒙', status: 'certified' }
+                ]
+              }
+            ],
+            certificates: [
+              {
+                id: 1,
+                name: '母婴护理服务合格证',
+                no: 'MY2026001005',
+                validity: '2027-04-02',
+                status: 'valid',
+                photos: [
+                  'https://picsum.photos/seed/staff5_cert1a/400/300',
+                  'https://picsum.photos/seed/staff5_cert1b/400/300'
+                ]
+              }
+            ],
+            timeline: [],
+            workRecords: []
+          }
+        ]);
+        // 过滤后的人员列表
+        const filteredStaffList = computed(() => {
+          return staffList.value;
+        });
+
+        // 当前选中的岗位
+        const currentPosition = ref('');
+
+        // 证书照片预览
+        const showCertificatePhotoDialog = ref(false);
+        const currentCertificatePhoto = ref('');
+
+        const previewCertificatePhoto = (photo) => {
+          currentCertificatePhoto.value = photo;
+          showCertificatePhotoDialog.value = true;
+        };
+
+        // 判断是否有证书照片
+        const hasCertificatePhotos = computed(() => {
+          if (!currentStaff.value?.certificates) return false;
+          return currentStaff.value.certificates.some(cert => cert.photos && cert.photos.length > 0);
+        });
+
+        // 获取所有证书照片（平铺展示）
+        const allCertificatePhotos = computed(() => {
+          if (!currentStaff.value?.certificates) return [];
+          const photos = [];
+          currentStaff.value.certificates.forEach(cert => {
+            if (cert.photos && cert.photos.length) {
+              cert.photos.forEach(photo => {
+                photos.push({
+                  url: photo,
+                  certName: cert.name
+                });
+              });
+            }
+          });
+          return photos;
+        });
+
+        // 查看详情
+        const handleViewDetail = (staff, positionName) => {
+          currentStaff.value = staff;
+          currentPosition.value = positionName || staff.positions[0]?.name;
+          activeTab.value = 'tags';
+          showDetailDrawer.value = true;
+        };
+
+        // 编辑标签
+        const handleEditTags = (staff, positionName) => {
+          currentStaff.value = staff;
+          currentPosition.value = positionName || staff.positions[0]?.name;
+          // 获取选中岗位的tags
+          const position = staff.positions.find(p => p.name === currentPosition.value);
+          selectedTags.value = position ? position.tags.map(t => t.id) : [];
+          showTagDialog.value = true;
+        };
+
+        // 确认编辑标签
+        const confirmEditTags = () => {
+          ElementPlus.ElMessage.success(`标签更新成功：${currentPosition.value}`);
+          showTagDialog.value = false;
+        };
+
+        // 查看简历
+        const handleViewResume = (staff, positionName) => {
+          currentStaff.value = staff;
+          currentPosition.value = positionName || staff.positions[0]?.name;
+          showResumeDialog.value = true;
+        };
+        
+        // 下载简历
+        const downloadResume = () => {
+          ElementPlus.ElMessage.success('简历PDF生成中...');
+        };
+        
+        // 搜索
+        const handleSearch = () => {
+          ElementPlus.ElMessage.success('查询完成');
+        };
+        
+        // 重置筛选
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterPosition.value = '';
+        };
+        
+        return {
+          searchKeyword,
+          filterPosition,
+          currentPage,
+          pageSize,
+          total,
+          currentStaff,
+          currentPosition,
+          showDetailDrawer,
+          showTagDialog,
+          showResumeDialog,
+          activeTab,
+          selectedTags,
+          tagCategories,
+          staffList,
+          filteredStaffList,
+          // 证书照片预览
+          showCertificatePhotoDialog,
+          currentCertificatePhoto,
+          previewCertificatePhoto,
+          hasCertificatePhotos,
+          allCertificatePhotos,
+          handleViewDetail,
+          handleEditTags,
+          confirmEditTags,
+          handleViewResume,
+          downloadResume,
+          handleSearch,
+          handleReset
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

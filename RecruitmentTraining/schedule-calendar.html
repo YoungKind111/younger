@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>排课表 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .schedule-container {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .schedule-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .schedule-subtitle {
+      font-size: 14px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .schedule-toolbar {
+      display: flex;
+      gap: 12px;
+    }
+
+    .calendar-wrapper {
+      overflow-x: auto;
+    }
+
+    .calendar-table {
+      width: 100%;
+      min-width: 1400px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .calendar-table th,
+    .calendar-table td {
+      border: 1px solid #e8e8e8;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .calendar-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    /* 固定列样式 */
+    .col-teacher {
+      width: 100px;
+      background: #fffbe6 !important;
+      font-weight: 500;
+    }
+
+    .col-room {
+      width: 90px;
+      background: #fffbe6 !important;
+      font-weight: 500;
+    }
+
+    /* 日期表头 */
+    .date-header {
+      padding: 8px 4px;
+      min-width: 70px;
+    }
+
+    .date-weekday {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 2px;
+    }
+
+    .date-day {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* 周末样式 */
+    .weekend {
+      background: #f6ffed !important;
+    }
+
+    .weekend .date-weekday,
+    .weekend .date-day {
+      color: #52c41a;
+    }
+
+    /* 课程单元格 */
+    .course-cell {
+      padding: 4px 2px;
+      min-height: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 11px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .course-cell:hover {
+      opacity: 0.8;
+      white-space: normal;
+      overflow: visible;
+      z-index: 100;
+      position: relative;
+    }
+
+    /* 课程类型样式 */
+    .course-gangqian {
+      background: #e6f7ff;
+      color: #1890ff;
+      font-weight: 500;
+    }
+
+    .course-shengji {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .course-kaohe {
+      background: #fff1f0;
+      color: #f5222d;
+      font-weight: 500;
+    }
+
+    .course-yiliao {
+      background: #f9f0ff;
+      color: #722ed1;
+    }
+
+    .course-changdan {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+
+    .course-zonghe {
+      background: #e6fffb;
+      color: #13c2c2;
+    }
+
+    .course-day {
+      background: #fff2e8;
+      color: #fa541c;
+    }
+
+    /* 高亮样式 */
+    .highlight-yellow {
+      background: #fffb8f !important;
+    }
+
+    .highlight-blue {
+      background: #bae7ff !important;
+    }
+
+    .highlight-green {
+      background: #b7eb8f !important;
+    }
+
+    /* 图例 */
+    .legend-bar {
+      display: flex;
+      gap: 20px;
+      padding: 12px 20px;
+      background: #fafafa;
+      border-top: 1px solid #e8e8e8;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #595959;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+    }
+
+    /* 今日标记 */
+    .today {
+      position: relative;
+    }
+
+    .today::after {
+      content: '今';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: #f5222d;
+      color: #fff;
+      font-size: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 固定左侧列 */
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+
+    .sticky-col-2 {
+      position: sticky;
+      left: 100px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="content-card">
+      <div class="schedule-header">
+        <div>
+          <div class="schedule-title">岗前·熟手·晋级·考证·排课表</div>
+          <div class="schedule-subtitle">2026年4月</div>
+        </div>
+        <div class="schedule-toolbar">
+          <el-radio-group v-model="viewMode" size="small">
+            <el-radio-button label="month">月视图</el-radio-button>
+            <el-radio-button label="week">周视图</el-radio-button>
+          </el-radio-group>
+          <el-button-group>
+            <el-button size="small" @click="prevMonth">
+              <i class="el-icon-arrow-left"></i>
+            </el-button>
+            <el-button size="small" @click="nextMonth">
+              <i class="el-icon-arrow-right"></i>
+            </el-button>
+          </el-button-group>
+          <el-button type="primary" size="small" @click="showAddDialog = true">
+            <i class="el-icon-plus"></i> 新增排课
+          </el-button>
+        </div>
+      </div>
+
+      <div class="calendar-wrapper">
+        <table class="calendar-table">
+          <thead>
+            <tr>
+              <th class="sticky-col col-teacher">开课老师</th>
+              <th class="sticky-col-2 col-room">开课教室</th>
+              <th
+                v-for="date in dates"
+                :key="date.day"
+                class="date-header"
+                :class="{ weekend: date.isWeekend, today: date.isToday }"
+              >
+                <div class="date-weekday">{{ date.weekday }}</div>
+                <div class="date-day">{{ date.day }}日</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="teacher in teachers" :key="teacher.name + teacher.room">
+              <td class="sticky-col col-teacher">{{ teacher.name }}</td>
+              <td class="sticky-col-2 col-room">{{ teacher.room }}</td>
+              <td
+                v-for="date in dates"
+                :key="date.day"
+                class="course-cell"
+                :class="getCellClass(teacher, date)"
+                @click="handleCellClick(teacher, date)"
+              >
+                {{ getCourseContent(teacher, date) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- 新增排课对话框 -->
+    <el-dialog v-model="showAddDialog" title="新增排课" width="600px">
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="开课老师">
+          <el-select v-model="form.teacher" placeholder="选择老师" style="width: 100%;">
+            <el-option v-for="t in teachers" :key="t.name" :label="t.name" :value="t.name"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="课程日期">
+          <el-date-picker v-model="form.date" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
+        </el-form-item>
+        <el-form-item label="课程类型">
+          <el-radio-group v-model="form.type">
+            <el-radio label="gangqian">5天岗前</el-radio>
+            <el-radio label="shengji">升级课程</el-radio>
+            <el-radio label="kaohe">考核</el-radio>
+            <el-radio label="yiliao">医疗陪护</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="课程内容">
+          <el-input v-model="form.content" placeholder="例如：升级早产、第2天等"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showAddDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveCourse">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('schedule-calendar', {
+      title: '排课表',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 排课表'
+    });
+
+    createApp({
+      setup() {
+        const viewMode = ref('month');
+        const showAddDialog = ref(false);
+        const form = ref({
+          teacher: '',
+          date: '',
+          type: 'gangqian',
+          content: ''
+        });
+
+        // 生成4月1日-4月30日的日期
+        const dates = ref([]);
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        for (let i = 1; i <= 30; i++) {
+          const date = new Date(2026, 3, i);
+          const dayOfWeek = date.getDay();
+          dates.value.push({
+            day: i,
+            weekday: '星期' + weekdays[dayOfWeek],
+            isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+            isToday: i === 8 // 假设今天是4月8日
+          });
+        }
+
+        // 培训班数据（与 training-class.html 对应）
+        const classList = ref([
+          {
+            id: 1,
+            name: '2026年4月月嫂新手班-A班',
+            position_name: '月嫂',
+            category: 'orientation',
+            start_date: '2026-04-01',
+            end_date: '2026-04-10',
+            location: '总部培训室A',
+            teacher: '张美玲',
+            status: '进行中',
+            student_count: 25
+          },
+          {
+            id: 2,
+            name: '2026年4月熟手强化班',
+            position_name: '月嫂',
+            category: 'skill',
+            start_date: '2026-04-05',
+            end_date: '2026-04-09',
+            location: '总部培训室B',
+            teacher: '李建国',
+            status: '进行中',
+            student_count: 15
+          },
+          {
+            id: 3,
+            name: '2026年4月月嫂新手班-B班',
+            position_name: '月嫂',
+            category: 'orientation',
+            start_date: '2026-04-15',
+            end_date: '2026-04-24',
+            location: '总部培训室A',
+            teacher: '王秀英',
+            status: '待开班',
+            student_count: 8
+          },
+          {
+            id: 4,
+            name: '2026年4月育儿嫂技能班',
+            position_name: '育儿嫂',
+            category: 'skill',
+            start_date: '2026-04-20',
+            end_date: '2026-04-24',
+            location: '总部培训室B',
+            teacher: '李建国',
+            status: '待开班',
+            student_count: 3
+          },
+          {
+            id: 5,
+            name: '2026年3月月嫂新手班',
+            position_name: '月嫂',
+            category: 'orientation',
+            start_date: '2026-03-01',
+            end_date: '2026-03-10',
+            location: '总部培训室A',
+            teacher: '张美玲',
+            status: '已结业',
+            student_count: 28
+          }
+        ]);
+
+        // 从培训班数据生成老师列表
+        const teachers = computed(() => {
+          const teacherMap = new Map();
+          classList.value.forEach(cls => {
+            if (!teacherMap.has(cls.teacher)) {
+              teacherMap.set(cls.teacher, {
+                name: cls.teacher,
+                room: cls.location
+              });
+            }
+          });
+          return Array.from(teacherMap.values());
+        });
+
+        // 根据培训班数据生成排课表
+        const scheduleData = computed(() => {
+          const data = {};
+          classList.value.forEach(cls => {
+            if (!data[cls.teacher]) {
+              data[cls.teacher] = {};
+            }
+
+            const startDate = new Date(cls.start_date);
+            const endDate = new Date(cls.end_date);
+            const startDay = startDate.getDate();
+            const endDay = endDate.getDate();
+
+            // 确定课程类型
+            let courseType = 'gangqian';
+            if (cls.category === 'skill') courseType = 'shengji';
+            else if (cls.category === 'certification') courseType = 'kaohe';
+            else if (cls.position_name === '养老护理') courseType = 'yiliao';
+
+            // 生成课程安排
+            let dayCount = 1;
+            for (let day = startDay; day <= endDay; day++) {
+              data[cls.teacher][day] = {
+                type: courseType,
+                content: dayCount === 1 ? cls.name.split('-')[0].replace('2026年4月', '') : `第${dayCount}天`,
+                className: cls.name,
+                highlight: dayCount === 1 ? 'blue' : null
+              };
+              dayCount++;
+            }
+
+            // 结束当天添加考核
+            if (data[cls.teacher][endDay]) {
+              data[cls.teacher][endDay] = {
+                type: 'kaohe',
+                content: '考核',
+                className: cls.name,
+                highlight: 'yellow'
+              };
+            }
+          });
+          return data;
+        });
+
+        const getCellClass = (teacher, date) => {
+          const schedule = scheduleData.value;
+          const data = schedule[teacher.name]?.[date.day];
+          if (!data) return '';
+
+          let classes = [`course-${data.type}`];
+          if (data.highlight) {
+            classes.push(`highlight-${data.highlight}`);
+          }
+          return classes.join(' ');
+        };
+
+        const getCourseContent = (teacher, date) => {
+          const schedule = scheduleData.value;
+          const data = schedule[teacher.name]?.[date.day];
+          return data ? data.content : '';
+        };
+
+        const handleCellClick = (teacher, date) => {
+          const schedule = scheduleData.value;
+          const data = schedule[teacher.name]?.[date.day];
+          if (data) {
+            ElementPlus.ElMessage.info(`${teacher.name} ${date.day}日: ${data.content} (${data.className})`);
+          }
+        };
+
+        const prevMonth = () => {
+          ElementPlus.ElMessage.info('上一月');
+        };
+
+        const nextMonth = () => {
+          ElementPlus.ElMessage.info('下一月');
+        };
+
+        const saveCourse = () => {
+          ElementPlus.ElMessage.success('排课保存成功');
+          showAddDialog.value = false;
+        };
+
+        return {
+          viewMode,
+          showAddDialog,
+          form,
+          dates,
+          teachers,
+          classList,
+          scheduleData,
+          getCellClass,
+          getCourseContent,
+          handleCellClick,
+          prevMonth,
+          nextMonth,
+          saveCourse
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
