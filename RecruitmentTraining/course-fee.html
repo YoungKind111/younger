@@ -132,6 +132,12 @@
       border: 1px solid #ffd591;
     }
 
+    .status-expired {
+      background: #f5f5f5;
+      color: #8c8c8c;
+      border: 1px solid #d9d9d9;
+    }
+
     .fee-footer {
       display: flex;
       justify-content: space-between;
@@ -347,6 +353,15 @@
           <i class="el-icon-time"></i>
         </div>
       </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.expiredCount }}</span>
+          <span class="stat-label">已过期记录</span>
+        </div>
+        <div class="stat-icon" style="background: #f5f5f5; color: #8c8c8c;">
+          <i class="el-icon-warning"></i>
+        </div>
+      </div>
     </div>
 
     <!-- 筛选栏 -->
@@ -362,6 +377,7 @@
       <el-select v-model="filterStatus" placeholder="支付状态" clearable style="width: 150px;">
         <el-option label="已支付" value="paid"></el-option>
         <el-option label="待支付" value="unpaid"></el-option>
+        <el-option label="已过期" value="expired"></el-option>
       </el-select>
       <el-date-picker v-model="filterDateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 280px;"></el-date-picker>
       <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -381,12 +397,15 @@
       </div>
       <div class="card-body" style="padding: 0;">
         <el-table :data="pagedList" style="width: 100%" v-loading="loading">
-          <el-table-column label="护理人员" width="180">
+          <el-table-column label="护理人员" width="200">
             <template #default="{ row }">
               <div class="staff-info">
                 <div class="staff-avatar">{{ row.staff_name.charAt(0) }}</div>
                 <div class="staff-detail">
-                  <span class="staff-name">{{ row.staff_name }}</span>
+                  <span class="staff-name">
+                    {{ row.staff_name }}
+                    <el-tag v-if="row.isExternal" size="mini" type="warning" style="margin-left: 4px;">外部</el-tag>
+                  </span>
                   <span class="staff-phone">{{ row.staff_phone }}</span>
                 </div>
               </div>
@@ -414,6 +433,7 @@
           <el-table-column label="支付状态" width="100" align="center">
             <template #default="{ row }">
               <span v-if="row.status === 'paid'" class="fee-status status-paid">已支付</span>
+              <span v-else-if="row.status === 'expired'" class="fee-status status-expired">已过期</span>
               <span v-else class="fee-status status-unpaid">待支付</span>
             </template>
           </el-table-column>
@@ -437,7 +457,7 @@
           </el-table-column>
           <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
-              <el-button v-if="row.status === 'unpaid'" type="primary" size="small" @click="showQrCode(row)">
+              <el-button v-if="row.status === 'unpaid' || row.status === 'expired'" type="primary" size="small" @click="showQrCode(row)">
                 查看收款码
               </el-button>
               <el-button type="text" @click="handleDetail(row)">详情</el-button>
@@ -454,10 +474,22 @@
     <!-- 生成收款码对话框 -->
     <el-dialog v-model="showGenerateDialog" title="生成课程收款码" width="500px">
       <el-form :model="generateForm" label-width="100px">
-        <el-form-item label="护理人员" required>
+        <el-form-item label="人员类型" required>
+          <el-radio-group v-model="generateForm.staffType" @change="onStaffTypeChange">
+            <el-radio label="internal">系统内人员</el-radio>
+            <el-radio label="external">外部人员</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="护理人员" required v-if="generateForm.staffType === 'internal'">
           <el-select v-model="generateForm.staff_id" placeholder="选择护理人员" filterable style="width: 100%;" @change="onStaffChange">
             <el-option v-for="staff in staffList" :key="staff.id" :label="staff.name + ' - ' + staff.phone" :value="staff.id"></el-option>
           </el-select>
+        </el-form-item>
+        <el-form-item label="外部人员" required v-else>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <el-input v-model="generateForm.externalName" placeholder="请输入姓名" style="width: 100%;"></el-input>
+            <el-input v-model="generateForm.externalPhone" placeholder="请输入手机号" maxlength="11" style="width: 100%;"></el-input>
+          </div>
         </el-form-item>
         <el-form-item label="选择课程" required>
           <el-select v-model="generateForm.course_id" placeholder="选择收费课程" style="width: 100%;" @change="onCourseChange">
@@ -482,7 +514,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showGenerateDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmGenerate" :disabled="!generateForm.staff_id || !generateForm.course_id">生成收款码</el-button>
+        <el-button type="primary" @click="confirmGenerate" :disabled="!canGenerateQr">生成收款码</el-button>
       </template>
     </el-dialog>
 
@@ -499,7 +531,10 @@
           <div v-else class="qr-code-hint" style="color: #f5222d; font-weight: 500;">二维码已过期，请重新生成</div>
           <div class="qr-code-staff">
             <div style="font-size: 13px; color: #8c8c8c;">缴费人员</div>
-            <div style="font-size: 16px; font-weight: 500; color: #262626; margin-top: 4px;">{{ currentQrData.staff_name }}</div>
+            <div style="font-size: 16px; font-weight: 500; color: #262626; margin-top: 4px;">
+              {{ currentQrData.staff_name }}
+              <el-tag v-if="currentQrData.isExternal" size="mini" type="warning" style="margin-left: 4px;">外部</el-tag>
+            </div>
             <div style="font-size: 13px; color: #595959; margin-top: 2px;">{{ currentQrData.staff_phone }}</div>
             <div class="qr-code-course">
               <span style="color: #8c8c8c;">课程：</span>{{ currentQrData.course_name }}
@@ -530,8 +565,8 @@
           <div style="display: flex; justify-content: space-around; text-align: center;">
             <div>
               <div style="font-size: 12px; color: #8c8c8c;">支付状态</div>
-              <div style="font-size: 14px; font-weight: 500; margin-top: 4px;" :style="{ color: currentDetail.status === 'paid' ? '#52c41a' : '#fa8c16' }">
-                {{ currentDetail.status === 'paid' ? '已支付' : '待支付' }}
+              <div style="font-size: 14px; font-weight: 500; margin-top: 4px;" :style="{ color: currentDetail.status === 'paid' ? '#52c41a' : currentDetail.status === 'expired' ? '#8c8c8c' : '#fa8c16' }">
+                {{ currentDetail.status === 'paid' ? '已支付' : currentDetail.status === 'expired' ? '已过期' : '待支付' }}
               </div>
             </div>
             <div>
@@ -554,7 +589,10 @@
               {{ currentDetail.staff_name.charAt(0) }}
             </div>
             <div>
-              <div style="font-size: 16px; font-weight: 500; color: #262626;">{{ currentDetail.staff_name }}</div>
+              <div style="font-size: 16px; font-weight: 500; color: #262626;">
+                {{ currentDetail.staff_name }}
+                <el-tag v-if="currentDetail.isExternal" size="mini" type="warning" style="margin-left: 4px;">外部人员</el-tag>
+              </div>
               <div style="font-size: 13px; color: #8c8c8c; margin-top: 2px;">{{ currentDetail.staff_phone }}</div>
             </div>
           </div>
@@ -622,7 +660,8 @@
         const stats = ref({
           totalCount: 0,
           totalAmount: 0,
-          unpaidCount: 0
+          unpaidCount: 0,
+          expiredCount: 0
         });
 
         // 岗位列表
@@ -704,10 +743,10 @@
             position_id: 3,
             amount: 1800,
             paid_amount: null,
-            status: 'unpaid',
+            status: 'expired',
             pay_method: 'wechat',
-            create_time: '2026-04-13 09:00:00',
-            expire_time: '2026-04-13 11:00:00',
+            create_time: '2026-04-11 09:00:00',
+            expire_time: '2026-04-11 11:00:00',
             pay_time: null,
             remark: ''
           },
@@ -749,13 +788,34 @@
           }
         ]);
 
+        // 检查记录是否过期
+        const checkExpired = (item) => {
+          if (item.status === 'paid') return false;
+          if (!item.expire_time) return false;
+          const now = new Date();
+          const expireTime = new Date(item.expire_time.replace(/-/g, '/'));
+          return now >= expireTime;
+        };
+
+        // 更新所有记录的过期状态
+        const updateExpiredStatus = () => {
+          feeList.value.forEach(item => {
+            if (item.status !== 'paid' && checkExpired(item)) {
+              item.status = 'expired';
+            }
+          });
+        };
+
         // 计算统计数据
         const updateStats = () => {
+          // 先更新过期状态
+          updateExpiredStatus();
           stats.value.totalCount = feeList.value.length;
           stats.value.totalAmount = feeList.value
             .filter(item => item.status === 'paid')
-            .reduce((sum, item) => sum + item.paid_amount, 0);
+            .reduce((sum, item) => sum + (item.paid_amount || 0), 0);
           stats.value.unpaidCount = feeList.value.filter(item => item.status === 'unpaid').length;
+          stats.value.expiredCount = feeList.value.filter(item => item.status === 'expired').length;
         };
 
         // 初始计算
@@ -809,12 +869,35 @@
         // 生成收款码对话框
         const showGenerateDialog = ref(false);
         const generateForm = ref({
+          staffType: 'internal',
           staff_id: '',
+          externalName: '',
+          externalPhone: '',
           course_id: '',
           amount: 0,
           pay_method: 'wechat',
           remark: ''
         });
+
+        // 是否可以生成收款码
+        const canGenerateQr = computed(() => {
+          if (!generateForm.value.course_id) return false;
+          if (generateForm.value.staffType === 'internal') {
+            return !!generateForm.value.staff_id;
+          } else {
+            return !!generateForm.value.externalName.trim() && !!generateForm.value.externalPhone.trim();
+          }
+        });
+
+        // 人员类型变化
+        const onStaffTypeChange = () => {
+          // 清空相关人员信息
+          generateForm.value.staff_id = '';
+          generateForm.value.externalName = '';
+          generateForm.value.externalPhone = '';
+          generateForm.value.staff_name = '';
+          generateForm.value.staff_phone = '';
+        };
 
         // 选择护理人员变化
         const onStaffChange = (staffId) => {
@@ -838,9 +921,29 @@
 
         // 确认生成收款码
         const confirmGenerate = () => {
-          if (!generateForm.value.staff_id || !generateForm.value.course_id) {
-            ElementPlus.ElMessage.warning('请选择护理人员和课程');
+          if (!generateForm.value.course_id) {
+            ElementPlus.ElMessage.warning('请选择课程');
             return;
+          }
+
+          // 获取人员信息
+          let staffId, staffName, staffPhone;
+          if (generateForm.value.staffType === 'internal') {
+            if (!generateForm.value.staff_id) {
+              ElementPlus.ElMessage.warning('请选择护理人员');
+              return;
+            }
+            staffId = generateForm.value.staff_id;
+            staffName = generateForm.value.staff_name;
+            staffPhone = generateForm.value.staff_phone;
+          } else {
+            if (!generateForm.value.externalName.trim() || !generateForm.value.externalPhone.trim()) {
+              ElementPlus.ElMessage.warning('请输入外部人员姓名和手机号');
+              return;
+            }
+            staffId = 'EXT_' + Date.now();
+            staffName = generateForm.value.externalName.trim();
+            staffPhone = generateForm.value.externalPhone.trim();
           }
 
           const now = new Date();
@@ -858,9 +961,10 @@
 
           const newRecord = {
             id: Date.now(),
-            staff_id: generateForm.value.staff_id,
-            staff_name: generateForm.value.staff_name,
-            staff_phone: generateForm.value.staff_phone,
+            staff_id: staffId,
+            staff_name: staffName,
+            staff_phone: staffPhone,
+            isExternal: generateForm.value.staffType === 'external',
             course_id: generateForm.value.course_id,
             course_name: generateForm.value.course_name,
             course_days: generateForm.value.course_days,
@@ -883,7 +987,10 @@
 
           // 清空表单
           generateForm.value = {
+            staffType: 'internal',
             staff_id: '',
+            externalName: '',
+            externalPhone: '',
             course_id: '',
             amount: 0,
             pay_method: 'wechat',
@@ -1012,6 +1119,8 @@
           getPositionName,
           showGenerateDialog,
           generateForm,
+          canGenerateQr,
+          onStaffTypeChange,
           onStaffChange,
           onCourseChange,
           confirmGenerate,

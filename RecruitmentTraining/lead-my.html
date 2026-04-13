@@ -367,6 +367,21 @@
       border-top: 1px dashed #f0f0f0;
       margin-top: 2px;
     }
+
+    /* 来源渠道标签 */
+    .lead-source-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .lead-source-tag.wechat { background: #e6f7ff; color: #096dd9; }
+    .lead-source-tag.douyin { background: #f6ffed; color: #389e0d; }
+    .lead-source-tag.ditui { background: #fff7e6; color: #d46b08; }
+    .lead-source-tag.intro { background: #f9f0ff; color: #722ed1; }
+    .lead-source-tag.website { background: #e6fffb; color: #08979c; }
   </style>
 </head>
 <body>
@@ -482,6 +497,17 @@
             <template #default="{ row }">
               <div class="cell-main">{{ row.name }}</div>
               <div class="cell-sub">{{ row.phone }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="来源渠道" width="120">
+            <template #default="{ row }">
+              <span class="lead-source-tag" :class="row.source">{{ row.sourceText }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="推荐人" width="120">
+            <template #default="{ row }">
+              <span v-if="row.referrer">{{ row.referrer }}</span>
+              <span v-else style="color: #8c8c8c;">-</span>
             </template>
           </el-table-column>
           <el-table-column label="目标岗位" width="100">
@@ -655,7 +681,7 @@
         </div>
         
         <div class="follow-form-item">
-          <label class="follow-form-label">下次跟进时间</label>
+          <label class="follow-form-label">下次跟进时间(会在企微自动提醒)</label>
           <el-date-picker
             v-model="followForm.nextFollowDate"
             type="datetime"
@@ -823,6 +849,7 @@
             position: '月嫂',
             source: 'wechat',
             sourceText: '微信广告',
+            referrer: '',
             createTime: '2026-04-06',
             assignDate: '2026-04-06',
             followCount: 2,
@@ -843,6 +870,7 @@
             position: '育婴师',
             source: 'intro',
             sourceText: '转介绍',
+            referrer: '张阿姨',
             createTime: '2026-04-05',
             assignDate: '2026-04-05',
             followCount: 1,
@@ -863,6 +891,7 @@
             position: '月嫂',
             source: 'douyin',
             sourceText: '抖音',
+            referrer: '',
             createTime: '2026-04-04',
             assignDate: '2026-04-04',
             followCount: 0,
@@ -883,6 +912,7 @@
             position: '老年护工',
             source: 'ditui',
             sourceText: '地推',
+            referrer: '李大哥',
             createTime: '2026-04-03',
             assignDate: '2026-04-03',
             followCount: 1,
@@ -903,6 +933,7 @@
             position: '月嫂',
             source: 'wechat',
             sourceText: '微信广告',
+            referrer: '',
             createTime: '2026-04-02',
             assignDate: '2026-04-02',
             followCount: 3,
@@ -925,6 +956,7 @@
             position: '育婴师',
             source: 'website',
             sourceText: '官网',
+            referrer: '',
             createTime: '2026-04-01',
             assignDate: '2026-04-01',
             followCount: 2,
@@ -945,6 +977,7 @@
             position: '月嫂',
             source: 'intro',
             sourceText: '转介绍',
+            referrer: '刘阿姨',
             createTime: '2026-03-28',
             assignDate: '2026-03-28',
             followCount: 3,
@@ -967,6 +1000,7 @@
             position: '老年护工',
             source: 'douyin',
             sourceText: '抖音',
+            referrer: '',
             createTime: '2026-03-25',
             assignDate: '2026-03-25',
             followCount: 2,
@@ -989,6 +1023,7 @@
             position: '育婴师',
             source: 'wechat',
             sourceText: '微信广告',
+            referrer: '',
             createTime: '2026-03-20',
             assignDate: '2026-03-20',
             followCount: 4,
@@ -1011,6 +1046,7 @@
             position: '月嫂',
             source: 'intro',
             sourceText: '转介绍',
+            referrer: '孙大姐',
             createTime: '2026-03-15',
             assignDate: '2026-03-15',
             followCount: 3,

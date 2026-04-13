@@ -398,14 +398,9 @@
           <span class="card-title">所有线索</span>
           <span class="card-subtitle" style="margin-left: 12px;">共 {{ total }} 条记录</span>
         </div>
-        <div class="flex-center gap-2">
-          <el-button type="primary" @click="showImportDialog = true">
-            <i class="el-icon-upload2"></i> 导入线索
-          </el-button>
-          <el-button @click="handleAutoAssign">
-            <i class="el-icon-magic-stick"></i> 自动分配
-          </el-button>
-        </div>
+        <el-button type="primary" @click="showAddLeadDialog = true">
+          <i class="el-icon-plus"></i> 线索录入
+        </el-button>
       </div>
       <div class="card-body" style="padding: 0;">
         <el-table
@@ -504,6 +499,117 @@
       </div>
     </div>
     
+    <!-- 线索录入对话框 -->
+    <el-dialog
+      v-model="showAddLeadDialog"
+      title="线索录入"
+      width="700px"
+      :close-on-click-modal="false"
+    >
+      <div style="padding: 20px;">
+        <!-- 第一步：选择分组和渠道 -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+            <span style="color: #f5222d;">*</span> 1. 选择分组和渠道
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <div style="font-size: 13px; color: #595959; margin-bottom: 8px;">分组</div>
+              <el-select v-model="addLeadForm.group" placeholder="请选择分组" style="width: 100%;" clearable>
+                <el-option label="新线索" value="new"></el-option>
+                <el-option label="重点跟进" value="important"></el-option>
+                <el-option label="转介绍" value="intro"></el-option>
+              </el-select>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #595959; margin-bottom: 8px;">渠道</div>
+              <el-select v-model="addLeadForm.channel" placeholder="请选择渠道" style="width: 100%;" clearable @change="onChannelChange">
+                <el-option label="微信广告" value="wechat"></el-option>
+                <el-option label="抖音" value="douyin"></el-option>
+                <el-option label="地推" value="ditui"></el-option>
+                <el-option label="转介绍" value="intro"></el-option>
+                <el-option label="官网" value="website"></el-option>
+                <el-option label="合作伙伴" value="partner"></el-option>
+              </el-select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二步：选择推荐人 -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+            2. 选择推荐人（非必选）
+          </div>
+          <el-select v-model="addLeadForm.referrer" placeholder="请选择推荐人" style="width: 100%;" clearable :disabled="!addLeadForm.channel">
+            <el-option-group v-if="channelReferrers.length > 0" :label="getChannelLabel(addLeadForm.channel)">
+              <el-option
+                v-for="referrer in channelReferrers"
+                :key="referrer.code"
+                :label="referrer.name"
+                :value="referrer.code"
+              >
+                <span>{{ referrer.name }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px;">{{ referrer.code }}</span>
+              </el-option>
+            </el-option-group>
+            <el-option v-else label="该渠道暂无推荐人" value="" disabled></el-option>
+          </el-select>
+          <div v-if="!addLeadForm.channel" style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+            <i class="el-icon-info"></i> 请先选择渠道
+          </div>
+        </div>
+
+        <!-- 第三步：录入线索 -->
+        <div>
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+            <span style="color: #f5222d;">*</span> 3. 录入线索信息
+            <el-radio-group v-model="addLeadForm.inputType" size="small" style="margin-left: 16px;">
+              <el-radio label="single">单个录入</el-radio>
+              <el-radio label="batch">批量录入</el-radio>
+            </el-radio-group>
+          </div>
+
+          <!-- 单个录入 -->
+          <div v-if="addLeadForm.inputType === 'single'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <div style="font-size: 13px; color: #595959; margin-bottom: 8px;">姓名 <span style="color: #f5222d;">*</span></div>
+              <el-input v-model="addLeadForm.singleName" placeholder="请输入姓名"></el-input>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #595959; margin-bottom: 8px;">手机号 <span style="color: #f5222d;">*</span></div>
+              <el-input v-model="addLeadForm.singlePhone" placeholder="请输入手机号" maxlength="11"></el-input>
+            </div>
+            <div style="grid-column: span 2;">
+              <div style="font-size: 13px; color: #595959; margin-bottom: 8px;">目标岗位</div>
+              <el-select v-model="addLeadForm.singlePosition" placeholder="请选择目标岗位" style="width: 100%;" clearable>
+                <el-option label="月嫂" value="月嫂"></el-option>
+                <el-option label="育婴师" value="育婴师"></el-option>
+                <el-option label="老年护工" value="老年护工"></el-option>
+                <el-option label="其他" value="其他"></el-option>
+              </el-select>
+            </div>
+          </div>
+
+          <!-- 批量录入 -->
+          <div v-else>
+            <el-input
+              v-model="addLeadForm.batchInput"
+              type="textarea"
+              :rows="6"
+              placeholder="请输入线索信息，每行一条，格式：姓名 手机号 岗位（可选）&#10;例如：&#10;张三 13800138000 月嫂&#10;李四 13900139000 育婴师&#10;王五 13700137000"
+            ></el-input>
+            <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+              支持格式：姓名 手机号（空格分隔），岗位可选。系统将自动识别并解析。
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showAddLeadDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddLead" :disabled="!canSubmitAddLead">确认录入</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 分配对话框 -->
     <el-dialog
       v-model="showAssignDialog"
@@ -725,13 +831,191 @@
         const showAssignDialog = ref(false);
         const showImportDialog = ref(false);
         const showDetailDrawer = ref(false);
-        
+        const showAddLeadDialog = ref(false);
+
         // 分配相关
         const assignType = ref('auto');
         const selectedRecruiter = ref('');
-        
+
         // 当前查看的线索
         const currentLead = ref(null);
+
+        // 线索录入表单
+        const addLeadForm = ref({
+          group: '',
+          channel: '',
+          referrer: '',
+          inputType: 'single',
+          singleName: '',
+          singlePhone: '',
+          singlePosition: '',
+          batchInput: ''
+        });
+
+        // 检查手机号是否重复
+        const checkDuplicatePhone = (phone) => {
+          return leadList.value.some(lead => lead.phone === phone || lead.phone.replace(/\*/g, '') === phone.replace(/\*/g, ''));
+        };
+
+        // 获取重复的手机号列表
+        const getDuplicatePhones = (phones) => {
+          const duplicates = [];
+          phones.forEach(phone => {
+            if (checkDuplicatePhone(phone)) {
+              duplicates.push(phone);
+            }
+          });
+          return duplicates;
+        };
+
+        // 渠道推荐人数据
+        const channelReferrersMap = {
+          wechat: [
+            { name: '张阿姨', code: 'WX001A' }
+          ],
+          douyin: [],
+          ditui: [
+            { name: '李大哥', code: 'DT001A' },
+            { name: '王姐', code: 'DT001B' }
+          ],
+          intro: [
+            { name: '刘阿姨', code: 'ZJ001A' },
+            { name: '孙大姐', code: 'ZJ001B' }
+          ],
+          website: [],
+          partner: []
+        };
+
+        // 当前渠道的推荐人列表
+        const channelReferrers = computed(() => {
+          if (!addLeadForm.value.channel) return [];
+          return channelReferrersMap[addLeadForm.value.channel] || [];
+        });
+
+        // 是否可以提交录入
+        const canSubmitAddLead = computed(() => {
+          if (!addLeadForm.value.group || !addLeadForm.value.channel) return false;
+          if (addLeadForm.value.inputType === 'single') {
+            return addLeadForm.value.singleName.trim() && addLeadForm.value.singlePhone.trim();
+          } else {
+            return addLeadForm.value.batchInput.trim();
+          }
+        });
+
+        // 获取渠道标签
+        const getChannelLabel = (channel) => {
+          const labelMap = {
+            wechat: '微信广告',
+            douyin: '抖音',
+            ditui: '地推',
+            intro: '转介绍',
+            website: '官网',
+            partner: '合作伙伴'
+          };
+          return labelMap[channel] || channel;
+        };
+
+        // 渠道变化时清空推荐人
+        const onChannelChange = () => {
+          addLeadForm.value.referrer = '';
+        };
+
+        // 确认录入线索
+        const confirmAddLead = () => {
+          let addedCount = 0;
+
+          if (addLeadForm.value.inputType === 'single') {
+            // 单个录入 - 查重验证
+            if (checkDuplicatePhone(addLeadForm.value.singlePhone)) {
+              ElementPlus.ElMessage.error(`手机号 ${addLeadForm.value.singlePhone} 已存在，不允许重复录入`);
+              return;
+            }
+
+            // 单个录入
+            const newLead = {
+              id: Date.now(),
+              name: addLeadForm.value.singleName,
+              phone: addLeadForm.value.singlePhone,
+              position: addLeadForm.value.singlePosition || '待确认',
+              source: addLeadForm.value.channel,
+              sourceText: getChannelLabel(addLeadForm.value.channel),
+              referrer: addLeadForm.value.referrer ? channelReferrersMap[addLeadForm.value.channel].find(r => r.code === addLeadForm.value.referrer)?.name : '',
+              referrerCode: addLeadForm.value.referrer,
+              createTime: new Date().toLocaleString('zh-CN', { hour12: false }),
+              assignStatus: 'unassigned',
+              followStatus: '未跟进',
+              followCount: 0,
+              followRecords: []
+            };
+            leadList.value.unshift(newLead);
+            addedCount = 1;
+            ElementPlus.ElMessage.success('线索录入成功');
+          } else {
+            // 批量录入解析
+            const lines = addLeadForm.value.batchInput.split('\n').filter(line => line.trim());
+            const duplicatePhones = [];
+            const uniqueLines = [];
+
+            // 先检查所有手机号是否有重复
+            lines.forEach(line => {
+              const parts = line.trim().split(/\s+/);
+              if (parts.length >= 2) {
+                const phone = parts[1];
+                if (checkDuplicatePhone(phone)) {
+                  duplicatePhones.push(phone);
+                } else {
+                  uniqueLines.push({ name: parts[0], phone, position: parts[2] || '待确认' });
+                }
+              }
+            });
+
+            // 如果有重复，提示并停止录入
+            if (duplicatePhones.length > 0) {
+              ElementPlus.ElMessage.error(`以下手机号已存在，不允许重复录入：${duplicatePhones.join('、')}`);
+              return;
+            }
+
+            // 录入不重复的线索
+            uniqueLines.forEach(item => {
+              const newLead = {
+                id: Date.now() + Math.random(),
+                name: item.name,
+                phone: item.phone,
+                position: item.position,
+                source: addLeadForm.value.channel,
+                sourceText: getChannelLabel(addLeadForm.value.channel),
+                referrer: addLeadForm.value.referrer ? channelReferrersMap[addLeadForm.value.channel].find(r => r.code === addLeadForm.value.referrer)?.name : '',
+                referrerCode: addLeadForm.value.referrer,
+                createTime: new Date().toLocaleString('zh-CN', { hour12: false }),
+                assignStatus: 'unassigned',
+                followStatus: '未跟进',
+                followCount: 0,
+                followRecords: []
+              };
+              leadList.value.unshift(newLead);
+              addedCount++;
+            });
+            ElementPlus.ElMessage.success(`成功录入 ${addedCount} 条线索`);
+          }
+
+          // 更新统计数据
+          stats.value.total += addedCount;
+          stats.value.today += addedCount;
+          stats.value.unassigned += addedCount;
+
+          // 重置表单并关闭对话框
+          addLeadForm.value = {
+            group: '',
+            channel: '',
+            referrer: '',
+            inputType: 'single',
+            singleName: '',
+            singlePhone: '',
+            singlePosition: '',
+            batchInput: ''
+          };
+          showAddLeadDialog.value = false;
+        };
         
         // 招募人员列表（与 recruiter.html 同步的数据）
         const recruiterList = ref([
@@ -1104,10 +1388,17 @@
           showAssignDialog,
           showImportDialog,
           showDetailDrawer,
+          showAddLeadDialog,
           assignType,
           selectedRecruiter,
           recruiterList,
           currentLead,
+          addLeadForm,
+          channelReferrers,
+          canSubmitAddLead,
+          getChannelLabel,
+          onChannelChange,
+          confirmAddLead,
           handleSelectionChange,
           handleSelectAll,
           handleSearch,

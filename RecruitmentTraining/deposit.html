@@ -304,6 +304,9 @@
           <span class="card-title">押金台账</span>
           <span class="card-subtitle" style="margin-left: 12px;">共 {{ total }} 条记录</span>
         </div>
+        <el-button type="primary" @click="showAddReceivableDialog = true">
+          <i class="el-icon-plus"></i> 新增应收押金
+        </el-button>
       </div>
       <div class="card-body">
         <div class="deposit-ledger">
@@ -337,6 +340,22 @@
               <div class="ledger-amount">
                 <div class="ledger-amount-value balance">¥{{ item.received - (item.refunded || 0) - item.deducted }}</div>
                 <div class="ledger-amount-label">剩余押金</div>
+              </div>
+            </div>
+            <div class="ledger-remark" style="margin-left: 24px; min-width: 150px;">
+              <el-input
+                v-if="editingRemarkId === item.id"
+                v-model="editingRemarkValue"
+                size="small"
+                placeholder="请输入备注"
+                @blur="saveRemark(item)"
+                @keyup.enter="saveRemark(item)"
+                ref="remarkInput"
+                style="width: 140px;"
+              ></el-input>
+              <div v-else style="display: flex; align-items: center; cursor: pointer;" @click="startEditRemark(item)">
+                <span style="color: #8c8c8c; font-size: 13px;" :title="item.remark">{{ item.remark || '添加备注' }}</span>
+                <i class="el-icon-edit" style="color: #1890ff; margin-left: 4px; font-size: 12px;"></i>
               </div>
             </div>
             <div class="ledger-actions">
@@ -500,6 +519,46 @@
       </template>
     </el-dialog>
 
+    <!-- 新增应收押金对话框 -->
+    <el-dialog
+      v-model="showAddReceivableDialog"
+      title="新增应收押金"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <div style="padding: 20px;">
+        <el-form :model="addReceivableForm" label-width="100px">
+          <el-form-item label="姓名" required>
+            <el-input v-model="addReceivableForm.name" placeholder="请输入人员姓名"></el-input>
+          </el-form-item>
+          <el-form-item label="手机号" required>
+            <el-input v-model="addReceivableForm.phone" placeholder="请输入手机号" maxlength="11"></el-input>
+          </el-form-item>
+          <el-form-item label="目标岗位" required>
+            <el-select v-model="addReceivableForm.position" placeholder="请选择岗位" style="width: 100%;">
+              <el-option label="月嫂" value="月嫂"></el-option>
+              <el-option label="育婴师" value="育婴师"></el-option>
+              <el-option label="老年护工" value="老年护工"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="应收金额" required>
+            <el-input-number v-model="addReceivableForm.receivable" :min="0" :precision="2" style="width: 200px;"></el-input-number>
+            <span style="margin-left: 8px; color: #8c8c8c;">元</span>
+          </el-form-item>
+          <el-form-item label="签约日期" required>
+            <el-date-picker v-model="addReceivableForm.contractDate" type="date" placeholder="选择签约日期" value-format="YYYY-MM-DD" style="width: 100%;"></el-date-picker>
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input v-model="addReceivableForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息（可选）"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="showAddReceivableDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddReceivable" :disabled="!canAddReceivable">确认新增</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 退款对话框 -->
     <el-dialog
       v-model="showRefundDialog"
@@ -605,9 +664,30 @@
         const showDetailDrawer = ref(false);
         const showDeductDialog = ref(false);
         const showRefundDialog = ref(false);
+        const showAddReceivableDialog = ref(false);
 
         // 当前选中的台账
         const currentLedger = ref(null);
+
+        // 备注编辑状态
+        const editingRemarkId = ref(null);
+        const editingRemarkValue = ref('');
+
+        // 新增应收押金表单
+        const addReceivableForm = ref({
+          name: '',
+          phone: '',
+          position: '',
+          receivable: 2000,
+          contractDate: '',
+          remark: ''
+        });
+
+        // 是否可以新增应收押金
+        const canAddReceivable = computed(() => {
+          const form = addReceivableForm.value;
+          return form.name && form.phone && form.position && form.receivable > 0 && form.contractDate;
+        });
 
         // 扣款表单
         const deductForm = ref({
@@ -849,6 +929,77 @@
           ElementPlus.ElMessage.success(`退款申请已提交，退款金额：¥${refundForm.value.amount}`);
         };
 
+        // 开始编辑备注
+        const startEditRemark = (item) => {
+          editingRemarkId.value = item.id;
+          editingRemarkValue.value = item.remark || '';
+          // 使用 nextTick 确保 DOM 更新后聚焦
+          setTimeout(() => {
+            const input = document.querySelector('.ledger-remark input');
+            if (input) input.focus();
+          }, 50);
+        };
+
+        // 保存备注
+        const saveRemark = (item) => {
+          item.remark = editingRemarkValue.value.trim();
+          editingRemarkId.value = null;
+          editingRemarkValue.value = '';
+          ElementPlus.ElMessage.success('备注已保存');
+        };
+
+        // 确认新增应收押金
+        const confirmAddReceivable = () => {
+          const form = addReceivableForm.value;
+          if (!form.name || !form.phone || !form.position || !form.contractDate) {
+            ElementPlus.ElMessage.warning('请填写完整信息');
+            return;
+          }
+
+          // 检查手机号是否已存在
+          const exists = ledgerList.value.find(item => item.phone.replace(/\*/g, '') === form.phone.replace(/\*/g, ''));
+          if (exists) {
+            ElementPlus.ElMessage.warning('该手机号已存在押金记录');
+            return;
+          }
+
+          const newId = Math.max(...ledgerList.value.map(item => item.id), 0) + 1;
+          const newLedger = {
+            id: newId,
+            name: form.name,
+            phone: form.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+            position: form.position,
+            contractDate: form.contractDate,
+            received: 0,
+            pending: form.receivable,
+            deducted: 0,
+            balance: 0,
+            refunded: 0,
+            remark: form.remark,
+            transactions: []
+          };
+
+          ledgerList.value.unshift(newLedger);
+
+          // 更新统计数据
+          stats.value.totalReceivable += form.receivable;
+          stats.value.totalPending += form.receivable;
+
+          // 重置表单
+          addReceivableForm.value = {
+            name: '',
+            phone: '',
+            position: '',
+            receivable: 2000,
+            contractDate: '',
+            remark: ''
+          };
+
+          showAddReceivableDialog.value = false;
+          total.value += 1;
+          ElementPlus.ElMessage.success('新增应收押金成功');
+        };
+
         // 分页变化
         const handleSizeChange = (val) => {
           pageSize.value = val;
@@ -870,9 +1021,14 @@
           showDetailDrawer,
           showDeductDialog,
           showRefundDialog,
+          showAddReceivableDialog,
           currentLedger,
           deductForm,
           refundForm,
+          addReceivableForm,
+          canAddReceivable,
+          editingRemarkId,
+          editingRemarkValue,
           handleSearch,
           handleReset,
           handleExport,
@@ -881,6 +1037,9 @@
           confirmDeduct,
           handleRefund,
           confirmRefund,
+          confirmAddReceivable,
+          startEditRemark,
+          saveRemark,
           handleSizeChange,
           handleCurrentChange
         };

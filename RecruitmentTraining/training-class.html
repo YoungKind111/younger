@@ -708,6 +708,24 @@
           </div>
         </el-form-item>
 
+        <!-- 已报名/已缴费学员警告（付费课程） -->
+        <el-form-item v-if="currentClass?.fee_type === 'paid' && alreadyPaidStudents.length > 0" label="">
+          <el-alert
+            :title="`以下 ${alreadyPaidStudents.length} 名学员已在本班级报名或有缴费记录，无法重复报名`"
+            type="error"
+            :closable="false"
+            style="margin-bottom: 12px;"
+          >
+            <div style="margin-top: 8px; max-height: 150px; overflow-y: auto;">
+              <div v-for="(student, idx) in alreadyPaidStudents" :key="idx" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #ffccc7;">
+                <span style="font-weight: 500; color: #f5222d;">{{ student.name }}</span>
+                <span style="color: #8c8c8c; font-size: 13px;">ID: {{ student.id }}</span>
+                <el-tag type="danger" size="mini">{{ student.feeStatus.message }}</el-tag>
+              </div>
+            </div>
+          </el-alert>
+        </el-form-item>
+
         <!-- 报名预览 -->
         <el-form-item v-if="allEnrollStudents.length > 0" label="报名预览">
           <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e8e8e8; border-radius: 4px; padding: 12px;">
@@ -729,6 +747,10 @@
             <el-radio label="paid">已缴费</el-radio>
             <el-radio label="unpaid">待缴费</el-radio>
           </el-radio-group>
+          <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+            <i class="el-icon-warning-outline" style="color: #fa8c16; margin-right: 4px;"></i>
+            付费课程需验证学员是否已报名或有缴费记录
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -1170,12 +1192,23 @@
           { id: 110, name: '王五', phone: '130****0000' }  // 重名
         ]);
 
+        // 课程费用记录（用于验证学员是否已报名付费课程）
+        const courseFeeList = ref([
+          { staff_id: 101, course_name: '2026年4月熟手强化班', status: 'paid' },
+          { staff_id: 102, course_name: '月嫂高级技能提升班', status: 'unpaid' },
+          { staff_id: 103, course_name: '育婴师考证培训班', status: 'expired' }
+        ]);
+
+        // 已报名学员列表（用于验证是否已在当前班级报名）
+        const enrolledStudentIds = ref([]);
+
         // 解析姓名输入
         const inputNameCount = ref(0);
         const matchedStudents = ref([]);
         const duplicateNames = ref([]);
         const unmatchedNames = ref([]);
         const idEnrollStudents = ref([]);
+        const alreadyPaidStudents = ref([]); // 已缴费学员列表
 
         // 计算属性：所有准备报名的学员
         const allEnrollStudents = computed(() => {
@@ -1287,7 +1320,28 @@
           duplicateNames.value = [];
           unmatchedNames.value = [];
           idEnrollStudents.value = [];
+          alreadyPaidStudents.value = [];
           showEnrollDialog.value = true;
+        };
+
+        // 检查学员是否已有付费记录（付费课程验证）
+        const checkStudentFeeStatus = (studentId) => {
+          if (!currentClass.value || currentClass.value.fee_type !== 'paid') {
+            return null;
+          }
+          // 检查是否已在当前班级报名
+          if (currentClass.value.students?.some(s => s.id === studentId)) {
+            return { type: 'enrolled', message: '已在本班级报名' };
+          }
+          // 检查是否已有该课程的付费记录
+          const feeRecord = courseFeeList.value.find(
+            f => f.staff_id === studentId && f.course_name === currentClass.value.name
+          );
+          if (feeRecord) {
+            const statusMap = { paid: '已缴费', unpaid: '待缴费', expired: '已过期' };
+            return { type: 'fee_record', status: feeRecord.status, message: `已有缴费记录（${statusMap[feeRecord.status]}）` };
+          }
+          return null;
         };
 
         // 解析姓名输入
@@ -1296,6 +1350,7 @@
             matchedStudents.value = [];
             duplicateNames.value = [];
             unmatchedNames.value = [];
+            alreadyPaidStudents.value = [];
             inputNameCount.value = 0;
             return;
           }
@@ -1310,6 +1365,7 @@
           const matched = [];
           const duplicates = [];
           const unmatched = [];
+          const alreadyPaid = [];
 
           names.forEach(name => {
             const found = allStudentsDB.value.filter(s => s.name === name);
@@ -1318,13 +1374,21 @@
             } else if (found.length > 1) {
               duplicates.push(name);
             } else {
-              matched.push({ ...found[0], isDuplicate: false, fromIdInput: false });
+              const student = found[0];
+              // 付费课程验证
+              const feeStatus = checkStudentFeeStatus(student.id);
+              if (feeStatus) {
+                alreadyPaid.push({ ...student, feeStatus });
+              } else {
+                matched.push({ ...student, isDuplicate: false, fromIdInput: false });
+              }
             }
           });
 
           matchedStudents.value = matched;
           duplicateNames.value = duplicates;
           unmatchedNames.value = unmatched;
+          alreadyPaidStudents.value = alreadyPaid;
         };
 
         // 解析ID输入
@@ -1340,6 +1404,8 @@
             .filter(l => l);
 
           const students = [];
+          const alreadyPaid = [];
+
           lines.forEach(line => {
             // 支持格式：ID 或 姓名|ID
             let id;
@@ -1352,12 +1418,20 @@
             if (!isNaN(id)) {
               const found = allStudentsDB.value.find(s => s.id === id);
               if (found) {
-                students.push({ ...found, isDuplicate: true, fromIdInput: true });
+                // 付费课程验证
+                const feeStatus = checkStudentFeeStatus(found.id);
+                if (feeStatus) {
+                  alreadyPaid.push({ ...found, feeStatus, fromIdInput: true });
+                } else {
+                  students.push({ ...found, isDuplicate: true, fromIdInput: true });
+                }
               }
             }
           });
 
           idEnrollStudents.value = students;
+          // 将已缴费的学员合并到 alreadyPaidStudents 中
+          alreadyPaidStudents.value = [...alreadyPaidStudents.value, ...alreadyPaid];
         };
 
         const confirmEnroll = () => {
@@ -1366,8 +1440,32 @@
             ElementPlus.ElMessage.warning('请至少输入一个有效学员');
             return;
           }
+
+          // 付费课程：再次验证学员是否已报名或已有缴费记录
+          if (currentClass.value?.fee_type === 'paid') {
+            const conflicts = [];
+            allEnrollStudents.value.forEach(student => {
+              const feeStatus = checkStudentFeeStatus(student.id);
+              if (feeStatus) {
+                conflicts.push(student.name);
+              }
+            });
+
+            if (conflicts.length > 0) {
+              ElementPlus.ElMessage.error(`以下学员${conflicts.length > 1 ? '均' : ''}已报名或有缴费记录，无法重复报名：${conflicts.join('、')}`);
+              return;
+            }
+          }
+
           if (currentClass.value) {
             currentClass.value.student_count += count;
+            // 将学员添加到班级学员列表
+            if (!currentClass.value.students) {
+              currentClass.value.students = [];
+            }
+            allEnrollStudents.value.forEach(student => {
+              currentClass.value.students.push({ id: student.id, name: student.name });
+            });
           }
           ElementPlus.ElMessage.success(`成功报名 ${count} 名学员`);
           showEnrollDialog.value = false;
@@ -1435,14 +1533,17 @@
           arrangeExam,
           viewResult,
           allStudentsDB,
+          courseFeeList,
           inputNameCount,
           matchedStudents,
           duplicateNames,
           unmatchedNames,
           idEnrollStudents,
           allEnrollStudents,
+          alreadyPaidStudents,
           parseNameInput,
           parseIdInput,
+          checkStudentFeeStatus,
           getPositionName
         };
       }

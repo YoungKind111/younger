@@ -7,14 +7,13 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
   <link rel="stylesheet" href="shared-styles.css">
   <style>
-    .channel-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    @media (max-width: 1200px) { .channel-stats { grid-template-columns: repeat(3, 1fr); } }
+    .channel-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 1200px) { .channel-stats { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 768px) { .channel-stats { grid-template-columns: repeat(2, 1fr); } }
     .channel-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; border-left: 4px solid #1890ff; }
     .channel-card:nth-child(2) { border-left-color: #52c41a; }
     .channel-card:nth-child(3) { border-left-color: #fa8c16; }
     .channel-card:nth-child(4) { border-left-color: #722ed1; }
-    .channel-card:nth-child(5) { border-left-color: #13c2c2; }
     .channel-card-value { font-size: 28px; font-weight: 600; color: #262626; }
     .channel-card-label { font-size: 13px; color: #8c8c8c; margin-top: 8px; }
     .channel-item { display: flex; align-items: center; padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s; }
@@ -42,7 +41,6 @@
     .referrer-stat-value.clues { color: #1890ff; }
     .referrer-stat-value.signed { color: #52c41a; }
     .referrer-stat-value.worked { color: #fa8c16; }
-    .referrer-stat-value.reward { color: #f5222d; }
     .referrer-stat-label { font-size: 11px; color: #8c8c8c; }
     .qr-code-placeholder { width: 200px; height: 200px; background: #f5f5f5; border: 2px dashed #d9d9d9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 16px; color: #8c8c8c; }
     .link-section { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-top: 16px; }
@@ -51,7 +49,6 @@
     .settlement-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .settlement-stat { text-align: center; }
     .settlement-stat-value { font-size: 20px; font-weight: 600; color: #262626; }
-    .settlement-stat-value.amount { color: #f5222d; }
     .settlement-stat-label { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
   </style>
 </head>
@@ -110,10 +107,6 @@
                 <div class="channel-card">
                   <div class="channel-card-value">{{ stats.totalSigned }}</div>
                   <div class="channel-card-label">当月签约</div>
-                </div>
-                <div class="channel-card">
-                  <div class="channel-card-value text-danger">¥{{ stats.totalReward }}</div>
-                  <div class="channel-card-label">当月奖励(元)</div>
                 </div>
               </div>
             </div>
@@ -199,23 +192,7 @@
                       <i class="el-icon-info"></i> 如需关联推荐人，请使用<strong>推荐人专属链接</strong>或在报名表中填写<strong>邀请码</strong>
                     </div>
                   </div>
-                  
-                  <div style="margin-top: 24px;">
-                    <div style="font-weight: 600; margin-bottom: 16px;">推荐奖励规则</div>
-                    <div style="background: #f5f5f5; padding: 16px; border-radius: 8px;">
-                      <div style="margin-bottom: 12px;">
-                        <span style="width: 100px; display: inline-block; color: #595959;">签约奖励</span>
-                        <el-input-number v-model="currentChannel.rewardSign" :min="0" :step="100" size="small" style="width: 120px;"></el-input-number>
-                        <span style="margin-left: 8px;">元/人</span>
-                      </div>
-                      <div>
-                        <span style="width: 100px; display: inline-block; color: #595959;">上户奖励</span>
-                        <el-input-number v-model="currentChannel.rewardWork" :min="0" :step="100" size="small" style="width: 120px;"></el-input-number>
-                        <span style="margin-left: 8px;">元/人</span>
-                      </div>
-                    </div>
-                  </div>
-                  
+
                   <div style="margin-top: 24px;">
                     <div style="font-weight: 600; margin-bottom: 16px;">本月统计</div>
                     <div class="settlement-stats">
@@ -230,10 +207,6 @@
                       <div class="settlement-stat">
                         <div class="settlement-stat-value">{{ currentChannel.monthWorked }}</div>
                         <div class="settlement-stat-label">上户人数</div>
-                      </div>
-                      <div class="settlement-stat">
-                        <div class="settlement-stat-value amount">¥{{ currentChannel.monthReward }}</div>
-                        <div class="settlement-stat-label">奖励金额</div>
                       </div>
                     </div>
                   </div>
@@ -266,10 +239,6 @@
                       <div>
                         <div class="referrer-stat-value worked">{{ referrer.workedCount }}</div>
                         <div class="referrer-stat-label">上户</div>
-                      </div>
-                      <div>
-                        <div class="referrer-stat-value reward">¥{{ referrer.totalReward }}</div>
-                        <div class="referrer-stat-label">奖励</div>
                       </div>
                     </div>
                     <div style="margin-left: 16px; display: flex; gap: 8px;">
@@ -306,14 +275,6 @@
                   <el-radio label="active">启用</el-radio>
                   <el-radio label="inactive">停用</el-radio>
                 </el-radio-group>
-              </el-form-item>
-              <el-form-item label="签约奖励" prop="rewardSign">
-                <el-input-number v-model="channelForm.rewardSign" :min="0" :step="100" style="width: 150px;"></el-input-number>
-                <span style="margin-left: 8px;">元/人</span>
-              </el-form-item>
-              <el-form-item label="上户奖励" prop="rewardWork">
-                <el-input-number v-model="channelForm.rewardWork" :min="0" :step="100" style="width: 150px;"></el-input-number>
-                <span style="margin-left: 8px;">元/人</span>
               </el-form-item>
             </el-form>
             <template #footer>
@@ -368,10 +329,6 @@
                   <div style="font-weight: 600; font-size: 16px;">{{ currentReferrer.name }}</div>
                   <div style="font-size: 13px; color: #8c8c8c;">{{ currentReferrer.phone }}</div>
                 </div>
-                <div style="margin-left: auto; text-align: right;">
-                  <div style="font-size: 24px; font-weight: 600; color: #f5222d;">¥{{ currentReferrer.totalReward }}</div>
-                  <div style="font-size: 12px; color: #8c8c8c;">累计奖励</div>
-                </div>
               </div>
 
               <el-tabs v-model="referrerTab">
@@ -386,11 +343,6 @@
                     <el-table-column label="状态" width="100">
                       <template #default="{ row }">
                         <el-tag :type="row.status === '已上户' ? 'success' : row.status === '已签约' ? 'warning' : 'info'" size="small">{{ row.status }}</el-tag>
-                      </template>
-                    </el-table-column>
-                    <el-table-column label="奖励" width="100">
-                      <template #default="{ row }">
-                        <span style="color: #f5222d;">¥{{ row.reward }}</span>
                       </template>
                     </el-table-column>
                   </el-table>
@@ -442,7 +394,6 @@
                   <li>分享专属链接给潜在护理人员</li>
                   <li>被推荐人扫码或点击链接报名，自动关联推荐关系</li>
                   <li>被推荐人也可在普通报名表中填写邀请码</li>
-                  <li>推荐人成功上户后自动计算奖励</li>
                 </ul>
               </div>
             </div>
@@ -455,24 +406,19 @@
         const statsMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
 
         // 统计数据
-        const stats = reactive({ totalChannels: 0, totalReferrers: 0, totalClues: 0, totalSigned: 0, totalReward: 0 });
+        const stats = reactive({ totalChannels: 0, totalReferrers: 0, totalClues: 0, totalSigned: 0 });
 
         // 更新统计数据
         const updateStats = () => {
-          const [year, month] = statsMonth.value.split('-');
-          const monthPrefix = `${year}-${month}`;
-
           // 统计各渠道的当月数据
           let totalClues = 0;
           let totalSigned = 0;
-          let totalReward = 0;
           let totalReferrers = 0;
 
           channels.value.forEach(channel => {
             // 累加当月数据
             totalClues += channel.monthClues || 0;
             totalSigned += channel.monthSigned || 0;
-            totalReward += channel.monthReward || 0;
             totalReferrers += channel.referrers?.length || 0;
           });
 
@@ -480,7 +426,6 @@
           stats.totalReferrers = totalReferrers;
           stats.totalClues = totalClues;
           stats.totalSigned = totalSigned;
-          stats.totalReward = totalReward;
         };
 
         const activeChannelType = ref('all');
@@ -500,36 +445,36 @@
         const editingChannelId = ref(null);
         const editingReferrerId = ref(null);
         
-        const channelForm = ref({ name: '', type: 'online', desc: '', status: 'active', rewardSign: 200, rewardWork: 500 });
+        const channelForm = ref({ name: '', type: 'online', desc: '', status: 'active' });
         const referrerForm = reactive({ name: '', phone: '', idCard: '', bankCard: '', bankName: '', bankBranch: '' });
         
         const channels = ref([
           {
-            id: 1, name: '微信广告', icon: 'el-icon-chat-dot-round', iconClass: 'wechat', type: 'online', desc: '微信朋友圈广告投放', status: 'active', clueCount: 486, signedCount: 98, link: 'https://xxx.com/form?channel=wechat&code=WX001', rewardSign: 200, rewardWork: 500, monthClues: 45, monthSigned: 12, monthWorked: 8, monthReward: 6400,
+            id: 1, name: '微信广告', icon: 'el-icon-chat-dot-round', iconClass: 'wechat', type: 'online', desc: '微信朋友圈广告投放', status: 'active', clueCount: 486, signedCount: 98, link: 'https://xxx.com/form?channel=wechat&code=WX001', monthClues: 45, monthSigned: 12, monthWorked: 8,
             referrers: [
-              { id: 1, name: '张阿姨', phone: '138****1234', inviteCode: 'WX001A', referralLink: 'https://xxx.com/form?channel=wechat&code=WX001&referrer=WX001A', clueCount: 12, signedCount: 3, workedCount: 2, totalReward: 1400 }
+              { id: 1, name: '张阿姨', phone: '138****1234', inviteCode: 'WX001A', referralLink: 'https://xxx.com/form?channel=wechat&code=WX001&referrer=WX001A', clueCount: 12, signedCount: 3, workedCount: 2 }
             ]
           },
           {
-            id: 2, name: '抖音推广', icon: 'el-icon-video-play', iconClass: 'douyin', type: 'online', desc: '抖音短视频广告投放', status: 'active', clueCount: 352, signedCount: 68, link: 'https://xxx.com/form?channel=douyin&code=DY001', rewardSign: 200, rewardWork: 500, monthClues: 38, monthSigned: 8, monthWorked: 5, monthReward: 4100,
+            id: 2, name: '抖音推广', icon: 'el-icon-video-play', iconClass: 'douyin', type: 'online', desc: '抖音短视频广告投放', status: 'active', clueCount: 352, signedCount: 68, link: 'https://xxx.com/form?channel=douyin&code=DY001', monthClues: 38, monthSigned: 8, monthWorked: 5,
             referrers: []
           },
           {
-            id: 3, name: '地推活动', icon: 'el-icon-location', iconClass: 'ditui', type: 'offline', desc: '线下地推人员推广', status: 'active', clueCount: 218, signedCount: 52, link: 'https://xxx.com/form?channel=ditui&code=DT001', rewardSign: 300, rewardWork: 600, monthClues: 25, monthSigned: 6, monthWorked: 4, monthReward: 4200,
+            id: 3, name: '地推活动', icon: 'el-icon-location', iconClass: 'ditui', type: 'offline', desc: '线下地推人员推广', status: 'active', clueCount: 218, signedCount: 52, link: 'https://xxx.com/form?channel=ditui&code=DT001', monthClues: 25, monthSigned: 6, monthWorked: 4,
             referrers: [
-              { id: 2, name: '李大哥', phone: '139****5678', inviteCode: 'DT001A', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001A', clueCount: 15, signedCount: 4, workedCount: 3, totalReward: 2400 },
-              { id: 3, name: '王姐', phone: '137****9012', inviteCode: 'DT001B', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001B', clueCount: 10, signedCount: 2, workedCount: 1, totalReward: 900 }
+              { id: 2, name: '李大哥', phone: '139****5678', inviteCode: 'DT001A', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001A', clueCount: 15, signedCount: 4, workedCount: 3 },
+              { id: 3, name: '王姐', phone: '137****9012', inviteCode: 'DT001B', referralLink: 'https://xxx.com/form?channel=ditui&code=DT001&referrer=DT001B', clueCount: 10, signedCount: 2, workedCount: 1 }
             ]
           },
           {
-            id: 4, name: '老带新转介绍', icon: 'el-icon-user', iconClass: 'intro', type: 'intro', desc: '在岗护理人员推荐', status: 'active', clueCount: 156, signedCount: 42, link: 'https://xxx.com/form?channel=intro&code=ZJ001', rewardSign: 500, rewardWork: 1000, monthClues: 18, monthSigned: 5, monthWorked: 4, monthReward: 6500,
+            id: 4, name: '老带新转介绍', icon: 'el-icon-user', iconClass: 'intro', type: 'intro', desc: '在岗护理人员推荐', status: 'active', clueCount: 156, signedCount: 42, link: 'https://xxx.com/form?channel=intro&code=ZJ001', monthClues: 18, monthSigned: 5, monthWorked: 4,
             referrers: [
-              { id: 4, name: '刘阿姨', phone: '136****2468', inviteCode: 'ZJ001A', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001A', clueCount: 8, signedCount: 3, workedCount: 3, totalReward: 4500, records: [{ name: '陈美华', phone: '135****1357', status: '已上户', reward: 1500 }] },
-              { id: 5, name: '孙大姐', phone: '135****7890', inviteCode: 'ZJ001B', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001B', clueCount: 5, signedCount: 2, workedCount: 1, totalReward: 1500 }
+              { id: 4, name: '刘阿姨', phone: '136****2468', inviteCode: 'ZJ001A', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001A', clueCount: 8, signedCount: 3, workedCount: 3, records: [{ name: '陈美华', phone: '135****1357', status: '已上户' }] },
+              { id: 5, name: '孙大姐', phone: '135****7890', inviteCode: 'ZJ001B', referralLink: 'https://xxx.com/form?channel=intro&code=ZJ001&referrer=ZJ001B', clueCount: 5, signedCount: 2, workedCount: 1 }
             ]
           },
           {
-            id: 5, name: '官网注册', icon: 'el-icon-monitor', iconClass: 'website', type: 'online', desc: '官方网站自然流量', status: 'active', clueCount: 44, signedCount: 8, link: 'https://xxx.com/form?channel=website&code=GW001', rewardSign: 0, rewardWork: 0, monthClues: 5, monthSigned: 1, monthWorked: 0, monthReward: 0,
+            id: 5, name: '官网注册', icon: 'el-icon-monitor', iconClass: 'website', type: 'online', desc: '官方网站自然流量', status: 'active', clueCount: 44, signedCount: 8, link: 'https://xxx.com/form?channel=website&code=GW001', monthClues: 5, monthSigned: 1, monthWorked: 0,
             referrers: []
           }
         ]);
@@ -542,10 +487,10 @@
         const handleAddChannel = () => {
           isEdit.value = false;
           editingChannelId.value = null;
-          channelForm.value = { name: '', type: 'online', desc: '', status: 'active', rewardSign: 200, rewardWork: 500 };
+          channelForm.value = { name: '', type: 'online', desc: '', status: 'active' };
           channelDialogVisible.value = true;
         };
-        
+
         const editChannel = (channel) => {
           isEdit.value = true;
           editingChannelId.value = channel.id;
@@ -553,9 +498,7 @@
             name: channel.name,
             type: channel.type,
             desc: channel.desc,
-            status: channel.status,
-            rewardSign: channel.rewardSign,
-            rewardWork: channel.rewardWork
+            status: channel.status
           };
           channelDialogVisible.value = true;
         };
@@ -583,7 +526,7 @@
               iconClass: iconClassMap[channelForm.value.type],
               clueCount: 0, signedCount: 0,
               link: `https://xxx.com/form?channel=${channelForm.value.type}&code=${code}`,
-              monthClues: 0, monthSigned: 0, monthWorked: 0, monthReward: 0,
+              monthClues: 0, monthSigned: 0, monthWorked: 0,
               referrers: []
             });
             stats.totalChannels++;
@@ -669,8 +612,7 @@
               referralLink,
               clueCount: 0,
               signedCount: 0,
-              workedCount: 0,
-              totalReward: 0
+              workedCount: 0
             });
             stats.totalReferrers++;
             ElementPlus.ElMessage.success('推荐人添加成功，已生成专属邀请码');

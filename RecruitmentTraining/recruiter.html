@@ -9,13 +9,13 @@
   <style>
     .recruiter-stats {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
 
     @media (max-width: 1200px) {
-      .recruiter-stats { grid-template-columns: repeat(3, 1fr); }
+      .recruiter-stats { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 768px) {
@@ -33,7 +33,6 @@
     .recruiter-card:nth-child(2) { border-left-color: #52c41a; }
     .recruiter-card:nth-child(3) { border-left-color: #fa8c16; }
     .recruiter-card:nth-child(4) { border-left-color: #722ed1; }
-    .recruiter-card:nth-child(5) { border-left-color: #13c2c2; }
 
     .recruiter-card-value {
       font-size: 28px;
@@ -139,21 +138,6 @@
       gap: 8px;
     }
 
-    .performance-bar {
-      width: 100px;
-      height: 6px;
-      background: #f0f0f0;
-      border-radius: 3px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-
-    .performance-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #1890ff, #36cfc9);
-      border-radius: 3px;
-    }
-
     .detail-header {
       display: flex;
       align-items: center;
@@ -191,7 +175,7 @@
 
     .detail-stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-bottom: 20px;
     }
@@ -214,6 +198,122 @@
       font-size: 12px;
       color: #8c8c8c;
       margin-top: 4px;
+    }
+
+    /* 跟进记录列表样式 */
+    .follow-records-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .follow-record-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .follow-record-time {
+      color: #8c8c8c;
+      font-size: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .follow-record-type {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .follow-record-type.phone {
+      background: #e6f7ff;
+      color: #096dd9;
+    }
+
+    .follow-record-type.wechat {
+      background: #f6ffed;
+      color: #389e0d;
+    }
+
+    .follow-record-type.visit {
+      background: #fff7e6;
+      color: #d46b08;
+    }
+
+    .follow-record-type.system {
+      background: #f5f5f5;
+      color: #8c8c8c;
+    }
+
+    .follow-record-content {
+      color: #262626;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .follow-record-more {
+      font-size: 12px;
+      color: #8c8c8c;
+      text-align: center;
+      padding-top: 2px;
+      border-top: 1px dashed #f0f0f0;
+      margin-top: 2px;
+    }
+
+    /* 跟进对话框样式 */
+    .follow-dialog-content {
+      padding: 20px;
+    }
+
+    .follow-form-item {
+      margin-bottom: 20px;
+    }
+
+    .follow-form-label {
+      font-size: 14px;
+      color: #262626;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .follow-type-options {
+      display: flex;
+      gap: 12px;
+    }
+
+    .follow-type-option {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e8e8e8;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .follow-type-option:hover {
+      border-color: #1890ff;
+    }
+
+    .follow-type-option.active {
+      border-color: #1890ff;
+      background: #e6f7ff;
+    }
+
+    .follow-type-option i {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
     }
   </style>
 </head>
@@ -252,10 +352,6 @@
           <div class="recruiter-card">
             <div class="recruiter-card-value">{{ stats.monthSigned }}</div>
             <div class="recruiter-card-label">当月签约</div>
-          </div>
-          <div class="recruiter-card">
-            <div class="recruiter-card-value text-danger">{{ stats.monthConversion }}%</div>
-            <div class="recruiter-card-label">当月转化率</div>
           </div>
         </div>
       </div>
@@ -309,10 +405,6 @@
                   <div class="recruiter-stat-value">{{ recruiter.signedCount }}</div>
                   <div class="recruiter-stat-label">本月签约</div>
                 </div>
-                <div class="recruiter-stat">
-                  <div class="recruiter-stat-value">{{ recruiter.conversionRate }}%</div>
-                  <div class="recruiter-stat-label">转化率</div>
-                </div>
               </div>
             </div>
             <div class="recruiter-actions">
@@ -357,10 +449,6 @@
                 <div class="detail-stat-value">{{ currentRecruiter.signedCount }}</div>
                 <div class="detail-stat-label">本月签约</div>
               </div>
-              <div class="detail-stat-card">
-                <div class="detail-stat-value">{{ currentRecruiter.conversionRate }}%</div>
-                <div class="detail-stat-label">转化率</div>
-              </div>
             </div>
 
             <div style="margin-top: 20px;">
@@ -382,12 +470,88 @@
                     <el-tag :type="row.status === '未跟进' ? 'info' : 'success'" size="mini">{{ row.status }}</el-tag>
                   </template>
                 </el-table-column>
+                <el-table-column label="跟进记录" min-width="320">
+                  <template #default="{ row }">
+                    <div v-if="row.followRecords && row.followRecords.length > 0" class="follow-records-list">
+                      <div
+                        v-for="(record, idx) in row.followRecords.slice(-3).reverse()"
+                        :key="idx"
+                        class="follow-record-item"
+                      >
+                        <span class="follow-record-time">{{ record.time.split(' ')[0].slice(5) }} {{ record.time.split(' ')[1]?.slice(0,5) || '' }}</span>
+                        <span class="follow-record-type" :class="record.type">{{ record.typeText }}</span>
+                        <span class="follow-record-content" :title="record.content">{{ record.content }}</span>
+                      </div>
+                      <div v-if="row.followRecords.length > 3" class="follow-record-more">
+                        +{{ row.followRecords.length - 3 }} 条更早记录
+                      </div>
+                    </div>
+                    <span v-else style="color: #8c8c8c; font-size: 13px;">暂无跟进记录</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="120" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="handleViewLeadDetail(row)">详情</el-button>
+                  </template>
+                </el-table-column>
               </el-table>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 线索详情抽屉 -->
+    <el-drawer
+      v-model="showLeadDetailDrawer"
+      title="线索详情"
+      size="500px"
+    >
+      <template v-if="currentLead">
+        <div style="margin-bottom: 24px; padding: 0 20px;">
+          <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">基本信息</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 12px; color: #8c8c8c;">姓名</span>
+              <span style="font-size: 14px; color: #262626; font-weight: 500;">{{ currentLead.name }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 12px; color: #8c8c8c;">目标岗位</span>
+              <span style="font-size: 14px; color: #262626; font-weight: 500;">{{ currentLead.position }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 12px; color: #8c8c8c;">分配时间</span>
+              <span style="font-size: 14px; color: #262626; font-weight: 500;">{{ currentLead.assignTime }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 12px; color: #8c8c8c;">状态</span>
+              <span style="font-size: 14px; color: #262626; font-weight: 500;">{{ currentLead.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px; padding: 0 20px;">
+          <div style="font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">跟进记录 ({{ currentLead.followRecords?.length || 0 }})</div>
+          <div style="padding-left: 16px;">
+            <div
+              v-for="(record, index) in currentLead.followRecords"
+              :key="index"
+              style="position: relative; padding-bottom: 20px; padding-left: 24px; border-left: 2px solid #e8e8e8;"
+            >
+              <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">{{ record.time }}</div>
+              <div style="color: #262626; line-height: 1.6;">
+                {{ record.content }}
+                <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;" :style="{ background: record.type === 'phone' ? '#e6f7ff' : record.type === 'wechat' ? '#f6ffed' : '#fff7e6', color: record.type === 'phone' ? '#096dd9' : record.type === 'wechat' ? '#389e0d' : '#d46b08' }"">{{ record.typeText }}</span>
+              </div>
+            </div>
+            <div v-if="!currentLead.followRecords || currentLead.followRecords.length === 0" style="color: #8c8c8c; padding: 20px 0;">
+              暂无跟进记录
+            </div>
+          </div>
+        </div>
+
+      </template>
+    </el-drawer>
 
     <!-- 新增/编辑对话框 -->
     <el-dialog
@@ -451,15 +615,11 @@
           total: 0,
           active: 0,
           monthAssigned: 0,
-          monthSigned: 0,
-          monthConversion: 0
+          monthSigned: 0
         });
 
         // 更新统计数据
         const updateStats = () => {
-          const [year, month] = statsMonth.value.split('-');
-          const monthPrefix = `${year}-${month}`;
-
           // 统计总数和在职人数
           const total = recruiterList.value.length;
           const active = recruiterList.value.filter(r => r.status === 'active').length;
@@ -475,15 +635,11 @@
             monthSigned += (r.monthStats?.[statsMonth.value]?.signed || r.signedCount || 0);
           });
 
-          // 计算转化率
-          const monthConversion = monthAssigned > 0 ? Math.round((monthSigned / monthAssigned) * 100) : 0;
-
           stats.value = {
             total,
             active,
             monthAssigned,
-            monthSigned,
-            monthConversion
+            monthSigned
           };
         };
 
@@ -492,6 +648,10 @@
         const currentRecruiter = ref(null);
         const dialogVisible = ref(false);
         const isEdit = ref(false);
+
+        // 线索详情抽屉
+        const showLeadDetailDrawer = ref(false);
+        const currentLead = ref(null);
 
         const form = ref({
           name: '',
@@ -521,13 +681,29 @@
             leadCount: 28,
             interviewCount: 8,
             signedCount: 5,
-            conversionRate: 18,
             monthStats: {
               [getCurrentMonth()]: { assigned: 12, signed: 5 }
             },
             recentLeads: [
-              { name: '王秀英', position: '月嫂', assignTime: '2026-04-06 10:30', status: '已跟进' },
-              { name: '李桂花', position: '育婴师', assignTime: '2026-04-06 09:15', status: '未跟进' }
+              {
+                name: '王秀英',
+                position: '月嫂',
+                assignTime: '2026-04-06 10:30',
+                status: '已跟进',
+                followRecords: [
+                  { time: '2026-04-06 10:30', content: '电话沟通，意向强烈', type: 'phone', typeText: '电话' },
+                  { time: '2026-04-06 14:00', content: '微信发送公司资料', type: 'wechat', typeText: '微信' }
+                ]
+              },
+              {
+                name: '李桂花',
+                position: '育婴师',
+                assignTime: '2026-04-06 09:15',
+                status: '未跟进',
+                followRecords: [
+                  { time: '2026-04-06 09:15', content: '系统自动分配，待跟进', type: 'system', typeText: '系统' }
+                ]
+              }
             ]
           },
           {
@@ -541,7 +717,6 @@
             leadCount: 35,
             interviewCount: 12,
             signedCount: 8,
-            conversionRate: 23,
             monthStats: {
               [getCurrentMonth()]: { assigned: 15, signed: 8 }
             },
@@ -560,7 +735,6 @@
             leadCount: 22,
             interviewCount: 6,
             signedCount: 4,
-            conversionRate: 18,
             monthStats: {
               [getCurrentMonth()]: { assigned: 8, signed: 4 }
             },
@@ -577,7 +751,6 @@
             leadCount: 30,
             interviewCount: 10,
             signedCount: 6,
-            conversionRate: 20,
             monthStats: {
               [getCurrentMonth()]: { assigned: 10, signed: 6 }
             },
@@ -594,7 +767,6 @@
             leadCount: 25,
             interviewCount: 7,
             signedCount: 4,
-            conversionRate: 16,
             monthStats: {
               [getCurrentMonth()]: { assigned: 9, signed: 4 }
             },
@@ -611,7 +783,6 @@
             leadCount: 18,
             interviewCount: 5,
             signedCount: 3,
-            conversionRate: 17,
             monthStats: {
               [getCurrentMonth()]: { assigned: 6, signed: 3 }
             },
@@ -628,7 +799,6 @@
             leadCount: 12,
             interviewCount: 2,
             signedCount: 1,
-            conversionRate: 8,
             monthStats: {
               [getCurrentMonth()]: { assigned: 4, signed: 1 }
             },
@@ -645,7 +815,6 @@
             leadCount: 0,
             interviewCount: 0,
             signedCount: 0,
-            conversionRate: 0,
             monthStats: {},
             recentLeads: []
           }
@@ -700,6 +869,12 @@
           currentRecruiter.value = recruiter;
         };
 
+        // 查看线索详情
+        const handleViewLeadDetail = (lead) => {
+          currentLead.value = lead;
+          showLeadDetailDrawer.value = true;
+        };
+
         // 默认选中第一个
         if (recruiterList.value.length > 0) {
           currentRecruiter.value = recruiterList.value[0];
@@ -724,7 +899,11 @@
           handleEdit,
           saveRecruiter,
           viewDetail,
-          updateStats
+          updateStats,
+          // 线索详情相关
+          showLeadDetailDrawer,
+          currentLead,
+          handleViewLeadDetail
         };
       }
     }).use(ElementPlus).mount('#app');
