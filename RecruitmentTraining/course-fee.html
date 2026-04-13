@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课程费用 - 护理招募培训系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .fee-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.3s;
+    }
+
+    .fee-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .fee-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .staff-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .staff-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .staff-detail {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .staff-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .staff-phone {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+
+    .fee-amount {
+      text-align: right;
+    }
+
+    .fee-amount-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f5222d;
+    }
+
+    .fee-amount-label {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .fee-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .course-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .course-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .course-meta {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .fee-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .status-paid {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .status-unpaid {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+
+    .fee-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .fee-time {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
+
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px;
+    }
+
+    .qr-code-box {
+      width: 280px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .qr-code-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 32px;
+      color: #fff;
+    }
+
+    .qr-code-icon.wechat {
+      background: linear-gradient(135deg, #07c160, #05a050);
+    }
+
+    .qr-code-icon.alipay {
+      background: linear-gradient(135deg, #1677ff, #0056d6);
+    }
+
+    .qr-code-icon.aggregate {
+      background: linear-gradient(135deg, #1890ff, #52c41a);
+    }
+
+    .qr-code-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 8px;
+    }
+
+    .qr-code-amount {
+      font-size: 32px;
+      font-weight: 700;
+      color: #f5222d;
+      margin-bottom: 8px;
+    }
+
+    .qr-code-hint {
+      font-size: 13px;
+      color: #8c8c8c;
+    }
+
+    .qr-code-staff {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e8e8e8;
+    }
+
+    .qr-code-course {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #595959;
+    }
+
+    .qr-expire-timer {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff7e6;
+      border: 1px solid #ffd591;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .qr-expire-timer.expired {
+      background: #fff1f0;
+      border-color: #ffa39e;
+    }
+
+    .qr-expire-label {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+
+    .qr-expire-time {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fa8c16;
+    }
+
+    .qr-expire-timer.expired .qr-expire-time {
+      color: #f5222d;
+    }
+
+    .qr-expire-hint {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .stat-value.income {
+      color: #f5222d;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-icon.primary {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+
+    .stat-icon.success {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .stat-icon.warning {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 统计卡片 -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.totalCount }}</span>
+          <span class="stat-label">收费记录总数</span>
+        </div>
+        <div class="stat-icon primary">
+          <i class="el-icon-document"></i>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-value income">¥{{ stats.totalAmount }}</span>
+          <span class="stat-label">收费总金额</span>
+        </div>
+        <div class="stat-icon success">
+          <i class="el-icon-money"></i>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-value">{{ stats.unpaidCount }}</span>
+          <span class="stat-label">待支付记录</span>
+        </div>
+        <div class="stat-icon warning">
+          <i class="el-icon-time"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <el-input v-model="searchKeyword" placeholder="搜索护理人员姓名/手机号" clearable style="width: 240px;">
+        <template #prefix>
+          <i class="el-icon-search"></i>
+        </template>
+      </el-input>
+      <el-select v-model="filterCourse" placeholder="选择课程" clearable style="width: 200px;">
+        <el-option v-for="course in courseList" :key="course.id" :label="course.name" :value="course.id"></el-option>
+      </el-select>
+      <el-select v-model="filterStatus" placeholder="支付状态" clearable style="width: 150px;">
+        <el-option label="已支付" value="paid"></el-option>
+        <el-option label="待支付" value="unpaid"></el-option>
+      </el-select>
+      <el-date-picker v-model="filterDateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 280px;"></el-date-picker>
+      <el-button type="primary" @click="handleSearch">查询</el-button>
+      <el-button @click="handleReset">重置</el-button>
+      <el-button type="success" @click="showGenerateDialog = true">
+        <i class="el-icon-plus"></i> 生成收款码
+      </el-button>
+    </div>
+
+    <!-- 收费记录列表 -->
+    <div class="content-card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">收费记录</span>
+          <span class="card-subtitle" style="margin-left: 12px;">共 {{ filteredList.length }} 条记录</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <el-table :data="pagedList" style="width: 100%" v-loading="loading">
+          <el-table-column label="护理人员" width="180">
+            <template #default="{ row }">
+              <div class="staff-info">
+                <div class="staff-avatar">{{ row.staff_name.charAt(0) }}</div>
+                <div class="staff-detail">
+                  <span class="staff-name">{{ row.staff_name }}</span>
+                  <span class="staff-phone">{{ row.staff_phone }}</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="课程信息" min-width="200">
+            <template #default="{ row }">
+              <div class="course-info">
+                <span class="course-name">{{ row.course_name }}</span>
+                <span class="course-meta">{{ row.course_days }}天 | {{ getPositionName(row.position_id) }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="应收金额" width="120" align="center">
+            <template #default="{ row }">
+              <span style="font-weight: 600; color: #f5222d;">¥{{ row.amount }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="实收金额" width="120" align="center">
+            <template #default="{ row }">
+              <span v-if="row.paid_amount" style="font-weight: 600; color: #52c41a;">¥{{ row.paid_amount }}</span>
+              <span v-else style="color: #bfbfbf;">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="支付状态" width="100" align="center">
+            <template #default="{ row }">
+              <span v-if="row.status === 'paid'" class="fee-status status-paid">已支付</span>
+              <span v-else class="fee-status status-unpaid">待支付</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="支付方式" width="100" align="center">
+            <template #default="{ row }">
+              <span v-if="row.pay_method === 'wechat'" style="color: #07c160;">微信</span>
+              <span v-else-if="row.pay_method === 'alipay'" style="color: #1677ff;">支付宝</span>
+              <span v-else style="color: #bfbfbf;">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="生成时间" width="160" align="center">
+            <template #default="{ row }">
+              {{ row.create_time }}
+            </template>
+          </el-table-column>
+          <el-table-column label="支付时间" width="160" align="center">
+            <template #default="{ row }">
+              <span v-if="row.pay_time">{{ row.pay_time }}</span>
+              <span v-else style="color: #bfbfbf;">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="180" fixed="right">
+            <template #default="{ row }">
+              <el-button v-if="row.status === 'unpaid'" type="primary" size="small" @click="showQrCode(row)">
+                查看收款码
+              </el-button>
+              <el-button type="text" @click="handleDetail(row)">详情</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; padding: 0 16px 16px;">
+          <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]" :total="filteredList.length" layout="total, sizes, prev, pager, next, jumper"></el-pagination>
+        </div>
+      </div>
+    </div>
+
+    <!-- 生成收款码对话框 -->
+    <el-dialog v-model="showGenerateDialog" title="生成课程收款码" width="500px">
+      <el-form :model="generateForm" label-width="100px">
+        <el-form-item label="护理人员" required>
+          <el-select v-model="generateForm.staff_id" placeholder="选择护理人员" filterable style="width: 100%;" @change="onStaffChange">
+            <el-option v-for="staff in staffList" :key="staff.id" :label="staff.name + ' - ' + staff.phone" :value="staff.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="选择课程" required>
+          <el-select v-model="generateForm.course_id" placeholder="选择收费课程" style="width: 100%;" @change="onCourseChange">
+            <el-option v-for="course in paidCourseList" :key="course.id" :label="course.name + ' - ¥' + course.fee_amount" :value="course.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="应收金额" v-if="generateForm.course_id">
+          <span style="font-size: 20px; font-weight: 600; color: #f5222d;">¥{{ generateForm.amount }}</span>
+        </el-form-item>
+        <el-form-item label="支付方式">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
+            <i class="el-icon-money" style="font-size: 18px; color: #1890ff;"></i>
+            <span>聚合支付（微信/支付宝）</span>
+          </div>
+          <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+            系统自动识别用户支付方式，无需手动选择
+          </div>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="generateForm.remark" type="textarea" :rows="2" placeholder="可选填备注信息"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showGenerateDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmGenerate" :disabled="!generateForm.staff_id || !generateForm.course_id">生成收款码</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 收款码展示对话框 -->
+    <el-dialog v-model="showQrDialog" title="课程收款码" width="400px" center @closed="() => { if (qrTimer) clearInterval(qrTimer); }">
+      <div class="qr-section">
+        <div class="qr-code-box" :class="{ 'expired': isQrExpired }">
+          <div class="qr-code-icon aggregate">
+            <i class="el-icon-money"></i>
+          </div>
+          <div class="qr-code-text">扫码支付</div>
+          <div class="qr-code-amount">¥{{ currentQrData.amount }}</div>
+          <div v-if="!isQrExpired" class="qr-code-hint">请使用微信或支付宝扫码支付</div>
+          <div v-else class="qr-code-hint" style="color: #f5222d; font-weight: 500;">二维码已过期，请重新生成</div>
+          <div class="qr-code-staff">
+            <div style="font-size: 13px; color: #8c8c8c;">缴费人员</div>
+            <div style="font-size: 16px; font-weight: 500; color: #262626; margin-top: 4px;">{{ currentQrData.staff_name }}</div>
+            <div style="font-size: 13px; color: #595959; margin-top: 2px;">{{ currentQrData.staff_phone }}</div>
+            <div class="qr-code-course">
+              <span style="color: #8c8c8c;">课程：</span>{{ currentQrData.course_name }}
+            </div>
+          </div>
+          <!-- 有效期倒计时 -->
+          <div class="qr-expire-timer" :class="{ 'expired': isQrExpired }">
+            <div class="qr-expire-label">{{ isQrExpired ? '二维码已过期' : '有效期剩余' }}</div>
+            <div class="qr-expire-time">{{ isQrExpired ? '00:00:00' : qrExpireCountdown }}</div>
+            <div class="qr-expire-hint">二维码有效期为2小时</div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showQrDialog = false">关闭</el-button>
+        <el-button v-if="isQrExpired" type="primary" @click="regenerateQrCode">重新生成</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 详情对话框 -->
+    <el-dialog v-model="showDetailDialog" title="收费详情" width="500px">
+      <div v-if="currentDetail" style="padding: 16px;">
+        <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 14px; color: #8c8c8c;">收费金额</div>
+            <div style="font-size: 32px; font-weight: 600; color: #f5222d; margin-top: 8px;">¥{{ currentDetail.amount }}</div>
+          </div>
+          <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">支付状态</div>
+              <div style="font-size: 14px; font-weight: 500; margin-top: 4px;" :style="{ color: currentDetail.status === 'paid' ? '#52c41a' : '#fa8c16' }">
+                {{ currentDetail.status === 'paid' ? '已支付' : '待支付' }}
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">支付方式</div>
+              <div style="font-size: 14px; font-weight: 500; margin-top: 4px;">
+                {{ currentDetail.pay_method === 'wechat' ? '微信' : currentDetail.pay_method === 'alipay' ? '支付宝' : '-' }}
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">课程天数</div>
+              <div style="font-size: 14px; font-weight: 500; margin-top: 4px;">{{ currentDetail.course_days }}天</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">护理人员信息</div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              {{ currentDetail.staff_name.charAt(0) }}
+            </div>
+            <div>
+              <div style="font-size: 16px; font-weight: 500; color: #262626;">{{ currentDetail.staff_name }}</div>
+              <div style="font-size: 13px; color: #8c8c8c; margin-top: 2px;">{{ currentDetail.staff_phone }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">课程信息</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">课程名称</div>
+              <div style="font-size: 14px; color: #262626; margin-top: 4px;">{{ currentDetail.course_name }}</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">培训岗位</div>
+              <div style="font-size: 14px; color: #262626; margin-top: 4px;">{{ getPositionName(currentDetail.position_id) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;">时间记录</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+            <div>
+              <div style="font-size: 12px; color: #8c8c8c;">生成时间</div>
+              <div style="font-size: 14px; color: #262626; margin-top: 4px;">{{ currentDetail.create_time }}</div>
+            </div>
+            <div v-if="currentDetail.pay_time">
+              <div style="font-size: 12px; color: #8c8c8c;">支付时间</div>
+              <div style="font-size: 14px; color: #262626; margin-top: 4px;">{{ currentDetail.pay_time }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="currentDetail.remark" style="margin-top: 16px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 8px;">备注</div>
+          <div style="font-size: 13px; color: #595959; background: #fafafa; padding: 12px; border-radius: 6px;">{{ currentDetail.remark }}</div>
+        </div>
+      </div>
+    </el-dialog>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('course-fee', {
+      title: '课程费用',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 培训考核 / 课程费用'
+    });
+
+    createApp({
+      setup() {
+        const loading = ref(false);
+        const searchKeyword = ref('');
+        const filterCourse = ref('');
+        const filterStatus = ref('');
+        const filterDateRange = ref(null);
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+
+        // 统计数据
+        const stats = ref({
+          totalCount: 0,
+          totalAmount: 0,
+          unpaidCount: 0
+        });
+
+        // 岗位列表
+        const positionList = ref([
+          { id: 1, name: '月嫂' },
+          { id: 2, name: '育儿嫂' },
+          { id: 3, name: '养老护理' }
+        ]);
+
+        // 课程列表
+        const courseList = ref([
+          { id: 1, name: '医疗护理员课程', description: '3天医疗护理培训', days: 3, position_id: 3, fee_type: 'free', fee_amount: 0 },
+          { id: 2, name: '月嫂岗前培训课程', description: '5天岗前培训', days: 5, position_id: 1, fee_type: 'free', fee_amount: 0 },
+          { id: 3, name: '月嫂高级技能提升班', description: '7天高级培训', days: 7, position_id: 1, fee_type: 'paid', fee_amount: 2800 },
+          { id: 4, name: '育婴师考证培训班', description: '10天考证培训', days: 10, position_id: 2, fee_type: 'paid', fee_amount: 3500 },
+          { id: 5, name: '养老护理专业班', description: '5天专业培训', days: 5, position_id: 3, fee_type: 'paid', fee_amount: 1800 }
+        ]);
+
+        // 收费课程列表
+        const paidCourseList = computed(() => {
+          return courseList.value.filter(c => c.fee_type === 'paid');
+        });
+
+        // 护理人员列表
+        const staffList = ref([
+          { id: 1, name: '王秀英', phone: '138****5678' },
+          { id: 2, name: '李桂花', phone: '139****1234' },
+          { id: 3, name: '张淑芬', phone: '137****9876' },
+          { id: 4, name: '陈美华', phone: '136****2468' },
+          { id: 5, name: '刘玉兰', phone: '135****1357' }
+        ]);
+
+        // 收费记录列表
+        const feeList = ref([
+          {
+            id: 1,
+            staff_id: 1,
+            staff_name: '王秀英',
+            staff_phone: '138****5678',
+            course_id: 3,
+            course_name: '月嫂高级技能提升班',
+            course_days: 7,
+            position_id: 1,
+            amount: 2800,
+            paid_amount: 2800,
+            status: 'paid',
+            pay_method: 'wechat',
+            create_time: '2026-04-10 14:30:00',
+            expire_time: '2026-04-10 16:30:00',
+            pay_time: '2026-04-10 14:32:15',
+            remark: ''
+          },
+          {
+            id: 2,
+            staff_id: 2,
+            staff_name: '李桂花',
+            staff_phone: '139****1234',
+            course_id: 4,
+            course_name: '育婴师考证培训班',
+            course_days: 10,
+            position_id: 2,
+            amount: 3500,
+            paid_amount: 3500,
+            status: 'paid',
+            pay_method: 'alipay',
+            create_time: '2026-04-09 10:00:00',
+            expire_time: '2026-04-09 12:00:00',
+            pay_time: '2026-04-09 10:05:30',
+            remark: '老学员优惠200元'
+          },
+          {
+            id: 3,
+            staff_id: 3,
+            staff_name: '张淑芬',
+            staff_phone: '137****9876',
+            course_id: 5,
+            course_name: '养老护理专业班',
+            course_days: 5,
+            position_id: 3,
+            amount: 1800,
+            paid_amount: null,
+            status: 'unpaid',
+            pay_method: 'wechat',
+            create_time: '2026-04-13 09:00:00',
+            expire_time: '2026-04-13 11:00:00',
+            pay_time: null,
+            remark: ''
+          },
+          {
+            id: 4,
+            staff_id: 4,
+            staff_name: '陈美华',
+            staff_phone: '136****2468',
+            course_id: 3,
+            course_name: '月嫂高级技能提升班',
+            course_days: 7,
+            position_id: 1,
+            amount: 2800,
+            paid_amount: null,
+            status: 'unpaid',
+            pay_method: 'alipay',
+            create_time: '2026-04-13 11:30:00',
+            expire_time: '2026-04-13 13:30:00',
+            pay_time: null,
+            remark: ''
+          },
+          {
+            id: 5,
+            staff_id: 5,
+            staff_name: '刘玉兰',
+            staff_phone: '135****1357',
+            course_id: 4,
+            course_name: '育婴师考证培训班',
+            course_days: 10,
+            position_id: 2,
+            amount: 3500,
+            paid_amount: 3500,
+            status: 'paid',
+            pay_method: 'wechat',
+            create_time: '2026-04-08 16:00:00',
+            expire_time: '2026-04-08 18:00:00',
+            pay_time: '2026-04-08 16:10:22',
+            remark: ''
+          }
+        ]);
+
+        // 计算统计数据
+        const updateStats = () => {
+          stats.value.totalCount = feeList.value.length;
+          stats.value.totalAmount = feeList.value
+            .filter(item => item.status === 'paid')
+            .reduce((sum, item) => sum + item.paid_amount, 0);
+          stats.value.unpaidCount = feeList.value.filter(item => item.status === 'unpaid').length;
+        };
+
+        // 初始计算
+        updateStats();
+
+        // 筛选后的列表
+        const filteredList = computed(() => {
+          let list = feeList.value;
+
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            list = list.filter(item =>
+              item.staff_name.toLowerCase().includes(keyword) ||
+              item.staff_phone.includes(keyword)
+            );
+          }
+
+          if (filterCourse.value) {
+            list = list.filter(item => item.course_id === filterCourse.value);
+          }
+
+          if (filterStatus.value) {
+            list = list.filter(item => item.status === filterStatus.value);
+          }
+
+          if (filterDateRange.value && filterDateRange.value.length === 2) {
+            const startDate = filterDateRange.value[0];
+            const endDate = filterDateRange.value[1];
+            list = list.filter(item => {
+              const createDate = item.create_time.split(' ')[0];
+              return createDate >= startDate && createDate <= endDate;
+            });
+          }
+
+          return list;
+        });
+
+        // 分页列表
+        const pagedList = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          const end = start + pageSize.value;
+          return filteredList.value.slice(start, end);
+        });
+
+        // 获取岗位名称
+        const getPositionName = (positionId) => {
+          const pos = positionList.value.find(p => p.id === positionId);
+          return pos ? pos.name : '-';
+        };
+
+        // 生成收款码对话框
+        const showGenerateDialog = ref(false);
+        const generateForm = ref({
+          staff_id: '',
+          course_id: '',
+          amount: 0,
+          pay_method: 'wechat',
+          remark: ''
+        });
+
+        // 选择护理人员变化
+        const onStaffChange = (staffId) => {
+          const staff = staffList.value.find(s => s.id === staffId);
+          if (staff) {
+            generateForm.value.staff_name = staff.name;
+            generateForm.value.staff_phone = staff.phone;
+          }
+        };
+
+        // 选择课程变化
+        const onCourseChange = (courseId) => {
+          const course = courseList.value.find(c => c.id === courseId);
+          if (course) {
+            generateForm.value.amount = course.fee_amount;
+            generateForm.value.course_name = course.name;
+            generateForm.value.course_days = course.days;
+            generateForm.value.position_id = course.position_id;
+          }
+        };
+
+        // 确认生成收款码
+        const confirmGenerate = () => {
+          if (!generateForm.value.staff_id || !generateForm.value.course_id) {
+            ElementPlus.ElMessage.warning('请选择护理人员和课程');
+            return;
+          }
+
+          const now = new Date();
+          // 生成时间
+          const createTime = now.toLocaleString('zh-CN', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          }).replace(/\//g, '-');
+
+          // 过期时间（2小时后）
+          const expireTime = new Date(now.getTime() + 2 * 60 * 60 * 1000).toLocaleString('zh-CN', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          }).replace(/\//g, '-');
+
+          const newRecord = {
+            id: Date.now(),
+            staff_id: generateForm.value.staff_id,
+            staff_name: generateForm.value.staff_name,
+            staff_phone: generateForm.value.staff_phone,
+            course_id: generateForm.value.course_id,
+            course_name: generateForm.value.course_name,
+            course_days: generateForm.value.course_days,
+            position_id: generateForm.value.position_id,
+            amount: generateForm.value.amount,
+            paid_amount: null,
+            status: 'unpaid',
+            pay_method: generateForm.value.pay_method,
+            create_time: createTime,
+            expire_time: expireTime,
+            pay_time: null,
+            remark: generateForm.value.remark
+          };
+
+          feeList.value.unshift(newRecord);
+          updateStats();
+
+          showGenerateDialog.value = false;
+          ElementPlus.ElMessage.success('收款码生成成功，有效期2小时');
+
+          // 清空表单
+          generateForm.value = {
+            staff_id: '',
+            course_id: '',
+            amount: 0,
+            pay_method: 'wechat',
+            remark: ''
+          };
+        };
+
+        // 收款码展示
+        const showQrDialog = ref(false);
+        const currentQrData = ref({});
+        const isQrExpired = ref(false);
+        const qrExpireCountdown = ref('02:00:00');
+        let qrTimer = null;
+
+        // 检查二维码是否过期
+        const checkQrExpired = () => {
+          if (!currentQrData.value.expire_time) return true;
+          const now = new Date();
+          const expireTime = new Date(currentQrData.value.expire_time.replace(/-/g, '/'));
+          return now >= expireTime;
+        };
+
+        // 计算剩余时间
+        const calculateRemainTime = () => {
+          if (!currentQrData.value.expire_time) return '00:00:00';
+          const now = new Date();
+          const expireTime = new Date(currentQrData.value.expire_time.replace(/-/g, '/'));
+          const diff = expireTime - now;
+
+          if (diff <= 0) {
+            isQrExpired.value = true;
+            return '00:00:00';
+          }
+
+          isQrExpired.value = false;
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        };
+
+        // 启动倒计时
+        const startQrCountdown = () => {
+          if (qrTimer) clearInterval(qrTimer);
+          qrExpireCountdown.value = calculateRemainTime();
+          qrTimer = setInterval(() => {
+            qrExpireCountdown.value = calculateRemainTime();
+            if (isQrExpired.value) {
+              clearInterval(qrTimer);
+            }
+          }, 1000);
+        };
+
+        const showQrCode = (row) => {
+          currentQrData.value = { ...row };
+          isQrExpired.value = checkQrExpired();
+          startQrCountdown();
+          showQrDialog.value = true;
+        };
+
+        // 重新生成二维码
+        const regenerateQrCode = () => {
+          const now = new Date();
+          const createTime = now.toLocaleString('zh-CN', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          }).replace(/\//g, '-');
+
+          const expireTime = new Date(now.getTime() + 2 * 60 * 60 * 1000).toLocaleString('zh-CN', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          }).replace(/\//g, '-');
+
+          // 更新当前记录
+          const record = feeList.value.find(item => item.id === currentQrData.value.id);
+          if (record) {
+            record.create_time = createTime;
+            record.expire_time = expireTime;
+            currentQrData.value = { ...record };
+            isQrExpired.value = false;
+            startQrCountdown();
+            ElementPlus.ElMessage.success('收款码已重新生成，有效期2小时');
+          }
+        };
+
+
+        // 详情对话框
+        const showDetailDialog = ref(false);
+        const currentDetail = ref(null);
+
+        const handleDetail = (row) => {
+          currentDetail.value = { ...row };
+          showDetailDialog.value = true;
+        };
+
+        // 搜索
+        const handleSearch = () => {
+          currentPage.value = 1;
+          ElementPlus.ElMessage.success('查询完成');
+        };
+
+        // 重置
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterCourse.value = '';
+          filterStatus.value = '';
+          filterDateRange.value = null;
+          currentPage.value = 1;
+        };
+
+        return {
+          loading,
+          searchKeyword,
+          filterCourse,
+          filterStatus,
+          filterDateRange,
+          currentPage,
+          pageSize,
+          stats,
+          courseList,
+          paidCourseList,
+          staffList,
+          filteredList,
+          pagedList,
+          getPositionName,
+          showGenerateDialog,
+          generateForm,
+          onStaffChange,
+          onCourseChange,
+          confirmGenerate,
+          showQrDialog,
+          currentQrData,
+          isQrExpired,
+          qrExpireCountdown,
+          showQrCode,
+          regenerateQrCode,
+          showDetailDialog,
+          currentDetail,
+          handleDetail,
+          handleSearch,
+          handleReset
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

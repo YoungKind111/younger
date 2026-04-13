@@ -37,6 +37,7 @@ const MENU_CONFIG = {
       items: [
         { id: 'position', name: '岗位管理', icon: 'el-icon-suitcase', url: 'position.html' },
         { id: 'course-template', name: '课程管理', icon: 'el-icon-s-management', url: 'course-template.html' },
+        { id: 'course-fee', name: '课程费用', icon: 'el-icon-money', url: 'course-fee.html' },
         { id: 'exam-paper', name: '考卷管理', icon: 'el-icon-document', url: 'exam-paper.html' },
         { id: 'training-class', name: '班级管理', icon: 'el-icon-reading', url: 'training-class.html' },
         { id: 'exam-results', name: '考核结果', icon: 'el-icon-trophy', url: 'exam-results.html' },

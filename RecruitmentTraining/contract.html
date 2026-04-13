@@ -674,6 +674,66 @@
     .payment-preview-item:hover .payment-preview-overlay {
       opacity: 1;
     }
+
+    /* 支付二维码区域 */
+    .payment-qr-section {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .payment-qr-code {
+      width: 240px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .payment-qr-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 32px;
+      color: #fff;
+    }
+
+    .payment-qr-icon.wechat {
+      background: linear-gradient(135deg, #07c160, #05a050);
+    }
+
+    .payment-qr-icon.alipay {
+      background: linear-gradient(135deg, #1677ff, #0056d6);
+    }
+
+    .payment-qr-icon.aggregate {
+      background: linear-gradient(135deg, #1890ff, #52c41a);
+    }
+
+    .payment-qr-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 8px;
+    }
+
+    .payment-qr-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f5222d;
+      margin-bottom: 8px;
+    }
+
+    .payment-qr-hint {
+      font-size: 12px;
+      color: #8c8c8c;
+    }
   </style>
 </head>
 <body>
@@ -1040,12 +1100,26 @@
       <div v-if="signStep === 2">
         <el-form :model="paymentForm" label-width="120px">
           <el-form-item label="支付方式">
-            <el-radio-group v-model="paymentForm.method">
-              <el-radio-button label="cash">现金</el-radio-button>
-              <el-radio-button label="wechat">微信支付</el-radio-button>
-              <el-radio-button label="alipay">支付宝</el-radio-button>
-              <el-radio-button label="bank">银行转账</el-radio-button>
-            </el-radio-group>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f5f5f5; border-radius: 6px;">
+              <i class="el-icon-money" style="font-size: 18px; color: #1890ff;"></i>
+              <span>聚合支付（微信/支付宝）</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+              系统自动识别用户支付方式，无需手动选择
+            </div>
+          </el-form-item>
+          <!-- 支付二维码 -->
+          <el-form-item label="支付二维码">
+            <div class="payment-qr-section">
+              <div class="payment-qr-code">
+                <div class="payment-qr-icon aggregate">
+                  <i class="el-icon-money"></i>
+                </div>
+                <div class="payment-qr-text">扫码支付</div>
+                <div class="payment-qr-amount">¥{{ paymentForm.amount }}</div>
+                <div class="payment-qr-hint">请使用微信或支付宝扫码支付</div>
+              </div>
+            </div>
           </el-form-item>
           <el-form-item label="实收金额">
             <el-input-number v-model="paymentForm.amount" :min="0" :precision="2" :step="100" style="width: 200px;"></el-input-number>
@@ -1054,51 +1128,12 @@
           <el-form-item label="收款备注">
             <el-input v-model="paymentForm.remark" type="textarea" :rows="2" placeholder="如有特殊情况请备注"></el-input>
           </el-form-item>
-          <el-form-item>
-            <template #label>
-              <span>支付截图</span>
-              <span style="color: #f5222d; margin-left: 4px;">*</span>
-            </template>
-            <div class="payment-screenshot-section">
-              <!-- 空状态：上传区域 -->
-              <div
-                v-if="!paymentScreenshot"
-                class="payment-upload-area"
-                @click="triggerPaymentFileInput"
-              >
-                <input
-                  ref="paymentFileInput"
-                  type="file"
-                  accept="image/*"
-                  style="display: none;"
-                  @change="handlePaymentFileSelect"
-                >
-                <div class="payment-upload-content">
-                  <i class="el-icon-camera payment-upload-icon"></i>
-                  <div class="payment-upload-text">点击上传支付截图</div>
-                  <div class="payment-upload-hint">支持 JPG、PNG 格式，不超过 5MB</div>
-                </div>
-              </div>
-
-              <!-- 已上传预览 -->
-              <div v-else class="payment-preview">
-                <div class="payment-preview-item">
-                  <img :src="paymentScreenshot" alt="支付截图">
-                  <div class="payment-preview-overlay">
-                    <el-button type="danger" size="mini" circle @click="removePaymentScreenshot">
-                      <i class="el-icon-delete"></i>
-                    </el-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </el-form-item>
         </el-form>
 
         <!-- 底部提示 -->
         <div style="background: #f6ffed; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-top: 16px; border: 1px solid #b7eb8f;">
           <i class="el-icon-document-checked" style="color: #52c41a; margin-right: 8px;"></i>
-          <span>完成签约后，将自动在<strong>押金台账</strong>中生成收款记录，，将自动在<strong>人员档案</strong>中生成档案</span>
+          <span>完成签约后，将自动在<strong>押金台账</strong>中生成收款记录，将自动在<strong>人员档案</strong>中生成档案</span>
         </div>
       </div>
 
@@ -1182,10 +1217,6 @@
         const isPasteActive = ref(false);
         const fileInput = ref(null);
 
-        // 支付截图（单张）
-        const paymentScreenshot = ref(null);
-        const paymentFileInput = ref(null);
-
         // 签约表单（使用 ref 替代 reactive）
         const signForm = ref({
           candidateType: 'novice',
@@ -1198,7 +1229,7 @@
 
         // 支付表单（使用 ref 替代 reactive）
         const paymentForm = ref({
-          method: 'cash',
+          method: 'wechat',
           amount: 700,
           remark: '',
           issueReceipt: true
@@ -1293,13 +1324,12 @@
             recruitmentRemark: ''
           };
           paymentForm.value = {
-            method: 'cash',
+            method: 'wechat',
             amount: 700,
             remark: '',
             issueReceipt: true
           };
           certImages.value = []; // 重置资格证照片
-          paymentScreenshot.value = null; // 重置支付截图
           showSignDialog.value = true;
         };
 
@@ -1392,59 +1422,12 @@
           ElementPlus.ElMessage.success('图片已删除');
         };
 
-        // 支付截图上传
-        const triggerPaymentFileInput = () => {
-          paymentFileInput.value?.click();
-        };
-
-        const handlePaymentFileSelect = (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          // 验证文件类型
-          if (!file.type.startsWith('image/')) {
-            ElementPlus.ElMessage.warning('请上传图片文件');
-            return;
-          }
-
-          // 验证文件大小（5MB）
-          if (file.size > 5 * 1024 * 1024) {
-            ElementPlus.ElMessage.warning('图片大小不能超过5MB');
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            paymentScreenshot.value = e.target.result;
-            ElementPlus.ElMessage.success('支付截图上传成功');
-          };
-          reader.onerror = () => {
-            ElementPlus.ElMessage.error('图片读取失败');
-          };
-          reader.readAsDataURL(file);
-
-          // 清空input，允许重复选择同一文件
-          event.target.value = '';
-        };
-
-        const removePaymentScreenshot = () => {
-          paymentScreenshot.value = null;
-          ElementPlus.ElMessage.success('截图已删除');
-        };
-
         // 下一步
         const nextStep = () => {
           // 第一步时验证：熟手必须上传资格证照片
           if (signStep.value === 1) {
             if (signForm.candidateType === 'expert' && certImages.value.length === 0) {
               ElementPlus.ElMessage.warning('熟手人员必须上传资格证照片');
-              return;
-            }
-          }
-          // 第二步时验证：必须上传支付截图
-          if (signStep.value === 2) {
-            if (!paymentScreenshot.value) {
-              ElementPlus.ElMessage.warning('请上传支付截图');
               return;
             }
           }
@@ -1521,8 +1504,6 @@
           certImages,
           isPasteActive,
           fileInput,
-          paymentScreenshot,
-          paymentFileInput,
           signForm,
           paymentForm,
           receiptNo,
@@ -1535,9 +1516,6 @@
           handlePaste,
           handleDrop,
           removeCertImage,
-          triggerPaymentFileInput,
-          handlePaymentFileSelect,
-          removePaymentScreenshot,
           nextStep,
           finishSign,
           handleReject,
