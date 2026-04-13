@@ -559,10 +559,31 @@
           </div>
         </div>
 
-        <!-- 第三步：录入线索 -->
+        <!-- 第三步：选择分配对象 -->
+        <div style="margin-bottom: 24px;">
+          <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px;">
+            <span style="color: #f5222d;">*</span> 3. 选择分配对象
+          </div>
+          <el-select v-model="addLeadForm.assignTo" placeholder="请选择招生老师" style="width: 100%;" clearable>
+            <el-option
+              v-for="recruiter in recruiterList"
+              :key="recruiter.id"
+              :label="recruiter.name"
+              :value="recruiter.id"
+            >
+              <span style="float: left">{{ recruiter.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px;">当前跟进: {{ recruiter.load }}人</span>
+            </el-option>
+          </el-select>
+          <div v-if="!addLeadForm.assignTo" style="margin-top: 8px; font-size: 12px; color: #8c8c8c;">
+            <i class="el-icon-info"></i> 请选择要分配的招生老师，录入后线索将自动分配给该老师
+          </div>
+        </div>
+
+        <!-- 第四步：录入线索 -->
         <div>
           <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px;">
-            <span style="color: #f5222d;">*</span> 3. 录入线索信息
+            <span style="color: #f5222d;">*</span> 4. 录入线索信息
             <el-radio-group v-model="addLeadForm.inputType" size="small" style="margin-left: 16px;">
               <el-radio label="single">单个录入</el-radio>
               <el-radio label="batch">批量录入</el-radio>
@@ -845,6 +866,7 @@
           group: '',
           channel: '',
           referrer: '',
+          assignTo: '',
           inputType: 'single',
           singleName: '',
           singlePhone: '',
@@ -894,7 +916,7 @@
 
         // 是否可以提交录入
         const canSubmitAddLead = computed(() => {
-          if (!addLeadForm.value.group || !addLeadForm.value.channel) return false;
+          if (!addLeadForm.value.group || !addLeadForm.value.channel || !addLeadForm.value.assignTo) return false;
           if (addLeadForm.value.inputType === 'single') {
             return addLeadForm.value.singleName.trim() && addLeadForm.value.singlePhone.trim();
           } else {
@@ -923,6 +945,8 @@
         // 确认录入线索
         const confirmAddLead = () => {
           let addedCount = 0;
+          const selectedRecruiter = recruiterList.value.find(r => r.id === addLeadForm.value.assignTo);
+          const assignToName = selectedRecruiter ? selectedRecruiter.name : '';
 
           if (addLeadForm.value.inputType === 'single') {
             // 单个录入 - 查重验证
@@ -942,14 +966,16 @@
               referrer: addLeadForm.value.referrer ? channelReferrersMap[addLeadForm.value.channel].find(r => r.code === addLeadForm.value.referrer)?.name : '',
               referrerCode: addLeadForm.value.referrer,
               createTime: new Date().toLocaleString('zh-CN', { hour12: false }),
-              assignStatus: 'unassigned',
+              assignStatus: 'assigned',
+              assignTo: assignToName,
+              assignTime: new Date().toLocaleString('zh-CN', { hour12: false }),
               followStatus: '未跟进',
               followCount: 0,
               followRecords: []
             };
             leadList.value.unshift(newLead);
             addedCount = 1;
-            ElementPlus.ElMessage.success('线索录入成功');
+            ElementPlus.ElMessage.success(`线索录入成功，已分配给 ${assignToName}`);
           } else {
             // 批量录入解析
             const lines = addLeadForm.value.batchInput.split('\n').filter(line => line.trim());
@@ -987,7 +1013,9 @@
                 referrer: addLeadForm.value.referrer ? channelReferrersMap[addLeadForm.value.channel].find(r => r.code === addLeadForm.value.referrer)?.name : '',
                 referrerCode: addLeadForm.value.referrer,
                 createTime: new Date().toLocaleString('zh-CN', { hour12: false }),
-                assignStatus: 'unassigned',
+                assignStatus: 'assigned',
+                assignTo: assignToName,
+                assignTime: new Date().toLocaleString('zh-CN', { hour12: false }),
                 followStatus: '未跟进',
                 followCount: 0,
                 followRecords: []
@@ -995,19 +1023,20 @@
               leadList.value.unshift(newLead);
               addedCount++;
             });
-            ElementPlus.ElMessage.success(`成功录入 ${addedCount} 条线索`);
+            ElementPlus.ElMessage.success(`成功录入 ${addedCount} 条线索，已分配给 ${assignToName}`);
           }
 
           // 更新统计数据
           stats.value.total += addedCount;
           stats.value.today += addedCount;
-          stats.value.unassigned += addedCount;
+          stats.value.assigned += addedCount;
 
           // 重置表单并关闭对话框
           addLeadForm.value = {
             group: '',
             channel: '',
             referrer: '',
+            assignTo: '',
             inputType: 'single',
             singleName: '',
             singlePhone: '',
