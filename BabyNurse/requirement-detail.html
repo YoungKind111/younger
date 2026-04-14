@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>需求详情 - 育婴师管理系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    SharedMenu.initPageLayout('requirement', {
+      title: '需求详情',
+      breadcrumb: '<a href="dashboard.html">首页</a> / <a href="requirement-list.html">需求管理</a> / 需求详情'
+    });
+
+    const mockRequirements = [
+      {
+        id: 1001,
+        customerName: '李女士',
+        babyAge: '1岁6个月',
+        familySize: '3人',
+        houseArea: '100㎡',
+        address: '广东省佛山市南海区里水',
+        addressDetail: '保利紫山花园',
+        jobType: '住家',
+        startDate: '随时上户',
+        duration: '长期',
+        ageRegionRequirement: '30-45岁，广东籍优先',
+        hasPet: false,
+        needSleepWithBaby: true,
+        needHousework: true,
+        salaryMin: 9500,
+        salaryMax: 11000,
+        otherRequirements: '身体健康，不打呼、没有脚气狐臭、性格好，好相处。会辅食、会早教，可以培养宝宝规律睡眠，能独立带娃。月休4天，全年国家法定13日。',
+        status: 'active',
+        contactPhone: '13800135678',
+        createTime: '2024-01-15'
+      },
+      {
+        id: 1002,
+        customerName: '王先生',
+        babyAge: '8个月',
+        familySize: '4人',
+        houseArea: '89㎡',
+        address: '广东省广州市天河区珠江新城',
+        addressDetail: '地铁5号线猎德站/中海花城湾',
+        jobType: '白班',
+        startDate: '2024-02-01',
+        duration: '1年',
+        ageRegionRequirement: '40-50岁，无地域要求',
+        hasPet: false,
+        needSleepWithBaby: false,
+        needHousework: true,
+        salaryMin: 7000,
+        salaryMax: 8000,
+        otherRequirements: '有带小月龄宝宝经验，会做辅食，性格开朗，有耐心。工作时间8:00-18:00，双休。',
+        status: 'active',
+        contactPhone: '13900131234',
+        createTime: '2024-01-14'
+      }
+    ];
+
+    const mockApplications = [
+      { id: 1, nannyId: 1, nannyName: '李阿姨', age: 42, phone: '138****1001', experience: '8年', skills: '辅食,早教,带睡', hometown: '湖南郴州', remark: '经验丰富，上一家带了3年', status: 'pending', applyTime: '2024-01-15 10:23' },
+      { id: 2, nannyId: 2, nannyName: '张阿姨', age: 45, phone: '138****1002', experience: '10年', skills: '月子餐,小月龄护理,早教', hometown: '广东茂名', remark: '做过月嫂，擅长小月龄', status: 'contacted', applyTime: '2024-01-14 16:42' },
+      { id: 3, nannyId: 3, nannyName: '王阿姨', age: 38, phone: '138****1003', experience: '5年', skills: '辅食,家务', hometown: '广西玉林', remark: '做饭好吃，会做广东菜', status: 'pending', applyTime: '2024-01-13 09:15' }
+    ];
+
+    createApp({
+      template: `
+        <div>
+          <div class="content-card" style="margin-bottom: 16px;">
+            <div class="card-header">
+              <div>
+                <span class="card-title">需求 #{{ requirement.id }} - {{ requirement.jobType }}</span>
+                <el-tag size="small" :type="getStatusType(requirement.status)" style="margin-left: 12px;">
+                  {{ getStatusText(requirement.status) }}
+                </el-tag>
+              </div>
+              <div>
+                <el-button @click="goBack"><i class="el-icon-arrow-left"></i> 返回</el-button>
+                <el-button type="primary" @click="handleEdit">编辑</el-button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="detail-section">
+                <div class="detail-section-title">客户与家庭信息</div>
+                <div class="detail-grid">
+                  <div class="detail-item"><span class="detail-label">客户姓名</span><span class="detail-value">{{ requirement.customerName || '暂无' }}</span></div>
+                  <div class="detail-item"><span class="detail-label">联系电话</span><span class="detail-value">{{ requirement.contactPhone }}</span></div>
+                  <div class="detail-item"><span class="detail-label">宝宝月份</span><span class="detail-value">{{ requirement.babyAge }}</span></div>
+                  <div class="detail-item"><span class="detail-label">家庭人数</span><span class="detail-value">{{ requirement.familySize }}</span></div>
+                  <div class="detail-item"><span class="detail-label">家庭面积</span><span class="detail-value">{{ requirement.houseArea }}</span></div>
+                  <div class="detail-item"><span class="detail-label">是否有宠物</span><span class="detail-value">{{ requirement.hasPet ? '有' : '无' }}</span></div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">服务地址</div>
+                <div style="background: #fafafa; padding: 16px; border-radius: 6px; line-height: 1.8; color: #262626;">
+                  <div><strong>地址：</strong>{{ requirement.address }}</div>
+                  <div style="color: #595959; margin-top: 4px;"><strong>详细位置：</strong>{{ requirement.addressDetail }}</div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">服务需求</div>
+                <div class="detail-grid">
+                  <div class="detail-item"><span class="detail-label">需求类型</span><span class="detail-value">{{ requirement.jobType }}</span></div>
+                  <div class="detail-item"><span class="detail-label">到岗日期</span><span class="detail-value">{{ requirement.startDate }}</span></div>
+                  <div class="detail-item"><span class="detail-label">服务期限</span><span class="detail-value">{{ requirement.duration }}</span></div>
+                  <div class="detail-item"><span class="detail-label">是否需要带睡</span><span class="detail-value">{{ requirement.needSleepWithBaby ? '是' : '否' }}</span></div>
+                  <div class="detail-item"><span class="detail-label">做家务煮饭</span><span class="detail-value">{{ requirement.needHousework ? '需要' : '不需要' }}</span></div>
+                  <div class="detail-item"><span class="detail-label">录入时间</span><span class="detail-value">{{ requirement.createTime }}</span></div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">薪资待遇</div>
+                <div class="detail-grid" style="grid-template-columns: repeat(3, 1fr);">
+                  <div class="detail-item"><span class="detail-label">薪资预算</span><span class="detail-value" style="color: #f5222d; font-weight: 600;">{{ requirement.salaryMin }}-{{ requirement.salaryMax }} 元/月</span></div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">年龄地域要求</div>
+                <div style="background: #fafafa; padding: 16px; border-radius: 6px; line-height: 1.8; color: #262626;">
+                  {{ requirement.ageRegionRequirement || '无特殊要求' }}
+                </div>
+              </div>
+
+              <div class="detail-section" style="margin-bottom: 0;">
+                <div class="detail-section-title">其他要求</div>
+                <div style="background: #fafafa; padding: 16px; border-radius: 6px; line-height: 1.8; color: #262626;">
+                  {{ requirement.otherRequirements }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">报名名单（{{ applications.length }}人）</span>
+              <el-radio-group v-model="filterApplyStatus" size="small">
+                <el-radio-button label="">全部</el-radio-button>
+                <el-radio-button label="pending">待联系</el-radio-button>
+                <el-radio-button label="contacted">已联系</el-radio-button>
+                <el-radio-button label="matched">已成交</el-radio-button>
+                <el-radio-button label="rejected">不合适</el-radio-button>
+              </el-radio-group>
+            </div>
+            <div class="card-body">
+              <div v-if="filteredApplications.length === 0" style="text-align: center; padding: 40px; color: #8c8c8c;">
+                <i class="el-icon-box" style="font-size: 48px; display: block; margin-bottom: 16px;"></i>
+                暂无符合条件的报名
+              </div>
+
+              <div v-for="item in filteredApplications" :key="item.id" class="application-card">
+                <div class="application-header">
+                  <div class="application-name">
+                    <i class="el-icon-user-solid" style="color: #1890ff; margin-right: 8px;"></i>
+                    {{ item.nannyName }}
+                    <el-tag size="small" :type="getApplyStatusType(item.status)" style="margin-left: 8px;">
+                      {{ getApplyStatusText(item.status) }}
+                    </el-tag>
+                  </div>
+                  <span style="color: #8c8c8c; font-size: 13px;">{{ item.applyTime }}</span>
+                </div>
+                <div style="background: #f6ffed; padding: 10px 12px; border-radius: 4px; font-size: 13px; color: #389e0d; margin-bottom: 12px;">
+                  <i class="el-icon-chat-line-square"></i> 报名备注：{{ item.remark }}
+                </div>
+                <div class="application-actions">
+                  <el-button v-if="item.status === 'pending'" type="success" size="small" @click="updateStatus(item, 'contacted')">
+                    标记已联系
+                  </el-button>
+                  <el-button v-if="item.status !== 'matched' && item.status !== 'rejected'" type="primary" size="small" @click="updateStatus(item, 'matched')">
+                    撮合成交
+                  </el-button>
+                  <el-button v-if="item.status !== 'rejected'" type="danger" plain size="small" @click="updateStatus(item, 'rejected')">
+                    标记不合适
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <el-dialog v-model="dialogVisible" title="编辑需求" width="720px" top="4vh">
+            <el-form :model="form" label-width="110px">
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="客户姓名"><el-input v-model="form.customerName" placeholder="暂无"></el-input></el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="联系电话"><el-input v-model="form.contactPhone" placeholder="客户电话"></el-input></el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="宝宝月份"><el-input v-model="form.babyAge" placeholder="如：1岁6个月"></el-input></el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="家庭人数"><el-input v-model="form.familySize" placeholder="包括宝宝"></el-input></el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="家庭面积"><el-input v-model="form.houseArea" placeholder="如：100㎡"></el-input></el-form-item>
+                </el-col>
+              </el-row>
+              <el-form-item label="服务地址"><el-input v-model="form.address" placeholder="省市区"></el-input></el-form-item>
+              <el-form-item label="详细地址"><el-input v-model="form.addressDetail" placeholder="街道/附近地铁站/楼盘"></el-input></el-form-item>
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="需求类型">
+                    <el-radio-group v-model="form.jobType">
+                      <el-radio label="住家">住家</el-radio>
+                      <el-radio label="白班">白班</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="状态">
+                    <el-radio-group v-model="form.status">
+                      <el-radio label="active">上架中</el-radio>
+                      <el-radio label="matched">已成交</el-radio>
+                      <el-radio label="closed">已关闭</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="到岗日期"><el-input v-model="form.startDate" placeholder="如：2024-02-01 或 随时"></el-input></el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="服务期限"><el-input v-model="form.duration" placeholder="如：1年 / 长期 / 6个月"></el-input></el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="最低薪资"><el-input-number v-model="form.salaryMin" :min="3000" :step="500" style="width: 100%;"></el-input-number></el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="最高薪资"><el-input-number v-model="form.salaryMax" :min="3000" :step="500" style="width: 100%;"></el-input-number></el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="是否有宠物">
+                    <el-radio-group v-model="form.hasPet">
+                      <el-radio :label="true">有</el-radio>
+                      <el-radio :label="false">无</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="需要带睡">
+                    <el-radio-group v-model="form.needSleepWithBaby">
+                      <el-radio :label="true">是</el-radio>
+                      <el-radio :label="false">否</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="16">
+                  <el-form-item label="做家务煮饭">
+                    <el-radio-group v-model="form.needHousework">
+                      <el-radio :label="true">需要</el-radio>
+                      <el-radio :label="false">不需要</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-form-item label="年龄地域要求"><el-input v-model="form.ageRegionRequirement" placeholder="如：30-45岁，广东籍优先"></el-input></el-form-item>
+              <el-form-item label="其他要求"><el-input v-model="form.otherRequirements" type="textarea" :rows="4" placeholder="性格、技能、健康等详细要求"></el-input></el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveEdit">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const requirementId = ref(1001);
+        const requirement = ref(mockRequirements[0]);
+        const applications = ref(mockApplications);
+        const filterApplyStatus = ref('');
+        const dialogVisible = ref(false);
+        const form = ref({});
+
+        onMounted(() => {
+          const params = new URLSearchParams(window.location.search);
+          const id = parseInt(params.get('id')) || 1001;
+          requirementId.value = id;
+          const found = mockRequirements.find(r => r.id === id);
+          if (found) requirement.value = found;
+        });
+
+        const filteredApplications = computed(() => {
+          if (!filterApplyStatus.value) return applications.value;
+          return applications.value.filter(item => item.status === filterApplyStatus.value);
+        });
+
+        const getStatusType = (status) => {
+          const map = { active: 'success', matched: 'warning', closed: 'info' };
+          return map[status] || 'info';
+        };
+        const getStatusText = (status) => {
+          const map = { active: '上架中', matched: '已成交', closed: '已关闭' };
+          return map[status] || status;
+        };
+        const getApplyStatusType = (status) => {
+          const map = { pending: 'danger', contacted: 'warning', matched: 'success', rejected: 'info' };
+          return map[status] || 'info';
+        };
+        const getApplyStatusText = (status) => {
+          const map = { pending: '待联系', contacted: '已联系', matched: '已成交', rejected: '不合适' };
+          return map[status] || status;
+        };
+
+        const goBack = () => window.location.href = 'requirement-list.html';
+        const handleEdit = () => { form.value = { ...requirement.value }; dialogVisible.value = true; };
+        const saveEdit = () => { Object.assign(requirement.value, form.value); ElementPlus.ElMessage.success('保存成功'); dialogVisible.value = false; };
+        const updateStatus = (item, status) => {
+          const statusMap = { contacted: '已联系', matched: '已成交', rejected: '不合适' };
+          ElementPlus.ElMessageBox.confirm(`确定将 "${item.nannyName}" 标记为「${statusMap[status]}」吗？`, '提示', { type: 'warning' }).then(() => {
+            item.status = status;
+            ElementPlus.ElMessage.success('状态更新成功');
+          });
+        };
+        return {
+          requirement, applications, filterApplyStatus, filteredApplications, dialogVisible, form,
+          getStatusType, getStatusText, getApplyStatusType, getApplyStatusText,
+          goBack, handleEdit, saveEdit, updateStatus
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

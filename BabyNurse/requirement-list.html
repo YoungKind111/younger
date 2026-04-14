@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>需求管理 - 育婴师管理系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('requirement', {
+      title: '需求管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 需求管理'
+    });
+
+    const mockRequirements = [
+      {
+        id: 1001,
+        customerName: '李女士',
+        babyAge: '1岁6个月',
+        familySize: '3人',
+        houseArea: '100㎡',
+        address: '广东省佛山市南海区里水',
+        addressDetail: '保利紫山花园',
+        jobType: '住家',
+        startDate: '随时上户',
+        duration: '长期',
+        ageRegionRequirement: '30-45岁，广东籍优先',
+        hasPet: false,
+        needSleepWithBaby: true,
+        needHousework: true,
+        salaryMin: 9500,
+        salaryMax: 11000,
+        otherRequirements: '身体健康，不打呼、没有脚气狐臭、性格好，好相处。会辅食、会早教，可以培养宝宝规律睡眠，能独立带娃。月休4天，全年国家法定13日。',
+        status: 'active',
+        contactPhone: '13800135678',
+        createTime: '2024-01-15',
+        applyCount: 3,
+        recorder: '运营专员'
+      },
+      {
+        id: 1002,
+        customerName: '王先生',
+        babyAge: '8个月',
+        familySize: '4人',
+        houseArea: '89㎡',
+        address: '广东省广州市天河区珠江新城',
+        addressDetail: '地铁5号线猎德站/中海花城湾',
+        jobType: '白班',
+        startDate: '2024-02-01',
+        duration: '1年',
+        ageRegionRequirement: '40-50岁，无地域要求',
+        hasPet: false,
+        needSleepWithBaby: false,
+        needHousework: true,
+        salaryMin: 7000,
+        salaryMax: 8000,
+        otherRequirements: '有带小月龄宝宝经验，会做辅食，性格开朗，有耐心。工作时间8:00-18:00，双休。',
+        status: 'active',
+        contactPhone: '13900131234',
+        createTime: '2024-01-14',
+        applyCount: 5,
+        recorder: '运营专员'
+      },
+      {
+        id: 1003,
+        customerName: '陈女士',
+        babyAge: '2岁',
+        familySize: '3人',
+        houseArea: '120㎡',
+        address: '广东省深圳市南山区蛇口',
+        addressDetail: '海上世界/南海玫瑰园',
+        jobType: '住家',
+        startDate: '2024-01-20',
+        duration: '2年',
+        ageRegionRequirement: '35-48岁，高中以上学历',
+        hasPet: true,
+        needSleepWithBaby: true,
+        needHousework: true,
+        salaryMin: 10000,
+        salaryMax: 12000,
+        otherRequirements: '英语启蒙优先，擅长早教互动。家里有一只泰迪，不怕宠物。',
+        status: 'matched',
+        contactPhone: '13700139999',
+        createTime: '2024-01-13',
+        applyCount: 2,
+        recorder: '运营专员'
+      },
+      {
+        id: 1004,
+        customerName: '张女士',
+        babyAge: '3个月',
+        familySize: '5人',
+        houseArea: '110㎡',
+        address: '广东省佛山市顺德区大良',
+        addressDetail: '顺德欢乐海岸附近/华侨城',
+        jobType: '住家',
+        startDate: '随时',
+        duration: '6个月',
+        ageRegionRequirement: '45岁以下',
+        hasPet: false,
+        needSleepWithBaby: true,
+        needHousework: true,
+        salaryMin: 8500,
+        salaryMax: 9500,
+        otherRequirements: '有月嫂或小月龄育儿经验，懂婴儿护理知识，会做月子餐。',
+        status: 'closed',
+        contactPhone: '13600138888',
+        createTime: '2024-01-12',
+        applyCount: 4,
+        recorder: '运营专员'
+      }
+    ];
+
+    createApp({
+      template: `
+        <div>
+          <div class="content-card" style="margin-bottom: 16px;">
+            <div class="card-body">
+              <div class="search-bar">
+                <el-input v-model="searchKeyword" placeholder="搜索地址/客户姓名" style="width: 240px;" clearable>
+                  <template #prefix><i class="el-icon-search"></i></template>
+                </el-input>
+                <el-select v-model="filterStatus" placeholder="状态筛选" clearable style="width: 140px;">
+                  <el-option label="上架中" value="active"></el-option>
+                  <el-option label="已成交" value="matched"></el-option>
+                  <el-option label="已关闭" value="closed"></el-option>
+                </el-select>
+                <el-select v-model="filterType" placeholder="需求类型" clearable style="width: 140px;">
+                  <el-option label="住家" value="住家"></el-option>
+                  <el-option label="白班" value="白班"></el-option>
+                </el-select>
+                <el-button type="primary" @click="handleSearch"><i class="el-icon-search"></i> 查询</el-button>
+                <el-button @click="handleReset"><i class="el-icon-refresh-left"></i> 重置</el-button>
+                <el-button type="primary" style="margin-left: auto;" @click="handleAdd">
+                  <i class="el-icon-plus"></i> 新增需求
+                </el-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-body">
+              <el-table :data="filteredData" style="width: 100%" stripe>
+                <el-table-column prop="id" label="ID" width="70" align="center"></el-table-column>
+                <el-table-column prop="customerName" label="客户" width="90"></el-table-column>
+                <el-table-column prop="jobType" label="类型" width="70" align="center">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="row.jobType === '住家' ? 'primary' : 'success'">{{ row.jobType }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="address" label="服务地址" min-width="160"></el-table-column>
+                <el-table-column prop="babyAge" label="宝宝" width="100" align="center"></el-table-column>
+                <el-table-column label="薪资" width="120">
+                  <template #default="{ row }">
+                    <span style="color: #f5222d; font-weight: 500;">{{ row.salaryMin }}-{{ row.salaryMax }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="startDate" label="到岗日期" width="100"></el-table-column>
+                <el-table-column prop="applyCount" label="报名" width="70" align="center">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="goToDetail(row.id)">{{ row.applyCount }}</el-button>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="status" label="状态" width="80" align="center">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="录入时间" width="100"></el-table-column>
+                <el-table-column prop="recorder" label="录入人" width="90"></el-table-column>
+                <el-table-column label="操作" width="180" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="goToDetail(row.id)">详情</el-button>
+                    <el-button type="text" @click="handleEdit(row)">编辑</el-button>
+                    <el-button type="text" style="color: #f5222d;" @click="handleDelete(row)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+                <el-pagination background layout="prev, pager, next" :total="filteredData.length" :page-size="10"></el-pagination>
+              </div>
+            </div>
+          </div>
+
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑需求' : '新增需求'" width="720px" top="4vh">
+            <el-form :model="form" label-width="110px">
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="客户姓名">
+                    <el-input v-model="form.customerName" placeholder="暂无"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="联系电话">
+                    <el-input v-model="form.contactPhone" placeholder="客户电话"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="宝宝月份">
+                    <el-input v-model="form.babyAge" placeholder="如：1岁6个月"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="家庭人数">
+                    <el-input v-model="form.familySize" placeholder="包括宝宝"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="家庭面积">
+                    <el-input v-model="form.houseArea" placeholder="如：100㎡"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-form-item label="服务地址">
+                <el-input v-model="form.address" placeholder="省市区"></el-input>
+              </el-form-item>
+              <el-form-item label="详细地址">
+                <el-input v-model="form.addressDetail" placeholder="街道/附近地铁站/楼盘"></el-input>
+              </el-form-item>
+
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="需求类型">
+                    <el-radio-group v-model="form.jobType">
+                      <el-radio label="住家">住家</el-radio>
+                      <el-radio label="白班">白班</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="需求状态">
+                    <el-radio-group v-model="form.status">
+                      <el-radio label="active">上架中</el-radio>
+                      <el-radio label="matched">已成交</el-radio>
+                      <el-radio label="closed">已关闭</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="到岗日期">
+                    <el-input v-model="form.startDate" placeholder="如：2024-02-01 或 随时"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="服务期限">
+                    <el-input v-model="form.duration" placeholder="如：1年 / 长期 / 6个月"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="最低薪资">
+                    <el-input-number v-model="form.salaryMin" :min="3000" :step="500" style="width: 100%;"></el-input-number>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="最高薪资">
+                    <el-input-number v-model="form.salaryMax" :min="3000" :step="500" style="width: 100%;"></el-input-number>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="是否有宠物">
+                    <el-radio-group v-model="form.hasPet">
+                      <el-radio :label="true">有</el-radio>
+                      <el-radio :label="false">无</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="需要带睡">
+                    <el-radio-group v-model="form.needSleepWithBaby">
+                      <el-radio :label="true">是</el-radio>
+                      <el-radio :label="false">否</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="16">
+                  <el-form-item label="做家务煮饭">
+                    <el-radio-group v-model="form.needHousework">
+                      <el-radio :label="true">需要</el-radio>
+                      <el-radio :label="false">不需要</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+
+              <el-form-item label="年龄地域要求">
+                <el-input v-model="form.ageRegionRequirement" placeholder="如：30-45岁，广东籍优先"></el-input>
+              </el-form-item>
+
+              <el-form-item label="其他要求">
+                <el-input v-model="form.otherRequirements" type="textarea" :rows="4" placeholder="性格、技能、健康等详细要求"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveData">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const searchKeyword = ref('');
+        const filterStatus = ref('');
+        const filterType = ref('');
+        const tableData = ref(JSON.parse(JSON.stringify(mockRequirements)));
+
+        const filteredData = computed(() => {
+          return tableData.value.filter(item => {
+            const matchKeyword = !searchKeyword.value ||
+              item.address.includes(searchKeyword.value) ||
+              item.customerName.includes(searchKeyword.value) ||
+              item.addressDetail.includes(searchKeyword.value);
+            const matchStatus = !filterStatus.value || item.status === filterStatus.value;
+            const matchType = !filterType.value || item.jobType === filterType.value;
+            return matchKeyword && matchStatus && matchType;
+          });
+        });
+
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+
+        const emptyForm = {
+          customerName: '',
+          babyAge: '',
+          familySize: '',
+          houseArea: '',
+          address: '',
+          addressDetail: '',
+          jobType: '住家',
+          startDate: '随时上户',
+          duration: '长期',
+          ageRegionRequirement: '',
+          hasPet: false,
+          needSleepWithBaby: true,
+          needHousework: true,
+          salaryMin: 7000,
+          salaryMax: 9000,
+          otherRequirements: '',
+          status: 'active',
+          contactPhone: '',
+          recorder: '运营专员'
+        };
+        const form = ref({ ...emptyForm });
+
+        const getStatusType = (status) => {
+          const map = { active: 'success', matched: 'warning', closed: 'info' };
+          return map[status] || 'info';
+        };
+        const getStatusText = (status) => {
+          const map = { active: '上架中', matched: '已成交', closed: '已关闭' };
+          return map[status] || status;
+        };
+
+        const handleSearch = () => {};
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterStatus.value = '';
+          filterType.value = '';
+        };
+
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.value = { ...emptyForm };
+          dialogVisible.value = true;
+        };
+
+        const handleEdit = (row) => {
+          isEdit.value = true;
+          editingId.value = row.id;
+          form.value = { ...row };
+          dialogVisible.value = true;
+        };
+
+        const saveData = () => {
+          if (!form.value.address) {
+            ElementPlus.ElMessage.warning('请填写服务地址');
+            return;
+          }
+          if (isEdit.value) {
+            const index = tableData.value.findIndex(item => item.id === editingId.value);
+            if (index > -1) {
+              tableData.value[index] = { ...tableData.value[index], ...form.value };
+            }
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            const newId = Math.max(...tableData.value.map(item => item.id), 1000) + 1;
+            const newItem = {
+              id: newId,
+              ...form.value,
+              createTime: new Date().toISOString().slice(0, 10),
+              applyCount: 0
+            };
+            tableData.value.unshift(newItem);
+            ElementPlus.ElMessage.success('添加成功');
+          }
+          dialogVisible.value = false;
+        };
+
+        const handleDelete = (row) => {
+          ElementPlus.ElMessageBox.confirm(`确定删除需求 #${row.id} 吗？`, '提示', { type: 'warning' }).then(() => {
+            const index = tableData.value.findIndex(item => item.id === row.id);
+            if (index > -1) tableData.value.splice(index, 1);
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        const goToDetail = (id) => {
+          window.location.href = 'requirement-detail.html?id=' + id;
+        };
+
+        return {
+          searchKeyword, filterStatus, filterType, filteredData, dialogVisible, isEdit, form,
+          getStatusType, getStatusText, handleSearch, handleReset, handleAdd, handleEdit, saveData, handleDelete, goToDetail
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

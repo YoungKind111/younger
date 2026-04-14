@@ -1,0 +1,386 @@
+<!--
+  页面名称：我的报名（育婴师端 H5）
+  核心功能：
+    1. 展示当前育婴师的所有历史报名记录。
+    2. 支持按状态筛选：全部、待联系、已联系、已成交、不合适。
+    3. 每条报名记录展示需求类型、地址、薪资、宝宝月份、备注、报名时间、状态标签及对应操作按钮。
+  关键交互：
+    - 页面访问需登录，未登录自动跳转登录页。
+    - 待联系状态：可操作「取消报名」。
+    - 已联系状态：可操作「联系平台」，点击后弹出该运营人员的微信二维码（根据来源链接的 op 参数匹配）。
+    - 已成交状态：显示文案「恭喜成交！」。
+    - 不合适/已结束状态：显示文案「已结束」。
+    - 底部固定导航：需求广场、我的报名（当前页）。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的报名 - 育婴师端</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    body {
+      background: #e8e8e8;
+    }
+    .nanny-page {
+      background: #f5f5f5;
+      min-height: 100vh;
+      width: 375px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .mobile-header {
+      width: 375px;
+      margin: 0 auto;
+      left: 0;
+      right: 0;
+    }
+    .mobile-nav {
+      width: 375px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .status-filter {
+      background: #fff;
+      display: flex;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .status-filter-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #595959;
+      cursor: pointer;
+      position: relative;
+    }
+    .status-filter-item.active {
+      color: #1890ff;
+      font-weight: 500;
+    }
+    .status-filter-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: #1890ff;
+    }
+    .apply-card {
+      background: #fff;
+      border-radius: 8px;
+      margin: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .apply-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .apply-card-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #262626;
+    }
+    .apply-card-info {
+      font-size: 13px;
+      color: #8c8c8c;
+      line-height: 1.8;
+    }
+    .apply-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #8c8c8c;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 模拟我的报名数据（含完整需求详情字段）
+    const mockApplications = [
+      {
+        id: 1,
+        jobId: 1002,
+        jobType: '白班育婴师',
+        address: '广州天河珠江新城',
+        addressDetail: '地铁5号线猎德站/中海花城湾',
+        salaryMin: 7000,
+        salaryMax: 8000,
+        babyAge: '8个月',
+        familySize: '4人',
+        houseArea: '89㎡',
+        startDate: '2024-02-01',
+        duration: '1年',
+        hasPet: false,
+        needSleepWithBaby: false,
+        needHousework: true,
+        ageRegionRequirement: '40-50岁，无地域要求',
+        otherRequirements: '有带小月龄宝宝经验，会做辅食，性格开朗，有耐心。工作时间8:00-18:00，双休。',
+        status: 'contacted',
+        applyTime: '2024-01-15 09:15',
+        remark: '有3年白班经验'
+      },
+      {
+        id: 2,
+        jobId: 1003,
+        jobType: '住家育婴师',
+        address: '深圳南山蛇口',
+        addressDetail: '海上世界/南海玫瑰园',
+        salaryMin: 10000,
+        salaryMax: 12000,
+        babyAge: '2岁',
+        familySize: '3人',
+        houseArea: '120㎡',
+        startDate: '2024-01-20',
+        duration: '2年',
+        hasPet: true,
+        needSleepWithBaby: true,
+        needHousework: true,
+        ageRegionRequirement: '35-48岁，高中以上学历',
+        otherRequirements: '英语启蒙优先，擅长早教互动。家里有一只泰迪，不怕宠物。',
+        status: 'matched',
+        applyTime: '2024-01-10 14:30',
+        remark: '擅长早教'
+      },
+      {
+        id: 3,
+        jobId: 1004,
+        jobType: '住家育婴师',
+        address: '佛山顺德大良',
+        addressDetail: '顺德欢乐海岸附近/华侨城',
+        salaryMin: 8500,
+        salaryMax: 9500,
+        babyAge: '3个月',
+        familySize: '5人',
+        houseArea: '110㎡',
+        startDate: '随时',
+        duration: '6个月',
+        hasPet: false,
+        needSleepWithBaby: true,
+        needHousework: true,
+        ageRegionRequirement: '45岁以下',
+        otherRequirements: '有月嫂或小月龄育儿经验，懂婴儿护理知识，会做月子餐。',
+        status: 'rejected',
+        applyTime: '2024-01-08 10:20',
+        remark: ''
+      }
+    ];
+
+    createApp({
+      template: `
+        <div class="nanny-page">
+          <!-- 顶部标题 -->
+          <div class="mobile-header">
+            <span class="mobile-title">我的报名</span>
+            <i class="el-icon-service" style="font-size: 20px; color: #595959;"></i>
+          </div>
+
+          <!-- 状态筛选 -->
+          <div class="status-filter">
+            <div
+              v-for="tab in tabs"
+              :key="tab.value"
+              class="status-filter-item"
+              :class="{ active: activeTab === tab.value }"
+              @click="activeTab = tab.value"
+            >
+              {{ tab.label }}
+            </div>
+          </div>
+
+          <!-- 报名列表 -->
+          <div style="padding-bottom: 70px;">
+            <div v-for="item in filteredList" :key="item.id" class="apply-card" @click="showDetail(item)">
+              <div class="apply-card-header">
+                <span class="apply-card-title">{{ item.jobType }} · {{ item.address }}</span>
+                <el-tag size="small" :type="getStatusType(item.status)">
+                  {{ getStatusText(item.status) }}
+                </el-tag>
+              </div>
+              <div class="apply-card-info">
+                <div><i class="el-icon-money" style="margin-right: 4px;"></i>薪资：{{ item.salaryMin }}-{{ item.salaryMax }} 元/月</div>
+                <div><i class="el-icon-user" style="margin-right: 4px;"></i>宝宝：{{ item.babyAge }}</div>
+                <div v-if="item.remark"><i class="el-icon-chat-line-square" style="margin-right: 4px;"></i>备注：{{ item.remark }}</div>
+              </div>
+              <div class="apply-card-footer">
+                <span style="font-size: 12px; color: #bfbfbf;">{{ item.applyTime }}</span>
+                <el-button v-if="item.status === 'pending'" type="danger" plain size="small" @click.stop="cancelApply(item)">
+                  取消报名
+                </el-button>
+                <el-button v-else-if="item.status === 'contacted'" type="primary" plain size="small" @click.stop="contactPlatform">
+                  联系平台
+                </el-button>
+                <span v-else-if="item.status === 'matched'" style="font-size: 12px; color: #52c41a;">恭喜成交！</span>
+                <span v-else style="font-size: 12px; color: #8c8c8c;">已结束</span>
+              </div>
+            </div>
+
+            <div v-if="filteredList.length === 0" class="empty-state">
+              <i class="el-icon-document" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
+              暂无{{ getTabLabel() }}的报名
+            </div>
+          </div>
+
+          <!-- 底部导航 -->
+          <div class="mobile-nav">
+            <a href="nanny-jobs.html" class="mobile-nav-item">
+              <i class="el-icon-s-cooperation"></i>
+              <span>需求广场</span>
+            </a>
+            <a href="nanny-my.html" class="mobile-nav-item active">
+              <i class="el-icon-user"></i>
+              <span>我的报名</span>
+            </a>
+          </div>
+
+          <el-dialog v-model="detailVisible" title="需求详情" width="340px" top="10vh">
+            <div v-if="currentJob" style="line-height: 1.6;">
+              <div style="margin-bottom: 12px;">
+                <el-tag type="primary" size="small">{{ currentJob.jobType }}</el-tag>
+                <span style="color: #f5222d; font-size: 18px; font-weight: 600; margin-left: 8px;">
+                  {{ currentJob.salaryMin }}-{{ currentJob.salaryMax }}
+                </span>
+                <span style="color: #f5222d; font-size: 12px;"> 元/月</span>
+              </div>
+
+              <div style="background: #f6ffed; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #262626; font-weight: 500;">
+                  <i class="el-icon-location" style="color: #52c41a;"></i>
+                  {{ currentJob.address }}
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; color: #595959; font-size: 13px; margin-bottom: 12px;">
+                <div><span style="color: #8c8c8c;">到岗：</span>{{ currentJob.startDate }}</div>
+                <div><span style="color: #8c8c8c;">期限：</span>{{ currentJob.duration }}</div>
+                <div><span style="color: #8c8c8c;">宝宝：</span>{{ currentJob.babyAge }}</div>
+                <div><span style="color: #8c8c8c;">人数：</span>{{ currentJob.familySize }}</div>
+                <div><span style="color: #8c8c8c;">面积：</span>{{ currentJob.houseArea }}</div>
+                <div><span style="color: #8c8c8c;">宠物：</span>{{ currentJob.hasPet ? '有' : '无' }}</div>
+                <div><span style="color: #8c8c8c;">带睡：</span>{{ currentJob.needSleepWithBaby ? '是' : '否' }}</div>
+                <div><span style="color: #8c8c8c;">家务：</span>{{ currentJob.needHousework ? '需要' : '不需要' }}</div>
+              </div>
+
+              <div style="margin-bottom: 10px; font-size: 13px;">
+                <span style="color: #8c8c8c;">要求：</span>{{ currentJob.ageRegionRequirement || '无' }}
+              </div>
+
+              <div style="font-size: 13px;">
+                <div style="color: #8c8c8c; margin-bottom: 2px;">其他要求</div>
+                <div style="background: #fafafa; border-radius: 4px; padding: 8px 10px; color: #595959; line-height: 1.6; font-size: 12px;">
+                  {{ currentJob.otherRequirements }}
+                </div>
+              </div>
+            </div>
+            <template #footer>
+              <el-button @click="detailVisible = false">关闭</el-button>
+            </template>
+          </el-dialog>
+
+          <el-dialog v-model="qrcodeVisible" title="联系平台" width="300px">
+            <div style="text-align: center;">
+              <p style="margin: 0 0 16px; font-size: 14px; color: #262626;">请添加运营人员微信</p>
+              <img :src="qrcodeUrl" alt="运营微信二维码" style="width: 200px; height: 200px; border-radius: 8px; border: 1px solid #f0f0f0;">
+              <p style="margin-top: 12px; font-size: 12px; color: #8c8c8c;">长按二维码识别添加</p>
+            </div>
+            <template #footer>
+              <el-button type="primary" style="width: 100%;" @click="qrcodeVisible = false">我知道了</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // 登录态检测：未登录则跳转到登录页
+        const user = JSON.parse(localStorage.getItem('nanny_user'));
+        if (!user || !user.isLogin) {
+          window.location.replace('nanny-login.html');
+          return {};
+        }
+
+        const tabs = [
+          { label: '全部', value: '' },
+          { label: '已联系', value: 'contacted' },
+          { label: '已成交', value: 'matched' }
+        ];
+        const activeTab = ref('');
+        const applications = ref(JSON.parse(JSON.stringify(mockApplications)));
+
+        const filteredList = computed(() => {
+          if (!activeTab.value) return applications.value;
+          return applications.value.filter(item => item.status === activeTab.value);
+        });
+
+        const getStatusType = (status) => {
+          const map = { pending: 'danger', contacted: 'warning', matched: 'success', rejected: 'info' };
+          return map[status] || 'info';
+        };
+
+        const getStatusText = (status) => {
+          const map = { pending: '待联系', contacted: '已联系', matched: '已成交', rejected: '不合适' };
+          return map[status] || status;
+        };
+
+        const getTabLabel = () => {
+          const tab = tabs.find(t => t.value === activeTab.value);
+          return tab ? tab.label : '';
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const opId = urlParams.get('op');
+        const operatorConfigs = JSON.parse(localStorage.getItem('operator_configs') || '[]');
+        const matchedOp = operatorConfigs.find(op => op.id === opId);
+        const qrcodeUrl = ref(matchedOp ? matchedOp.qrcodeUrl : 'https://placehold.co/200x200?text=运营微信二维码');
+        const qrcodeVisible = ref(false);
+        const detailVisible = ref(false);
+        const currentJob = ref(null);
+
+        const showDetail = (job) => {
+          currentJob.value = job;
+          detailVisible.value = true;
+        };
+
+        const cancelApply = (item) => {
+          ElementPlus.ElMessageBox.confirm('确定取消该报名吗？', '提示', { type: 'warning' }).then(() => {
+            const index = applications.value.findIndex(a => a.id === item.id);
+            if (index > -1) {
+              applications.value.splice(index, 1);
+            }
+            ElementPlus.ElMessage.success('已取消报名');
+          });
+        };
+
+        const contactPlatform = () => {
+          qrcodeVisible.value = true;
+        };
+
+        return {
+          tabs, activeTab, filteredList,
+          getStatusType, getStatusText, getTabLabel,
+          cancelApply, contactPlatform, qrcodeVisible, qrcodeUrl,
+          detailVisible, currentJob, showDetail
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

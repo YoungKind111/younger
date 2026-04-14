@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推广链接配置 - 育婴师管理系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    SharedMenu.initPageLayout('operator', {
+      title: '推广链接配置',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 推广链接配置'
+    });
+
+    createApp({
+      template: `
+        <div>
+          <div class="content-card" style="margin-bottom: 16px;">
+            <div class="card-header">
+              <span class="card-title">运营人员列表</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                <i class="el-icon-plus"></i> 新增运营人员
+              </el-button>
+            </div>
+            <div class="card-body">
+              <div v-if="operators.length === 0" style="text-align: center; padding: 60px; color: #8c8c8c;">
+                <i class="el-icon-link" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
+                暂无运营人员配置，点击右上角按钮添加
+              </div>
+
+              <div v-for="(op, index) in operators" :key="op.id" class="content-card" style="margin-bottom: 12px;">
+                <div class="card-body">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 16px; font-weight: 500; color: #262626;">{{ op.name }}</span>
+                    <div style="display: flex; gap: 8px;">
+                      <el-button type="text" @click="handleEdit(op)">编辑</el-button>
+                      <el-button type="text" style="color: #f5222d;" @click="removeOperator(index)">删除</el-button>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+                    <img :src="op.qrcodeUrl" alt="二维码" style="width: 120px; height: 120px; border-radius: 8px; border: 1px solid #f0f0f0; object-fit: cover;">
+                    <div style="flex: 1; min-width: 200px;">
+                      <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">推广链接</div>
+                      <div style="background: #f5f5f5; padding: 10px 12px; border-radius: 4px; font-size: 13px; color: #595959; word-break: break-all; margin-bottom: 12px;">
+                        {{ getOperatorLink(op.id) }}
+                      </div>
+                      <el-button type="primary" size="small" @click="copyLink(op.id)">
+                        <i class="el-icon-document-copy"></i> 复制推广链接
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑运营人员' : '新增运营人员'" width="480px">
+            <el-form label-width="100px">
+              <el-form-item label="运营姓名">
+                <el-input v-model="form.name" placeholder="如：张运营"></el-input>
+              </el-form-item>
+              <el-form-item label="微信二维码">
+                <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                  <div style="position: relative;">
+                    <img v-if="form.qrcodeUrl" :src="form.qrcodeUrl" alt="预览" style="width: 120px; height: 120px; border-radius: 8px; border: 1px solid #f0f0f0; object-fit: cover;">
+                    <div v-else style="width: 120px; height: 120px; border-radius: 8px; border: 1px dashed #d9d9d9; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #bfbfbf; font-size: 13px;">
+                      暂无图片
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      @change="handleFileChange"
+                      style="position: absolute; top: 0; left: 0; width: 120px; height: 120px; opacity: 0; cursor: pointer;"
+                    >
+                  </div>
+                  <div style="flex: 1; min-width: 160px;">
+                    <el-button size="small" @click="triggerFileInput">
+                      <i class="el-icon-upload"></i> 上传图片
+                    </el-button>
+                    <p style="font-size: 12px; color: #8c8c8c; margin-top: 8px; line-height: 1.5;">
+                      支持 JPG、PNG 格式<br>点击图片区域也可上传
+                    </p>
+                    <input ref="fileInput" type="file" accept="image/*" @change="handleFileChange" style="display: none;">
+                  </div>
+                </div>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveOperator">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const operators = ref(JSON.parse(localStorage.getItem('operator_configs') || '[]'));
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+        const form = ref({ name: '', qrcodeUrl: '' });
+        const fileInput = ref(null);
+
+        const saveOperators = () => {
+          localStorage.setItem('operator_configs', JSON.stringify(operators.value));
+        };
+
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.value = { name: '', qrcodeUrl: '' };
+          dialogVisible.value = true;
+        };
+
+        const handleEdit = (op) => {
+          isEdit.value = true;
+          editingId.value = op.id;
+          form.value = { name: op.name, qrcodeUrl: op.qrcodeUrl };
+          dialogVisible.value = true;
+        };
+
+        const saveOperator = () => {
+          if (!form.value.name) {
+            ElementPlus.ElMessage.warning('请输入运营姓名');
+            return;
+          }
+          if (!form.value.qrcodeUrl) {
+            ElementPlus.ElMessage.warning('请上传微信二维码');
+            return;
+          }
+          if (isEdit.value) {
+            const index = operators.value.findIndex(op => op.id === editingId.value);
+            if (index > -1) {
+              operators.value[index] = { ...operators.value[index], name: form.value.name, qrcodeUrl: form.value.qrcodeUrl };
+            }
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            const maxId = operators.value.reduce((max, op) => {
+              const num = parseInt(op.id.replace('op', ''), 10) || 0;
+              return num > max ? num : max;
+            }, 0);
+            operators.value.push({ id: 'op' + (maxId + 1), name: form.value.name, qrcodeUrl: form.value.qrcodeUrl });
+            ElementPlus.ElMessage.success('添加成功');
+          }
+          saveOperators();
+          dialogVisible.value = false;
+        };
+
+        const removeOperator = (index) => {
+          ElementPlus.ElMessageBox.confirm('确定删除该运营人员配置吗？', '提示', { type: 'warning' }).then(() => {
+            operators.value.splice(index, 1);
+            saveOperators();
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        const getOperatorLink = (opId) => {
+          const base = window.location.origin + window.location.pathname.replace('operator-config.html', 'nanny-jobs.html');
+          return base + '?op=' + opId;
+        };
+
+        const copyLink = (opId) => {
+          const link = getOperatorLink(opId);
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(link).then(() => {
+              ElementPlus.ElMessage.success('推广链接已复制');
+            });
+          } else {
+            const input = document.createElement('input');
+            input.value = link;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            ElementPlus.ElMessage.success('推广链接已复制');
+          }
+        };
+
+        const triggerFileInput = () => {
+          if (fileInput.value) fileInput.value.click();
+        };
+
+        const handleFileChange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (!file.type.startsWith('image/')) {
+            ElementPlus.ElMessage.warning('请选择图片文件');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            form.value.qrcodeUrl = reader.result;
+          };
+          reader.readAsDataURL(file);
+          e.target.value = '';
+        };
+
+        return {
+          operators, dialogVisible, isEdit, form, fileInput,
+          handleAdd, handleEdit, saveOperator, removeOperator,
+          getOperatorLink, copyLink, triggerFileInput, handleFileChange
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!--
+  页面名称：登录页（育婴师端 H5）
+  核心功能：
+    1. 提供育婴师登录入口，仅支持「手机号 + 验证码」登录。
+    2. 验证码为原型模拟，点击获取后自动填充演示验证码。
+  关键交互：
+    - 输入手机号并获取验证码后，点击登录按钮写入模拟用户数据到 localStorage，并跳转到需求广场。
+    - 登录态持久化，其他页面通过读取 localStorage 判断当前是否已登录。
+    - 页面底部有用户服务协议和隐私政策链接（当前为演示占位内容）。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>登录 - 育婴师端</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    body {
+      background: #e8e8e8;
+    }
+    .login-page {
+      width: 375px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #1890ff 0%, #1890ff 35%, #f5f5f5 35%, #f5f5f5 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .login-header {
+      padding: 60px 24px 40px;
+      color: #fff;
+      text-align: center;
+    }
+    .login-header h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .login-header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      margin: 0 16px;
+      padding: 28px 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .login-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .wx-login-btn {
+      width: 100%;
+      height: 44px;
+      background: #07c160;
+      color: #fff;
+      border: none;
+      border-radius: 22px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .wx-login-btn i {
+      font-size: 20px;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      color: #bfbfbf;
+      font-size: 12px;
+      margin: 16px 0;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e8e8e8;
+    }
+    .divider span {
+      padding: 0 12px;
+    }
+    .phone-form {
+      margin-top: 8px;
+    }
+    .phone-form .el-input {
+      margin-bottom: 12px;
+    }
+    .phone-form .el-input__wrapper {
+      border-radius: 8px;
+    }
+    .code-row {
+      display: flex;
+      gap: 10px;
+    }
+    .code-row .el-input {
+      flex: 1;
+    }
+    .code-row .el-button {
+      width: 110px;
+      flex-shrink: 0;
+    }
+    .submit-btn {
+      width: 100%;
+      height: 44px;
+      border-radius: 22px;
+      font-size: 15px;
+      margin-top: 8px;
+    }
+    .agreement {
+      font-size: 12px;
+      color: #8c8c8c;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+    .agreement a {
+      color: #1890ff;
+      text-decoration: none;
+    }
+    .tips {
+      padding: 16px 20px;
+      font-size: 12px;
+      color: #8c8c8c;
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      template: `
+        <div class="login-page">
+          <div class="login-header">
+            <h1>专业育婴师服务平台</h1>
+            <p>加入平台，获取更多优质订单</p>
+          </div>
+
+          <div class="login-card">
+            <div class="login-title">欢迎登录</div>
+
+            <div class="phone-form">
+              <el-input v-model="phone" placeholder="请输入手机号" maxlength="11">
+                <template #prefix><i class="el-icon-mobile-phone"></i></template>
+              </el-input>
+
+              <div class="code-row">
+                <el-input v-model="code" placeholder="请输入验证码" maxlength="6">
+                  <template #prefix><i class="el-icon-key"></i></template>
+                </el-input>
+                <el-button type="primary" plain :disabled="countdown > 0" @click="sendCode">
+                  {{ countdown > 0 ? countdown + 's' : '获取验证码' }}
+                </el-button>
+              </div>
+
+              <el-button type="primary" class="submit-btn" @click="handlePhoneLogin">
+                手机号登录
+              </el-button>
+            </div>
+
+            <div class="agreement">
+           
+            </div>
+          </div>
+
+          <div class="tips">
+            <i class="el-icon-info"></i>
+          </div>
+        </div>
+      `,
+      setup() {
+        const phone = ref('');
+        const code = ref('');
+        const countdown = ref(0);
+
+        // 模拟发送验证码
+        const sendCode = () => {
+          if (!phone.value || phone.value.length !== 11) {
+            ElementPlus.ElMessage.warning('请输入正确的手机号');
+            return;
+          }
+          ElementPlus.ElMessage.success('验证码已发送：123456');
+          code.value = '123456'; // 原型自动填充，方便演示
+          countdown.value = 60;
+          const timer = setInterval(() => {
+            countdown.value--;
+            if (countdown.value <= 0) clearInterval(timer);
+          }, 1000);
+        };
+
+        // 模拟手机号登录
+        const handlePhoneLogin = () => {
+          if (!phone.value || phone.value.length !== 11) {
+            ElementPlus.ElMessage.warning('请输入手机号');
+            return;
+          }
+          if (!code.value) {
+            ElementPlus.ElMessage.warning('请输入验证码');
+            return;
+          }
+
+          const mockUser = {
+            isLogin: true,
+            userType: 'nanny',
+            phone: phone.value,
+            nickname: phone.value.slice(-4) + '阿姨',
+            loginTime: new Date().toISOString()
+          };
+          localStorage.setItem('nanny_user', JSON.stringify(mockUser));
+
+          ElementPlus.ElMessage.success('登录成功！');
+          window.location.href = 'nanny-jobs.html';
+        };
+
+        const showAgreement = () => {
+          ElementPlus.ElMessageBox.alert('这里是《用户服务协议》内容...', '用户服务协议');
+        };
+
+        const showPrivacy = () => {
+          ElementPlus.ElMessageBox.alert('这里是《隐私政策》内容...', '隐私政策');
+        };
+
+        return {
+          phone, code, countdown,
+          sendCode, handlePhoneLogin,
+          showAgreement, showPrivacy
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

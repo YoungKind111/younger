@@ -1,0 +1,391 @@
+<!--
+  页面名称：需求广场（育婴师端 H5）
+  核心功能：
+    1. 展示所有「上架中」状态的需求列表，支持按地址关键词、类型（住家/白班）、薪资范围筛选。
+    2. 无需登录即可浏览列表；点击需求卡片、查看详情、我要报名、进入我的报名时需先登录。
+    3. 点击需求卡片弹出「需求详情」弹窗，展示需求类型、薪资、服务地址、关键信息、年龄地域要求、其他要求（不展示详细地址）。
+    4. 点击「我要报名」弹出确认窗口，首次报名需填写姓名（后续自动记住），可选填备注。
+    5. 报名成功后弹出运营人员微信二维码（根据 URL 参数 op 匹配后台配置），引导添加微信。
+  关键交互：
+    - 未登录用户点击「查看详情/我要报名/我的报名」时，提示"请先登录"并跳转登录页。
+    - 薪资筛选项：全部、7K以下、7K~8K、8K~9K、9K~10K、10K以上。
+    - 底部固定导航：需求广场（当前页）、我的报名。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>需求广场 - 育婴师端</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    body {
+      background: #e8e8e8;
+    }
+    .nanny-page {
+      background: #f5f5f5;
+      min-height: 100vh;
+      width: 375px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .mobile-header {
+      width: 375px;
+      margin: 0 auto;
+      left: 0;
+      right: 0;
+    }
+    .mobile-nav {
+      width: 375px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .filter-bar {
+      background: #fff;
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid #f0f0f0;
+      overflow-x: auto;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-bar .el-input { flex: 1; min-width: 120px; }
+    .filter-bar .el-select { width: 110px; flex-shrink: 0; }
+    .job-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: #595959;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    const mockJobs = [
+      {
+        id: 1001,
+        customerName: '李女士',
+        babyAge: '1岁6个月',
+        familySize: '3人',
+        houseArea: '100㎡',
+        address: '广东省佛山市南海区里水',
+        addressDetail: '保利紫山花园',
+        jobType: '住家',
+        startDate: '随时上户',
+        duration: '长期',
+        ageRegionRequirement: '30-45岁，广东籍优先',
+        hasPet: false,
+        needSleepWithBaby: true,
+        needHousework: true,
+        salaryMin: 9500,
+        salaryMax: 11000,
+        otherRequirements: '身体健康，不打呼、没有脚气狐臭、性格好，好相处。会辅食、会早教，可以培养宝宝规律睡眠，能独立带娃。月休4天，全年国家法定13日。',
+        createTime: '01-15',
+        applied: false
+      },
+      {
+        id: 1002,
+        customerName: '王先生',
+        babyAge: '8个月',
+        familySize: '4人',
+        houseArea: '89㎡',
+        address: '广东省广州市天河区珠江新城',
+        addressDetail: '地铁5号线猎德站/中海花城湾',
+        jobType: '白班',
+        startDate: '2024-02-01',
+        duration: '1年',
+        ageRegionRequirement: '40-50岁，无地域要求',
+        hasPet: false,
+        needSleepWithBaby: false,
+        needHousework: true,
+        salaryMin: 7000,
+        salaryMax: 8000,
+        otherRequirements: '有带小月龄宝宝经验，会做辅食，性格开朗，有耐心。工作时间8:00-18:00，双休。',
+        createTime: '01-14',
+        applied: true
+      },
+      {
+        id: 1005,
+        customerName: '赵女士',
+        babyAge: '2岁',
+        familySize: '3人',
+        houseArea: '78㎡',
+        address: '广东省广州市海珠区琶洲',
+        addressDetail: '地铁8号线万胜围/保利天悦',
+        jobType: '白班',
+        startDate: '随时上户',
+        duration: '6个月',
+        ageRegionRequirement: '50岁以下，本地人优先',
+        hasPet: false,
+        needSleepWithBaby: false,
+        needHousework: true,
+        salaryMin: 4500,
+        salaryMax: 5000,
+        otherRequirements: '下午接送2岁宝宝，做一顿晚饭，简单打扫。',
+        createTime: '01-11',
+        applied: false
+      }
+    ];
+
+    createApp({
+      template: `
+        <div class="nanny-page">
+          <div class="mobile-header">
+            <span class="mobile-title">需求广场</span>
+            <i class="el-icon-bell" style="font-size: 20px; color: #595959;"></i>
+          </div>
+
+          <div class="filter-bar">
+            <el-input v-model="searchKeyword" placeholder="搜索地址" size="small" clearable>
+              <template #prefix><i class="el-icon-search"></i></template>
+            </el-input>
+            <el-select v-model="filterType" placeholder="类型" size="small" clearable>
+              <el-option label="住家" value="住家"></el-option>
+              <el-option label="白班" value="白班"></el-option>
+            </el-select>
+            <el-select v-model="filterSalary" placeholder="薪资" size="small">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="7K以下" value="low"></el-option>
+              <el-option label="7K~8K" value="7to8"></el-option>
+              <el-option label="8K~9K" value="8to9"></el-option>
+              <el-option label="9K~10K" value="9to10"></el-option>
+              <el-option label="10K以上" value="high"></el-option>
+            </el-select>
+          </div>
+
+          <div style="padding-bottom: 70px;">
+            <div v-for="job in filteredJobs" :key="job.id" class="job-card" @click="showDetail(job)">
+              <div class="job-card-header">
+                <div class="job-card-title">{{ job.jobType }} · {{ job.address }}</div>
+                <div class="job-card-salary">{{ job.salaryMin }}-{{ job.salaryMax }}</div>
+              </div>
+              <div class="job-card-tags">
+                <span class="job-card-tag">{{ job.startDate }}</span>
+                <span class="job-card-tag">{{ job.duration }}</span>
+                <span class="job-card-tag">{{ job.needSleepWithBaby ? '带睡' : '不带睡' }}</span>
+                <span class="job-card-tag">{{ job.needHousework ? '做家务煮饭' : '不做家务' }}</span>
+                <span v-if="job.hasPet" class="job-card-tag" style="color: #fa8c16;">有宠物</span>
+              </div>
+              <div class="job-card-info">
+                <div><i class="el-icon-user" style="margin-right: 4px;"></i>宝宝：{{ job.babyAge }}</div>
+                <div><i class="el-icon-house" style="margin-right: 4px;"></i>家庭：{{ job.familySize }} | 面积：{{ job.houseArea }}</div>
+                <div class="job-meta">
+                  <span><i class="el-icon-location" style="margin-right: 4px;"></i>{{ job.addressDetail }}</span>
+                </div>
+              </div>
+              <div class="job-card-footer">
+                <span class="job-card-time">{{ job.createTime }} 发布</span>
+                <el-button
+                  :type="job.applied ? 'info' : 'primary'"
+                  size="small"
+                  :disabled="job.applied"
+                  @click.stop="handleApply(job)"
+                >
+                  {{ job.applied ? '已报名' : '我要报名' }}
+                </el-button>
+              </div>
+            </div>
+
+            <div v-if="filteredJobs.length === 0" style="text-align: center; padding: 60px 20px; color: #8c8c8c;">
+              <i class="el-icon-search" style="font-size: 48px; display: block; margin-bottom: 12px;"></i>
+              暂无匹配的需求
+            </div>
+          </div>
+
+          <div class="mobile-nav">
+            <a href="nanny-jobs.html" class="mobile-nav-item active">
+              <i class="el-icon-s-cooperation"></i>
+              <span>需求广场</span>
+            </a>
+            <a href="javascript:void(0);" class="mobile-nav-item" @click.prevent="goToMy">
+              <i class="el-icon-user"></i>
+              <span>我的报名</span>
+            </a>
+          </div>
+
+          <el-dialog v-model="detailVisible" title="需求详情" width="340px" top="10vh">
+            <div v-if="currentJob" style="line-height: 1.6;">
+              <div style="margin-bottom: 12px;">
+                <el-tag type="primary" size="small">{{ currentJob.jobType }}</el-tag>
+                <span style="color: #f5222d; font-size: 18px; font-weight: 600; margin-left: 8px;">
+                  {{ currentJob.salaryMin }}-{{ currentJob.salaryMax }}
+                </span>
+                <span style="color: #f5222d; font-size: 12px;"> 元/月</span>
+              </div>
+
+              <div style="background: #f6ffed; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #262626; font-weight: 500;">
+                  <i class="el-icon-location" style="color: #52c41a;"></i>
+                  {{ currentJob.address }}
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; color: #595959; font-size: 13px; margin-bottom: 12px;">
+                <div><span style="color: #8c8c8c;">到岗：</span>{{ currentJob.startDate }}</div>
+                <div><span style="color: #8c8c8c;">期限：</span>{{ currentJob.duration }}</div>
+                <div><span style="color: #8c8c8c;">宝宝：</span>{{ currentJob.babyAge }}</div>
+                <div><span style="color: #8c8c8c;">人数：</span>{{ currentJob.familySize }}</div>
+                <div><span style="color: #8c8c8c;">面积：</span>{{ currentJob.houseArea }}</div>
+                <div><span style="color: #8c8c8c;">宠物：</span>{{ currentJob.hasPet ? '有' : '无' }}</div>
+                <div><span style="color: #8c8c8c;">带睡：</span>{{ currentJob.needSleepWithBaby ? '是' : '否' }}</div>
+                <div><span style="color: #8c8c8c;">家务：</span>{{ currentJob.needHousework ? '需要' : '不需要' }}</div>
+              </div>
+
+              <div style="margin-bottom: 10px; font-size: 13px;">
+                <span style="color: #8c8c8c;">要求：</span>{{ currentJob.ageRegionRequirement || '无' }}
+              </div>
+
+              <div style="font-size: 13px;">
+                <div style="color: #8c8c8c; margin-bottom: 2px;">其他要求</div>
+                <div style="background: #fafafa; border-radius: 4px; padding: 8px 10px; color: #595959; line-height: 1.6; font-size: 12px;">
+                  {{ currentJob.otherRequirements }}
+                </div>
+              </div>
+            </div>
+            <template #footer>
+              <el-button @click="detailVisible = false">关闭</el-button>
+              <el-button
+                :type="currentJob && currentJob.applied ? 'info' : 'primary'"
+                :disabled="currentJob && currentJob.applied"
+                @click="currentJob && handleApply(currentJob); detailVisible = false;"
+              >
+                {{ currentJob && currentJob.applied ? '已报名' : '我要报名' }}
+              </el-button>
+            </template>
+          </el-dialog>
+
+          <el-dialog v-model="applyVisible" title="确认报名" width="340px">
+            <p style="margin-bottom: 12px;">您正在报名以下需求：</p>
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+              <strong>{{ applyingJob ? applyingJob.jobType + ' · ' + applyingJob.address : '' }}</strong>
+              <div style="color: #8c8c8c; font-size: 13px; margin-top: 4px;">
+                薪资：{{ applyingJob ? applyingJob.salaryMin + '-' + applyingJob.salaryMax : '' }}
+              </div>
+            </div>
+            <el-form label-width="60px">
+              <el-form-item v-if="!hasName" label="姓名">
+                <el-input v-model="applyName" placeholder="请输入您的姓名"></el-input>
+              </el-form-item>
+              <el-form-item label="备注">
+                <el-input v-model="applyRemark" type="textarea" :rows="2" placeholder="可选：填写您的优势或备注"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button size="small" @click="applyVisible = false">取消</el-button>
+              <el-button size="small" type="primary" @click="confirmApply">确认报名</el-button>
+            </template>
+          </el-dialog>
+
+          <el-dialog v-model="qrcodeVisible" title="报名成功" width="300px">
+            <div style="text-align: center;">
+              <i class="el-icon-success" style="font-size: 32px; color: #52c41a;"></i>
+              <p style="margin: 12px 0 16px; font-size: 14px; color: #262626;">报名成功！请添加运营人员微信</p>
+              <img :src="qrcodeUrl" alt="运营微信二维码" style="width: 200px; height: 200px; border-radius: 8px; border: 1px solid #f0f0f0;">
+              <p style="margin-top: 12px; font-size: 12px; color: #8c8c8c;">长按二维码识别添加</p>
+            </div>
+            <template #footer>
+              <el-button type="primary" style="width: 100%;" @click="qrcodeVisible = false">我知道了</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const user = JSON.parse(localStorage.getItem('nanny_user')) || {};
+        const isLogin = !!user.isLogin;
+
+        const searchKeyword = ref('');
+        const filterType = ref('');
+        const filterSalary = ref('');
+        const jobs = ref(JSON.parse(JSON.stringify(mockJobs)));
+
+        const filteredJobs = computed(() => {
+          return jobs.value.filter(job => {
+            const matchKeyword = !searchKeyword.value || job.address.includes(searchKeyword.value);
+            const matchType = !filterType.value || job.jobType === filterType.value;
+            let matchSalary = true;
+            if (filterSalary.value === 'low') matchSalary = job.salaryMax < 7000;
+            if (filterSalary.value === '7to8') matchSalary = job.salaryMin <= 8000 && job.salaryMax >= 7000;
+            if (filterSalary.value === '8to9') matchSalary = job.salaryMin <= 9000 && job.salaryMax >= 8000;
+            if (filterSalary.value === '9to10') matchSalary = job.salaryMin <= 10000 && job.salaryMax >= 9000;
+            if (filterSalary.value === 'high') matchSalary = job.salaryMin > 10000;
+            return matchKeyword && matchType && matchSalary;
+          });
+        });
+
+        const detailVisible = ref(false);
+        const currentJob = ref(null);
+        const applyVisible = ref(false);
+        const applyingJob = ref(null);
+        const applyName = ref(user.name || '');
+        const applyRemark = ref('');
+        const qrcodeVisible = ref(false);
+        const hasName = ref(!!user.name);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const opId = urlParams.get('op');
+        const operatorConfigs = JSON.parse(localStorage.getItem('operator_configs') || '[]');
+        const matchedOp = operatorConfigs.find(op => op.id === opId);
+        const qrcodeUrl = ref(matchedOp ? matchedOp.qrcodeUrl : 'https://placehold.co/200x200?text=运营微信二维码');
+
+        const requireLogin = () => {
+          if (!isLogin) {
+            ElementPlus.ElMessage.warning('请先登录');
+            setTimeout(() => {
+              window.location.href = 'nanny-login.html';
+            }, 800);
+            return false;
+          }
+          return true;
+        };
+
+        const showDetail = (job) => {
+          if (!requireLogin()) return;
+          currentJob.value = job;
+          detailVisible.value = true;
+        };
+
+        const handleApply = (job) => {
+          if (!requireLogin()) return;
+          if (job.applied) return;
+          applyingJob.value = job;
+          applyRemark.value = '';
+          applyVisible.value = true;
+        };
+
+        const confirmApply = () => {
+          if (applyingJob.value) {
+            if (!hasName.value && applyName.value) {
+              const updatedUser = { ...user, name: applyName.value };
+              localStorage.setItem('nanny_user', JSON.stringify(updatedUser));
+              hasName.value = true;
+            }
+            applyingJob.value.applied = true;
+            applyVisible.value = false;
+            qrcodeVisible.value = true;
+          }
+        };
+
+        const goToMy = () => {
+          if (!requireLogin()) return;
+          window.location.href = 'nanny-my.html';
+        };
+
+        return {
+          searchKeyword, filterType, filterSalary, filteredJobs,
+          detailVisible, currentJob, applyVisible, applyingJob, applyName, applyRemark, qrcodeVisible, hasName, qrcodeUrl,
+          showDetail, handleApply, confirmApply, goToMy
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

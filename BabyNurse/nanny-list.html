@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>育婴师管理 - 育婴师管理系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 步骤1：先初始化布局
+    SharedMenu.initPageLayout('nanny', {
+      title: '育婴师管理',
+      breadcrumb: '<a href="dashboard.html">首页</a> / 育婴师管理'
+    });
+
+    // 模拟育婴师数据
+    const mockNannies = [
+      { id: 1, name: '李阿姨', age: 42, phone: '138****1001', experience: '8年', hometown: '湖南郴州', skills: '辅食,早教,带睡', status: 'active', joinTime: '2023-06-15', note: '经验丰富，客户评价好' },
+      { id: 2, name: '张阿姨', age: 45, phone: '138****1002', experience: '10年', hometown: '广东茂名', skills: '月子餐,小月龄护理,早教', status: 'active', joinTime: '2023-08-20', note: '做过月嫂' },
+      { id: 3, name: '王阿姨', age: 38, phone: '138****1003', experience: '5年', hometown: '广西玉林', skills: '辅食,家务', status: 'active', joinTime: '2023-11-10', note: '做饭好吃' },
+      { id: 4, name: '陈阿姨', age: 36, phone: '138****1004', experience: '4年', hometown: '江西赣州', skills: '早教,英语启蒙', status: 'rest', joinTime: '2024-01-05', note: '大专以上学历' },
+      { id: 5, name: '刘阿姨', age: 41, phone: '138****1005', experience: '6年', hometown: '四川成都', skills: '推拿,辅食,带睡', status: 'active', joinTime: '2023-09-18', note: '有小儿推拿证' }
+    ];
+
+    createApp({
+      template: `
+        <div>
+          <!-- 搜索筛选栏 -->
+          <div class="content-card" style="margin-bottom: 16px;">
+            <div class="card-body">
+              <div class="search-bar">
+                <el-input v-model="searchKeyword" placeholder="搜索姓名/籍贯/技能" style="width: 240px;" clearable>
+                  <template #prefix><i class="el-icon-search"></i></template>
+                </el-input>
+                <el-select v-model="filterStatus" placeholder="状态筛选" clearable style="width: 140px;">
+                  <el-option label="可接单" value="active"></el-option>
+                  <el-option label="休息中" value="rest"></el-option>
+                  <el-option label="已离职" value="left"></el-option>
+                </el-select>
+                <el-button type="primary" @click="handleSearch"><i class="el-icon-search"></i> 查询</el-button>
+                <el-button @click="handleReset"><i class="el-icon-refresh-left"></i> 重置</el-button>
+                <el-button type="primary" style="margin-left: auto;" @click="handleAdd">
+                  <i class="el-icon-plus"></i> 新增育婴师
+                </el-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="content-card">
+            <div class="card-body">
+              <el-table :data="filteredData" style="width: 100%" stripe>
+                <el-table-column prop="id" label="ID" width="60" align="center"></el-table-column>
+                <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+                <el-table-column prop="phone" label="联系电话" min-width="140"></el-table-column>
+                <el-table-column prop="joinTime" label="入驻时间" width="120"></el-table-column>
+                <el-table-column label="操作" width="180" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="text" @click="handleEdit(row)">编辑</el-button>
+                    <el-button type="text" style="color: #f5222d;" @click="handleDelete(row)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 新增/编辑对话框 -->
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑育婴师' : '新增育婴师'" width="560px">
+            <el-form :model="form" label-width="90px">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="姓名">
+                    <el-input v-model="form.name" placeholder="请输入姓名"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="年龄">
+                    <el-input-number v-model="form.age" :min="18" :max="70" style="width: 100%;"></el-input-number>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="联系电话">
+                    <el-input v-model="form.phone" placeholder="请输入电话"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="从业经验">
+                    <el-input v-model="form.experience" placeholder="如：5年"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-form-item label="籍贯">
+                <el-input v-model="form.hometown" placeholder="请输入籍贯"></el-input>
+              </el-form-item>
+              <el-form-item label="技能标签">
+                <el-input v-model="form.skills" placeholder="多个标签用逗号分隔，如：辅食,早教,带睡"></el-input>
+              </el-form-item>
+              <el-form-item label="状态">
+                <el-radio-group v-model="form.status">
+                  <el-radio label="active">可接单</el-radio>
+                  <el-radio label="rest">休息中</el-radio>
+                  <el-radio label="left">已离职</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="备注">
+                <el-input v-model="form.note" type="textarea" :rows="2" placeholder="请输入备注"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveData">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const searchKeyword = ref('');
+        const filterStatus = ref('');
+        const tableData = ref(JSON.parse(JSON.stringify(mockNannies)));
+
+        const filteredData = computed(() => {
+          return tableData.value.filter(item => {
+            const matchKeyword = !searchKeyword.value ||
+              item.name.includes(searchKeyword.value) ||
+              item.hometown.includes(searchKeyword.value) ||
+              item.skills.includes(searchKeyword.value);
+            const matchStatus = !filterStatus.value || item.status === filterStatus.value;
+            return matchKeyword && matchStatus;
+          });
+        });
+
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+        const form = ref({ name: '', age: 40, phone: '', experience: '', hometown: '', skills: '', status: 'active', note: '' });
+
+        const handleSearch = () => {};
+        const handleReset = () => {
+          searchKeyword.value = '';
+          filterStatus.value = '';
+        };
+
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.value = { name: '', age: 40, phone: '', experience: '', hometown: '', skills: '', status: 'active', note: '' };
+          dialogVisible.value = true;
+        };
+
+        const handleEdit = (row) => {
+          isEdit.value = true;
+          editingId.value = row.id;
+          form.value = { ...row };
+          dialogVisible.value = true;
+        };
+
+        const saveData = () => {
+          if (!form.value.name) {
+            ElementPlus.ElMessage.warning('请输入姓名');
+            return;
+          }
+          if (isEdit.value) {
+            const index = tableData.value.findIndex(item => item.id === editingId.value);
+            if (index > -1) tableData.value[index] = { ...tableData.value[index], ...form.value };
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            const newId = Math.max(...tableData.value.map(item => item.id), 0) + 1;
+            const newItem = { id: newId, ...form.value, joinTime: new Date().toISOString().slice(0, 10) };
+            tableData.value.unshift(newItem);
+            ElementPlus.ElMessage.success('添加成功');
+          }
+          dialogVisible.value = false;
+        };
+
+        const handleDelete = (row) => {
+          ElementPlus.ElMessageBox.confirm(`确定删除 "${row.name}" 吗？`, '提示', { type: 'warning' }).then(() => {
+            const index = tableData.value.findIndex(item => item.id === row.id);
+            if (index > -1) tableData.value.splice(index, 1);
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        return {
+          searchKeyword, filterStatus, filteredData, dialogVisible, isEdit, form,
+          handleSearch, handleReset, handleAdd, handleEdit, saveData, handleDelete
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
