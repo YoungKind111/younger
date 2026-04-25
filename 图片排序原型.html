@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片排序 - 方向键+拖拽</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .tips {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .image-card {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .image-card.selected {
+            box-shadow: 0 0 0 3px #1890ff, 0 4px 16px rgba(24,144,255,0.2);
+        }
+
+        .image-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 100;
+        }
+
+        .image-card.drag-over {
+            box-shadow: 0 0 0 3px #52c41a;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 28px;
+            height: 28px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: grab;
+            z-index: 2;
+        }
+
+        .preview-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 140px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .image-info {
+            padding: 10px 12px;
+        }
+
+        .image-name {
+            font-size: 13px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 方向键控制区 */
+        .arrow-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            display: none;
+            z-index: 10;
+        }
+
+        .image-card.selected .arrow-controls {
+            display: block;
+        }
+
+        .arrow-btn {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: rgba(24, 144, 255, 0.95);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .arrow-btn:hover {
+            background: rgba(24, 144, 255, 0.95);
+        }
+
+        .arrow-btn.disabled {
+            background: rgba(0,0,0,0.3);
+            cursor: not-allowed;
+        }
+
+        .arrow-up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .arrow-down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .arrow-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .arrow-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 交换动画 */
+        @keyframes swapAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .swapping {
+            animation: swapAnimation 0.3s ease;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+
+            .image-wrapper {
+                height: 100px;
+            }
+
+            .arrow-controls {
+                width: 110px;
+                height: 110px;
+            }
+
+            .arrow-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="tips">
+        💡 点击图片选中，使用方向键↑↓←→微调位置；或拖拽图片直接排序
+    </div>
+
+    <div class="image-grid" id="imageGrid"></div>
+
+    <script>
+        // 模拟图片数据 - 高对比度颜色
+        const mockImages = [
+            { id: 1, name: '风景-山川', color: '#FF6B6B' },
+            { id: 2, name: '风景-湖泊', color: '#4ECDC4' },
+            { id: 3, name: '风景-森林', color: '#45B7D1' },
+            { id: 4, name: '风景-海洋', color: '#96CEB4' },
+            { id: 5, name: '风景-日落', color: '#FFEAA7' },
+            { id: 6, name: '风景-雪景', color: '#DDA0DD' },
+            { id: 7, name: '风景-花海', color: '#98D8C8' },
+            { id: 8, name: '风景-星空', color: '#F7DC6F' },
+            { id: 9, name: '风景-沙漠', color: '#BB8FCE' },
+            { id: 10, name: '风景-瀑布', color: '#85C1E9' },
+            { id: 11, name: '风景-草原', color: '#F8C471' },
+            { id: 12, name: '风景-峡谷', color: '#82E0AA' },
+        ];
+
+        let images = [...mockImages];
+        let selectedId = null;
+        let draggedId = null;
+        let showNumbers = true;
+
+        const grid = document.getElementById('imageGrid');
+
+        // 获取列数
+        function getColumnCount() {
+            const cardWidth = 160;
+            const gap = 16;
+            const containerWidth = grid.clientWidth;
+            return Math.floor((containerWidth + gap) / (cardWidth + gap));
+        }
+
+        // 渲染图片网格
+        function renderGrid() {
+            grid.innerHTML = '';
+            const colCount = getColumnCount();
+
+            images.forEach((img, index) => {
+                const card = createImageCard(img, index, colCount);
+                grid.appendChild(card);
+            });
+        }
+
+        // 创建图片卡片
+        function createImageCard(img, index, colCount) {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.dataset.id = img.id;
+            card.draggable = true;
+
+            if (selectedId === img.id) {
+                card.classList.add('selected');
+            }
+
+            // 计算行列位置，用于判断边界
+            const row = Math.floor(index / colCount);
+            const col = index % colCount;
+            const totalRows = Math.ceil(images.length / colCount);
+
+            const isFirstRow = row === 0;
+            const isLastRow = row === totalRows - 1;
+            const isFirstCol = col === 0;
+            const isLastCol = col === colCount - 1 || index === images.length - 1;
+
+            card.innerHTML = `
+                <div class="drag-handle">&#9776;</div>
+                <div class="preview-icon" onclick="event.stopPropagation(); alert('预览: ${img.name}')">&#128065;</div>
+                <div class="image-wrapper">
+                    <div style="width: 100%; height: 100%; background: ${img.color}; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                        ${img.name}
+                    </div>
+                </div>
+                <div class="image-info">
+                    <div class="image-name">${img.name}</div>
+                </div>
+                <div class="arrow-controls">
+                    <button class="arrow-btn arrow-up ${isFirstRow ? 'disabled' : ''}" 
+                            onclick="moveImage(${img.id}, 'up')" ${isFirstRow ? 'disabled' : ''}>↑</button>
+                    <button class="arrow-btn arrow-down ${isLastRow ? 'disabled' : ''}" 
+                            onclick="moveImage(${img.id}, 'down')" ${isLastRow ? 'disabled' : ''}>↓</button>
+                    <button class="arrow-btn arrow-left ${isFirstCol ? 'disabled' : ''}" 
+                            onclick="moveImage(${img.id}, 'left')" ${isFirstCol ? 'disabled' : ''}>←</button>
+                    <button class="arrow-btn arrow-right ${isLastCol ? 'disabled' : ''}" 
+                            onclick="moveImage(${img.id}, 'right')" ${isLastCol ? 'disabled' : ''}>→</button>
+                </div>
+            `;
+
+            // 点击选中
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.arrow-btn')) return;
+                selectImage(img.id);
+            });
+
+            // 拖拽事件
+            card.addEventListener('dragstart', (e) => {
+                draggedId = img.id;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                draggedId = null;
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (draggedId !== img.id) {
+                    card.classList.add('drag-over');
+                }
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('drag-over');
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                if (draggedId && draggedId !== img.id) {
+                    swapImages(draggedId, img.id);
+                }
+            });
+
+            return card;
+        }
+
+        // 选中图片
+        function selectImage(id) {
+            selectedId = selectedId === id ? null : id;
+            renderGrid();
+        }
+
+        // 移动图片（方向键）
+        function moveImage(id, direction) {
+            const colCount = getColumnCount();
+            const currentIndex = images.findIndex(img => img.id === id);
+            let targetIndex;
+
+            switch (direction) {
+                case 'up':
+                    targetIndex = currentIndex - colCount;
+                    break;
+                case 'down':
+                    targetIndex = currentIndex + colCount;
+                    break;
+                case 'left':
+                    targetIndex = currentIndex - 1;
+                    break;
+                case 'right':
+                    targetIndex = currentIndex + 1;
+                    break;
+            }
+
+            if (targetIndex >= 0 && targetIndex < images.length) {
+                swapImagesByIndex(currentIndex, targetIndex);
+            }
+        }
+
+        // 交换两张图片
+        function swapImages(id1, id2) {
+            const index1 = images.findIndex(img => img.id === id1);
+            const index2 = images.findIndex(img => img.id === id2);
+            swapImagesByIndex(index1, index2);
+        }
+
+        // 按索引交换
+        function swapImagesByIndex(index1, index2) {
+            // 添加交换动画
+            const cards = document.querySelectorAll('.image-card');
+            if (cards[index1]) cards[index1].classList.add('swapping');
+            if (cards[index2]) cards[index2].classList.add('swapping');
+
+            // 交换数据
+            [images[index1], images[index2]] = [images[index2], images[index1]];
+
+            // 延迟重新渲染，让动画生效
+            setTimeout(() => {
+                renderGrid();
+            }, 150);
+        }
+
+        // 重置顺序
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (!selectedId) return;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    moveImage(selectedId, 'up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    moveImage(selectedId, 'down');
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    moveImage(selectedId, 'left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    moveImage(selectedId, 'right');
+                    break;
+                case 'Escape':
+                    selectedId = null;
+                    renderGrid();
+                    break;
+            }
+        });
+
+        // 窗口大小改变时重新渲染（列数可能变化）
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderGrid();
+            }, 200);
+        });
+
+        // 初始化
+        renderGrid();
+    </script>
+</body>
+</html>
