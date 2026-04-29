@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的工资</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F080A0',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .page-container {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .capsule-btn {
+      background: rgba(0,0,0,0.05);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      gap: 8px;
+    }
+    .capsule-btn .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(0,0,0,0.15);
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-tag.unopened {
+      background: #f5f5f5;
+      color: #999;
+    }
+    .status-tag.opening {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+    .status-tag.opened {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+    .status-tag.failed {
+      background: #fff2f0;
+      color: #ff4d4f;
+    }
+    .account-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .account-card.disabled {
+      opacity: 0.7;
+    }
+    .account-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .account-info .title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .account-info .subtitle {
+      font-size: 13px;
+      color: #999;
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 顶部导航栏 -->
+    <div class="bg-white pt-12 pb-3 px-4 flex items-center justify-between sticky top-0 z-10">
+      <a href="index.html" class="text-gray-800">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </a>
+      <h1 class="text-lg font-medium text-gray-900">我的工资</h1>
+      <div class="capsule-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
+          <circle cx="6" cy="12" r="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="18" cy="12" r="2"/>
+        </svg>
+        <div class="divider"></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-gray-600">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 收款账户入口 -->
+    <div class="px-4 mt-3">
+      <!-- 未开通 -->
+      <a href="account.html" class="account-card active:scale-[0.98] transition-transform" id="accountCard">
+        <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l8-4 8 4v14"/>
+            <path d="M9 21v-6h6v6"/>
+            <path d="M10 9h4"/>
+            <path d="M10 12h4"/>
+          </svg>
+        </div>
+        <div class="account-info">
+          <div class="flex items-center gap-2">
+            <span class="title">收款账户</span>
+            <span class="status-tag unopened" id="statusTag">未开通</span>
+          </div>
+          <div class="subtitle" id="statusDesc">查看账户状态和收款信息</div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="arrowIcon">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- 工资账单 -->
+    <div class="px-4 mt-3">
+      <div class="bg-white rounded-xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-6">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F080A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 14l2 2 4-4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5Z"/>
+          </svg>
+          <span class="text-gray-900 font-medium">工资账单</span>
+        </div>
+        <!-- 空状态 -->
+        <div class="flex flex-col items-center justify-center py-16">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" class="mb-4">
+            <rect x="2" y="4" width="20" height="16" rx="2" fill="#DBEAFE"/>
+            <rect x="2" y="4" width="20" height="12" rx="2" fill="#93C5FD"/>
+            <circle cx="12" cy="10" r="3" fill="#DBEAFE"/>
+            <path d="M9 13c0 1.5 1.5 3 3 3s3-1.5 3-3" stroke="#60A5FA" stroke-width="1.5" fill="none"/>
+            <rect x="5" y="16" width="4" height="2" rx="1" fill="#60A5FA"/>
+            <rect x="15" y="16" width="4" height="2" rx="1" fill="#60A5FA"/>
+          </svg>
+          <span class="text-gray-400 text-sm">暂无工资账单</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // 从 URL 参数读取状态，默认未开通
+    // 可选值: unopened / opening / opened / failed
+    const urlParams = new URLSearchParams(window.location.search);
+    const accountStatus = urlParams.get('status') || 'unopened';
+
+    const statusConfig = {
+      unopened: {
+        tagClass: 'unopened',
+        tagText: '未开通',
+        desc: '点击开通收款账户',
+        clickable: true,
+        href: 'account.html'
+      },
+      opening: {
+        tagClass: 'opening',
+        tagText: '开通中',
+        desc: '审核中，请耐心等待',
+        clickable: false,
+        href: null
+      },
+      opened: {
+        tagClass: 'opened',
+        tagText: '已开通',
+        desc: '查看账户状态和收款信息',
+        clickable: true,
+        href: 'account_detail.html'
+      },
+      failed: {
+        tagClass: 'failed',
+        tagText: '开通失败',
+        desc: '点击重新提交',
+        clickable: true,
+        href: 'account.html'
+      }
+    };
+
+    function renderStatus() {
+      const cfg = statusConfig[accountStatus];
+      const card = document.getElementById('accountCard');
+      const tag = document.getElementById('statusTag');
+      const desc = document.getElementById('statusDesc');
+      const arrow = document.getElementById('arrowIcon');
+
+      tag.className = 'status-tag ' + cfg.tagClass;
+      tag.textContent = cfg.tagText;
+      desc.textContent = cfg.desc;
+
+      if (!cfg.clickable) {
+        card.classList.add('disabled');
+        card.removeAttribute('href');
+        card.style.cursor = 'default';
+        arrow.style.display = 'none';
+        card.onclick = function(e) {
+          e.preventDefault();
+          showToast('账户审核中，请耐心等待');
+        };
+      } else {
+        card.classList.remove('disabled');
+        card.setAttribute('href', cfg.href);
+        card.style.cursor = 'pointer';
+        arrow.style.display = 'block';
+        card.onclick = null;
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    renderStatus();
+  </script>
+</body>
+</html>

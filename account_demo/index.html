@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>氧阁助手</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F080A0',
+            primaryDark: '#E06090',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .page-container {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      padding-bottom: 80px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .capsule-btn {
+      background: rgba(255,255,255,0.25);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      gap: 8px;
+    }
+    .capsule-btn .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255,255,255,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 顶部 Header -->
+    <div class="bg-primary pt-12 pb-8 px-4 relative">
+      <!-- 顶部操作栏 -->
+      <div class="flex items-center justify-between mb-6">
+        <!-- 铃铛 -->
+        <button class="text-white active:opacity-70 transition-opacity">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            <path d="M4 2C2.8 3.7 2 5.7 2 8"/>
+            <path d="M22 8c0-2.3-.8-4.3-2-6"/>
+          </svg>
+        </button>
+        <!-- 标题 -->
+        <h1 class="text-white text-lg font-medium">氧阁助手</h1>
+        <!-- 胶囊按钮 -->
+        <div class="capsule-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-white">
+            <circle cx="6" cy="12" r="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <circle cx="18" cy="12" r="2"/>
+          </svg>
+          <div class="divider"></div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="4" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 用户信息 -->
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="#bbb">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="text-white text-xl font-bold mb-1">Y K</div>
+          <div class="text-white/80 text-sm flex items-center gap-1">
+            手机号码：187******3506
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能入口 -->
+    <div class="px-4 -mt-2">
+      <a href="salary.html" class="bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform">
+        <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#FCD34D"/>
+            <text x="12" y="16" text-anchor="middle" font-size="12" fill="#92400E" font-weight="bold">$</text>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="text-gray-900 font-medium">我的工资</div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- 底部 TabBar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
+      <div class="max-w-[430px] mx-auto flex items-center justify-around py-2">
+        <a href="index.html" class="flex flex-col items-center gap-1 px-6 py-1 active:opacity-70 transition-opacity">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span class="text-xs text-gray-400">首页</span>
+        </a>
+        <a href="index.html" class="flex flex-col items-center gap-1 px-6 py-1 active:opacity-70 transition-opacity">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F080A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="text-xs text-primary font-medium">我的</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

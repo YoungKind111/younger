@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>收款账户</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F080A0',
+            primaryDark: '#E06090',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .page-container {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      padding-bottom: 100px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .capsule-btn {
+      background: rgba(0,0,0,0.05);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      gap: 8px;
+    }
+    .capsule-btn .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(0,0,0,0.15);
+    }
+    .upload-box {
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 12px;
+      gap: 6px;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-box:active {
+      background: #fafafa;
+      border-color: #ccc;
+    }
+    .upload-box.has-image {
+      border-style: solid;
+      border-color: #e5e5e5;
+    }
+    .upload-box .preview-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .upload-box .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: #F080A0;
+    }
+    .form-input::placeholder {
+      color: #bbb;
+    }
+    .section-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 20px 0;
+    }
+    .bank-options-wrap {
+      max-height: 160px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+    }
+    .bank-options-wrap::-webkit-scrollbar {
+      width: 3px;
+    }
+    .bank-options-wrap::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border-radius: 3px;
+    }
+    .bank-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      border: 1px solid #e5e5e5;
+      color: #666;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .bank-tag.active {
+      background: #FEF2F2;
+      border-color: #F080A0;
+      color: #F080A0;
+    }
+    .submit-btn {
+      width: 100%;
+      background: #F080A0;
+      color: white;
+      font-weight: 500;
+      padding: 14px;
+      border-radius: 999px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .submit-btn:disabled {
+      background: #e5e5e5;
+      color: #bbb;
+      cursor: not-allowed;
+    }
+    .submit-btn:not(:disabled):active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    .input-error {
+      border-color: #ef4444 !important;
+    }
+    .input-error:focus {
+      border-color: #ef4444 !important;
+    }
+    .error-msg {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+    .error-msg.show {
+      display: block;
+    }
+    .required::after {
+      content: '*';
+      color: #F080A0;
+      margin-left: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 顶部导航栏 -->
+    <div class="bg-white pt-12 pb-3 px-4 flex items-center justify-between sticky top-0 z-10">
+      <a href="salary.html" class="text-gray-800">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </a>
+      <h1 class="text-lg font-medium text-gray-900">收款账户</h1>
+      <div class="capsule-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-gray-600">
+          <circle cx="6" cy="12" r="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="18" cy="12" r="2"/>
+        </svg>
+        <div class="divider"></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-gray-600">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 收款账户信息 -->
+    <div class="px-4 mt-3">
+      <div class="bg-white rounded-xl p-4 shadow-sm">
+        <div class="text-gray-900 font-medium mb-4">收款账户信息</div>
+
+        <!-- 身份信息组 -->
+        <div class="mb-4">
+          <div class="text-gray-700 text-sm mb-2 required">开户人姓名</div>
+          <input type="text" id="name" class="form-input" value="" placeholder="请输入姓名" oninput="clearError(this); checkForm()" />
+          <div class="error-msg" id="nameError">请输入开户人姓名</div>
+        </div>
+
+        <div class="mb-4">
+          <div class="text-gray-700 text-sm mb-2 required">开户人身份证</div>
+          <input type="text" id="idcard" class="form-input" placeholder="请输入身份证号码" maxlength="18" inputmode="numeric" oninput="clearError(this); checkForm()" />
+          <div class="error-msg" id="idcardError">请输入正确的18位身份证号码</div>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-gray-700 text-sm mb-2 required">身份证照片</div>
+          <div class="flex gap-3">
+            <!-- 人像面 -->
+            <div class="flex-1">
+              <div class="upload-box" id="uploadFront" onclick="handleUpload('front')">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span class="text-sm upload-text">上传人像面</span>
+                <span class="text-xs text-gray-400 status-text">待上传</span>
+              </div>
+            </div>
+            <!-- 国徽面 -->
+            <div class="flex-1">
+              <div class="upload-box" id="uploadBack" onclick="handleUpload('back')">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span class="text-sm upload-text">上传国徽面</span>
+                <span class="text-xs text-gray-400 status-text">待上传</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分割线 -->
+        <div class="section-divider"></div>
+
+        <!-- 银行卡信息组 -->
+        <div class="mb-4">
+          <div class="text-gray-700 text-sm mb-2 required">银行预留手机号</div>
+          <input type="tel" id="phone" class="form-input" value="" placeholder="请输入手机号" maxlength="11" inputmode="tel" oninput="clearError(this); checkForm()" />
+          <div class="error-msg" id="phoneError">请输入正确的11位手机号</div>
+        </div>
+
+        <div class="mb-4">
+          <div class="text-gray-700 text-sm mb-2 required">银行卡号</div>
+          <input type="text" id="cardNo" class="form-input" placeholder="请输入结算银行卡号" maxlength="23" inputmode="numeric" oninput="formatCardNo(this); clearError(this); checkForm()" />
+          <div class="error-msg" id="cardNoError">请输入正确的银行卡号（16-19位）</div>
+        </div>
+
+        <div class="mb-4">
+          <div class="text-gray-700 text-sm mb-2 required">银行</div>
+          <input type="text" id="bankInput" class="form-input mb-2" value="" placeholder="请输入或选择银行" oninput="filterBanks(this.value); clearError(this); checkForm()" onfocus="showBankOptions()" />
+          <div id="bankOptions" class="bank-options-wrap flex flex-wrap gap-2" style="display:none;">
+            <span class="bank-tag" data-value="中国农业银行" onclick="selectBank(this)">中国农业银行</span>
+            <span class="bank-tag" data-value="中国工商银行" onclick="selectBank(this)">中国工商银行</span>
+            <span class="bank-tag" data-value="中国建设银行" onclick="selectBank(this)">中国建设银行</span>
+            <span class="bank-tag" data-value="中国银行" onclick="selectBank(this)">中国银行</span>
+            <span class="bank-tag" data-value="中国邮政储蓄银行" onclick="selectBank(this)">中国邮政储蓄银行</span>
+            <span class="bank-tag" data-value="交通银行" onclick="selectBank(this)">交通银行</span>
+            <span class="bank-tag" data-value="招商银行" onclick="selectBank(this)">招商银行</span>
+            <span class="bank-tag" data-value="中信银行" onclick="selectBank(this)">中信银行</span>
+            <span class="bank-tag" data-value="浦发银行" onclick="selectBank(this)">浦发银行</span>
+            <span class="bank-tag" data-value="民生银行" onclick="selectBank(this)">民生银行</span>
+            <span class="bank-tag" data-value="光大银行" onclick="selectBank(this)">光大银行</span>
+            <span class="bank-tag" data-value="平安银行" onclick="selectBank(this)">平安银行</span>
+            <span class="bank-tag" data-value="兴业银行" onclick="selectBank(this)">兴业银行</span>
+            <span class="bank-tag" data-value="华夏银行" onclick="selectBank(this)">华夏银行</span>
+            <span class="bank-tag" data-value="广发银行" onclick="selectBank(this)">广发银行</span>
+            <span class="bank-tag" data-value="北京银行" onclick="selectBank(this)">北京银行</span>
+            <span class="bank-tag" data-value="上海银行" onclick="selectBank(this)">上海银行</span>
+            <span class="bank-tag" data-value="江苏银行" onclick="selectBank(this)">江苏银行</span>
+            <span class="bank-tag" data-value="南京银行" onclick="selectBank(this)">南京银行</span>
+            <span class="bank-tag" data-value="杭州银行" onclick="selectBank(this)">杭州银行</span>
+            <span class="bank-tag" data-value="宁波银行" onclick="selectBank(this)">宁波银行</span>
+            <span class="bank-tag" data-value="浙商银行" onclick="selectBank(this)">浙商银行</span>
+            <span class="bank-tag" data-value="渤海银行" onclick="selectBank(this)">渤海银行</span>
+            <span class="bank-tag" data-value="恒丰银行" onclick="selectBank(this)">恒丰银行</span>
+            <span class="bank-tag" data-value="徽商银行" onclick="selectBank(this)">徽商银行</span>
+            <span class="bank-tag" data-value="北京农商银行" onclick="selectBank(this)">北京农商银行</span>
+            <span class="bank-tag" data-value="上海农商银行" onclick="selectBank(this)">上海农商银行</span>
+            <span class="bank-tag" data-value="广州农商银行" onclick="selectBank(this)">广州农商银行</span>
+            <span class="bank-tag" data-value="深圳农商银行" onclick="selectBank(this)">深圳农商银行</span>
+            <span class="bank-tag" data-value="重庆农商银行" onclick="selectBank(this)">重庆农商银行</span>
+            <span class="bank-tag" data-value="成都农商银行" onclick="selectBank(this)">成都农商银行</span>
+            <span class="bank-tag" data-value="东莞农商银行" onclick="selectBank(this)">东莞农商银行</span>
+            <span class="bank-tag" data-value="顺德农商银行" onclick="selectBank(this)">顺德农商银行</span>
+            <span class="bank-tag" data-value="南海农商银行" onclick="selectBank(this)">南海农商银行</span>
+            <span class="bank-tag" data-value="天津农商银行" onclick="selectBank(this)">天津农商银行</span>
+            <span class="bank-tag" data-value="武汉农商银行" onclick="selectBank(this)">武汉农商银行</span>
+            <span class="bank-tag" data-value="长沙农商银行" onclick="selectBank(this)">长沙农商银行</span>
+            <span class="bank-tag" data-value="厦门国际银行" onclick="selectBank(this)">厦门国际银行</span>
+            <span class="bank-tag" data-value="富滇银行" onclick="selectBank(this)">富滇银行</span>
+            <span class="bank-tag" data-value="哈尔滨银行" onclick="selectBank(this)">哈尔滨银行</span>
+            <span class="bank-tag" data-value="吉林银行" onclick="selectBank(this)">吉林银行</span>
+            <span class="bank-tag" data-value="盛京银行" onclick="selectBank(this)">盛京银行</span>
+            <span class="bank-tag" data-value="大连银行" onclick="selectBank(this)">大连银行</span>
+            <span class="bank-tag" data-value="锦州银行" onclick="selectBank(this)">锦州银行</span>
+            <span class="bank-tag" data-value="包商银行" onclick="selectBank(this)">包商银行</span>
+            <span class="bank-tag" data-value="内蒙古银行" onclick="selectBank(this)">内蒙古银行</span>
+            <span class="bank-tag" data-value="兰州银行" onclick="selectBank(this)">兰州银行</span>
+            <span class="bank-tag" data-value="西安银行" onclick="selectBank(this)">西安银行</span>
+            <span class="bank-tag" data-value="长安银行" onclick="selectBank(this)">长安银行</span>
+            <span class="bank-tag" data-value="乌鲁木齐银行" onclick="selectBank(this)">乌鲁木齐银行</span>
+            <span class="bank-tag" data-value="昆仑银行" onclick="selectBank(this)">昆仑银行</span>
+            <span class="bank-tag" data-value="宁夏银行" onclick="selectBank(this)">宁夏银行</span>
+            <span class="bank-tag" data-value="青海银行" onclick="selectBank(this)">青海银行</span>
+            <span class="bank-tag" data-value="西藏银行" onclick="selectBank(this)">西藏银行</span>
+            <span class="bank-tag" data-value="贵阳银行" onclick="selectBank(this)">贵阳银行</span>
+            <span class="bank-tag" data-value="贵州银行" onclick="selectBank(this)">贵州银行</span>
+            <span class="bank-tag" data-value="成都银行" onclick="selectBank(this)">成都银行</span>
+            <span class="bank-tag" data-value="重庆银行" onclick="selectBank(this)">重庆银行</span>
+            <span class="bank-tag" data-value="汉口银行" onclick="selectBank(this)">汉口银行</span>
+            <span class="bank-tag" data-value="湖北银行" onclick="selectBank(this)">湖北银行</span>
+            <span class="bank-tag" data-value="长沙银行" onclick="selectBank(this)">长沙银行</span>
+            <span class="bank-tag" data-value="湖南银行" onclick="selectBank(this)">湖南银行</span>
+            <span class="bank-tag" data-value="江西银行" onclick="selectBank(this)">江西银行</span>
+            <span class="bank-tag" data-value="九江银行" onclick="selectBank(this)">九江银行</span>
+            <span class="bank-tag" data-value="赣州银行" onclick="selectBank(this)">赣州银行</span>
+            <span class="bank-tag" data-value="上饶银行" onclick="selectBank(this)">上饶银行</span>
+            <span class="bank-tag" data-value="齐鲁银行" onclick="selectBank(this)">齐鲁银行</span>
+            <span class="bank-tag" data-value="青岛银行" onclick="selectBank(this)">青岛银行</span>
+            <span class="bank-tag" data-value="威海银行" onclick="selectBank(this)">威海银行</span>
+            <span class="bank-tag" data-value="齐商银行" onclick="selectBank(this)">齐商银行</span>
+            <span class="bank-tag" data-value="泰安银行" onclick="selectBank(this)">泰安银行</span>
+            <span class="bank-tag" data-value="日照银行" onclick="selectBank(this)">日照银行</span>
+            <span class="bank-tag" data-value="莱商银行" onclick="selectBank(this)">莱商银行</span>
+            <span class="bank-tag" data-value="烟台银行" onclick="selectBank(this)">烟台银行</span>
+            <span class="bank-tag" data-value="潍坊银行" onclick="selectBank(this)">潍坊银行</span>
+            <span class="bank-tag" data-value="济宁银行" onclick="selectBank(this)">济宁银行</span>
+            <span class="bank-tag" data-value="临商银行" onclick="selectBank(this)">临商银行</span>
+            <span class="bank-tag" data-value="德州银行" onclick="selectBank(this)">德州银行</span>
+            <span class="bank-tag" data-value="东营银行" onclick="selectBank(this)">东营银行</span>
+            <span class="bank-tag" data-value="枣庄银行" onclick="selectBank(this)">枣庄银行</span>
+            <span class="bank-tag" data-value="菏泽银行" onclick="selectBank(this)">菏泽银行</span>
+            <span class="bank-tag" data-value="聊城银行" onclick="selectBank(this)">聊城银行</span>
+            <span class="bank-tag" data-value="郑州银行" onclick="selectBank(this)">郑州银行</span>
+            <span class="bank-tag" data-value="中原银行" onclick="selectBank(this)">中原银行</span>
+            <span class="bank-tag" data-value="洛阳银行" onclick="selectBank(this)">洛阳银行</span>
+            <span class="bank-tag" data-value="平顶山银行" onclick="selectBank(this)">平顶山银行</span>
+            <span class="bank-tag" data-value="焦作中旅银行" onclick="selectBank(this)">焦作中旅银行</span>
+            <span class="bank-tag" data-value="许昌银行" onclick="selectBank(this)">许昌银行</span>
+            <span class="bank-tag" data-value="开封商业银行" onclick="selectBank(this)">开封商业银行</span>
+            <span class="bank-tag" data-value="南阳银行" onclick="selectBank(this)">南阳银行</span>
+            <span class="bank-tag" data-value="新乡银行" onclick="selectBank(this)">新乡银行</span>
+            <span class="bank-tag" data-value="信阳银行" onclick="selectBank(this)">信阳银行</span>
+            <span class="bank-tag" data-value="安阳银行" onclick="selectBank(this)">安阳银行</span>
+            <span class="bank-tag" data-value="鹤壁银行" onclick="selectBank(this)">鹤壁银行</span>
+            <span class="bank-tag" data-value="周口银行" onclick="selectBank(this)">周口银行</span>
+            <span class="bank-tag" data-value="驻马店银行" onclick="selectBank(this)">驻马店银行</span>
+            <span class="bank-tag" data-value="商丘银行" onclick="selectBank(this)">商丘银行</span>
+            <span class="bank-tag" data-value="漯河银行" onclick="selectBank(this)">漯河银行</span>
+            <span class="bank-tag" data-value="濮阳银行" onclick="selectBank(this)">濮阳银行</span>
+            <span class="bank-tag" data-value="三门峡银行" onclick="selectBank(this)">三门峡银行</span>
+            <span class="bank-tag" data-value="晋商银行" onclick="selectBank(this)">晋商银行</span>
+            <span class="bank-tag" data-value="山西银行" onclick="selectBank(this)">山西银行</span>
+            <span class="bank-tag" data-value="晋城银行" onclick="selectBank(this)">晋城银行</span>
+            <span class="bank-tag" data-value="晋中银行" onclick="selectBank(this)">晋中银行</span>
+            <span class="bank-tag" data-value="大同银行" onclick="selectBank(this)">大同银行</span>
+            <span class="bank-tag" data-value="长治银行" onclick="selectBank(this)">长治银行</span>
+            <span class="bank-tag" data-value="阳泉银行" onclick="selectBank(this)">阳泉银行</span>
+            <span class="bank-tag" data-value="朔州银行" onclick="selectBank(this)">朔州银行</span>
+            <span class="bank-tag" data-value="河北银行" onclick="selectBank(this)">河北银行</span>
+            <span class="bank-tag" data-value="唐山银行" onclick="selectBank(this)">唐山银行</span>
+            <span class="bank-tag" data-value="秦皇岛银行" onclick="selectBank(this)">秦皇岛银行</span>
+            <span class="bank-tag" data-value="邯郸银行" onclick="selectBank(this)">邯郸银行</span>
+            <span class="bank-tag" data-value="邢台银行" onclick="selectBank(this)">邢台银行</span>
+            <span class="bank-tag" data-value="保定银行" onclick="selectBank(this)">保定银行</span>
+            <span class="bank-tag" data-value="张家口银行" onclick="selectBank(this)">张家口银行</span>
+            <span class="bank-tag" data-value="承德银行" onclick="selectBank(this)">承德银行</span>
+            <span class="bank-tag" data-value="沧州银行" onclick="selectBank(this)">沧州银行</span>
+            <span class="bank-tag" data-value="廊坊银行" onclick="selectBank(this)">廊坊银行</span>
+            <span class="bank-tag" data-value="衡水银行" onclick="selectBank(this)">衡水银行</span>
+            <span class="bank-tag" data-value="天津银行" onclick="selectBank(this)">天津银行</span>
+            <span class="bank-tag" data-value="厦门银行" onclick="selectBank(this)">厦门银行</span>
+            <span class="bank-tag" data-value="福建海峡银行" onclick="selectBank(this)">福建海峡银行</span>
+            <span class="bank-tag" data-value="泉州银行" onclick="selectBank(this)">泉州银行</span>
+            <span class="bank-tag" data-value="莆田银行" onclick="selectBank(this)">莆田银行</span>
+            <span class="bank-tag" data-value="漳州银行" onclick="selectBank(this)">漳州银行</span>
+            <span class="bank-tag" data-value="龙岩银行" onclick="selectBank(this)">龙岩银行</span>
+            <span class="bank-tag" data-value="三明银行" onclick="selectBank(this)">三明银行</span>
+            <span class="bank-tag" data-value="南平银行" onclick="selectBank(this)">南平银行</span>
+            <span class="bank-tag" data-value="宁德银行" onclick="selectBank(this)">宁德银行</span>
+            <span class="bank-tag" data-value="浙江泰隆商业银行" onclick="selectBank(this)">浙江泰隆商业银行</span>
+            <span class="bank-tag" data-value="浙江民泰商业银行" onclick="selectBank(this)">浙江民泰商业银行</span>
+            <span class="bank-tag" data-value="浙江稠州商业银行" onclick="selectBank(this)">浙江稠州商业银行</span>
+            <span class="bank-tag" data-value="台州银行" onclick="selectBank(this)">台州银行</span>
+            <span class="bank-tag" data-value="绍兴银行" onclick="selectBank(this)">绍兴银行</span>
+            <span class="bank-tag" data-value="嘉兴银行" onclick="selectBank(this)">嘉兴银行</span>
+            <span class="bank-tag" data-value="湖州银行" onclick="selectBank(this)">湖州银行</span>
+            <span class="bank-tag" data-value="金华银行" onclick="selectBank(this)">金华银行</span>
+            <span class="bank-tag" data-value="温州银行" onclick="selectBank(this)">温州银行</span>
+            <span class="bank-tag" data-value="苏州银行" onclick="selectBank(this)">苏州银行</span>
+            <span class="bank-tag" data-value="无锡银行" onclick="selectBank(this)">无锡银行</span>
+            <span class="bank-tag" data-value="常州银行" onclick="selectBank(this)">常州银行</span>
+            <span class="bank-tag" data-value="南通银行" onclick="selectBank(this)">南通银行</span>
+            <span class="bank-tag" data-value="徐州银行" onclick="selectBank(this)">徐州银行</span>
+            <span class="bank-tag" data-value="扬州银行" onclick="selectBank(this)">扬州银行</span>
+            <span class="bank-tag" data-value="泰州银行" onclick="selectBank(this)">泰州银行</span>
+            <span class="bank-tag" data-value="镇江银行" onclick="selectBank(this)">镇江银行</span>
+            <span class="bank-tag" data-value="盐城银行" onclick="selectBank(this)">盐城银行</span>
+            <span class="bank-tag" data-value="淮安银行" onclick="selectBank(this)">淮安银行</span>
+            <span class="bank-tag" data-value="连云港银行" onclick="selectBank(this)">连云港银行</span>
+            <span class="bank-tag" data-value="宿迁银行" onclick="selectBank(this)">宿迁银行</span>
+            <span class="bank-tag" data-value="江阴银行" onclick="selectBank(this)">江阴银行</span>
+            <span class="bank-tag" data-value="张家港银行" onclick="selectBank(this)">张家港银行</span>
+            <span class="bank-tag" data-value="常熟银行" onclick="selectBank(this)">常熟银行</span>
+            <span class="bank-tag" data-value="昆山银行" onclick="selectBank(this)">昆山银行</span>
+            <span class="bank-tag" data-value="太仓银行" onclick="selectBank(this)">太仓银行</span>
+            <span class="bank-tag" data-value="吴江银行" onclick="selectBank(this)">吴江银行</span>
+            <span class="bank-tag" data-value="广东南粤银行" onclick="selectBank(this)">广东南粤银行</span>
+            <span class="bank-tag" data-value="华兴银行" onclick="selectBank(this)">华兴银行</span>
+            <span class="bank-tag" data-value="珠海华润银行" onclick="selectBank(this)">珠海华润银行</span>
+            <span class="bank-tag" data-value="广州银行" onclick="selectBank(this)">广州银行</span>
+            <span class="bank-tag" data-value="东莞银行" onclick="selectBank(this)">东莞银行</span>
+            <span class="bank-tag" data-value="佛山银行" onclick="selectBank(this)">佛山银行</span>
+            <span class="bank-tag" data-value="中山银行" onclick="selectBank(this)">中山银行</span>
+            <span class="bank-tag" data-value="江门银行" onclick="selectBank(this)">江门银行</span>
+            <span class="bank-tag" data-value="惠州银行" onclick="selectBank(this)">惠州银行</span>
+            <span class="bank-tag" data-value="肇庆银行" onclick="selectBank(this)">肇庆银行</span>
+            <span class="bank-tag" data-value="汕头银行" onclick="selectBank(this)">汕头银行</span>
+            <span class="bank-tag" data-value="揭阳银行" onclick="selectBank(this)">揭阳银行</span>
+            <span class="bank-tag" data-value="潮州银行" onclick="selectBank(this)">潮州银行</span>
+            <span class="bank-tag" data-value="梅州银行" onclick="selectBank(this)">梅州银行</span>
+            <span class="bank-tag" data-value="河源银行" onclick="selectBank(this)">河源银行</span>
+            <span class="bank-tag" data-value="阳江银行" onclick="selectBank(this)">阳江银行</span>
+            <span class="bank-tag" data-value="清远银行" onclick="selectBank(this)">清远银行</span>
+            <span class="bank-tag" data-value="韶关银行" onclick="selectBank(this)">韶关银行</span>
+            <span class="bank-tag" data-value="云浮银行" onclick="selectBank(this)">云浮银行</span>
+            <span class="bank-tag" data-value="茂名银行" onclick="selectBank(this)">茂名银行</span>
+            <span class="bank-tag" data-value="湛江银行" onclick="selectBank(this)">湛江银行</span>
+            <span class="bank-tag" data-value="广西北部湾银行" onclick="selectBank(this)">广西北部湾银行</span>
+            <span class="bank-tag" data-value="桂林银行" onclick="selectBank(this)">桂林银行</span>
+            <span class="bank-tag" data-value="柳州银行" onclick="selectBank(this)">柳州银行</span>
+            <span class="bank-tag" data-value="海南银行" onclick="selectBank(this)">海南银行</span>
+            <span class="bank-tag" data-value="三亚银行" onclick="selectBank(this)">三亚银行</span>
+            <span class="bank-tag" data-value="云南红塔银行" onclick="selectBank(this)">云南红塔银行</span>
+            <span class="bank-tag" data-value="曲靖银行" onclick="selectBank(this)">曲靖银行</span>
+            <span class="bank-tag" data-value="玉溪银行" onclick="selectBank(this)">玉溪银行</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 提交按钮 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
+      <div class="max-w-[430px] mx-auto">
+        <button id="submitBtn" class="submit-btn" disabled onclick="handleSubmit()">
+          提交收款账户
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // 上传状态
+    const uploadState = { front: false, back: false };
+
+    // 银行卡号分段格式化
+    function formatCardNo(input) {
+      let v = input.value.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+      let parts = [];
+      for (let i = 0; i < v.length; i += 4) {
+        parts.push(v.substring(i, i + 4));
+      }
+      input.value = parts.join(' ');
+    }
+
+    // 银行列表数据
+    const allBanks = Array.from(document.querySelectorAll('.bank-tag')).map(el => ({
+      value: el.dataset.value,
+      text: el.textContent.trim()
+    }));
+
+    // 显示银行选项
+    function showBankOptions() {
+      document.getElementById('bankOptions').style.display = 'flex';
+    }
+
+    // 过滤银行选项
+    function filterBanks(keyword) {
+      const opts = document.getElementById('bankOptions');
+      const tags = opts.querySelectorAll('.bank-tag');
+      const k = keyword.trim();
+      if (!k) {
+        tags.forEach(t => t.style.display = 'inline-flex');
+        opts.style.display = 'flex';
+        return;
+      }
+      let hasMatch = false;
+      tags.forEach(t => {
+        const text = t.textContent.trim();
+        const match = text.includes(k);
+        t.style.display = match ? 'inline-flex' : 'none';
+        if (match) hasMatch = true;
+      });
+      opts.style.display = hasMatch ? 'flex' : 'none';
+    }
+
+    // 选择银行
+    function selectBank(el) {
+      document.querySelectorAll('.bank-tag').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('bankInput').value = el.dataset.value || el.textContent.trim();
+      filterBanks(el.dataset.value);
+      checkForm();
+    }
+
+    // 处理上传点击
+    function handleUpload(side) {
+      const box = document.getElementById(side === 'front' ? 'uploadFront' : 'uploadBack');
+      if (uploadState[side]) {
+        uploadState[side] = false;
+        box.classList.remove('has-image');
+        box.querySelector('.preview-img')?.remove();
+        box.querySelector('.delete-btn')?.remove();
+        box.querySelector('.upload-icon').style.display = 'block';
+        box.querySelector('.upload-text').style.display = 'block';
+        box.querySelector('.status-text').textContent = '待上传';
+        box.querySelector('.status-text').style.display = 'block';
+        checkForm();
+        return;
+      }
+      uploadState[side] = true;
+      box.classList.add('has-image');
+      box.querySelector('.upload-icon').style.display = 'none';
+      box.querySelector('.upload-text').style.display = 'none';
+      box.querySelector('.status-text').style.display = 'none';
+
+      const img = document.createElement('div');
+      img.className = 'preview-img';
+      img.style.background = side === 'front' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+      box.appendChild(img);
+
+      const del = document.createElement('span');
+      del.className = 'delete-btn';
+      del.innerHTML = 'x';
+      del.onclick = function(e) { e.stopPropagation(); handleUpload(side); };
+      box.appendChild(del);
+
+      showToast(side === 'front' ? '人像面上传成功' : '国徽面上传成功');
+      checkForm();
+    }
+
+    // 身份证校验（简化：只检查格式和长度）
+    function isValidIdCard(id) {
+      return /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[\dXx]$/.test(id);
+    }
+
+    // 手机号校验
+    function isValidPhone(phone) {
+      return /^1[3-9]\d{9}$/.test(phone);
+    }
+
+    // 银行卡号校验（简化：只检查16-19位数字）
+    function isValidCardNo(card) {
+      const num = card.replace(/\s/g, '');
+      return /^\d{16,19}$/.test(num);
+    }
+
+    // 显示字段错误
+    function showFieldError(inputId, errorId, show) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errorId);
+      if (show) {
+        input.classList.add('input-error');
+        err.classList.add('show');
+      } else {
+        input.classList.remove('input-error');
+        err.classList.remove('show');
+      }
+    }
+
+    // 清除错误
+    function clearError(input) {
+      input.classList.remove('input-error');
+      const errId = input.id + 'Error';
+      const err = document.getElementById(errId);
+      if (err) err.classList.remove('show');
+    }
+
+    // 表单校验（用于按钮状态）
+    function checkForm() {
+      const name = document.getElementById('name').value.trim();
+      const idcard = document.getElementById('idcard').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const cardNo = document.getElementById('cardNo').value.trim();
+      const bank = document.getElementById('bankInput').value.trim();
+
+      const isValid = name && isValidIdCard(idcard) && isValidPhone(phone) && isValidCardNo(cardNo) && bank && uploadState.front && uploadState.back;
+      document.getElementById('submitBtn').disabled = !isValid;
+    }
+
+    // 提交
+    function handleSubmit() {
+      const name = document.getElementById('name').value.trim();
+      const idcard = document.getElementById('idcard').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const cardNo = document.getElementById('cardNo').value.trim();
+      const bank = document.getElementById('bankInput').value.trim();
+
+      let hasError = false;
+
+      if (!name) { showFieldError('name', 'nameError', true); hasError = true; }
+      if (!isValidIdCard(idcard)) { showFieldError('idcard', 'idcardError', true); hasError = true; }
+      if (!uploadState.front || !uploadState.back) {
+        showToast('请上传身份证正反面照片');
+        hasError = true;
+      }
+      if (!isValidPhone(phone)) { showFieldError('phone', 'phoneError', true); hasError = true; }
+      if (!isValidCardNo(cardNo)) { showFieldError('cardNo', 'cardNoError', true); hasError = true; }
+      if (!bank) {
+        document.getElementById('bankInput').classList.add('input-error');
+        showToast('请选择银行');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = '提交中...';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = '提交收款账户';
+        btn.disabled = false;
+        showToast('提交成功');
+      }, 1500);
+    }
+
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // 初始化校验
+    checkForm();
+  </script>
+</body>
+</html>
