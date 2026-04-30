@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户地图分布 - 数量热力</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ========== 左侧面板 ========== */
+        .left-panel {
+            width: 380px;
+            background: #fff;
+            border-right: 1px solid #e8e8e8;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .panel-header h1 {
+            font-size: 18px;
+            color: #262626;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-header h1::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: #1890ff;
+            border-radius: 2px;
+        }
+
+        /* 录入表单 */
+        .form-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .form-header h3 {
+            font-size: 14px;
+            color: #595959;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .form-row input, .form-row select, .form-row textarea {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-row textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+            border-color: #1890ff;
+        }
+        .batch-hint {
+            font-size: 11px;
+            color: #bfbfbf;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 9px;
+            background: #1890ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-primary:active { background: #096dd9; }
+        .batch-result {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: none;
+        }
+        .batch-result.success {
+            display: block;
+            background: #f6ffed;
+            color: #389e0d;
+            border: 1px solid #b7eb8f;
+        }
+        .batch-result.error {
+            display: block;
+            background: #fff2f0;
+            color: #cf1322;
+            border: 1px solid #ffa39e;
+        }
+
+        /* 统计 */
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 16px;
+        }
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f6ffed;
+        }
+        .stat-box:nth-child(2) { background: #e6f7ff; }
+        .stat-box:nth-child(3) { background: #fff7e6; }
+        .stat-box .num {
+            font-size: 22px;
+            font-weight: 700;
+            color: #262626;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 2px;
+        }
+
+        /* 客户列表 */
+        .list-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .list-header {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: #595959;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-header button {
+            font-size: 12px;
+            color: #ff4d4f;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .list-header button:hover { text-decoration: underline; }
+        .customer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 16px;
+        }
+        .customer-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .customer-item:hover {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+        }
+        .customer-item .info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .customer-item .name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .customer-item .meta {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .customer-item .del {
+            color: #bfbfbf;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px;
+        }
+        .customer-item .del:hover { color: #ff4d4f; }
+        .empty-tip {
+            text-align: center;
+            padding: 40px 20px;
+            color: #bfbfbf;
+            font-size: 13px;
+        }
+
+        /* ========== 右侧地图 ========== */
+        .right-panel {
+            flex: 1;
+            position: relative;
+            background: #fff;
+        }
+        #map-chart {
+            width: 100%;
+            height: 100%;
+        }
+        .map-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 13px;
+            color: #595959;
+            line-height: 1.8;
+            pointer-events: none;
+        }
+        .map-overlay strong {
+            color: #262626;
+            font-size: 14px;
+        }
+        .color-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .color-bar .gradient {
+            width: 120px;
+            height: 12px;
+            border-radius: 2px;
+            background: linear-gradient(to right, #e0f3f8, #abd9e9, #74add1, #4575b4, #313695);
+        }
+        .color-bar span {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h1>客户地图分布</h1>
+            </div>
+
+            <!-- 录入表单 -->
+            <div class="form-section">
+                <div class="form-header">
+                    <h3>录入客户</h3>
+                </div>
+
+                <div id="batchForm">
+                    <div class="batch-hint">
+                        每行一位客户，支持以下格式（可直接从 Excel 复制粘贴）：<br>
+                        <code>姓名,省份</code> 或 <code>姓名,省份,城市</code><br>
+                        <span style="color:#999">城市选填，不填则默认使用省会</span>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="batchInput" placeholder=""></textarea>
+                    </div>
+                    <button class="btn-primary" onclick="addBatchCustomers()">批量添加</button>
+                    <div id="batchResult" class="batch-result"></div>
+                </div>
+            </div>
+
+            <!-- 统计 -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="num" id="statTotal">0</div>
+                    <div class="label">客户总数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="statProvinces">0</div>
+                    <div class="label">覆盖省份</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="statTop">-</div>
+                    <div class="label">最多省份</div>
+                </div>
+            </div>
+
+            <!-- 客户列表 -->
+            <div class="list-section">
+                <div class="list-header">
+                    <span>客户列表</span>
+                    <button onclick="clearAll()">清空全部</button>
+                </div>
+                <div class="customer-list" id="customerList">
+                    <div class="empty-tip">暂无客户，请在上方录入</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧地图 -->
+        <div class="right-panel">
+            <div id="map-chart"></div>
+            <div class="map-overlay">
+                <strong>客户分布热力图</strong><br>
+                颜色越深代表该省份客户数量越多<br>
+                <div class="color-bar">
+                    <span>少</span>
+                    <div class="gradient"></div>
+                    <span>多</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 省市数据 ====================
+        const provinceCityMap = {
+            '北京': ['北京市'],
+            '天津': ['天津市'],
+            '上海': ['上海市'],
+            '重庆': ['重庆市'],
+            '河北': ['石家庄', '唐山', '秦皇岛', '邯郸', '邢台', '保定', '张家口', '承德', '沧州', '廊坊', '衡水'],
+            '山西': ['太原', '大同', '阳泉', '长治', '晋城', '朔州', '晋中', '运城', '忻州', '临汾', '吕梁'],
+            '内蒙古': ['呼和浩特', '包头', '乌海', '赤峰', '通辽', '鄂尔多斯', '呼伦贝尔', '巴彦淖尔', '乌兰察布', '兴安', '锡林郭勒', '阿拉善'],
+            '辽宁': ['沈阳', '大连', '鞍山', '抚顺', '本溪', '丹东', '锦州', '营口', '阜新', '辽阳', '盘锦', '铁岭', '朝阳', '葫芦岛'],
+            '吉林': ['长春', '吉林', '四平', '辽源', '通化', '白山', '松原', '白城', '延边'],
+            '黑龙江': ['哈尔滨', '齐齐哈尔', '鸡西', '鹤岗', '双鸭山', '大庆', '伊春', '佳木斯', '七台河', '牡丹江', '黑河', '绥化', '大兴安岭'],
+            '江苏': ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'],
+            '浙江': ['杭州', '宁波', '温州', '嘉兴', '湖州', '绍兴', '金华', '衢州', '舟山', '台州', '丽水'],
+            '安徽': ['合肥', '芜湖', '蚌埠', '淮南', '马鞍山', '淮北', '铜陵', '安庆', '黄山', '滁州', '阜阳', '宿州', '六安', '亳州', '池州', '宣城'],
+            '福建': ['福州', '厦门', '莆田', '三明', '泉州', '漳州', '南平', '龙岩', '宁德'],
+            '江西': ['南昌', '景德镇', '萍乡', '九江', '新余', '鹰潭', '赣州', '吉安', '宜春', '抚州', '上饶'],
+            '山东': ['济南', '青岛', '淄博', '枣庄', '东营', '烟台', '潍坊', '济宁', '泰安', '威海', '日照', '莱芜', '临沂', '德州', '聊城', '滨州', '菏泽'],
+            '河南': ['郑州', '开封', '洛阳', '平顶山', '安阳', '鹤壁', '新乡', '焦作', '濮阳', '许昌', '漯河', '三门峡', '南阳', '商丘', '信阳', '周口', '驻马店', '济源'],
+            '湖北': ['武汉', '黄石', '十堰', '宜昌', '襄阳', '鄂州', '荆门', '孝感', '荆州', '黄冈', '咸宁', '随州', '恩施', '仙桃', '潜江', '天门', '神农架'],
+            '湖南': ['长沙', '株洲', '湘潭', '衡阳', '邵阳', '岳阳', '常德', '张家界', '益阳', '郴州', '永州', '怀化', '娄底', '湘西'],
+            '广东': ['广州', '韶关', '深圳', '珠海', '汕头', '佛山', '江门', '湛江', '茂名', '肇庆', '惠州', '梅州', '汕尾', '河源', '阳江', '清远', '东莞', '中山', '潮州', '揭阳', '云浮'],
+            '广西': ['南宁', '柳州', '桂林', '梧州', '北海', '防城港', '钦州', '贵港', '玉林', '百色', '贺州', '河池', '来宾', '崇左'],
+            '海南': ['海口', '三亚', '三沙', '儋州', '五指山', '琼海', '文昌', '万宁', '东方', '定安', '屯昌', '澄迈', '临高', '白沙', '昌江', '乐东', '陵水', '保亭', '琼中'],
+            '四川': ['成都', '自贡', '攀枝花', '泸州', '德阳', '绵阳', '广元', '遂宁', '内江', '乐山', '南充', '眉山', '宜宾', '广安', '达州', '雅安', '巴中', '资阳', '阿坝', '甘孜', '凉山'],
+            '贵州': ['贵阳', '六盘水', '遵义', '安顺', '毕节', '铜仁', '黔西南', '黔东南', '黔南'],
+            '云南': ['昆明', '曲靖', '玉溪', '保山', '昭通', '丽江', '普洱', '临沧', '楚雄', '红河', '文山', '西双版纳', '大理', '德宏', '怒江', '迪庆'],
+            '西藏': ['拉萨', '日喀则', '昌都', '林芝', '山南', '那曲', '阿里'],
+            '陕西': ['西安', '铜川', '宝鸡', '咸阳', '渭南', '延安', '汉中', '榆林', '安康', '商洛'],
+            '甘肃': ['兰州', '嘉峪关', '金昌', '白银', '天水', '武威', '张掖', '平凉', '酒泉', '庆阳', '定西', '陇南', '临夏', '甘南'],
+            '青海': ['西宁', '海东', '海北', '黄南', '海南', '果洛', '玉树', '海西'],
+            '宁夏': ['银川', '石嘴山', '吴忠', '固原', '中卫'],
+            '新疆': ['乌鲁木齐', '克拉玛依', '吐鲁番', '哈密', '昌吉', '博尔塔拉', '巴音郭楞', '阿克苏', '克孜勒苏', '喀什', '和田', '伊犁', '塔城', '阿勒泰', '石河子', '阿拉尔', '图木舒克', '五家渠', '北屯', '铁门关', '双河', '可克达拉', '昆玉', '胡杨河', '新星'],
+            '台湾': ['台北市', '新北市', '桃园市', '台中市', '台南市', '高雄市', '基隆', '新竹', '嘉义', '宜兰', '新竹县', '苗栗', '彰化', '南投', '云林', '嘉义县', '屏东', '台东', '花莲', '澎湖', '金门', '连江'],
+            '香港': ['香港岛', '九龙', '新界'],
+            '澳门': ['澳门半岛', '氹仔', '路环']
+        };
+
+        // ==================== 状态 ====================
+        let customers = [];
+        let chart = null;
+        let chinaGeoJSON = null;
+
+        // 省份名称映射：简称 → ECharts GeoJSON 全称
+        const provinceNameMap = {
+            '北京': '北京市', '天津': '天津市', '上海': '上海市', '重庆': '重庆市',
+            '河北': '河北省', '山西': '山西省', '内蒙古': '内蒙古自治区',
+            '辽宁': '辽宁省', '吉林': '吉林省', '黑龙江': '黑龙江省',
+            '江苏': '江苏省', '浙江': '浙江省', '安徽': '安徽省',
+            '福建': '福建省', '江西': '江西省', '山东': '山东省',
+            '河南': '河南省', '湖北': '湖北省', '湖南': '湖南省',
+            '广东': '广东省', '广西': '广西壮族自治区', '海南': '海南省',
+            '四川': '四川省', '贵州': '贵州省', '云南': '云南省',
+            '西藏': '西藏自治区',
+            '陕西': '陕西省', '甘肃': '甘肃省', '青海': '青海省',
+            '宁夏': '宁夏回族自治区', '新疆': '新疆维吾尔自治区',
+            '台湾': '台湾省', '香港': '香港特别行政区', '澳门': '澳门特别行政区'
+        };
+
+        // ==================== 初始化 ====================
+        function init() {
+            // 加载中国地图
+            loadChinaMap();
+
+            // 加载演示数据
+            loadDemoData();
+        }
+
+        // ==================== 加载中国地图 ====================
+        async function loadChinaMap() {
+            try {
+                const res = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+                chinaGeoJSON = await res.json();
+                echarts.registerMap('china', chinaGeoJSON);
+                initChart();
+                updateChart();
+            } catch (e) {
+                console.error('地图加载失败', e);
+                document.getElementById('map-chart').innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">地图数据加载失败，请检查网络</div>';
+            }
+        }
+
+        // ==================== 初始化图表 ====================
+        function initChart() {
+            chart = echarts.init(document.getElementById('map-chart'));
+
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderColor: '#e8e8e8',
+                    borderWidth: 1,
+                    textStyle: { color: '#262626', fontSize: 13 },
+                    formatter: function(params) {
+                        // 找到该全称对应的简称，用于匹配客户数据
+                        let shortName = params.name;
+                        for (const [k, v] of Object.entries(provinceNameMap)) {
+                            if (v === params.name) { shortName = k; break; }
+                        }
+
+                        if (!params.value && params.value !== 0) {
+                            return `<div style="font-weight:600">${params.name}</div><div style="color:#8c8c8c;font-size:12px">暂无客户</div>`;
+                        }
+                        const list = customers.filter(c => c.province === shortName);
+                        const cityCount = {};
+                        list.forEach(c => {
+                            cityCount[c.city] = (cityCount[c.city] || 0) + 1;
+                        });
+                        const topCities = Object.entries(cityCount)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 3)
+                            .map(([city, num]) => `${city}${num > 1 ? '(' + num + ')' : ''}`)
+                            .join('、');
+                        return `<div style="font-weight:600">${params.name}</div>
+                                <div style="margin-top:4px">客户数量：<span style="color:#1890ff;font-weight:700">${params.value}</span> 人</div>
+                                ${topCities ? `<div style="color:#8c8c8c;font-size:12px;margin-top:4px">主要城市：${topCities}</div>` : ''}`;
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 10,
+                    left: 'right',
+                    bottom: '40',
+                    text: ['多', '少'],
+                    calculable: true,
+                    inRange: {
+                        color: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695']
+                    },
+                    textStyle: { color: '#595959' }
+                },
+                series: [{
+                    name: '客户数量',
+                    type: 'map',
+                    map: 'china',
+                    roam: true,
+                    zoom: 1.2,
+                    center: [105, 36],
+                    label: {
+                        show: true,
+                        fontSize: 10,
+                        color: '#333'
+                    },
+                    emphasis: {
+                        label: { show: true, fontSize: 12, fontWeight: 'bold' },
+                        itemStyle: {
+                            areaColor: '#ffd666',
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0,0,0,0.2)'
+                        }
+                    },
+                    itemStyle: {
+                        borderColor: '#fff',
+                        borderWidth: 1,
+                        areaColor: '#f5f5f5'
+                    },
+                    select: {
+                        itemStyle: { areaColor: '#ffd666' },
+                        label: { show: true, color: '#fff' }
+                    },
+                    data: []
+                }]
+            };
+
+            chart.setOption(option);
+
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        // ==================== 更新图表数据 ====================
+        function updateChart() {
+            if (!chart) return;
+
+            // 统计各省数量（用全称匹配 ECharts 地图）
+            const provinceCount = {};
+            customers.forEach(c => {
+                const fullName = provinceNameMap[c.province] || c.province;
+                provinceCount[fullName] = (provinceCount[fullName] || 0) + 1;
+            });
+
+            const data = Object.entries(provinceCount).map(([name, value]) => ({ name, value }));
+
+            // 自动调整 visualMap 最大值
+            const maxVal = Math.max(...Object.values(provinceCount), 1);
+            const visualMax = Math.max(maxVal, 5);
+
+            chart.setOption({
+                visualMap: { max: visualMax },
+                series: [{ data: data }]
+            });
+
+            updateStats();
+            renderList();
+        }
+
+        // ==================== 批量添加客户 ====================
+        function addBatchCustomers() {
+            const raw = document.getElementById('batchInput').value.trim();
+            const resultEl = document.getElementById('batchResult');
+
+            if (!raw) {
+                resultEl.className = 'batch-result error';
+                resultEl.textContent = '请输入客户数据';
+                return;
+            }
+
+            const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
+            const validProvinces = Object.keys(provinceCityMap);
+            let success = 0;
+            let fail = 0;
+            const failLines = [];
+
+            lines.forEach((line, idx) => {
+                // 支持逗号、制表符、空格（连续空格或tab）分隔
+                let parts = line.split(',').map(s => s.trim());
+                if (parts.length < 2) {
+                    parts = line.split('\t').map(s => s.trim());
+                }
+                if (parts.length < 2) {
+                    parts = line.split(/\s+/).map(s => s.trim());
+                }
+
+                const name = parts[0];
+                let province = parts[1] || '';
+                let city = parts[2] || '';
+
+                // 容错：如果只有姓名和省份（城市选填）
+                if (parts.length === 2) {
+                    province = parts[1];
+                    city = '';
+                }
+
+                if (!name) { fail++; failLines.push(`第${idx+1}行：缺少姓名`); return; }
+
+                // 智能匹配省份：支持简称
+                let matchedProvince = validProvinces.find(p => p === province || provinceNameMap[p] === province);
+                if (!matchedProvince) {
+                    // 尝试模糊匹配
+                    matchedProvince = validProvinces.find(p => province.includes(p) || p.includes(province));
+                }
+                if (!matchedProvince) { fail++; failLines.push(`第${idx+1}行：省份「${province}」无法识别`); return; }
+
+                // 城市选填，不填则留空
+
+                customers.push({
+                    id: Date.now() + idx,
+                    name,
+                    province: matchedProvince,
+                    city,
+                    time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                });
+                success++;
+            });
+
+            if (success > 0) {
+                updateChart();
+                document.getElementById('batchInput').value = '';
+            }
+
+            if (fail === 0) {
+                resultEl.className = 'batch-result success';
+                resultEl.textContent = `成功录入 ${success} 位客户`;
+            } else {
+                resultEl.className = 'batch-result error';
+                resultEl.innerHTML = `成功 ${success} 条，失败 ${fail} 条<br><span style="font-size:11px">${failLines.join('；').substring(0, 120)}${failLines.join('；').length > 120 ? '...' : ''}</span>`;
+            }
+        }
+
+        // ==================== 删除客户 ====================
+        function deleteCustomer(id) {
+            customers = customers.filter(c => c.id !== id);
+            updateChart();
+        }
+
+        // ==================== 清空全部 ====================
+        function clearAll() {
+            if (customers.length === 0) return;
+            if (confirm(`确定清空全部 ${customers.length} 位客户吗？`)) {
+                customers = [];
+                updateChart();
+            }
+        }
+
+        // ==================== 更新统计 ====================
+        function updateStats() {
+            document.getElementById('statTotal').textContent = customers.length;
+
+            const provinces = new Set(customers.map(c => c.province));
+            document.getElementById('statProvinces').textContent = provinces.size;
+
+            const provinceCount = {};
+            customers.forEach(c => {
+                provinceCount[c.province] = (provinceCount[c.province] || 0) + 1;
+            });
+            const topProvince = Object.entries(provinceCount).sort((a, b) => b[1] - a[1])[0];
+            document.getElementById('statTop').textContent = topProvince ? topProvince[0] : '-';
+        }
+
+        // ==================== 渲染列表 ====================
+        function renderList() {
+            const container = document.getElementById('customerList');
+            if (customers.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无客户，请在上方录入</div>';
+                return;
+            }
+
+            // 按时间倒序
+            const list = [...customers].reverse();
+            container.innerHTML = list.map(c => `
+                <div class="customer-item">
+                    <div class="info">
+                        <span class="name">${c.name} <span style="font-weight:400;color:#8c8c8c">${c.province}${c.city ? ' · ' + c.city : ''}</span></span>
+                        <span class="meta">${c.time}</span>
+                    </div>
+                    <span class="del" onclick="deleteCustomer(${c.id})" title="删除">✕</span>
+                </div>
+            `).join('');
+        }
+
+        // ==================== 演示数据 ====================
+        function loadDemoData() {
+            // 演示数据已清空，如需预置数据可在此添加
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
