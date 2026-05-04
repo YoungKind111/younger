@@ -338,6 +338,42 @@
             .header-amounts { gap: 10px; }
             .filter-bar input { width: 130px; }
         }
+        .sync-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e8e8e8;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        .sync-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+        .sync-bar-left b {
+            color: #e91e8c;
+            font-size: 16px;
+        }
+        .sync-bar .btn {
+            padding: 8px 24px;
+            font-size: 14px;
+        }
+        .sync-bar .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .page-container {
+            padding-bottom: 80px;
+        }
         @media (max-width: 900px) {
             .header-amounts { display: none; }
         }
@@ -360,9 +396,9 @@
         <div class="demo-switcher">
             <div class="demo-switcher-title">📋 示例数据切换（用于需求沟通）</div>
             <div class="demo-list" id="demoSwitcher">
-                <div class="demo-item active" onclick="switchDemo('all')">全部展示</div>
+                <div class="demo-item" onclick="switchDemo('all')">全部展示</div>
                 <div class="demo-item" onclick="switchDemo(0)">O20260501-001 <span class="demo-tag">完全一致</span></div>
-                <div class="demo-item" onclick="switchDemo(1)">O20260501-002 <span class="demo-tag">无合同有订单</span></div>
+                <div class="demo-item active" onclick="switchDemo(1)">O20260501-002 <span class="demo-tag">无合同有订单</span></div>
                 <div class="demo-item" onclick="switchDemo(2)">O20260501-003 <span class="demo-tag">有差异</span></div>
                 <div class="demo-item" onclick="switchDemo(3)">O20260501-004 <span class="demo-tag">重复录入</span></div>
             </div>
@@ -1144,6 +1180,45 @@
             return html;
         }
 
+        function updateSyncBar() {
+            let totalSelected = 0;
+            let totalAmount = 0;
+            let hasSelection = false;
+            
+            currentData.forEach(c => {
+                const oldPayments = c.oldContract.payments || [];
+                const oldRefunds = c.oldContract.refunds || [];
+                const selPay = c._selectedPayments || {};
+                const selRef = c._selectedRefunds || {};
+                
+                oldPayments.forEach((p, i) => {
+                    if (selPay[i]) {
+                        hasSelection = true;
+                        totalSelected++;
+                        totalAmount += p.amount;
+                    }
+                });
+                oldRefunds.forEach((r, i) => {
+                    if (selRef[i]) {
+                        hasSelection = true;
+                        totalSelected++;
+                        totalAmount += r.amount;
+                    }
+                });
+            });
+            
+            const syncBar = document.getElementById('syncBar');
+            if (!syncBar) return;
+            
+            if (hasSelection) {
+                syncBar.style.display = 'flex';
+                document.getElementById('syncCount').textContent = totalSelected;
+                document.getElementById('syncAmount').textContent = fmtMoney(totalAmount);
+            } else {
+                syncBar.style.display = 'none';
+            }
+        }
+
         function toggleSelectAll(id, type, checked) {
             const c = currentData.find(x => x._id === id);
             if (!c) return;
@@ -1158,6 +1233,7 @@
                 const body = card.querySelector('.card-body');
                 body.innerHTML = renderTabs(c) + renderSections(c);
             }
+            updateSyncBar();
         }
 
         function toggleSelectItem(id, type, index, checked) {
@@ -1171,6 +1247,7 @@
                 const body = card.querySelector('.card-body');
                 body.innerHTML = renderTabs(c) + renderSections(c);
             }
+            updateSyncBar();
         }
 
         function syncSelected(id, type) {
@@ -1186,7 +1263,7 @@
 
 
 
-        let demoMode = 'all';
+        let demoMode = 1;
 
         function switchDemo(index) {
             demoMode = index;
@@ -1266,8 +1343,67 @@
             });
         });
 
+        // 初始化：默认展示第2条示例数据（无合同有订单）
+        currentData = [mockContracts[1]];
         renderStats();
         renderList();
+    </script>
+    
+    <!-- 底部固定同步按钮栏 -->
+    <div class="sync-bar" id="syncBar" style="display: none;">
+        <div class="sync-bar-left">
+            <div>已选 <b id="syncCount">0</b> 笔记录</div>
+            <div>合计 <b id="syncAmount">¥0</b></div>
+        </div>
+        <button class="btn" onclick="confirmSync()">确认同步到新系统</button>
+    </div>
+    
+    <script>
+        function confirmSync() {
+            let totalSelected = 0;
+            let totalAmount = 0;
+            let details = [];
+            
+            currentData.forEach(c => {
+                const oldPayments = c.oldContract.payments || [];
+                const oldRefunds = c.oldContract.refunds || [];
+                const selPay = c._selectedPayments || {};
+                const selRef = c._selectedRefunds || {};
+                
+                oldPayments.forEach((p, i) => {
+                    if (selPay[i]) {
+                        totalSelected++;
+                        totalAmount += p.amount;
+                        details.push(`收款: ${p.docNo} ${p.channel} ${fmtMoney(p.amount)}`);
+                    }
+                });
+                oldRefunds.forEach((r, i) => {
+                    if (selRef[i]) {
+                        totalSelected++;
+                        totalAmount += r.amount;
+                        details.push(`退款: ${r.docNo} ${r.channel} ${fmtMoney(r.amount)}`);
+                    }
+                });
+            });
+            
+            if (totalSelected === 0) {
+                alert('请先选择要同步的记录');
+                return;
+            }
+            
+            const confirmMsg = `确认同步以下 ${totalSelected} 笔记录到新系统？\n\n合计金额: ${fmtMoney(totalAmount)}\n\n${details.join('\n')}\n\n同步后将在新系统订单中创建对应的收款/退款记录。`;
+            
+            if (confirm(confirmMsg)) {
+                alert('同步成功！\n\n这里可以调用实际的同步接口。');
+                // 清空选中状态
+                currentData.forEach(c => {
+                    c._selectedPayments = {};
+                    c._selectedRefunds = {};
+                });
+                updateSyncBar();
+                renderList();
+            }
+        }
     </script>
 </body>
 </html>
