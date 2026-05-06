@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>月嫂工资发放</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            font-size: 13px;
+        }
+
+        /* 顶部导航 */
+        .topbar {
+            height: 48px;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e91e8c;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .logo-icon {
+            width: 28px; height: 28px;
+            background: #e91e8c;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+        }
+        .breadcrumb {
+            color: #999;
+            font-size: 12px;
+        }
+        .breadcrumb span { margin: 0 4px; }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: #e91e8c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* 左侧菜单 */
+        .layout {
+            display: flex;
+            height: calc(100vh - 48px);
+        }
+        .sidebar {
+            width: 180px;
+            background: #fff;
+            border-right: 1px solid #e8e8e8;
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 10px 16px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .menu-item:hover { background: #f5f7fa; color: #e91e8c; }
+        .menu-item.active { background: #fce4f3; color: #e91e8c; border-right: 3px solid #e91e8c; }
+        .menu-icon { font-size: 14px; width: 18px; text-align: center; }
+        .menu-group {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* 主内容区 */
+        .main {
+            flex: 1;
+            overflow: auto;
+            padding: 16px 20px;
+        }
+
+        /* Tab */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .tab {
+            padding: 6px 16px;
+            border: 1px solid #e8e8e8;
+            background: #fff;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+        }
+        .tab.active {
+            background: #e91e8c;
+            color: #fff;
+            border-color: #e91e8c;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-info {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #666;
+        }
+        .page-info span { display: flex; align-items: center; gap: 4px; }
+        .info-tag {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .info-tag.pink { background: #fce4f3; color: #e91e8c; }
+        .info-tag.purple { background: #f0e6fa; color: #722ed1; }
+
+        /* 操作按钮栏 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+        .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+        .btn-warning { background: #faad14; color: #fff; border-color: #faad14; }
+        .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+        .btn-purple { background: #722ed1; color: #fff; border-color: #722ed1; }
+        .btn-pink { background: #e91e8c; color: #fff; border-color: #e91e8c; }
+        .btn-dark { background: #333; color: #fff; border-color: #333; }
+
+        /* 资金账户信息 */
+        .account-info {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 搜索区域 */
+        .search-bar {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-item label {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+        .search-item input, .search-item select {
+            padding: 5px 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+            min-width: 120px;
+        }
+        .search-item input:focus, .search-item select:focus { border-color: #e91e8c; }
+        .search-btns {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        /* 表格 */
+        .table-wrap {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table thead th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 500;
+            color: #333;
+            background: #fafafa;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .data-table tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+            font-size: 12px;
+        }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table tbody tr.expanded { background: #f9f9f9; }
+        .checkbox {
+            width: 16px; height: 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 2px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .checkbox.checked {
+            background: #e91e8c;
+            border-color: #e91e8c;
+        }
+        /* 状态标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .tag-pink { background: #fce4f3; color: #e91e8c; }
+        .tag-green { background: #f6ffed; color: #52c41a; }
+        .tag-blue { background: #e6f7ff; color: #1890ff; }
+        .tag-gray { background: #f5f5f5; color: #999; }
+        .tag-orange { background: #fff7e6; color: #fa8c16; }
+        .tag-red { background: #fff2f0; color: #cf1322; }
+        .tag-purple { background: #f9f0ff; color: #722ed1; }
+        .tag-cyan { background: #e6fffb; color: #13c2c2; }
+        .tag-gold { background: #fffbe6; color: #d48806; }
+        .tag-amber { background: #fff7e6; color: #fa8c16; }
+        .tag-draft { background: #f5f5f5; color: #999; border: 1px dashed #d9d9d9; }
+        .tag-done { background: #f6ffed; color: #52c41a; }
+
+        /* 操作按钮 */
+        .op-btns {
+            display: flex;
+            gap: 6px;
+        }
+        .op-btn {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            color: #555;
+        }
+        .op-btn:hover { border-color: #e91e8c; color: #e91e8c; }
+        .op-btn.primary { background: #e91e8c; color: #fff; border-color: #e91e8c; }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 12px 16px;
+            gap: 4px;
+        }
+        .page-btn {
+            min-width: 28px; height: 28px;
+            padding: 0 8px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+        }
+        .page-btn:hover { border-color: #e91e8c; color: #e91e8c; }
+        .page-btn.active { background: #e91e8c; color: #fff; border-color: #e91e8c; }
+        .page-info { font-size: 12px; color: #999; margin: 0 8px; }
+
+        /* 提示信息 */
+        .alert-bar {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 4px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #d46b08;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <div class="logo-icon">氧</div>
+                氧阁集团 企业智慧管理平台
+            </div>
+            <div class="breadcrumb">首页 <span>/</span> 产品与服务 <span>/</span> 月嫂工资单</div>
+        </div>
+        <div class="topbar-right">
+            <span style="font-size:12px;color:#999;">杨楷</span>
+            <div class="user-avatar">杨</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- 左侧菜单 -->
+        <div class="sidebar">
+            <div class="menu-item"><span class="menu-icon">◎</span>首页</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>智能中枢</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>客户关系管理</div>
+            <div class="menu-group">产品与服务</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂档案</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂排期</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂保险</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂套餐</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂库存</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂费用</div>
+            <div class="menu-item active"><span class="menu-icon">◎</span>月嫂工资单</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>月嫂标签</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>护理日志</div>
+            <div class="menu-group">财务管理</div>
+            <div class="menu-item"><span class="menu-icon">◎</span>财务审核管理</div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main">
+            <!-- Tab -->
+            <div class="tabs">
+                <div class="tab active">财务审核管理</div>
+                <div class="tab">月嫂工资单</div>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1 class="page-title">月嫂工资发放</h1>
+                <div class="page-actions">
+                    <div class="page-info">
+                        <span class="info-tag pink">总览数 128</span>
+                        <span class="info-tag purple">财务看板</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提示 -->
+            <div class="alert-bar">
+                <span>⚠</span>
+                <span>易宝资金账户：- / 易宝待结算账户：- / 易宝待分账账户：-</span>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="toolbar">
+                <button id="auditBtn" class="btn btn-warning" disabled style="opacity:0.5;cursor:not-allowed;">审核通过
+                <button id="payBtn" class="btn btn-purple" disabled style="opacity:0.5;cursor:not-allowed;">支付工资</button>
+                <button class="btn">导出</button>
+                <button class="btn btn-dark">月嫂工资条批量生成</button>
+                <button class="btn">余额查询</button>
+            </div>
+
+            <!-- 搜索 -->
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>客户名称</label>
+                    <input type="text" placeholder="请输入客户名称" style="width:130px">
+                </div>
+                <div class="search-item">
+                    <label>月嫂名称</label>
+                    <input type="text" placeholder="请输入月嫂名称" style="width:120px">
+                </div>
+                <div class="search-item">
+                    <label>工资期数</label>
+                    <select style="width:110px"><option>全部</option><option>20260518</option><option>20260528</option></select>
+                </div>
+                <div class="search-item">
+                    <label>专属客服</label>
+                    <select style="width:120px"><option>全部</option><option>廖美云</option><option>陈小花</option><option>张小丽</option><option>王小芳</option><option>李小红</option><option>周小美</option><option>吴小兰</option><option>郑小翠</option><option>林小燕</option><option>黄小蝶</option></select>
+                </div>
+                <div class="search-item">
+                    <label>月嫂老师</label>
+                    <select style="width:120px"><option>全部</option><option>王老师</option><option>李老师</option><option>刘老师</option><option>赵老师</option><option>陈老师</option><option>孙老师</option><option>钱老师</option><option>周老师</option><option>张老师</option><option>吴老师</option></select>
+                </div>
+                <div class="search-item">
+                    <label>审核状态</label>
+                    <select style="width:130px"><option>全部</option><option>草稿</option><option>待专属客服审核</option><option>待薪酬审核</option><option>待月嫂老师（运营）审核</option><option>待月嫂确认</option><option>待薪酬复核</option><option>待运营核对</option><option>待财务审核</option><option>待出纳发放</option><option>已完成</option></select>
+                </div>
+                <div class="search-item">
+                    <label>发放状态</label>
+                    <select style="width:100px"><option>全部</option><option>未发放</option><option>发放部分</option><option>发放全部</option></select>
+                </div>
+                <div class="search-btns">
+                    <button class="btn btn-primary">🔍 搜索</button>
+                    <button class="btn">重置</button>
+                </div>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30px"><span class="checkbox" onclick="toggleCheckbox(this)"></span></th>
+                            <th>月嫂姓名</th>
+                            <th>工资期数</th>
+                            <th>结算等级</th>
+                            <th>应发工资</th>
+                            <th>专属客服</th>
+                            <th>月嫂老师</th>
+                            <th>审核状态</th>
+                            <th>发放状态</th>
+                            <th>实发工资</th>
+                            <th>资金缺口</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 01 草稿 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>赵阿姨</td>
+                            <td>20260518</td>
+                            <td>Y2-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥9,800.00</td>
+                            <td>廖美云</td>
+                            <td>王老师</td>
+                            <td><span class="tag tag-draft">草稿</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 02 待专属客服审核 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>刘阿姨</td>
+                            <td>20260518</td>
+                            <td>Y1-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥6,200.00</td>
+                            <td>陈小花</td>
+                            <td>李老师</td>
+                            <td><span class="tag tag-gray">待专属客服审核</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 03 待薪酬审核 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>钱阿姨</td>
+                            <td>20260518</td>
+                            <td>Y3-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥10,500.00</td>
+                            <td>张小丽</td>
+                            <td>刘老师</td>
+                            <td><span class="tag tag-gray">待薪酬审核</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 04 待月嫂老师（运营）审核 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>孙阿姨</td>
+                            <td>20260518</td>
+                            <td>Y2-2</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥11,000.00</td>
+                            <td>王小芳</td>
+                            <td>赵老师</td>
+                            <td><span class="tag tag-orange">待月嫂老师（运营）审核</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 05 待月嫂确认 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>张阿姨</td>
+                            <td>20260518</td>
+                            <td>Y2-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥8,500.00</td>
+                            <td>李小红</td>
+                            <td>陈老师</td>
+                            <td><span class="tag tag-blue">待月嫂确认</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 06 待薪酬复核 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>周阿姨</td>
+                            <td>20260518</td>
+                            <td>Y4-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥15,600.00</td>
+                            <td>周小美</td>
+                            <td>孙老师</td>
+                            <td><span class="tag tag-purple">待薪酬复核</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 07 待运营核对 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>陈阿姨</td>
+                            <td>20260518</td>
+                            <td>Y3-2</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥12,800.00</td>
+                            <td>吴小兰</td>
+                            <td>钱老师</td>
+                            <td><span class="tag tag-pink">待运营核对</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">编辑</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 08 待财务审核 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>吴阿姨</td>
+                            <td>20260518</td>
+                            <td>Y3-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥7,500.00</td>
+                            <td>郑小翠</td>
+                            <td>周老师</td>
+                            <td><span class="tag tag-cyan">待财务审核</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 09 待出纳发放 -->
+                        <tr>
+                            <td><span class="checkbox" onclick="toggleCheckbox(this)"></span></td>
+                            <td>王阿姨</td>
+                            <td>20260518</td>
+                            <td>Y3-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥1,001.00</td>
+                            <td>林小燕</td>
+                            <td>张老师</td>
+                            <td><span class="tag tag-gold">待出纳发放</span></td>
+                            <td><span class="tag tag-orange">未发放</span></td>
+                            <td style="color:#ff4d4f;font-weight:600">-</td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 10 已完成 -->
+                        <tr>
+                            <td><span class="checkbox" style="opacity:0.3;cursor:not-allowed;" title="已完成数据不可选中"></span></td>
+                            <td>李阿姨</td>
+                            <td>20260518</td>
+                            <td>Y4-2</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥21,000.00</td>
+                            <td>黄小蝶</td>
+                            <td>吴老师</td>
+                            <td><span class="tag tag-done">已完成</span></td>
+                            <td id="payStatus-10"><span class="tag tag-amber">发放部分</span></td>
+                            <td id="actualPay-10" style="color:#52c41a;font-weight:600">¥3,000.00（易宝）</td>
+                            <td id="gapAmt-10"><span class="tag tag-red">¥18,000.00</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">审核日志</button>
+                                    <button id="gapBtn-10" class="op-btn primary" onclick="openGapModal()">缺口处理</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- 11 已完成（多渠道发放） -->
+                        <tr>
+                            <td><span class="checkbox" style="opacity:0.3;cursor:not-allowed;" title="已完成数据不可选中"></span></td>
+                            <td>杨阿姨</td>
+                            <td>20260518</td>
+                            <td>Y3-1</td>
+                            <td style="color:#ff4d4f;font-weight:600">¥8,000.00</td>
+                            <td>何小青</td>
+                            <td>马老师</td>
+                            <td><span class="tag tag-done">已完成</span></td>
+                            <td><span class="tag tag-green">发放全部</span></td>
+                            <td>
+                                <div style="color:#52c41a;font-weight:600">¥3,000.00（易宝）</div>
+                                <div style="color:#52c41a;font-weight:600">¥5,000.00（盛付通）</div>
+                            </td>
+                            <td><span class="tag tag-green">-</span></td>
+                            <td>
+                                <div class="op-btns">
+                                    <button class="op-btn">查看</button>
+                                    <button class="op-btn">审核日志</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span class="page-info">显示 1 到 11 条，共 11 条记录</span>
+                    <button class="page-btn">&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">&gt;</button>
+                    <select style="padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;">
+                        <option>10条/页</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 缺口处理弹窗 -->
+    <div id="gapModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:8px;width:720px;max-height:90vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <!-- 弹窗头部 -->
+            <div style="padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;">
+                <h3 style="font-size:16px;font-weight:600;color:#333;">缺口处理 — 工资单 YGNW20260501001</h3>
+                <button onclick="closeGapModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+            </div>
+
+            <!-- 弹窗内容 -->
+            <div style="padding:20px;">
+                <!-- 金额概览 -->
+                <div style="background:#fafafa;border-radius:6px;padding:14px 16px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:120px;">
+                        <div style="font-size:11px;color:#999;margin-bottom:2px;">应发工资</div>
+                        <div style="font-size:18px;font-weight:700;color:#ff4d4f;">¥21,000.00</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <div style="font-size:11px;color:#999;margin-bottom:2px;">新系统易宝可发</div>
+                        <div style="font-size:18px;font-weight:700;color:#52c41a;">¥3,000.00</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <div style="font-size:11px;color:#999;margin-bottom:2px;">资金缺口</div>
+                        <div style="font-size:18px;font-weight:700;color:#ff4d4f;">¥18,000.00</div>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                        <div style="font-size:11px;color:#999;margin-bottom:2px;">缺口率</div>
+                        <div style="font-size:18px;font-weight:700;color:#ff4d4f;">85.7%</div>
+                    </div>
+                </div>
+
+                <!-- 第一步：出纳执行出款 -->
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span style="width:24px;height:24px;border-radius:50%;background:#1890ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">1</span>
+                        <span style="font-size:14px;font-weight:600;color:#333;">出纳分配缺口并执行出款</span>
+                        <span style="font-size:12px;color:#999;">（出纳操作）</span>
+                    </div>
+                    <div style="padding-left:32px;">
+                        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:4px;padding:12px;">
+                            <!-- 缺口部分 -->
+                            <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px;">缺口部分（出纳手动分配金额与渠道）</div>
+                            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;">
+                                <thead>
+                                    <tr style="background:#fafafa;">
+                                        <th style="padding:8px;text-align:left;border:1px solid #e8e8e8;">出款渠道</th>
+                                        <th style="padding:8px;text-align:left;border:1px solid #e8e8e8;">分配金额</th>
+                                        <th style="padding:8px;text-align:left;border:1px solid #e8e8e8;">打款编号</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><span class="tag tag-orange">盛付通</span></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapAmt-sft" type="text" placeholder="请输入金额" style="width:100px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapNo-sft" type="text" placeholder="请输入打款编号" style="width:130px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><span class="tag tag-gray">银行转账</span></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapAmt-bank" type="text" placeholder="请输入金额" style="width:100px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapNo-bank" type="text" placeholder="请输入打款编号" style="width:130px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><span class="tag tag-gray">其他</span></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapAmt-other" type="text" placeholder="请输入金额" style="width:100px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;"><input id="gapNo-other" type="text" placeholder="请输入打款编号" style="width:130px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;"></td>
+                                    </tr>
+                                    <tr style="background:#fafafa;font-weight:600;">
+                                        <td style="padding:8px;border:1px solid #e8e8e8;text-align:right;">缺口合计</td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;color:#ff4d4f;">¥18,000.00</td>
+                                        <td style="padding:8px;border:1px solid #e8e8e8;color:#999;font-weight:400;">分配金额合计需等于缺口总额</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="font-size:11px;color:#999;background:#fff7e6;padding:8px;border-radius:4px;">
+                                💡 出纳操作提示：在上方表格中填写各渠道的分配金额和对应打款编号。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二步：完成标记 -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span style="width:24px;height:24px;border-radius:50%;background:#1890ff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">2</span>
+                        <span style="font-size:14px;font-weight:600;color:#333;">完成确认</span>
+                        <span style="font-size:12px;color:#999;">（会计+出纳确认）</span>
+                    </div>
+                    <div style="padding-left:32px;">
+                        <div style="background:#f6ffed;border:1px solid #b7eb8f;border-radius:4px;padding:12px;display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:18px;">✅</span>
+                            <div style="font-size:13px;color:#389e0d;">
+                                全部出款完成后，系统自动更新发放状态为"发放全部"。<br>
+                                <span style="font-size:12px;color:#999;">易宝 ¥3,000 + 缺口各渠道合计 ¥18,000 = 合计发放 ¥21,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 弹窗底部 -->
+            <div style="padding:12px 20px;border-top:1px solid #e8e8e8;display:flex;justify-content:flex-end;gap:10px;">
+                <button onclick="closeGapModal()" style="padding:6px 16px;border:1px solid #d9d9d9;background:#fff;border-radius:4px;font-size:13px;cursor:pointer;">关闭</button>
+                <button onclick="saveGapResult()" style="padding:6px 16px;border:none;background:#1890ff;color:#fff;border-radius:4px;font-size:13px;cursor:pointer;">保存处理结果</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCheckbox(el) {
+            el.classList.toggle('checked');
+            updatePayBtn();
+            updateAuditBtn();
+        }
+        function updatePayBtn() {
+            var checkedBoxes = document.querySelectorAll('.checkbox.checked');
+            var hasValid = false;
+            checkedBoxes.forEach(function(box) {
+                var tr = box.closest('tr');
+                if (tr && tr.textContent.indexOf('待出纳发放') !== -1) {
+                    hasValid = true;
+                }
+            });
+            var btn = document.getElementById('payBtn');
+            if (hasValid) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+        }
+        function updateAuditBtn() {
+            var checkedBoxes = document.querySelectorAll('.checkbox.checked');
+            if (checkedBoxes.length === 0) {
+                setBtnState('auditBtn', false);
+                return;
+            }
+            var allValid = true;
+            checkedBoxes.forEach(function(box) {
+                var tr = box.closest('tr');
+                if (tr) {
+                    var text = tr.textContent;
+                    if (text.indexOf('待出纳发放') !== -1) allValid = false;
+                    if (text.indexOf('已完成') !== -1) allValid = false;
+                }
+            });
+            setBtnState('auditBtn', allValid);
+        }
+        function setBtnState(id, enabled) {
+            var btn = document.getElementById(id);
+            if (enabled) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+        }
+        function openGapModal() {
+            document.getElementById('gapModal').style.display = 'flex';
+        }
+        function closeGapModal() {
+            document.getElementById('gapModal').style.display = 'none';
+        }
+        function saveGapResult() {
+            var a = parseFloat(document.getElementById('gapAmt-sft').value) || 0;
+            var b = parseFloat(document.getElementById('gapAmt-bank').value) || 0;
+            var c = parseFloat(document.getElementById('gapAmt-other').value) || 0;
+            var total = a + b + c;
+            if (total >= 18000) {
+                var channels = [];
+                if (a > 0) channels.push('¥' + a.toLocaleString() + '（盛付通）');
+                if (b > 0) channels.push('¥' + b.toLocaleString() + '（银行转账）');
+                if (c > 0) channels.push('¥' + c.toLocaleString() + '（其他）');
+                var actualHtml = '<div style="color:#52c41a;font-weight:600">¥3,000.00（易宝）</div>';
+                channels.forEach(function(ch) {
+                    actualHtml += '<div style="color:#52c41a;font-weight:600">' + ch + '</div>';
+                });
+                document.getElementById('actualPay-10').innerHTML = actualHtml;
+                document.getElementById('gapAmt-10').innerHTML = '<span class="tag tag-green">-</span>';
+                document.getElementById('payStatus-10').innerHTML = '<span class="tag tag-green">发放全部</span>';
+                document.getElementById('gapBtn-10').style.display = 'none';
+                alert('缺口已清零，列表数据已更新');
+                closeGapModal();
+            } else {
+                alert('缺口尚未清零，当前合计：¥' + total.toLocaleString() + '，还需分配：¥' + (18000 - total).toLocaleString());
+            }
+        }
+    </script>
+</body>
+</html>
