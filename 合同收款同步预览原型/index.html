@@ -1,1027 +1,944 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新老系统合同收款同步预览</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-            font-size: 13px;
-        }
-        .topbar {
-            height: 48px;
-            background: #fff;
-            border-bottom: 1px solid #e8e8e8;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-        }
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .logo {
-            font-size: 16px;
-            font-weight: 600;
-            color: #e91e8c;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .logo-icon {
-            width: 28px; height: 28px;
-            background: #e91e8c;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 14px;
-        }
-        .breadcrumb { color: #999; font-size: 12px; }
-        .page-container { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
-        .filter-bar {
-            background: #fff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            border: 1px solid #e8e8e8;
-        }
-        .filter-bar input, .filter-bar select {
-            padding: 6px 10px;
-            border: 1px solid #d9d9d9;
-            border-radius: 4px;
-            font-size: 13px;
-            outline: none;
-        }
-        .filter-bar input:focus, .filter-bar select:focus { border-color: #e91e8c; }
-        .filter-bar input { width: 160px; }
-        .filter-bar .btn {
-            padding: 6px 16px;
-            background: #e91e8c;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .filter-bar .btn:hover { background: #d11a7d; }
-        .filter-bar .btn-secondary {
-            background: #fff;
-            color: #666;
-            border: 1px solid #d9d9d9;
-        }
-        .filter-bar .btn-secondary:hover { color: #e91e8c; border-color: #e91e8c; }
-        .stats-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .stat-item {
-            background: #fff;
-            border-radius: 8px;
-            padding: 12px 20px;
-            flex: 1;
-            border: 1px solid #e8e8e8;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .stat-label { color: #666; font-size: 12px; }
-        .stat-value { font-size: 20px; font-weight: 600; color: #333; }
-        .stat-value.success { color: #52c41a; }
-        .stat-value.warning { color: #ff4d4f; }
-        .stat-value.info { color: #1890ff; }
-        .contract-card {
-            background: #fff;
-            border-radius: 8px;
-            border: 1px solid #e8e8e8;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .contract-card.has-diff { border-left: 3px solid #ff4d4f; }
-        .contract-card.no-diff { border-left: 3px solid #52c41a; }
-        .card-header {
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            background: #fafafa;
-            gap: 12px;
-        }
-        .card-header:hover { background: #f5f5f5; }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex: 1;
-            flex-wrap: wrap;
-        }
-        .header-item { display: flex; align-items: center; gap: 6px; }
-        .header-item .label { color: #999; font-size: 12px; }
-        .header-item .value { font-weight: 600; color: #333; font-size: 14px; }
-        .header-item .value.amount { color: #e91e8c; font-size: 15px; }
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .tag-diff { color: #ff4d4f; background: #fff2f0; border: 1px solid #ffccc7; }
-        .tag-ok { color: #52c41a; background: #f6ffed; border: 1px solid #b7eb8f; }
-        .tag-old { color: #666; background: #f5f5f5; border: 1px solid #d9d9d9; }
-        .tag-new-contract { color: #1890ff; background: #e6f7ff; border: 1px solid #91d5ff; }
-        .tag-new-order { color: #e91e8c; background: #fff0f6; border: 1px solid #ffadd2; }
-        .header-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-        .header-amounts {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-        .ha-item { font-size: 12px; color: #666; }
-        .ha-item b { font-size: 13px; color: #333; margin-left: 4px; }
-        .ha-item .ha-old { color: #666; }
-        .ha-item .ha-newc { color: #1890ff; }
-        .ha-item .ha-newo { color: #e91e8c; }
-        .ha-item .ha-none { color: #999; font-weight: normal; }
-        .toggle-btn {
-            width: 28px; height: 28px;
-            border-radius: 4px;
-            border: 1px solid #d9d9d9;
-            background: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .toggle-btn:hover { border-color: #e91e8c; color: #e91e8c; }
-        .toggle-btn.expanded { transform: rotate(180deg); }
-        .card-body {
-            padding: 0 20px 16px;
-            display: none;
-        }
-        .card-body.expanded { display: block; }
-        .section-tabs {
-            display: flex;
-            gap: 8px;
-            margin: 16px 0 12px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 8px;
-        }
-        .tab {
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            color: #666;
-            background: transparent;
-        }
-        .tab:hover { color: #e91e8c; }
-        .tab.active {
-            background: #fff0f6;
-            color: #e91e8c;
-            border-color: #ffadd2;
-            font-weight: 500;
-        }
-        .tab .badge {
-            display: inline-block;
-            margin-left: 4px;
-            padding: 0 5px;
-            background: #ff4d4f;
-            color: #fff;
-            border-radius: 8px;
-            font-size: 11px;
-            line-height: 14px;
-        }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .data-table th {
-            background: #fafafa;
-            padding: 8px 12px;
-            text-align: left;
-            font-weight: 500;
-            color: #666;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .data-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-        .data-table tr:hover td { background: #fafafa; }
-        .data-table .col-center { text-align: center; }
-        .data-table .col-right { text-align: right; }
-        .compare-table th:first-child { width: 130px; }
-        .compare-table td:first-child { color: #666; font-weight: 500; }
-        .compare-table .diff-cell {
-            background: #fff2f0;
-            color: #ff4d4f;
-            font-weight: 500;
-        }
-        .src-tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .src-old { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
-        .src-new-order { background: #fff0f6; color: #e91e8c; border: 1px solid #ffadd2; }
-        .summary-bar {
-            background: #fafafa;
-            border-radius: 6px;
-            padding: 10px 16px;
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .summary-left { display: flex; gap: 24px; flex-wrap: wrap; }
-        .summary-item { display: flex; align-items: center; gap: 6px; }
-        .summary-item .s-label { color: #666; font-size: 12px; }
-        .summary-item .s-value { font-weight: 600; font-size: 14px; }
-        .summary-item .s-value.old { color: #666; }
-        .summary-item .s-value.newo { color: #e91e8c; }
-        .summary-item .s-value.diff { color: #ff4d4f; }
-        .summary-item .s-value.total { color: #333; }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-        .status-signed { color: #52c41a; background: #f6ffed; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .status-pending { color: #faad14; background: #fffbe6; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .status-completed { color: #1890ff; background: #e6f7ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .status-canceled { color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .no-contract {
-            color: #999;
-            font-style: italic;
-        }
-        .note-bar {
-            background: #e6f7ff;
-            border: 1px solid #91d5ff;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            color: #1890ff;
-        }
-        .demo-switcher {
-            background: #fff;
-            border: 1px solid #e8e8e8;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-        }
-        .demo-switcher-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .demo-list {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .demo-item {
-            padding: 6px 14px;
-            border-radius: 4px;
-            border: 1px solid #d9d9d9;
-            background: #fff;
-            cursor: pointer;
-            font-size: 12px;
-            color: #666;
-            transition: all 0.2s;
-        }
-        .demo-item:hover {
-            border-color: #e91e8c;
-            color: #e91e8c;
-        }
-        .demo-item.active {
-            background: #e91e8c;
-            color: #fff;
-            border-color: #e91e8c;
-        }
-        .demo-item .demo-tag {
-            display: inline-block;
-            margin-left: 4px;
-            padding: 0 4px;
-            border-radius: 3px;
-            font-size: 11px;
-            background: rgba(255,255,255,0.3);
-        }
-        @media (max-width: 1200px) {
-            .header-left { gap: 10px; }
-            .header-amounts { gap: 10px; }
-            .filter-bar input { width: 130px; }
-        }
-        .sync-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border-top: 1px solid #e8e8e8;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
-            z-index: 100;
-        }
-        .sync-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 13px;
-            color: #666;
-        }
-        .sync-bar-left b {
-            color: #e91e8c;
-            font-size: 16px;
-        }
-        .sync-bar .btn {
-            padding: 8px 24px;
-            font-size: 14px;
-        }
-        .sync-bar .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .page-container {
-            padding-bottom: 80px;
-        }
-        @media (max-width: 900px) {
-            .header-amounts { display: none; }
-        }
-    </style>
-</head>
-<body>
-    <div class="topbar">
-        <div class="topbar-left">
-            <div class="logo">
-                <div class="logo-icon">同</div>
-                <span>新老系统合同收款同步预览</span>
-            </div>
-            <div class="breadcrumb">财务核对 / 数据同步</div>
-        </div>
-    </div>
-    <div class="page-container">
-        <div class="note-bar">
-            💡 新系统区分订单与合同：合同为签署快照，收款/退款均以订单为准
-        </div>
-        <div class="demo-switcher">
-            <div class="demo-switcher-title">📋 示例数据切换（用于需求沟通）</div>
-            <div class="demo-list" id="demoSwitcher">
-                <div class="demo-item" onclick="switchDemo('all')">全部展示</div>
-                <div class="demo-item" onclick="switchDemo(0)">O20260501-001 <span class="demo-tag">完全一致</span></div>
-                <div class="demo-item active" onclick="switchDemo(1)">O20260501-002 <span class="demo-tag">无合同有订单</span></div>
-                <div class="demo-item" onclick="switchDemo(2)">O20260501-003 <span class="demo-tag">有差异</span></div>
-                <div class="demo-item" onclick="switchDemo(3)">O20260501-004 <span class="demo-tag">重复录入</span></div>
-            </div>
-        </div>
-        <div class="filter-bar">
-            <input type="text" id="filterTicket" placeholder="订单号 / 合同编号">
-            <input type="text" id="filterCustomer" placeholder="客户姓名">
-            <input type="text" id="filterNanny" placeholder="月嫂姓名">
-            <select id="filterStatus">
-                <option value="">全部状态</option>
-                <option value="signed">已签署</option>
-                <option value="pending">待处理</option>
-                <option value="completed">已完成</option>
-                <option value="canceled">已取消</option>
-            </select>
-            <select id="filterDiff">
-                <option value="">全部一致性</option>
-                <option value="has">有差异</option>
-                <option value="no">完全一致</option>
-            </select>
-            <button class="btn" onclick="applyFilter()">查询</button>
-            <button class="btn btn-secondary" onclick="resetFilter()">重置</button>
-        </div>
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-label">总合同数</span>
-                <span class="stat-value info" id="statTotal">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">完全一致</span>
-                <span class="stat-value success" id="statOk">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">存在差异</span>
-                <span class="stat-value warning" id="statDiff">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">差异总金额</span>
-                <span class="stat-value warning" id="statDiffAmount">¥0</span>
-            </div>
-        </div>
-        <div id="contractList"></div>
-    </div>
-    <script>
-        // ========== Mock 数据 ==========
-        const mockContracts = [
-            {
-                ticket: 'O20260501-001',
-                customerName: '李山',
-                nannyName: '王阿姨',
-                oldContract: {
-                    packageName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市天河区珠江新城',
-                    packageAmount: 20835,
-                    holidayCharge: 0,
-                    totalAmount: 20835,
-                    receivedAmount: 500,
-                    refundedAmount: 0,
-                    actualReceived: 500,
-                    arrears: 20335,
-                    status: 'signed',
-                    signDate: '2026-04-18',
-                    payments: [
-                        {docNo: 'BL20260420001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-20 10:30', category: '合同收款', channel: '银行转账', amount: 500, audit: '审核通过'}
-                    ],
-                    refunds: []
-                },
-                newContract: {
-                    packageName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市天河区珠江新城',
-                    packageAmount: 20835,
-                    holidayCharge: 0,
-                    totalAmount: 20835,
-                    receivedAmount: 500,
-                    refundedAmount: 0,
-                    actualReceived: 500,
-                    arrears: 20335,
-                    status: 'signed',
-                    signDate: '2026-04-18'
-                },
-                newOrder: {
-                    packageLevelName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市天河区珠江新城',
-                    packageAmount: 20835,
-                    holidayCharge: 0,
-                    totalReceivable: 20835,
-                    receivedAmount: 500,
-                    refundedAmount: 0,
-                    actualReceived: 500,
-                    arrears: 20335,
-                    payments: [
-                        {docNo: 'PAY20260425001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-25 09:15', category: '合同收款', channel: '易宝', amount: 500, audit: '审核通过'}
-                    ],
-                    refunds: []
-                }
-            },
-            {
-                ticket: 'O20260501-002',
-                customerName: '张梅',
-                nannyName: '刘阿姨',
-                oldContract: {
-                    packageName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '佛山市南海区桂城街道',
-                    packageAmount: 30000,
-                    holidayCharge: 0,
-                    totalAmount: 30000,
-                    receivedAmount: 25000,
-                    refundedAmount: 0,
-                    actualReceived: 25000,
-                    arrears: 5000,
-                    status: 'signed',
-                    signDate: '2026-04-15',
-                    payments: [
-                        {docNo: 'BL20260418001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-18 11:00', category: '合同收款', channel: '盛付通', amount: 10000, audit: '审核通过'},
-                        {docNo: 'BL20260420002', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-20 15:30', category: '合同收款', channel: '银行转账', amount: 15000, audit: '审核通过'}
-                    ],
-                    refunds: []
-                },
-                newContract: null,
-                newOrder: {
-                    packageLevelName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '佛山市南海区桂城街道',
-                    packageAmount: 30000,
-                    holidayCharge: 0,
-                    totalReceivable: 30000,
-                    receivedAmount: 5000,
-                    refundedAmount: 0,
-                    actualReceived: 5000,
-                    arrears: 25000,
-                    payments: [
-                        {docNo: 'PAY20260428001', dept: '销售二部', receiver: '胡小清', time: '2026-04-28 10:20', category: '合同收款', channel: '易宝', amount: 3000, audit: '审核通过'},
-                        {docNo: 'PAY20260429001', dept: '销售二部', receiver: '胡小清', time: '2026-04-29 13:50', category: '合同收款', channel: '银行转账', amount: 2000, audit: '审核通过'}
-                    ],
-                    refunds: []
-                }
-            },
-            {
-                ticket: 'O20260501-003',
-                customerName: '陈芳',
-                nannyName: '赵阿姨',
-                oldContract: {
-                    packageName: 'V2 安心优选',
-                    serviceDays: 26,
-                    serviceAddress: '深圳市南山区科技园',
-                    packageAmount: 25000,
-                    holidayCharge: 500,
-                    totalAmount: 25500,
-                    receivedAmount: 17000,
-                    refundedAmount: 3000,
-                    actualReceived: 14000,
-                    arrears: 8500,
-                    status: 'completed',
-                    signDate: '2026-04-10',
-                    payments: [
-                        {docNo: 'BL20260415001', dept: '深圳一组', receiver: '王小红', time: '2026-04-15 09:00', category: '合同收款', channel: '盛付通', amount: 8000, audit: '审核通过'},
-                        {docNo: 'BL20260418003', dept: '深圳一组', receiver: '王小红', time: '2026-04-18 11:30', category: '诚意金', channel: '银行转账', amount: 12000, audit: '审核通过'}
-                    ],
-                    refunds: [
-                        {docNo: 'BL20260420005', dept: '深圳一组', receiver: '王小红', time: '2026-04-20 16:00', reason: '客户要求退部分款', channel: '银行转账', amount: 3000, audit: '审核通过'}
-                    ]
-                },
-                newContract: {
-                    packageName: 'V2 安心优选',
-                    serviceDays: 26,
-                    serviceAddress: '深圳市南山区科技园',
-                    packageAmount: 25000,
-                    holidayCharge: 500,
-                    totalAmount: 25500,
-                    receivedAmount: 10000,
-                    refundedAmount: 2000,
-                    actualReceived: 8000,
-                    arrears: 15500,
-                    status: 'signed',
-                    signDate: '2026-04-10'
-                },
-                newOrder: {
-                    packageLevelName: 'V2 安心优选',
-                    serviceDays: 28,
-                    serviceAddress: '深圳市南山区科技园',
-                    packageAmount: 25000,
-                    holidayCharge: 500,
-                    totalReceivable: 25500,
-                    receivedAmount: 10000,
-                    refundedAmount: 2000,
-                    actualReceived: 8000,
-                    arrears: 15500,
-                    payments: [
-                        {docNo: 'PAY20260422001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-22 14:00', category: '合同收款', channel: '易宝', amount: 5000, audit: '审核通过'},
-                        {docNo: 'PAY20260423001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-23 10:30', category: '合同收款', channel: '银行转账', amount: 7000, audit: '审核通过'}
-                    ],
-                    refunds: [
-                        {docNo: 'REF20260425001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-25 09:20', reason: '支付失败退回', channel: '易宝', amount: 2000, audit: '审核通过'}
-                    ]
-                }
-            },
-            {
-                ticket: 'O20260501-004',
-                customerName: '王强',
-                nannyName: '李阿姨',
-                oldContract: {
-                    packageName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市番禺区南村镇',
-                    packageAmount: 30000,
-                    holidayCharge: 0,
-                    totalAmount: 30000,
-                    receivedAmount: 10000,
-                    refundedAmount: 0,
-                    actualReceived: 10000,
-                    arrears: 20000,
-                    status: 'signed',
-                    signDate: '2026-04-18',
-                    payments: [
-                        {docNo: 'BL20260418001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-18 11:00', category: '合同收款', channel: '盛付通', amount: 10000, audit: '审核通过'}
-                    ],
-                    refunds: []
-                },
-                newContract: {
-                    packageName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市番禺区南村镇',
-                    packageAmount: 30000,
-                    holidayCharge: 0,
-                    totalAmount: 30000,
-                    receivedAmount: 10000,
-                    refundedAmount: 0,
-                    actualReceived: 10000,
-                    arrears: 20000,
-                    status: 'signed',
-                    signDate: '2026-04-18'
-                },
-                newOrder: {
-                    packageLevelName: 'Y4 月子好帮手',
-                    serviceDays: 42,
-                    serviceAddress: '广州市番禺区南村镇',
-                    packageAmount: 30000,
-                    holidayCharge: 0,
-                    totalReceivable: 30000,
-                    receivedAmount: 10000,
-                    refundedAmount: 0,
-                    actualReceived: 10000,
-                    arrears: 20000,
-                    payments: [
-                        {docNo: 'PAY20260420001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-20 15:30', category: '合同收款', channel: '银行转账', amount: 10000, audit: '审核通过'}
-                    ],
-                    refunds: []
-                },
-                _duplicate: {
-                    detected: true,
-                    confidence: 85,
-                    oldPayment: {docNo: 'BL20260418001', channel: '盛付通', amount: 10000, time: '2026-04-18 11:00'},
-                    newPayment: {docNo: 'PAY20260420001', channel: '银行转账', amount: 10000, time: '2026-04-20 15:30'},
-                    reason: '金额相同 + 时间差2天 + 新系统为手动补录渠道',
-                    status: 'pending'  // pending / confirmed / rejected
-                }
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>新老系统合同收款同步预览</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: #f5f7fa;
+                color: #333;
+                font-size: 13px;
             }
-        ];
+            .topbar {
+                height: 48px;
+                background: #fff;
+                border-bottom: 1px solid #e8e8e8;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 24px;
+            }
+            .topbar-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .logo {
+                font-size: 16px;
+                font-weight: 600;
+                color: #e91e8c;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .logo-icon {
+                width: 28px; height: 28px;
+                background: #e91e8c;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 14px;
+            }
+            .breadcrumb { color: #999; font-size: 12px; }
+            .page-container { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+            .filter-bar {
+                background: #fff;
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                border: 1px solid #e8e8e8;
+            }
+            .filter-bar input, .filter-bar select {
+                padding: 6px 10px;
+                border: 1px solid #d9d9d9;
+                border-radius: 4px;
+                font-size: 13px;
+                outline: none;
+            }
+            .filter-bar input:focus, .filter-bar select:focus { border-color: #e91e8c; }
+            .filter-bar input { width: 160px; }
+            .filter-bar .btn {
+                padding: 6px 16px;
+                background: #e91e8c;
+                color: #fff;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+            }
+            .filter-bar .btn:hover { background: #d11a7d; }
+            .filter-bar .btn-secondary {
+                background: #fff;
+                color: #666;
+                border: 1px solid #d9d9d9;
+            }
+            .filter-bar .btn-secondary:hover { color: #e91e8c; border-color: #e91e8c; }
+            /* 统计栏已删除 */
+            .contract-card {
+                background: #fff;
+                border-radius: 8px;
+                border: 1px solid #e8e8e8;
+                margin-bottom: 12px;
+                overflow: hidden;
+            }
+            .contract-card.has-diff { border-left: 3px solid #ff4d4f; }
+            .contract-card.no-diff { border-left: 3px solid #52c41a; }
+            .card-header {
+                padding: 14px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                background: #fafafa;
+                gap: 12px;
+            }
+            .card-header:hover { background: #f5f5f5; }
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                flex: 1;
+                flex-wrap: wrap;
+            }
+            .header-item { display: flex; align-items: center; gap: 6px; }
+            .header-item .label { color: #999; font-size: 12px; }
+            .header-item .value { font-weight: 600; color: #333; font-size: 14px; }
+            .header-item .value.amount { color: #e91e8c; font-size: 15px; }
+            .tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 2px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            .tag-diff { color: #ff4d4f; background: #fff2f0; border: 1px solid #ffccc7; }
+            .tag-ok { color: #52c41a; background: #f6ffed; border: 1px solid #b7eb8f; }
+            .tag-old { color: #666; background: #f5f5f5; border: 1px solid #d9d9d9; }
+            .tag-new-contract { color: #1890ff; background: #e6f7ff; border: 1px solid #91d5ff; }
+            .tag-new-order { color: #e91e8c; background: #fff0f6; border: 1px solid #ffadd2; }
+            .header-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+            .header-amounts {
+                display: flex;
+                gap: 16px;
+                align-items: center;
+            }
+            .ha-item { font-size: 12px; color: #666; }
+            .ha-item b { font-size: 13px; color: #333; margin-left: 4px; }
+            .ha-item .ha-old { color: #666; }
+            .ha-item .ha-newc { color: #1890ff; }
+            .ha-item .ha-newo { color: #e91e8c; }
+            .ha-item .ha-none { color: #999; font-weight: normal; }
+            .toggle-btn {
+                width: 28px; height: 28px;
+                border-radius: 4px;
+                border: 1px solid #d9d9d9;
+                background: #fff;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #999;
+                transition: all 0.2s;
+                flex-shrink: 0;
+            }
+            .toggle-btn:hover { border-color: #e91e8c; color: #e91e8c; }
+            .toggle-btn.expanded { transform: rotate(180deg); }
+            .card-body {
+                padding: 0 20px 16px;
+                display: none;
+            }
+            .card-body.expanded { display: block; }
+            .section-tabs {
+                display: flex;
+                gap: 8px;
+                margin: 16px 0 12px;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 8px;
+            }
+            .tab {
+                padding: 6px 14px;
+                border-radius: 4px;
+                font-size: 13px;
+                cursor: pointer;
+                border: 1px solid transparent;
+                color: #666;
+                background: transparent;
+            }
+            .tab:hover { color: #e91e8c; }
+            .tab.active {
+                background: #fff0f6;
+                color: #e91e8c;
+                border-color: #ffadd2;
+                font-weight: 500;
+            }
+            .tab .badge {
+                display: inline-block;
+                margin-left: 4px;
+                padding: 0 5px;
+                background: #ff4d4f;
+                color: #fff;
+                border-radius: 8px;
+                font-size: 11px;
+                line-height: 14px;
+            }
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+            .data-table th {
+                background: #fafafa;
+                padding: 8px 12px;
+                text-align: left;
+                font-weight: 500;
+                color: #666;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .data-table td {
+                padding: 10px 12px;
+                border-bottom: 1px solid #f0f0f0;
+                vertical-align: middle;
+            }
+            .data-table tr:hover td { background: #fafafa; }
+            .data-table .col-center { text-align: center; }
+            .data-table .col-right { text-align: right; }
+            .compare-table th:first-child { width: 130px; }
+            .compare-table td:first-child { color: #666; font-weight: 500; }
+            .compare-table .diff-cell {
+                background: #fff2f0;
+                color: #ff4d4f;
+                font-weight: 500;
+            }
+            .src-tag {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            .src-old { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
+            .src-new-order { background: #fff0f6; color: #e91e8c; border: 1px solid #ffadd2; }
+            .summary-bar {
+                background: #fafafa;
+                border-radius: 6px;
+                padding: 10px 16px;
+                margin-top: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .summary-left { display: flex; gap: 24px; flex-wrap: wrap; }
+            .summary-item { display: flex; align-items: center; gap: 6px; }
+            .summary-item .s-label { color: #666; font-size: 12px; }
+            .summary-item .s-value { font-weight: 600; font-size: 14px; }
+            .summary-item .s-value.old { color: #666; }
+            .summary-item .s-value.newo { color: #e91e8c; }
+            .summary-item .s-value.diff { color: #ff4d4f; }
+            .summary-item .s-value.total { color: #333; }
+            .empty-state {
+                text-align: center;
+                padding: 40px;
+                color: #999;
+            }
+            .status-signed { color: #52c41a; background: #f6ffed; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+            .status-pending { color: #faad14; background: #fffbe6; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+            .status-completed { color: #1890ff; background: #e6f7ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+            .status-canceled { color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+            .no-contract {
+                color: #999;
+                font-style: italic;
+            }
+            .note-bar {
+                background: #e6f7ff;
+                border: 1px solid #91d5ff;
+                border-radius: 6px;
+                padding: 8px 12px;
+                margin-bottom: 12px;
+                font-size: 12px;
+                color: #1890ff;
+            }
+            .demo-switcher {
+                background: #fff;
+                border: 1px solid #e8e8e8;
+                border-radius: 8px;
+                padding: 12px 16px;
+                margin-bottom: 12px;
+            }
+            .demo-switcher-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 10px;
+            }
+            .demo-list {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .demo-item {
+                padding: 6px 14px;
+                border-radius: 4px;
+                border: 1px solid #d9d9d9;
+                background: #fff;
+                cursor: pointer;
+                font-size: 12px;
+                color: #666;
+                transition: all 0.2s;
+            }
+            .demo-item:hover {
+                border-color: #e91e8c;
+                color: #e91e8c;
+            }
+            .demo-item.active {
+                background: #e91e8c;
+                color: #fff;
+                border-color: #e91e8c;
+            }
+            .demo-item .demo-tag {
+                display: inline-block;
+                margin-left: 4px;
+                padding: 0 4px;
+                border-radius: 3px;
+                font-size: 11px;
+                background: rgba(255,255,255,0.3);
+            }
+            @media (max-width: 1200px) {
+                .header-left { gap: 10px; }
+                .header-amounts { gap: 10px; }
+                .filter-bar input { width: 130px; }
+            }
+            .sync-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border-top: 1px solid #e8e8e8;
+                padding: 12px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+                z-index: 100;
+            }
+            .sync-bar-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                font-size: 13px;
+                color: #666;
+            }
+            .sync-bar-left b {
+                color: #e91e8c;
+                font-size: 16px;
+            }
+            .sync-bar .btn {
+                padding: 8px 24px;
+                font-size: 14px;
+            }
+            .sync-bar .btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            .page-container {
+                padding-bottom: 80px;
+            }
+            @media (max-width: 900px) {
+                .header-amounts { display: none; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="logo">
+                    <div class="logo-icon">同</div>
+                    <span>新老系统合同收款同步预览</span>
+                </div>
+                <div class="breadcrumb">财务核对 / 数据同步</div>
+            </div>
+        </div>
+        <div class="page-container">
+            <div class="note-bar">
+                💡 新系统区分订单与合同：合同为签署快照，收款/退款均以订单为准
+            </div>
+            <div class="demo-switcher">
+                <div class="demo-switcher-title">📋 示例数据切换（用于需求沟通）</div>
+                <div class="demo-list" id="demoSwitcher">
+                    <div class="demo-item" onclick="switchDemo('all')">全部展示</div>
+                    <div class="demo-item" onclick="switchDemo(0)">O20260501-001 <span class="demo-tag">完全一致</span></div>
+                    <div class="demo-item active" onclick="switchDemo(1)">O20260501-002 <span class="demo-tag">无合同有订单</span></div>
+                    <div class="demo-item" onclick="switchDemo(2)">O20260501-003 <span class="demo-tag">有差异</span></div>
+                    <div class="demo-item" onclick="switchDemo(3)">O20260501-004 <span class="demo-tag">重复录入</span></div>
+                </div>
+            </div>
 
-        mockContracts.forEach((c, i) => {
-            c._id = i;
-            c._tab = 'all';
-            c._expanded = true;
-            c._diff = computeDiff(c);
-        });
+            <div id="contractList"></div>
+        </div>
+        <script>
+            // ========== Mock 数据 ==========
+            const mockContracts = [
+                {
+                    ticket: 'O20260501-001',
+                    customerName: '李山',
+                    nannyName: '王阿姨',
+                    oldContract: {
+                        packageName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市天河区珠江新城',
+                        packageAmount: 20835,
+                        holidayCharge: 0,
+                        totalAmount: 20835,
+                        receivedAmount: 500,
+                        refundedAmount: 0,
+                        actualReceived: 500,
+                        arrears: 20335,
+                        status: 'signed',
+                        signDate: '2026-04-18',
+                        payments: [
+                            {docNo: 'BL20260420001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-20 10:30', category: '合同收款', channel: '银行转账', amount: 500, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    },
+                    newContract: {
+                        packageName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市天河区珠江新城',
+                        packageAmount: 20835,
+                        holidayCharge: 0,
+                        totalAmount: 20835,
+                        receivedAmount: 500,
+                        refundedAmount: 0,
+                        actualReceived: 500,
+                        arrears: 20335,
+                        status: 'signed',
+                        signDate: '2026-04-18'
+                    },
+                    newOrder: {
+                        packageLevelName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市天河区珠江新城',
+                        packageAmount: 20835,
+                        holidayCharge: 0,
+                        totalReceivable: 20835,
+                        receivedAmount: 500,
+                        refundedAmount: 0,
+                        actualReceived: 500,
+                        arrears: 20335,
+                        payments: [
+                            {docNo: 'PAY20260425001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-25 09:15', category: '合同收款', channel: '易宝', amount: 500, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    }
+                },
+                {
+                    ticket: 'O20260501-002',
+                    customerName: '张梅',
+                    nannyName: '刘阿姨',
+                    oldContract: {
+                        packageName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '佛山市南海区桂城街道',
+                        packageAmount: 30000,
+                        holidayCharge: 0,
+                        totalAmount: 30000,
+                        receivedAmount: 25000,
+                        refundedAmount: 0,
+                        actualReceived: 25000,
+                        arrears: 5000,
+                        status: 'signed',
+                        signDate: '2026-04-15',
+                        payments: [
+                            {docNo: 'BL20260418001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-18 11:00', category: '合同收款', channel: '盛付通', amount: 10000, audit: '审核通过'},
+                            {docNo: 'BL20260420002', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-20 15:30', category: '合同收款', channel: '银行转账', amount: 15000, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    },
+                    newContract: null,
+                    newOrder: {
+                        packageLevelName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '佛山市南海区桂城街道',
+                        packageAmount: 30000,
+                        holidayCharge: 0,
+                        totalReceivable: 30000,
+                        receivedAmount: 5000,
+                        refundedAmount: 0,
+                        actualReceived: 5000,
+                        arrears: 25000,
+                        payments: [
+                            {docNo: 'PAY20260428001', dept: '销售二部', receiver: '胡小清', time: '2026-04-28 10:20', category: '合同收款', channel: '易宝', amount: 3000, audit: '审核通过'},
+                            {docNo: 'PAY20260429001', dept: '销售二部', receiver: '胡小清', time: '2026-04-29 13:50', category: '合同收款', channel: '银行转账', amount: 2000, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    }
+                },
+                {
+                    ticket: 'O20260501-003',
+                    customerName: '陈芳',
+                    nannyName: '赵阿姨',
+                    oldContract: {
+                        packageName: 'V2 安心优选',
+                        serviceDays: 26,
+                        serviceAddress: '深圳市南山区科技园',
+                        packageAmount: 25000,
+                        holidayCharge: 500,
+                        totalAmount: 25500,
+                        receivedAmount: 17000,
+                        refundedAmount: 3000,
+                        actualReceived: 14000,
+                        arrears: 8500,
+                        status: 'completed',
+                        signDate: '2026-04-10',
+                        payments: [
+                            {docNo: 'BL20260415001', dept: '深圳一组', receiver: '王小红', time: '2026-04-15 09:00', category: '合同收款', channel: '盛付通', amount: 8000, audit: '审核通过'},
+                            {docNo: 'BL20260418003', dept: '深圳一组', receiver: '王小红', time: '2026-04-18 11:30', category: '诚意金', channel: '银行转账', amount: 12000, audit: '审核通过'}
+                        ],
+                        refunds: [
+                            {docNo: 'BL20260420005', dept: '深圳一组', receiver: '王小红', time: '2026-04-20 16:00', reason: '客户要求退部分款', channel: '银行转账', amount: 3000, audit: '审核通过'}
+                        ]
+                    },
+                    newContract: {
+                        packageName: 'V2 安心优选',
+                        serviceDays: 26,
+                        serviceAddress: '深圳市南山区科技园',
+                        packageAmount: 25000,
+                        holidayCharge: 500,
+                        totalAmount: 25500,
+                        receivedAmount: 10000,
+                        refundedAmount: 2000,
+                        actualReceived: 8000,
+                        arrears: 15500,
+                        status: 'signed',
+                        signDate: '2026-04-10'
+                    },
+                    newOrder: {
+                        packageLevelName: 'V2 安心优选',
+                        serviceDays: 28,
+                        serviceAddress: '深圳市南山区科技园',
+                        packageAmount: 25000,
+                        holidayCharge: 500,
+                        totalReceivable: 25500,
+                        receivedAmount: 10000,
+                        refundedAmount: 2000,
+                        actualReceived: 8000,
+                        arrears: 15500,
+                        payments: [
+                            {docNo: 'PAY20260422001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-22 14:00', category: '合同收款', channel: '易宝', amount: 5000, audit: '审核通过'},
+                            {docNo: 'PAY20260423001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-23 10:30', category: '合同收款', channel: '银行转账', amount: 7000, audit: '审核通过'}
+                        ],
+                        refunds: [
+                            {docNo: 'REF20260425001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-25 09:20', reason: '支付失败退回', channel: '易宝', amount: 2000, audit: '审核通过'}
+                        ]
+                    }
+                },
+                {
+                    ticket: 'O20260501-004',
+                    customerName: '王强',
+                    nannyName: '李阿姨',
+                    oldContract: {
+                        packageName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市番禺区南村镇',
+                        packageAmount: 30000,
+                        holidayCharge: 0,
+                        totalAmount: 30000,
+                        receivedAmount: 10000,
+                        refundedAmount: 0,
+                        actualReceived: 10000,
+                        arrears: 20000,
+                        status: 'signed',
+                        signDate: '2026-04-18',
+                        payments: [
+                            {docNo: 'BL20260418001', dept: '广州一组', receiver: '刘晓庆', time: '2026-04-18 11:00', category: '合同收款', channel: '盛付通', amount: 10000, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    },
+                    newContract: {
+                        packageName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市番禺区南村镇',
+                        packageAmount: 30000,
+                        holidayCharge: 0,
+                        totalAmount: 30000,
+                        receivedAmount: 10000,
+                        refundedAmount: 0,
+                        actualReceived: 10000,
+                        arrears: 20000,
+                        status: 'signed',
+                        signDate: '2026-04-18'
+                    },
+                    newOrder: {
+                        packageLevelName: 'Y4 月子好帮手',
+                        serviceDays: 42,
+                        serviceAddress: '广州市番禺区南村镇',
+                        packageAmount: 30000,
+                        holidayCharge: 0,
+                        totalReceivable: 30000,
+                        receivedAmount: 10000,
+                        refundedAmount: 0,
+                        actualReceived: 10000,
+                        arrears: 20000,
+                        payments: [
+                            {docNo: 'PAY20260420001', dept: '销售一部', receiver: '许晓璇', time: '2026-04-20 15:30', category: '合同收款', channel: '银行转账', amount: 10000, audit: '审核通过'}
+                        ],
+                        refunds: []
+                    },
+                    _duplicate: {
+                        detected: true,
+                        confidence: 85,
+                        oldPayment: {docNo: 'BL20260418001', channel: '盛付通', amount: 10000, time: '2026-04-18 11:00'},
+                        newPayment: {docNo: 'PAY20260420001', channel: '银行转账', amount: 10000, time: '2026-04-20 15:30'},
+                        reason: '金额相同 + 时间差2天 + 新系统为手动补录渠道',
+                        status: 'pending'  // pending / confirmed / rejected
+                    }
+                }
+            ];
 
-        let currentData = [...mockContracts];
+            mockContracts.forEach((c, i) => {
+                c._id = i;
+                c._tab = 'all';
+                c._expanded = true;
+                c._diff = computeDiff(c);
+            });
 
-        function fmtMoney(v) {
-            if (v === null || v === undefined) return '—';
-            return '¥' + v.toLocaleString('zh-CN');
-        }
-        function fmtStatus(s) {
-            const map = { signed: '已签署', pending: '待处理', completed: '已完成', canceled: '已取消', drafting: '草稿' };
-            return map[s] || s;
-        }
-        function statusClass(s) {
-            const map = { signed: 'status-signed', pending: 'status-pending', completed: 'status-completed', canceled: 'status-canceled' };
-            return map[s] || '';
-        }
-        function sum(arr, key) {
-            return (arr || []).reduce((a, b) => a + (b[key] || 0), 0);
-        }
+            let currentData = [...mockContracts];
 
-        function computeDiff(c) {
-            const d = { hasDiff: false, fields: [], diffAmount: 0, noNewContract: !c.newContract };
-            const oldC = c.oldContract;
-            const newC = c.newContract;
-            const newO = c.newOrder;
-            const hasNewOrder = newO !== null && newO !== undefined;
-            const hasNewContract = newC !== null && newC !== undefined;
+            function fmtMoney(v) {
+                if (v === null || v === undefined) return '—';
+                return '¥' + v.toLocaleString('zh-CN');
+            }
+            function fmtStatus(s) {
+                const map = { signed: '已签署', pending: '待处理', completed: '已完成', canceled: '已取消', drafting: '草稿' };
+                return map[s] || s;
+            }
+            function statusClass(s) {
+                const map = { signed: 'status-signed', pending: 'status-pending', completed: 'status-completed', canceled: 'status-canceled' };
+                return map[s] || '';
+            }
+            function sum(arr, key) {
+                return (arr || []).reduce((a, b) => a + (b[key] || 0), 0);
+            }
 
-            // 新系统完全无数据（无合同也无订单）
-            if (!hasNewOrder) {
-                d.hasDiff = true;
-                d.fields.push('新系统无数据');
-                d.diffAmount = oldC.receivedAmount;
+            function computeDiff(c) {
+                const d = { hasDiff: false, fields: [], diffAmount: 0, noNewContract: !c.newContract };
+                const oldC = c.oldContract;
+                const newC = c.newContract;
+                const newO = c.newOrder;
+                const hasNewOrder = newO !== null && newO !== undefined;
+                const hasNewContract = newC !== null && newC !== undefined;
+
+                // 新系统完全无数据（无合同也无订单）
+                if (!hasNewOrder) {
+                    d.hasDiff = true;
+                    d.fields.push('新系统无数据');
+                    d.diffAmount = oldC.receivedAmount;
+                    return d;
+                }
+
+                function cmp3(oldVal, newCVal, newOVal) {
+                    if (hasNewContract) {
+                        return oldVal === newCVal && oldVal === newOVal && newCVal === newOVal;
+                    }
+                    return oldVal === newOVal;
+                }
+
+                if (!cmp3(oldC.packageName, hasNewContract ? newC.packageName : null, newO.packageLevelName || newO.packageName)) {
+                    d.hasDiff = true; d.fields.push('套餐名称');
+                }
+                if (!cmp3(oldC.serviceDays, hasNewContract ? newC.serviceDays : null, newO.serviceDays)) {
+                    d.hasDiff = true; d.fields.push('服务天数');
+                }
+                if (!cmp3(oldC.serviceAddress, hasNewContract ? newC.serviceAddress : null, newO.serviceAddress)) {
+                    d.hasDiff = true; d.fields.push('服务地址');
+                }
+                if (!cmp3(oldC.packageAmount, hasNewContract ? newC.packageAmount : null, newO.packageAmount)) {
+                    d.hasDiff = true; d.fields.push('套餐金额');
+                }
+                if (!cmp3(oldC.holidayCharge, hasNewContract ? newC.holidayCharge : null, newO.holidayCharge)) {
+                    d.hasDiff = true; d.fields.push('节假日费用');
+                }
+                if (!cmp3(oldC.totalAmount, hasNewContract ? newC.totalAmount : null, newO.totalReceivable)) {
+                    d.hasDiff = true; d.fields.push('应收总金额');
+                }
+                if (!cmp3(oldC.receivedAmount, hasNewContract ? newC.receivedAmount : null, newO.receivedAmount)) {
+                    d.hasDiff = true; d.fields.push('已收金额');
+                    d.diffAmount = Math.abs(oldC.receivedAmount - newO.receivedAmount);
+                }
+                if (!cmp3(oldC.refundedAmount, hasNewContract ? newC.refundedAmount : null, newO.refundedAmount)) {
+                    d.hasDiff = true; d.fields.push('已退金额');
+                }
+                if (!cmp3(oldC.actualReceived, hasNewContract ? newC.actualReceived : null, newO.actualReceived)) {
+                    d.hasDiff = true; d.fields.push('实收金额');
+                }
+                if (!cmp3(oldC.arrears, hasNewContract ? newC.arrears : null, newO.arrears)) {
+                    d.hasDiff = true; d.fields.push('欠款');
+                }
+                if (hasNewContract && oldC.status !== newC.status) {
+                    d.hasDiff = true; d.fields.push('合同状态');
+                }
                 return d;
             }
 
-            function cmp3(oldVal, newCVal, newOVal) {
-                if (hasNewContract) {
-                    return oldVal === newCVal && oldVal === newOVal && newCVal === newOVal;
+            function renderStats() {
+                // 统计栏已删除，此函数保留但不做DOM操作
+            }
+
+            function renderList() {
+                const container = document.getElementById('contractList');
+                if (!currentData.length) {
+                    container.innerHTML = '<div class="empty-state">暂无数据</div>';
+                    return;
                 }
-                return oldVal === newOVal;
+                container.innerHTML = currentData.map(c => renderCard(c)).join('');
             }
 
-            if (!cmp3(oldC.packageName, hasNewContract ? newC.packageName : null, newO.packageLevelName || newO.packageName)) {
-                d.hasDiff = true; d.fields.push('套餐名称');
-            }
-            if (!cmp3(oldC.serviceDays, hasNewContract ? newC.serviceDays : null, newO.serviceDays)) {
-                d.hasDiff = true; d.fields.push('服务天数');
-            }
-            if (!cmp3(oldC.serviceAddress, hasNewContract ? newC.serviceAddress : null, newO.serviceAddress)) {
-                d.hasDiff = true; d.fields.push('服务地址');
-            }
-            if (!cmp3(oldC.packageAmount, hasNewContract ? newC.packageAmount : null, newO.packageAmount)) {
-                d.hasDiff = true; d.fields.push('套餐金额');
-            }
-            if (!cmp3(oldC.holidayCharge, hasNewContract ? newC.holidayCharge : null, newO.holidayCharge)) {
-                d.hasDiff = true; d.fields.push('节假日费用');
-            }
-            if (!cmp3(oldC.totalAmount, hasNewContract ? newC.totalAmount : null, newO.totalReceivable)) {
-                d.hasDiff = true; d.fields.push('应收总金额');
-            }
-            if (!cmp3(oldC.receivedAmount, hasNewContract ? newC.receivedAmount : null, newO.receivedAmount)) {
-                d.hasDiff = true; d.fields.push('已收金额');
-                d.diffAmount = Math.abs(oldC.receivedAmount - newO.receivedAmount);
-            }
-            if (!cmp3(oldC.refundedAmount, hasNewContract ? newC.refundedAmount : null, newO.refundedAmount)) {
-                d.hasDiff = true; d.fields.push('已退金额');
-            }
-            if (!cmp3(oldC.actualReceived, hasNewContract ? newC.actualReceived : null, newO.actualReceived)) {
-                d.hasDiff = true; d.fields.push('实收金额');
-            }
-            if (!cmp3(oldC.arrears, hasNewContract ? newC.arrears : null, newO.arrears)) {
-                d.hasDiff = true; d.fields.push('欠款');
-            }
-            if (hasNewContract && oldC.status !== newC.status) {
-                d.hasDiff = true; d.fields.push('合同状态');
-            }
-            return d;
-        }
+            function renderCard(c) {
+                const diff = c._diff;
+                const oldR = c.oldContract.receivedAmount;
+                const newCR = c.newContract ? c.newContract.receivedAmount : null;
+                const newOR = c.newOrder ? c.newOrder.receivedAmount : null;
+                const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
+                const hasNewContract = c.newContract !== null && c.newContract !== undefined;
 
-        function renderStats() {
-            const total = currentData.length;
-            const ok = currentData.filter(c => !c._diff.hasDiff).length;
-            const diff = total - ok;
-            const diffAmount = currentData.reduce((s, c) => s + c._diff.diffAmount, 0);
-            document.getElementById('statTotal').textContent = total;
-            document.getElementById('statOk').textContent = ok;
-            document.getElementById('statDiff').textContent = diff;
-            document.getElementById('statDiffAmount').textContent = fmtMoney(diffAmount);
-        }
-
-        function renderList() {
-            const container = document.getElementById('contractList');
-            if (!currentData.length) {
-                container.innerHTML = '<div class="empty-state">暂无数据</div>';
-                return;
-            }
-            container.innerHTML = currentData.map(c => renderCard(c)).join('');
-        }
-
-        function renderCard(c) {
-            const diff = c._diff;
-            const oldR = c.oldContract.receivedAmount;
-            const newCR = c.newContract ? c.newContract.receivedAmount : null;
-            const newOR = c.newOrder ? c.newOrder.receivedAmount : null;
-            const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
-            const hasNewContract = c.newContract !== null && c.newContract !== undefined;
-
-            let diffTag;
-            if (!hasNewOrder) {
-                diffTag = `<span class="tag tag-diff">⚠ 新系统无数据</span>`;
-            } else if (!hasNewContract) {
-                diffTag = `<span class="tag tag-diff">⚠ 新系统无合同</span>`;
-            } else if (diff.hasDiff) {
-                diffTag = `<span class="tag tag-diff">⚠ 差异: ${diff.fields.join('、')}</span>`;
-            } else {
-                diffTag = `<span class="tag tag-ok">✅ 完全一致</span>`;
-            }
-
-            return `
-            <div class="contract-card ${(!hasNewOrder || diff.hasDiff) ? 'has-diff' : 'no-diff'}" data-id="${c._id}">
-                <div class="card-header" onclick="toggleCard(${c._id})">
-                    <div class="header-left">
-                        <div class="header-item">
-                            <span class="label">合同编号</span>
-                            <span class="value">${c.ticket}</span>
-                        </div>
-                        <div class="header-item">
-                            <span class="label">客户</span>
-                            <span class="value">${c.customerName}</span>
-                        </div>
-                        <div class="header-item">
-                            <span class="label">月嫂</span>
-                            <span class="value">${c.nannyName}</span>
-                        </div>
-                        <div class="header-item">
-                            <span class="label">套餐</span>
-                            <span class="value" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${hasNewOrder ? (c.newOrder.packageLevelName || c.newOrder.packageName) : c.oldContract.packageName}</span>
-                        </div>
-                        ${diffTag}
-                    </div>
-                    <div class="header-right">
-                        <div class="header-amounts">
-                            <div class="ha-item">老合同: <b class="ha-old">${fmtMoney(oldR)}</b></div>
-                            <div class="ha-item">新合同: <b class="${hasNewContract ? 'ha-newc' : 'ha-none'}">${hasNewContract ? fmtMoney(newCR) : '无'}</b></div>
-                            <div class="ha-item">新订单: <b class="${hasNewOrder ? 'ha-newo' : 'ha-none'}">${hasNewOrder ? fmtMoney(newOR) : '无'}</b></div>
-                        </div>
-                        <div class="toggle-btn ${c._expanded ? 'expanded' : ''}" id="toggle-${c._id}">▼</div>
-                    </div>
-                </div>
-                <div class="card-body ${c._expanded ? 'expanded' : ''}" id="body-${c._id}">
-                    ${renderTabs(c)}
-                    ${renderSections(c)}
-                </div>
-            </div>`;
-        }
-
-        function renderTabs(c) {
-            const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
-            const oldPay = c.oldContract.payments.length;
-            const newOPay = hasNewOrder ? c.newOrder.payments.length : 0;
-            const payCount = oldPay + newOPay;
-
-            const oldRef = c.oldContract.refunds.length;
-            const newORef = hasNewOrder ? c.newOrder.refunds.length : 0;
-            const refCount = oldRef + newORef;
-
-            const tabs = [
-                { key: 'all', label: '全部' },
-                { key: 'base', label: '基本信息' },
-                { key: 'pay', label: '收款记录', badge: payCount || null },
-                { key: 'refund', label: '退款记录', badge: refCount || null }
-            ];
-            return `
-            <div class="section-tabs">
-                ${tabs.map(t => `
-                    <div class="tab ${c._tab === t.key ? 'active' : ''}" onclick="switchTab(${c._id}, '${t.key}')">
-                        ${t.label}${t.badge ? `<span class="badge">${t.badge}</span>` : ''}
-                    </div>
-                `).join('')}
-            </div>`;
-        }
-
-        function renderSections(c) {
-            const showBase = c._tab === 'all' || c._tab === 'base';
-            const showPay = c._tab === 'all' || c._tab === 'pay';
-            const showRefund = c._tab === 'all' || c._tab === 'refund';
-            const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
-            return `
-                ${showBase ? renderBaseCompare(c) : ''}
-                ${showPay ? renderPaymentTable(c) : ''}
-                ${showRefund ? renderRefundTable(c) : ''}
-                ${!hasNewOrder ? '<div class="empty-state" style="padding: 20px; color: #999;">新系统无订单数据，无法展示收款/退款记录</div>' : ''}
-            `;
-        }
-
-        function renderBaseCompare(c) {
-            const oldC = c.oldContract;
-            const newC = c.newContract;
-            const newO = c.newOrder;
-            const hasNewOrder = newO !== null && newO !== undefined;
-            const hasNewContract = newC !== null && newC !== undefined;
-
-            function cmp3(oldVal, newCVal, newOVal) {
-                if (hasNewContract) {
-                    return oldVal === newCVal && oldVal === newOVal && newCVal === newOVal;
+                let diffTag;
+                if (!hasNewOrder) {
+                    diffTag = `<span class="tag tag-diff">⚠ 新系统无数据</span>`;
+                } else if (!hasNewContract) {
+                    diffTag = `<span class="tag tag-diff">⚠ 新系统无合同</span>`;
+                } else if (diff.hasDiff) {
+                    diffTag = `<span class="tag tag-diff">⚠ 差异: ${diff.fields.join('、')}</span>`;
+                } else {
+                    diffTag = `<span class="tag tag-ok">✅ 完全一致</span>`;
                 }
-                return oldVal === newOVal;
+
+                return `
+                <div class="contract-card ${(!hasNewOrder || diff.hasDiff) ? 'has-diff' : 'no-diff'}" data-id="${c._id}">
+                    <div class="card-header" onclick="toggleCard(${c._id})">
+                        <div class="header-left">
+                            <div class="header-item">
+                                <span class="label">合同编号</span>
+                                <span class="value">${c.ticket}</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="label">客户</span>
+                                <span class="value">${c.customerName}</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="label">月嫂</span>
+                                <span class="value">${c.nannyName}</span>
+                            </div>
+                            <div class="header-item">
+                                <span class="label">套餐</span>
+                                <span class="value" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${hasNewOrder ? (c.newOrder.packageLevelName || c.newOrder.packageName) : c.oldContract.packageName}</span>
+                            </div>
+                            ${diffTag}
+                        </div>
+                        <div class="header-right">
+                            <div class="header-amounts">
+                                <div class="ha-item">老合同: <b class="ha-old">${fmtMoney(oldR)}</b></div>
+                                <div class="ha-item">新合同: <b class="${hasNewContract ? 'ha-newc' : 'ha-none'}">${hasNewContract ? fmtMoney(newCR) : '无'}</b></div>
+                                <div class="ha-item">新订单: <b class="${hasNewOrder ? 'ha-newo' : 'ha-none'}">${hasNewOrder ? fmtMoney(newOR) : '无'}</b></div>
+                            </div>
+                            <div class="toggle-btn ${c._expanded ? 'expanded' : ''}" id="toggle-${c._id}">▼</div>
+                        </div>
+                    </div>
+                    <div class="card-body ${c._expanded ? 'expanded' : ''}" id="body-${c._id}">
+                        ${renderTabs(c)}
+                        ${renderSections(c)}
+                    </div>
+                </div>`;
             }
 
-            const rows = [
-                { label: '套餐等级/套餐名', oldV: oldC.packageName, newCV: hasNewContract ? newC.packageName : null, newOV: hasNewOrder ? (newO.packageLevelName || newO.packageName) : null },
-                { label: '服务天数', oldV: oldC.serviceDays + '天', newCV: hasNewContract ? newC.serviceDays + '天' : null, newOV: hasNewOrder ? newO.serviceDays + '天' : null },
-                { label: '服务地址', oldV: oldC.serviceAddress, newCV: hasNewContract ? newC.serviceAddress : null, newOV: hasNewOrder ? newO.serviceAddress : null },
-                { label: '套餐金额', oldV: oldC.packageAmount, newCV: hasNewContract ? newC.packageAmount : null, newOV: hasNewOrder ? newO.packageAmount : null },
-                { label: '节假日费用', oldV: oldC.holidayCharge, newCV: hasNewContract ? newC.holidayCharge : null, newOV: hasNewOrder ? newO.holidayCharge : null },
-                { label: '应收总金额', oldV: oldC.totalAmount, newCV: hasNewContract ? newC.totalAmount : null, newOV: hasNewOrder ? newO.totalReceivable : null },
-                { label: '已收金额', oldV: oldC.receivedAmount, newCV: hasNewContract ? newC.receivedAmount : null, newOV: hasNewOrder ? newO.receivedAmount : null },
-                { label: '已退金额', oldV: oldC.refundedAmount, newCV: hasNewContract ? newC.refundedAmount : null, newOV: hasNewOrder ? newO.refundedAmount : null },
-                { label: '实收金额', oldV: oldC.actualReceived, newCV: hasNewContract ? newC.actualReceived : null, newOV: hasNewOrder ? newO.actualReceived : null },
-                { label: '欠款', oldV: oldC.arrears, newCV: hasNewContract ? newC.arrears : null, newOV: hasNewOrder ? newO.arrears : null },
-            ];
+            function renderTabs(c) {
+                const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
+                const oldPay = c.oldContract.payments.length;
+                const newOPay = hasNewOrder ? c.newOrder.payments.length : 0;
+                const payCount = oldPay + newOPay;
 
-            let statusRow = '';
-            if (hasNewContract) {
-                const statusEq = oldC.status === newC.status;
-                statusRow = `
-                    <tr>
-                        <td>合同状态</td>
-                        <td class="${statusEq ? '' : 'diff-cell'}"><span class="${statusClass(oldC.status)}">${fmtStatus(oldC.status)}</span></td>
-                        <td class="${statusEq ? '' : 'diff-cell'}"><span class="${statusClass(newC.status)}">${fmtStatus(newC.status)}</span></td>
-                        <td class="no-contract">—</td>
-                    </tr>
+                const oldRef = c.oldContract.refunds.length;
+                const newORef = hasNewOrder ? c.newOrder.refunds.length : 0;
+                const refCount = oldRef + newORef;
+
+                const tabs = [
+                    { key: 'all', label: '全部' },
+                    { key: 'base', label: '基本信息' },
+                    { key: 'pay', label: '收款记录', badge: payCount || null },
+                    { key: 'refund', label: '退款记录', badge: refCount || null }
+                ];
+                return `
+                <div class="section-tabs">
+                    ${tabs.map(t => `
+                        <div class="tab ${c._tab === t.key ? 'active' : ''}" onclick="switchTab(${c._id}, '${t.key}')">
+                            ${t.label}${t.badge ? `<span class="badge">${t.badge}</span>` : ''}
+                        </div>
+                    `).join('')}
+                </div>`;
+            }
+
+            function renderSections(c) {
+                const showBase = c._tab === 'all' || c._tab === 'base';
+                const showPay = c._tab === 'all' || c._tab === 'pay';
+                const showRefund = c._tab === 'all' || c._tab === 'refund';
+                const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
+                return `
+                    ${showBase ? renderBaseCompare(c) : ''}
+                    ${showPay ? renderPaymentTable(c) : ''}
+                    ${showRefund ? renderRefundTable(c) : ''}
+                    ${!hasNewOrder ? '<div class="empty-state" style="padding: 20px; color: #999;">新系统无订单数据，无法展示收款/退款记录</div>' : ''}
                 `;
             }
 
-            return `
-            <table class="data-table compare-table" style="margin-bottom: 16px;">
-                <thead>
-                    <tr>
-                        <th>字段</th>
-                        <th><span class="src-tag src-old">老系统合同</span></th>
-                        <th><span class="src-tag src-new-contract">新系统合同</span></th>
-                        <th><span class="src-tag src-new-order">新系统订单</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows.map(r => {
-                        const eq = cmp3(r.oldV, r.newCV, r.newOV);
-                        const displayOld = typeof r.oldV === 'number' ? fmtMoney(r.oldV) : r.oldV;
-                        const displayNewC = r.newCV === null ? '<span class="no-contract">无合同</span>' : (typeof r.newCV === 'number' ? fmtMoney(r.newCV) : r.newCV);
-                        const displayNewO = r.newOV === null ? '<span class="no-contract">—</span>' : (typeof r.newOV === 'number' ? fmtMoney(r.newOV) : r.newOV);
-                        return `
-                            <tr>
-                                <td>${r.label}</td>
-                                <td class="${eq ? '' : 'diff-cell'}">${displayOld}</td>
-                                <td class="${eq ? '' : 'diff-cell'}">${displayNewC}</td>
-                                <td class="${eq ? '' : 'diff-cell'}">${displayNewO}</td>
-                            </tr>
-                        `;
-                    }).join('')}
-                    ${statusRow}
-                </tbody>
-            </table>`;
-        }
+            function renderBaseCompare(c) {
+                const oldC = c.oldContract;
+                const newC = c.newContract;
+                const newO = c.newOrder;
+                const hasNewOrder = newO !== null && newO !== undefined;
+                const hasNewContract = newC !== null && newC !== undefined;
 
-        function renderPaymentTable(c) {
-            const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
-            const oldPayments = c.oldContract.payments;
-            const newPayments = hasNewOrder ? c.newOrder.payments : [];
-            const oldSum = sum(oldPayments, 'amount');
-            const newOSum = sum(newPayments, 'amount');
-            const diffPay = Math.abs(oldSum - newOSum);
+                function cmp3(oldVal, newCVal, newOVal) {
+                    if (hasNewContract) {
+                        return oldVal === newCVal && oldVal === newOVal && newCVal === newOVal;
+                    }
+                    return oldVal === newOVal;
+                }
 
-            let html = '';
+                const rows = [
+                    { label: '套餐等级/套餐名', oldV: oldC.packageName, newCV: hasNewContract ? newC.packageName : null, newOV: hasNewOrder ? (newO.packageLevelName || newO.packageName) : null },
+                    { label: '服务天数', oldV: oldC.serviceDays + '天', newCV: hasNewContract ? newC.serviceDays + '天' : null, newOV: hasNewOrder ? newO.serviceDays + '天' : null },
+                    { label: '服务地址', oldV: oldC.serviceAddress, newCV: hasNewContract ? newC.serviceAddress : null, newOV: hasNewOrder ? newO.serviceAddress : null },
+                    { label: '套餐金额', oldV: oldC.packageAmount, newCV: hasNewContract ? newC.packageAmount : null, newOV: hasNewOrder ? newO.packageAmount : null },
+                    { label: '节假日费用', oldV: oldC.holidayCharge, newCV: hasNewContract ? newC.holidayCharge : null, newOV: hasNewOrder ? newO.holidayCharge : null },
+                    { label: '应收总金额', oldV: oldC.totalAmount, newCV: hasNewContract ? newC.totalAmount : null, newOV: hasNewOrder ? newO.totalReceivable : null },
+                    { label: '已收金额', oldV: oldC.receivedAmount, newCV: hasNewContract ? newC.receivedAmount : null, newOV: hasNewOrder ? newO.receivedAmount : null },
+                    { label: '已退金额', oldV: oldC.refundedAmount, newCV: hasNewContract ? newC.refundedAmount : null, newOV: hasNewOrder ? newO.refundedAmount : null },
+                    { label: '实收金额', oldV: oldC.actualReceived, newCV: hasNewContract ? newC.actualReceived : null, newOV: hasNewOrder ? newO.actualReceived : null },
+                    { label: '欠款', oldV: oldC.arrears, newCV: hasNewContract ? newC.arrears : null, newOV: hasNewOrder ? newO.arrears : null },
+                ];
 
-            // 老系统收款
-            const selectedPayKey = `pay_${c._id}`;
-            if (!c._selectedPayments) c._selectedPayments = {};
-            html += `
-            <div style="margin-bottom: 16px;">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #333; display: flex; align-items: center; justify-content: space-between;">
-                    <span class="src-tag src-old">老系统合同收款</span>
-                    ${oldPayments.length ? `<label style="font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="checkbox" onchange="toggleSelectAll(${c._id}, 'payments', this.checked)"> 全选</label>` : ''}
-                </div>
-                ${oldPayments.length ? `
-                <table class="data-table">
+                let statusRow = '';
+                if (hasNewContract) {
+                    const statusEq = oldC.status === newC.status;
+                    statusRow = `
+                        <tr>
+                            <td>合同状态</td>
+                            <td class="${statusEq ? '' : 'diff-cell'}"><span class="${statusClass(oldC.status)}">${fmtStatus(oldC.status)}</span></td>
+                            <td class="${statusEq ? '' : 'diff-cell'}"><span class="${statusClass(newC.status)}">${fmtStatus(newC.status)}</span></td>
+                            <td class="no-contract">—</td>
+                        </tr>
+                    `;
+                }
+
+                let createContractTip = '';
+                if (!hasNewContract && hasNewOrder) {
+                    createContractTip = `
+                    <div style="background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="color: #d48806; font-size: 13px;">
+                            <span style="font-weight: 600;">⚠ 新系统无合同</span> — 该订单在老系统中存在对应的合同，请先在新系统创建合同
+                        </div>
+                        <button class="btn" style="font-size: 12px; padding: 5px 14px; flex-shrink: 0;" onclick="createContract(${c._id})">创建合同</button>
+                    </div>`;
+                }
+
+                return `${createContractTip}
+                <table class="data-table compare-table" style="margin-bottom: 16px;">
                     <thead>
                         <tr>
-                            <th style="width: 36px;"><input type="checkbox" ${oldPayments.every((_, i) => c._selectedPayments[i]) ? 'checked' : ''} onchange="toggleSelectAll(${c._id}, 'payments', this.checked)"></th>
-                            <th>单据编号</th>
-                            <th>收款部门</th>
-                            <th>收款人</th>
-                            <th>单据日期</th>
-                            <th>款项类别</th>
-                            <th>支付方式</th>
-                            <th class="col-right">单据金额</th>
-                            <th>财务审核</th>
+                            <th>字段</th>
+                            <th><span class="src-tag src-old">老系统合同</span></th>
+                            <th><span class="src-tag src-new-contract">新系统合同</span></th>
+                            <th><span class="src-tag src-new-order">新系统订单</span></th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${oldPayments.map((p, i) => `
-                            <tr>
-                                <td><input type="checkbox" ${c._selectedPayments[i] ? 'checked' : ''} onchange="toggleSelectItem(${c._id}, 'payments', ${i}, this.checked)"></td>
-                                <td>${p.docNo || '—'}</td>
-                                <td>${p.dept || '—'}</td>
-                                <td>${p.receiver || '—'}</td>
-                                <td>${p.time}</td>
-                                <td>${p.category || '—'}</td>
-                                <td>${p.channel}</td>
-                                <td class="col-right" style="font-weight: 500;">${fmtMoney(p.amount)}</td>
-                                <td><span class="${p.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${p.audit || '—'}</span></td>
-                            </tr>
-                        `).join('')}
+                        ${rows.map(r => {
+                            const eq = cmp3(r.oldV, r.newCV, r.newOV);
+                            const displayOld = typeof r.oldV === 'number' ? fmtMoney(r.oldV) : r.oldV;
+                            const displayNewC = r.newCV === null ? '<span class="no-contract">无合同</span>' : (typeof r.newCV === 'number' ? fmtMoney(r.newCV) : r.newCV);
+                            const displayNewO = r.newOV === null ? '<span class="no-contract">—</span>' : (typeof r.newOV === 'number' ? fmtMoney(r.newOV) : r.newOV);
+                            return `
+                                <tr>
+                                    <td>${r.label}</td>
+                                    <td class="${eq ? '' : 'diff-cell'}">${displayOld}</td>
+                                    <td class="${eq ? '' : 'diff-cell'}">${displayNewC}</td>
+                                    <td class="${eq ? '' : 'diff-cell'}">${displayNewO}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                        ${statusRow}
                     </tbody>
-                </table>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: #666; font-size: 13px;">
-                    <div>
-                        已选 <b style="color: #e91e8c;">${Object.values(c._selectedPayments).filter(Boolean).length}</b> 笔 / 共 ${oldPayments.length} 笔
-                        ${Object.values(c._selectedPayments).filter(Boolean).length > 0 ? `，合计 <b style="color: #e91e8c;">${fmtMoney(oldPayments.reduce((s, p, i) => s + (c._selectedPayments[i] ? p.amount : 0), 0))}</b>` : ''}
-                    </div>
-                    <div>老系统合同合计: <b style="color: #333;">${fmtMoney(oldSum)}</b></div>
-                </div>
-                ${Object.values(c._selectedPayments).filter(Boolean).length > 0 ? `
-                <div style="padding: 8px 12px;">
-                    <button class="btn" style="font-size: 12px; padding: 4px 12px;" onclick="syncSelected(${c._id}, 'payments')">同步已选记录到新系统</button>
-                </div>
-                ` : ''}
-                ` : '<div class="empty-state" style="padding: 20px;">暂无收款记录</div>'}
-            </div>`;
+                </table>`;
+            }
 
-            // 新系统收款
-            if (hasNewOrder) {
+            function renderPaymentTable(c) {
+                const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
+                const oldPayments = c.oldContract.payments;
+                const newPayments = hasNewOrder ? c.newOrder.payments : [];
+                const oldSum = sum(oldPayments, 'amount');
+                const newOSum = sum(newPayments, 'amount');
+                const diffPay = Math.abs(oldSum - newOSum);
+
+                let html = '';
+
+                // 老系统收款
+                const selectedPayKey = `pay_${c._id}`;
+                if (!c._selectedPayments) c._selectedPayments = {};
                 html += `
                 <div style="margin-bottom: 16px;">
-                    <div style="font-weight: 600; margin-bottom: 8px; color: #333;">
-                        <span class="src-tag src-new-order">新系统订单收款</span>
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #333; display: flex; align-items: center; justify-content: space-between;">
+                        <span class="src-tag src-old">老系统合同收款</span>
+                        ${oldPayments.length ? `<label style="font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="checkbox" onchange="toggleSelectAll(${c._id}, 'payments', this.checked)"> 全选</label>` : ''}
                     </div>
-                    ${newPayments.length ? `
+                    ${oldPayments.length ? `
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>支付单号</th>
-                                <th>收款人部门</th>
+                                <th style="width: 36px;"><input type="checkbox" ${oldPayments.every((_, i) => c._selectedPayments[i]) ? 'checked' : ''} onchange="toggleSelectAll(${c._id}, 'payments', this.checked)"></th>
+                                <th style="width: 160px;">同步方式</th>
+                                <th>单据编号</th>
+                                <th>收款部门</th>
                                 <th>收款人</th>
-                                <th>收款时间</th>
+                                <th>单据日期</th>
                                 <th>款项类别</th>
                                 <th>支付方式</th>
-                                <th class="col-right">金额</th>
-                                <th>审核状态</th>
+                                <th class="col-right">单据金额</th>
+                                <th>财务审核</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${newPayments.map(p => `
+                            ${oldPayments.map((p, i) => {
+                                const dupOptions = newPayments.filter(np => np.amount === p.amount);
+                                const hasDup = dupOptions.length > 0;
+                                const syncMode = c._syncModePayments?.[i] || (hasDup ? 'cover' : 'new');
+                                const coverTarget = c._coverTargetPayments?.[i] || (dupOptions[0]?.docNo || '');
+                                return `
                                 <tr>
+                                    <td><input type="checkbox" ${c._selectedPayments[i] ? 'checked' : ''} onchange="toggleSelectItem(${c._id}, 'payments', ${i}, this.checked)"></td>
+                                    <td>
+                                        ${hasDup ? `
+                                        <select style="font-size: 12px; padding: 2px 4px; border: 1px solid #d9d9d9; border-radius: 4px; width: 150px;" onchange="setSyncMode(${c._id}, 'payments', ${i}, this.value)">
+                                            <option value="new" ${syncMode === 'new' ? 'selected' : ''}>新增到新系统</option>
+                                            <option value="cover" ${syncMode === 'cover' ? 'selected' : ''}>覆盖新系统记录</option>
+                                        </select>
+                                        ${syncMode === 'cover' ? `
+                                        <select style="font-size: 12px; padding: 2px 4px; border: 1px solid #d9d9d9; border-radius: 4px; width: 150px; margin-top: 4px;" onchange="setCoverTarget(${c._id}, 'payments', ${i}, this.value)">
+                                            ${dupOptions.map(d => `<option value="${d.docNo}" ${coverTarget === d.docNo ? 'selected' : ''}>覆盖: ${d.docNo} ${d.channel}</option>`).join('')}
+                                        </select>
+                                        ` : ''}
+                                        ` : `<span style="font-size: 12px; color: #999;">新增到新系统</span>`}
+                                    </td>
                                     <td>${p.docNo || '—'}</td>
                                     <td>${p.dept || '—'}</td>
                                     <td>${p.receiver || '—'}</td>
@@ -1031,379 +948,557 @@
                                     <td class="col-right" style="font-weight: 500;">${fmtMoney(p.amount)}</td>
                                     <td><span class="${p.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${p.audit || '—'}</span></td>
                                 </tr>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </tbody>
                     </table>
-                    <div style="text-align: right; padding: 8px 12px; color: #666; font-size: 13px;">
-                        新系统订单合计: <b style="color: #e91e8c;">${fmtMoney(newOSum)}</b>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: #666; font-size: 13px;">
+                        <div>
+                            已选 <b style="color: #e91e8c;">${Object.values(c._selectedPayments).filter(Boolean).length}</b> 笔 / 共 ${oldPayments.length} 笔
+                            ${Object.values(c._selectedPayments).filter(Boolean).length > 0 ? `，合计 <b style="color: #e91e8c;">${fmtMoney(oldPayments.reduce((s, p, i) => s + (c._selectedPayments[i] ? p.amount : 0), 0))}</b>` : ''}
+                        </div>
+                        <div>老系统合同合计: <b style="color: #333;">${fmtMoney(oldSum)}</b></div>
                     </div>
+                    ${Object.values(c._selectedPayments).filter(Boolean).length > 0 ? `
+                    <div style="padding: 8px 12px;">
+                        <button class="btn" style="font-size: 12px; padding: 4px 12px;" onclick="syncSelected(${c._id}, 'payments')">同步已选记录到新系统</button>
+                    </div>
+                    ` : ''}
                     ` : '<div class="empty-state" style="padding: 20px;">暂无收款记录</div>'}
                 </div>`;
-            }
 
-            // 差异汇总
-            html += `
-            <div class="summary-bar" style="margin-bottom: 16px;">
-                <div class="summary-left">
-                    <div class="summary-item"><span class="s-label">老系统合同</span><span class="s-value old">${fmtMoney(oldSum)}</span></div>
-                    <div class="summary-item"><span class="s-label">新系统订单</span><span class="s-value newo">${fmtMoney(newOSum)}</span></div>
-                    <div class="summary-item"><span class="s-label">差异</span><span class="s-value diff">${diffPay === 0 ? '无' : fmtMoney(diffPay)}</span></div>
-                </div>
-            </div>`;
+                // 新系统收款
+                if (hasNewOrder) {
+                    html += `
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #333;">
+                            <span class="src-tag src-new-order">新系统订单收款</span>
+                        </div>
+                        ${newPayments.length ? `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>支付单号</th>
+                                    <th>收款人部门</th>
+                                    <th>收款人</th>
+                                    <th>收款时间</th>
+                                    <th>款项类别</th>
+                                    <th>支付方式</th>
+                                    <th class="col-right">金额</th>
+                                    <th>审核状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${newPayments.map(p => `
+                                    <tr>
+                                        <td>${p.docNo || '—'}</td>
+                                        <td>${p.dept || '—'}</td>
+                                        <td>${p.receiver || '—'}</td>
+                                        <td>${p.time}</td>
+                                        <td>${p.category || '—'}</td>
+                                        <td>${p.channel}</td>
+                                        <td class="col-right" style="font-weight: 500;">${fmtMoney(p.amount)}</td>
+                                        <td><span class="${p.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${p.audit || '—'}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <div style="text-align: right; padding: 8px 12px; color: #666; font-size: 13px;">
+                            新系统订单合计: <b style="color: #e91e8c;">${fmtMoney(newOSum)}</b>
+                        </div>
+                        ` : '<div class="empty-state" style="padding: 20px;">暂无收款记录</div>'}
+                    </div>`;
+                }
 
-            return html;
-        }
-
-        function renderRefundTable(c) {
-            const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
-            const oldRefunds = c.oldContract.refunds;
-            const newRefunds = hasNewOrder ? c.newOrder.refunds : [];
-            const oldSum = sum(oldRefunds, 'amount');
-            const newOSum = sum(newRefunds, 'amount');
-            const diffRef = Math.abs(oldSum - newOSum);
-
-            if (!oldRefunds.length && !newRefunds.length) {
-                return `<div class="empty-state" style="padding: 20px;">暂无退款记录</div>`;
-            }
-
-            let html = '';
-
-            // 老系统退款
-            if (!c._selectedRefunds) c._selectedRefunds = {};
-            html += `
-            <div style="margin-bottom: 16px;">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #333; display: flex; align-items: center; justify-content: space-between;">
-                    <span class="src-tag src-old">老系统合同退款</span>
-                    ${oldRefunds.length ? `<label style="font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="checkbox" onchange="toggleSelectAll(${c._id}, 'refunds', this.checked)"> 全选</label>` : ''}
-                </div>
-                ${oldRefunds.length ? `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 36px;"><input type="checkbox" ${oldRefunds.every((_, i) => c._selectedRefunds[i]) ? 'checked' : ''} onchange="toggleSelectAll(${c._id}, 'refunds', this.checked)"></th>
-                            <th>单据编号</th>
-                            <th>退款部门</th>
-                            <th>退款人</th>
-                            <th>单据日期</th>
-                            <th>款项类别</th>
-                            <th>支付方式</th>
-                            <th>原因</th>
-                            <th class="col-right">单据金额</th>
-                            <th>财务审核</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${oldRefunds.map((r, i) => `
-                            <tr>
-                                <td><input type="checkbox" ${c._selectedRefunds[i] ? 'checked' : ''} onchange="toggleSelectItem(${c._id}, 'refunds', ${i}, this.checked)"></td>
-                                <td>${r.docNo || '—'}</td>
-                                <td>${r.dept || '—'}</td>
-                                <td>${r.receiver || '—'}</td>
-                                <td>${r.time}</td>
-                                <td>${r.category || '—'}</td>
-                                <td>${r.channel}</td>
-                                <td>${r.reason || '—'}</td>
-                                <td class="col-right" style="font-weight: 500; color: #ff4d4f;">${fmtMoney(r.amount)}</td>
-                                <td><span class="${r.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${r.audit || '—'}</span></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: #666; font-size: 13px;">
-                    <div>
-                        已选 <b style="color: #e91e8c;">${Object.values(c._selectedRefunds).filter(Boolean).length}</b> 笔 / 共 ${oldRefunds.length} 笔
-                        ${Object.values(c._selectedRefunds).filter(Boolean).length > 0 ? `，合计 <b style="color: #e91e8c;">${fmtMoney(oldRefunds.reduce((s, r, i) => s + (c._selectedRefunds[i] ? r.amount : 0), 0))}</b>` : ''}
+                // 差异汇总
+                html += `
+                <div class="summary-bar" style="margin-bottom: 16px;">
+                    <div class="summary-left">
+                        <div class="summary-item"><span class="s-label">老系统合同</span><span class="s-value old">${fmtMoney(oldSum)}</span></div>
+                        <div class="summary-item"><span class="s-label">新系统订单</span><span class="s-value newo">${fmtMoney(newOSum)}</span></div>
+                        <div class="summary-item"><span class="s-label">差异</span><span class="s-value diff">${diffPay === 0 ? '无' : fmtMoney(diffPay)}</span></div>
                     </div>
-                    <div>老系统合同合计: <b style="color: #ff4d4f;">${fmtMoney(oldSum)}</b></div>
-                </div>
-                ${Object.values(c._selectedRefunds).filter(Boolean).length > 0 ? `
-                <div style="padding: 8px 12px;">
-                    <button class="btn" style="font-size: 12px; padding: 4px 12px;" onclick="syncSelected(${c._id}, 'refunds')">同步已选记录到新系统</button>
-                </div>
-                ` : ''}
-                ` : '<div class="empty-state" style="padding: 20px;">暂无退款记录</div>'}
-            </div>`;
+                </div>`;
 
-            // 新系统退款
-            if (hasNewOrder) {
+                return html;
+            }
+
+            function renderRefundTable(c) {
+                const hasNewOrder = c.newOrder !== null && c.newOrder !== undefined;
+                const oldRefunds = c.oldContract.refunds;
+                const newRefunds = hasNewOrder ? c.newOrder.refunds : [];
+                const oldSum = sum(oldRefunds, 'amount');
+                const newOSum = sum(newRefunds, 'amount');
+                const diffRef = Math.abs(oldSum - newOSum);
+
+                if (!oldRefunds.length && !newRefunds.length) {
+                    return `<div class="empty-state" style="padding: 20px;">暂无退款记录</div>`;
+                }
+
+                let html = '';
+
+                // 老系统退款
+                if (!c._selectedRefunds) c._selectedRefunds = {};
                 html += `
                 <div style="margin-bottom: 16px;">
-                    <div style="font-weight: 600; margin-bottom: 8px; color: #333;">
-                        <span class="src-tag src-new-order">新系统订单退款</span>
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #333; display: flex; align-items: center; justify-content: space-between;">
+                        <span class="src-tag src-old">老系统合同退款</span>
+                        ${oldRefunds.length ? `<label style="font-size: 12px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="checkbox" onchange="toggleSelectAll(${c._id}, 'refunds', this.checked)"> 全选</label>` : ''}
                     </div>
-                    ${newRefunds.length ? `
+                    ${oldRefunds.length ? `
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>退款单号</th>
-                                <th>退款人部门</th>
+                                <th style="width: 36px;"><input type="checkbox" ${oldRefunds.every((_, i) => c._selectedRefunds[i]) ? 'checked' : ''} onchange="toggleSelectAll(${c._id}, 'refunds', this.checked)"></th>
+                                <th style="width: 160px;">同步方式</th>
+                                <th>单据编号</th>
+                                <th>退款部门</th>
                                 <th>退款人</th>
-                                <th>退款时间</th>
-                                <th>原因</th>
+                                <th>单据日期</th>
+                                <th>款项类别</th>
                                 <th>支付方式</th>
-                                <th class="col-right">金额</th>
-                                <th>审核状态</th>
+                                <th>原因</th>
+                                <th class="col-right">单据金额</th>
+                                <th>财务审核</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${newRefunds.map(r => `
+                            ${oldRefunds.map((r, i) => {
+                                const dupOptions = newRefunds.filter(nr => nr.amount === r.amount);
+                                const hasDup = dupOptions.length > 0;
+                                const syncMode = c._syncModeRefunds?.[i] || (hasDup ? 'cover' : 'new');
+                                const coverTarget = c._coverTargetRefunds?.[i] || (dupOptions[0]?.docNo || '');
+                                return `
                                 <tr>
+                                    <td><input type="checkbox" ${c._selectedRefunds[i] ? 'checked' : ''} onchange="toggleSelectItem(${c._id}, 'refunds', ${i}, this.checked)"></td>
+                                    <td>
+                                        ${hasDup ? `
+                                        <select style="font-size: 12px; padding: 2px 4px; border: 1px solid #d9d9d9; border-radius: 4px; width: 150px;" onchange="setSyncMode(${c._id}, 'refunds', ${i}, this.value)">
+                                            <option value="new" ${syncMode === 'new' ? 'selected' : ''}>新增到新系统</option>
+                                            <option value="cover" ${syncMode === 'cover' ? 'selected' : ''}>覆盖新系统记录</option>
+                                        </select>
+                                        ${syncMode === 'cover' ? `
+                                        <select style="font-size: 12px; padding: 2px 4px; border: 1px solid #d9d9d9; border-radius: 4px; width: 150px; margin-top: 4px;" onchange="setCoverTarget(${c._id}, 'refunds', ${i}, this.value)">
+                                            ${dupOptions.map(d => `<option value="${d.docNo}" ${coverTarget === d.docNo ? 'selected' : ''}>覆盖: ${d.docNo} ${d.channel}</option>`).join('')}
+                                        </select>
+                                        ` : ''}
+                                        ` : `<span style="font-size: 12px; color: #999;">新增到新系统</span>`}
+                                    </td>
                                     <td>${r.docNo || '—'}</td>
                                     <td>${r.dept || '—'}</td>
                                     <td>${r.receiver || '—'}</td>
                                     <td>${r.time}</td>
-                                    <td>${r.reason || '—'}</td>
+                                    <td>${r.category || '—'}</td>
                                     <td>${r.channel}</td>
+                                    <td>${r.reason || '—'}</td>
                                     <td class="col-right" style="font-weight: 500; color: #ff4d4f;">${fmtMoney(r.amount)}</td>
                                     <td><span class="${r.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${r.audit || '—'}</span></td>
                                 </tr>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </tbody>
                     </table>
-                    <div style="text-align: right; padding: 8px 12px; color: #666; font-size: 13px;">
-                        新系统订单合计: <b style="color: #ff4d4f;">${fmtMoney(newOSum)}</b>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: #666; font-size: 13px;">
+                        <div>
+                            已选 <b style="color: #e91e8c;">${Object.values(c._selectedRefunds).filter(Boolean).length}</b> 笔 / 共 ${oldRefunds.length} 笔
+                            ${Object.values(c._selectedRefunds).filter(Boolean).length > 0 ? `，合计 <b style="color: #e91e8c;">${fmtMoney(oldRefunds.reduce((s, r, i) => s + (c._selectedRefunds[i] ? r.amount : 0), 0))}</b>` : ''}
+                        </div>
+                        <div>老系统合同合计: <b style="color: #ff4d4f;">${fmtMoney(oldSum)}</b></div>
                     </div>
+                    ${Object.values(c._selectedRefunds).filter(Boolean).length > 0 ? `
+                    <div style="padding: 8px 12px;">
+                        <button class="btn" style="font-size: 12px; padding: 4px 12px;" onclick="syncSelected(${c._id}, 'refunds')">同步已选记录到新系统</button>
+                    </div>
+                    ` : ''}
                     ` : '<div class="empty-state" style="padding: 20px;">暂无退款记录</div>'}
                 </div>`;
-            }
 
-            // 差异汇总
-            html += `
-            <div class="summary-bar" style="margin-bottom: 16px;">
-                <div class="summary-left">
-                    <div class="summary-item"><span class="s-label">老系统合同</span><span class="s-value old">${fmtMoney(oldSum)}</span></div>
-                    <div class="summary-item"><span class="s-label">新系统订单</span><span class="s-value newo">${fmtMoney(newOSum)}</span></div>
-                    <div class="summary-item"><span class="s-label">差异</span><span class="s-value diff">${diffRef === 0 ? '无' : fmtMoney(diffRef)}</span></div>
-                </div>
-            </div>`;
-
-            return html;
-        }
-
-        function updateSyncBar() {
-            let totalSelected = 0;
-            let totalAmount = 0;
-            let hasSelection = false;
-            
-            currentData.forEach(c => {
-                const oldPayments = c.oldContract.payments || [];
-                const oldRefunds = c.oldContract.refunds || [];
-                const selPay = c._selectedPayments || {};
-                const selRef = c._selectedRefunds || {};
-                
-                oldPayments.forEach((p, i) => {
-                    if (selPay[i]) {
-                        hasSelection = true;
-                        totalSelected++;
-                        totalAmount += p.amount;
-                    }
-                });
-                oldRefunds.forEach((r, i) => {
-                    if (selRef[i]) {
-                        hasSelection = true;
-                        totalSelected++;
-                        totalAmount += r.amount;
-                    }
-                });
-            });
-            
-            const syncBar = document.getElementById('syncBar');
-            if (!syncBar) return;
-            
-            if (hasSelection) {
-                syncBar.style.display = 'flex';
-                document.getElementById('syncCount').textContent = totalSelected;
-                document.getElementById('syncAmount').textContent = fmtMoney(totalAmount);
-            } else {
-                syncBar.style.display = 'none';
-            }
-        }
-
-        function toggleSelectAll(id, type, checked) {
-            const c = currentData.find(x => x._id === id);
-            if (!c) return;
-            const items = type === 'payments' ? c.oldContract.payments : c.oldContract.refunds;
-            const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
-            if (!c[selectedKey]) c[selectedKey] = {};
-            items.forEach((_, i) => {
-                c[selectedKey][i] = checked;
-            });
-            const card = document.querySelector(`.contract-card[data-id="${id}"]`);
-            if (card) {
-                const body = card.querySelector('.card-body');
-                body.innerHTML = renderTabs(c) + renderSections(c);
-            }
-            updateSyncBar();
-        }
-
-        function toggleSelectItem(id, type, index, checked) {
-            const c = currentData.find(x => x._id === id);
-            if (!c) return;
-            const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
-            if (!c[selectedKey]) c[selectedKey] = {};
-            c[selectedKey][index] = checked;
-            const card = document.querySelector(`.contract-card[data-id="${id}"]`);
-            if (card) {
-                const body = card.querySelector('.card-body');
-                body.innerHTML = renderTabs(c) + renderSections(c);
-            }
-            updateSyncBar();
-        }
-
-        function syncSelected(id, type) {
-            const c = currentData.find(x => x._id === id);
-            if (!c) return;
-            const items = type === 'payments' ? c.oldContract.payments : c.oldContract.refunds;
-            const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
-            const selected = c[selectedKey] || {};
-            const selectedItems = items.filter((_, i) => selected[i]);
-            const selectedSum = selectedItems.reduce((s, item) => s + item.amount, 0);
-            alert(`已选择 ${selectedItems.length} 笔${type === 'payments' ? '收款' : '退款'}记录，合计 ${fmtMoney(selectedSum)}\n\n这里可以调用同步接口，将选中的记录同步到新系统。`);
-        }
-
-
-
-        let demoMode = 1;
-
-        function switchDemo(index) {
-            demoMode = index;
-            // 更新切换器样式
-            document.querySelectorAll('.demo-item').forEach((el, i) => {
-                const target = index === 'all' ? 'all' : i - 1;
-                el.classList.toggle('active', demoMode === target);
-            });
-            // 更新数据
-            if (demoMode === 'all') {
-                currentData = [...mockContracts];
-            } else {
-                currentData = [mockContracts[demoMode]];
-            }
-            renderStats();
-            renderList();
-        }
-
-        function toggleCard(id) {
-            const c = currentData.find(x => x._id === id);
-            if (!c) return;
-            c._expanded = !c._expanded;
-            const body = document.getElementById(`body-${id}`);
-            const btn = document.getElementById(`toggle-${id}`);
-            if (body) body.classList.toggle('expanded', c._expanded);
-            if (btn) btn.classList.toggle('expanded', c._expanded);
-        }
-
-        function switchTab(id, tab) {
-            const c = currentData.find(x => x._id === id);
-            if (!c) return;
-            c._tab = tab;
-            const card = document.querySelector(`.contract-card[data-id="${id}"]`);
-            if (!card) return;
-            const body = card.querySelector('.card-body');
-            body.innerHTML = renderTabs(c) + renderSections(c);
-        }
-
-        function applyFilter() {
-            const ft = document.getElementById('filterTicket').value.trim().toLowerCase();
-            const fc = document.getElementById('filterCustomer').value.trim().toLowerCase();
-            const fn = document.getElementById('filterNanny').value.trim().toLowerCase();
-            const fs = document.getElementById('filterStatus').value;
-            const fd = document.getElementById('filterDiff').value;
-
-            currentData = mockContracts.filter(c => {
-                if (ft && !c.ticket.toLowerCase().includes(ft)) return false;
-                if (fc && !c.customerName.includes(fc)) return false;
-                if (fn && !c.nannyName.includes(fn)) return false;
-                if (fs) {
-                    const oldMatch = c.oldContract.status === fs;
-                    const newMatch = c.newContract && c.newContract.status === fs;
-                    if (!oldMatch && !newMatch) return false;
+                // 新系统退款
+                if (hasNewOrder) {
+                    html += `
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #333;">
+                            <span class="src-tag src-new-order">新系统订单退款</span>
+                        </div>
+                        ${newRefunds.length ? `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>退款单号</th>
+                                    <th>退款人部门</th>
+                                    <th>退款人</th>
+                                    <th>退款时间</th>
+                                    <th>原因</th>
+                                    <th>支付方式</th>
+                                    <th class="col-right">金额</th>
+                                    <th>审核状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${newRefunds.map(r => `
+                                    <tr>
+                                        <td>${r.docNo || '—'}</td>
+                                        <td>${r.dept || '—'}</td>
+                                        <td>${r.receiver || '—'}</td>
+                                        <td>${r.time}</td>
+                                        <td>${r.reason || '—'}</td>
+                                        <td>${r.channel}</td>
+                                        <td class="col-right" style="font-weight: 500; color: #ff4d4f;">${fmtMoney(r.amount)}</td>
+                                        <td><span class="${r.audit === '审核通过' ? 'status-signed' : 'status-pending'}">${r.audit || '—'}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <div style="text-align: right; padding: 8px 12px; color: #666; font-size: 13px;">
+                            新系统订单合计: <b style="color: #ff4d4f;">${fmtMoney(newOSum)}</b>
+                        </div>
+                        ` : '<div class="empty-state" style="padding: 20px;">暂无退款记录</div>'}
+                    </div>`;
                 }
-                if (fd === 'has' && !c._diff.hasDiff) return false;
-                if (fd === 'no' && c._diff.hasDiff) return false;
-                return true;
-            });
-            renderStats();
-            renderList();
-        }
 
-        function resetFilter() {
-            document.getElementById('filterTicket').value = '';
-            document.getElementById('filterCustomer').value = '';
-            document.getElementById('filterNanny').value = '';
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterDiff').value = '';
-            currentData = [...mockContracts];
-            renderStats();
-            renderList();
-        }
+                // 差异汇总
+                html += `
+                <div class="summary-bar" style="margin-bottom: 16px;">
+                    <div class="summary-left">
+                        <div class="summary-item"><span class="s-label">老系统合同</span><span class="s-value old">${fmtMoney(oldSum)}</span></div>
+                        <div class="summary-item"><span class="s-label">新系统订单</span><span class="s-value newo">${fmtMoney(newOSum)}</span></div>
+                        <div class="summary-item"><span class="s-label">差异</span><span class="s-value diff">${diffRef === 0 ? '无' : fmtMoney(diffRef)}</span></div>
+                    </div>
+                </div>`;
 
-        ['filterTicket', 'filterCustomer', 'filterNanny'].forEach(id => {
-            document.getElementById(id).addEventListener('keydown', e => {
-                if (e.key === 'Enter') applyFilter();
-            });
-        });
-
-        // 初始化：默认展示第2条示例数据（无合同有订单）
-        currentData = [mockContracts[1]];
-        renderStats();
-        renderList();
-    </script>
-    
-    <!-- 底部固定同步按钮栏 -->
-    <div class="sync-bar" id="syncBar" style="display: none;">
-        <div class="sync-bar-left">
-            <div>已选 <b id="syncCount">0</b> 笔记录</div>
-            <div>合计 <b id="syncAmount">¥0</b></div>
-        </div>
-        <button class="btn" onclick="confirmSync()">确认同步到新系统</button>
-    </div>
-    
-    <script>
-        function confirmSync() {
-            let totalSelected = 0;
-            let totalAmount = 0;
-            let details = [];
-            
-            currentData.forEach(c => {
-                const oldPayments = c.oldContract.payments || [];
-                const oldRefunds = c.oldContract.refunds || [];
-                const selPay = c._selectedPayments || {};
-                const selRef = c._selectedRefunds || {};
-                
-                oldPayments.forEach((p, i) => {
-                    if (selPay[i]) {
-                        totalSelected++;
-                        totalAmount += p.amount;
-                        details.push(`收款: ${p.docNo} ${p.channel} ${fmtMoney(p.amount)}`);
-                    }
-                });
-                oldRefunds.forEach((r, i) => {
-                    if (selRef[i]) {
-                        totalSelected++;
-                        totalAmount += r.amount;
-                        details.push(`退款: ${r.docNo} ${r.channel} ${fmtMoney(r.amount)}`);
-                    }
-                });
-            });
-            
-            if (totalSelected === 0) {
-                alert('请先选择要同步的记录');
-                return;
+                return html;
             }
-            
-            const confirmMsg = `确认同步以下 ${totalSelected} 笔记录到新系统？\n\n合计金额: ${fmtMoney(totalAmount)}\n\n${details.join('\n')}\n\n同步后将在新系统订单中创建对应的收款/退款记录。`;
-            
-            if (confirm(confirmMsg)) {
-                alert('同步成功！\n\n这里可以调用实际的同步接口。');
-                // 清空选中状态
+
+            function updateSyncBar() {
+                let totalSelected = 0;
+                let totalAmount = 0;
+                let hasSelection = false;
+                
                 currentData.forEach(c => {
-                    c._selectedPayments = {};
-                    c._selectedRefunds = {};
+                    const oldPayments = c.oldContract.payments || [];
+                    const oldRefunds = c.oldContract.refunds || [];
+                    const selPay = c._selectedPayments || {};
+                    const selRef = c._selectedRefunds || {};
+                    
+                    oldPayments.forEach((p, i) => {
+                        if (selPay[i]) {
+                            hasSelection = true;
+                            totalSelected++;
+                            totalAmount += p.amount;
+                        }
+                    });
+                    oldRefunds.forEach((r, i) => {
+                        if (selRef[i]) {
+                            hasSelection = true;
+                            totalSelected++;
+                            totalAmount += r.amount;
+                        }
+                    });
                 });
+                
+                const syncBar = document.getElementById('syncBar');
+                if (!syncBar) return;
+                
+                if (hasSelection) {
+                    syncBar.style.display = 'flex';
+                    document.getElementById('syncCount').textContent = totalSelected;
+                    document.getElementById('syncAmount').textContent = fmtMoney(totalAmount);
+                } else {
+                    syncBar.style.display = 'none';
+                }
+            }
+
+            function toggleSelectAll(id, type, checked) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                const items = type === 'payments' ? c.oldContract.payments : c.oldContract.refunds;
+                const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
+                if (!c[selectedKey]) c[selectedKey] = {};
+                items.forEach((_, i) => {
+                    c[selectedKey][i] = checked;
+                });
+                const card = document.querySelector(`.contract-card[data-id="${id}"]`);
+                if (card) {
+                    const body = card.querySelector('.card-body');
+                    body.innerHTML = renderTabs(c) + renderSections(c);
+                }
                 updateSyncBar();
+            }
+
+            function setSyncMode(id, type, index, value) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                const modeKey = type === 'payments' ? '_syncModePayments' : '_syncModeRefunds';
+                if (!c[modeKey]) c[modeKey] = {};
+                c[modeKey][index] = value;
+                const card = document.querySelector(`.contract-card[data-id="${id}"]`);
+                if (card) {
+                    const body = card.querySelector('.card-body');
+                    body.innerHTML = renderTabs(c) + renderSections(c);
+                }
+            }
+
+            function setCoverTarget(id, type, index, value) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                const targetKey = type === 'payments' ? '_coverTargetPayments' : '_coverTargetRefunds';
+                if (!c[targetKey]) c[targetKey] = {};
+                c[targetKey][index] = value;
+            }
+
+            function toggleSelectItem(id, type, index, checked) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
+                if (!c[selectedKey]) c[selectedKey] = {};
+                c[selectedKey][index] = checked;
+                const card = document.querySelector(`.contract-card[data-id="${id}"]`);
+                if (card) {
+                    const body = card.querySelector('.card-body');
+                    body.innerHTML = renderTabs(c) + renderSections(c);
+                }
+                updateSyncBar();
+            }
+
+            function syncSelected(id, type) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                const items = type === 'payments' ? c.oldContract.payments : c.oldContract.refunds;
+                const selectedKey = type === 'payments' ? '_selectedPayments' : '_selectedRefunds';
+                const selected = c[selectedKey] || {};
+                const selectedItems = items.filter((_, i) => selected[i]);
+                const selectedSum = selectedItems.reduce((s, item) => s + item.amount, 0);
+                alert(`已选择 ${selectedItems.length} 笔${type === 'payments' ? '收款' : '退款'}记录，合计 ${fmtMoney(selectedSum)}\n\n这里可以调用同步接口，将选中的记录同步到新系统。`);
+            }
+
+
+
+            let demoMode = 1;
+
+            function switchDemo(index) {
+                demoMode = index;
+                // 更新切换器样式
+                document.querySelectorAll('.demo-item').forEach((el, i) => {
+                    const target = index === 'all' ? 'all' : i - 1;
+                    el.classList.toggle('active', demoMode === target);
+                });
+                // 更新数据
+                if (demoMode === 'all') {
+                    currentData = [...mockContracts];
+                } else {
+                    currentData = [mockContracts[demoMode]];
+                }
                 renderList();
             }
-        }
-    </script>
-</body>
-</html>
+
+            function toggleCard(id) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                c._expanded = !c._expanded;
+                const body = document.getElementById(`body-${id}`);
+                const btn = document.getElementById(`toggle-${id}`);
+                if (body) body.classList.toggle('expanded', c._expanded);
+                if (btn) btn.classList.toggle('expanded', c._expanded);
+            }
+
+            function switchTab(id, tab) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                c._tab = tab;
+                const card = document.querySelector(`.contract-card[data-id="${id}"]`);
+                if (!card) return;
+                const body = card.querySelector('.card-body');
+                body.innerHTML = renderTabs(c) + renderSections(c);
+            }
+
+            function createContract(id) {
+                const c = currentData.find(x => x._id === id);
+                if (!c) return;
+                if (!confirm(`确认在新系统中为合同 ${c.ticket} 创建合同？\n\n创建内容将以老系统的合同信息为准：\n- 客户：${c.customerName}\n- 套餐：${c.oldContract.packageName}\n- 应收金额：${fmtMoney(c.oldContract.totalAmount)}\n- 签署日期：${c.oldContract.signDate}\n\n创建后合同状态将同步为"已签署"。`)) {
+                    return;
+                }
+                // 从老系统合同复制数据到新系统合同
+                c.newContract = {
+                    packageName: c.oldContract.packageName,
+                    serviceDays: c.oldContract.serviceDays,
+                    serviceAddress: c.oldContract.serviceAddress,
+                    packageAmount: c.oldContract.packageAmount,
+                    holidayCharge: c.oldContract.holidayCharge,
+                    totalAmount: c.oldContract.totalAmount,
+                    receivedAmount: c.oldContract.receivedAmount,
+                    refundedAmount: c.oldContract.refundedAmount,
+                    actualReceived: c.oldContract.actualReceived,
+                    arrears: c.oldContract.arrears,
+                    status: c.oldContract.status,
+                    signDate: c.oldContract.signDate
+                };
+                // 重新计算差异
+                c._diff = computeDiff(c);
+                // 重新渲染
+                renderList();
+                alert(`合同 ${c.ticket} 创建成功！\n\n新系统合同已创建，请继续核对收款记录并同步。`);
+            }
+
+            function applyFilter() {
+                const ft = document.getElementById('filterTicket').value.trim().toLowerCase();
+                const fc = document.getElementById('filterCustomer').value.trim().toLowerCase();
+                const fn = document.getElementById('filterNanny').value.trim().toLowerCase();
+                const fs = document.getElementById('filterStatus').value;
+                const fd = document.getElementById('filterDiff').value;
+
+                currentData = mockContracts.filter(c => {
+                    if (ft && !c.ticket.toLowerCase().includes(ft)) return false;
+                    if (fc && !c.customerName.includes(fc)) return false;
+                    if (fn && !c.nannyName.includes(fn)) return false;
+                    if (fs) {
+                        const oldMatch = c.oldContract.status === fs;
+                        const newMatch = c.newContract && c.newContract.status === fs;
+                        if (!oldMatch && !newMatch) return false;
+                    }
+                    if (fd === 'has' && !c._diff.hasDiff) return false;
+                    if (fd === 'no' && c._diff.hasDiff) return false;
+                    return true;
+                });
+                renderList();
+            }
+
+            function resetFilter() {
+                document.getElementById('filterTicket').value = '';
+                document.getElementById('filterCustomer').value = '';
+                document.getElementById('filterNanny').value = '';
+                document.getElementById('filterStatus').value = '';
+                document.getElementById('filterDiff').value = '';
+                currentData = [...mockContracts];
+                renderList();
+            }
+
+            ['filterTicket', 'filterCustomer', 'filterNanny'].forEach(id => {
+                document.getElementById(id).addEventListener('keydown', e => {
+                    if (e.key === 'Enter') applyFilter();
+                });
+            });
+
+            // 初始化：默认展示第2条示例数据（无合同有订单）
+            currentData = [mockContracts[1]];
+            renderList();
+        </script>
+        
+        <!-- 底部固定同步按钮栏 -->
+        <div class="sync-bar" id="syncBar" style="display: none;">
+            <div class="sync-bar-left">
+                <div>已选 <b id="syncCount">0</b> 笔记录</div>
+                <div>合计 <b id="syncAmount">¥0</b></div>
+            </div>
+            <button class="btn" onclick="confirmSync()">确认同步到新系统</button>
+        </div>
+        
+        <script>
+            function checkDuplicateSync(c, item, type) {
+                // 检查新系统是否有金额相同的记录
+                const newItems = type === 'payment' ? (c.newOrder?.payments || []) : (c.newOrder?.refunds || []);
+                return newItems.find(ni => ni.amount === item.amount);
+            }
+
+            function confirmSync() {
+                let totalSelected = 0;
+                let totalAmount = 0;
+                let newItems = [];      // 新系统无记录，需要新增
+                let coverItems = [];    // 新系统有记录，需要覆盖
+                
+                currentData.forEach(c => {
+                    const oldPayments = c.oldContract.payments || [];
+                    const oldRefunds = c.oldContract.refunds || [];
+                    const selPay = c._selectedPayments || {};
+                    const selRef = c._selectedRefunds || {};
+                    
+                    oldPayments.forEach((p, i) => {
+                        if (selPay[i]) {
+                            totalSelected++;
+                            totalAmount += p.amount;
+                            const dup = checkDuplicateSync(c, p, 'payment');
+                            if (dup) {
+                                coverItems.push({
+                                    ticket: c.ticket,
+                                    type: '收款',
+                                    oldDocNo: p.docNo,
+                                    oldChannel: p.channel,
+                                    newDocNo: dup.docNo,
+                                    newChannel: dup.channel,
+                                    amount: p.amount
+                                });
+                            } else {
+                                newItems.push({
+                                    ticket: c.ticket,
+                                    type: '收款',
+                                    docNo: p.docNo,
+                                    channel: p.channel,
+                                    amount: p.amount
+                                });
+                            }
+                        }
+                    });
+                    oldRefunds.forEach((r, i) => {
+                        if (selRef[i]) {
+                            totalSelected++;
+                            totalAmount += r.amount;
+                            const dup = checkDuplicateSync(c, r, 'refund');
+                            if (dup) {
+                                coverItems.push({
+                                    ticket: c.ticket,
+                                    type: '退款',
+                                    oldDocNo: r.docNo,
+                                    oldChannel: r.channel,
+                                    newDocNo: dup.docNo,
+                                    newChannel: dup.channel,
+                                    amount: r.amount
+                                });
+                            } else {
+                                newItems.push({
+                                    ticket: c.ticket,
+                                    type: '退款',
+                                    docNo: r.docNo,
+                                    channel: r.channel,
+                                    amount: r.amount
+                                });
+                            }
+                        }
+                    });
+                });
+                
+                if (totalSelected === 0) {
+                    alert('请先选择要同步的记录');
+                    return;
+                }
+                
+                let confirmMsg = `确认同步以下 ${totalSelected} 笔记录到新系统？\n\n合计金额: ${fmtMoney(totalAmount)}\n`;
+                
+                if (newItems.length > 0) {
+                    confirmMsg += `\n【新增同步】${newItems.length} 笔（新系统无记录）\n`;
+                    newItems.forEach(item => {
+                        confirmMsg += `  ${item.ticket} ${item.type}: ${item.docNo} ${item.channel} ${fmtMoney(item.amount)}\n`;
+                    });
+                }
+                
+                if (coverItems.length > 0) {
+                    confirmMsg += `\n【覆盖同步】${coverItems.length} 笔（新系统已有记录，将以老系统为准）\n`;
+                    coverItems.forEach(item => {
+                        confirmMsg += `  ${item.ticket} ${item.type}: ${item.oldDocNo} ${item.oldChannel} → 覆盖 ${item.newDocNo} ${item.newChannel} ${fmtMoney(item.amount)}\n`;
+                    });
+                }
+                
+                confirmMsg += `\n同步后将以老系统的真实支付信息为准。`;
+                
+                if (confirm(confirmMsg)) {
+                    alert('同步成功！\n\n这里可以调用实际的同步接口。');
+                    // 清空选中状态
+                    currentData.forEach(c => {
+                        c._selectedPayments = {};
+                        c._selectedRefunds = {};
+                    });
+                    updateSyncBar();
+                    renderList();
+                }
+            }
+        </script>
+    </body>
+    </html>
