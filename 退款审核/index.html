@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退款审核列表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            font-size: 14px;
+        }
+        .container {
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .page-header {
+            margin-bottom: 20px;
+        }
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f1f1f;
+            margin-bottom: 4px;
+        }
+        .page-header p {
+            font-size: 13px;
+            color: #999;
+        }
+        .search-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .search-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .search-row:last-child {
+            margin-bottom: 0;
+        }
+        .search-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 160px;
+        }
+        .search-item label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+        .search-item input,
+        .search-item select {
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-item input:focus,
+        .search-item select:focus {
+            border-color: #1890ff;
+        }
+        .search-item input::placeholder {
+            color: #bfbfbf;
+        }
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .date-range input {
+            flex: 1;
+        }
+        .date-range span {
+            color: #999;
+            font-size: 13px;
+        }
+        .search-buttons {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .btn {
+            height: 32px;
+            padding: 0 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        .btn-default {
+            background: #fff;
+            color: #333;
+            border-color: #d9d9d9;
+        }
+        .btn-default:hover {
+            color: #1890ff;
+            border-color: #1890ff;
+        }
+        .table-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead th {
+            background: #fafafa;
+            color: #666;
+            font-weight: 500;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+            white-space: nowrap;
+        }
+        tbody tr:hover {
+            background: #fafafa;
+        }
+        tbody tr.expanded-row {
+            background: #fafafa;
+        }
+        tbody tr.expanded-row td {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #666;
+        }
+        .expand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            color: #999;
+            transition: transform 0.2s;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .order-no {
+            color: #1890ff;
+            cursor: pointer;
+        }
+        .order-no:hover {
+            text-decoration: underline;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .tag-green {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .tag-blue {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        .tag-red {
+            background: #fff1f0;
+            color: #ff4d4f;
+            border: 1px solid #ffa39e;
+        }
+        .tag-orange {
+            background: #fff7e6;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        .tag-gray {
+            background: #f5f5f5;
+            color: #999;
+            border: 1px solid #d9d9d9;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .action-btn {
+            color: #1890ff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        .action-btn-primary {
+            color: #1890ff;
+            border: 1px solid #1890ff;
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .action-btn-primary:hover {
+            background: #e6f7ff;
+        }
+        .amount {
+            color: #ff4d4f;
+            font-weight: 500;
+        }
+        .expanded-info {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .expanded-info-item {
+            display: flex;
+            gap: 8px;
+        }
+        .expanded-info-item .label {
+            color: #999;
+        }
+        .expanded-info-item .value {
+            color: #666;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 4px;
+            width: 780px;
+            max-width: 90vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            background: #ff4d4f;
+            color: #fff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px 4px 0 0;
+        }
+        .modal-header h3 {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .modal-close {
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+        }
+        .modal-body {
+            padding: 16px;
+            overflow: auto;
+        }
+        .modal-table-wrapper {
+            overflow-x: auto;
+        }
+        .modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .modal-table thead th {
+            background: #fafafa;
+            color: #666;
+            font-weight: 500;
+            text-align: left;
+            padding: 10px 12px;
+            border: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        .modal-table tbody td {
+            padding: 10px 12px;
+            border: 1px solid #f0f0f0;
+            color: #333;
+            white-space: nowrap;
+        }
+        .modal-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        /* 审核弹窗样式 */
+        .audit-modal {
+            width: 420px;
+            max-width: 90vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .audit-header {
+            background: #fff;
+            color: #333;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .audit-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1890ff;
+        }
+        .audit-close {
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+            color: #999;
+        }
+        .audit-body {
+            padding: 20px;
+        }
+        .audit-amount-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .audit-amount {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ff4d4f;
+            margin-bottom: 20px;
+        }
+        .audit-remark-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .audit-remark-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+            outline: none;
+            resize: vertical;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+        .audit-remark-input:focus {
+            border-color: #1890ff;
+        }
+        .audit-remark-input::placeholder {
+            color: #bfbfbf;
+        }
+        .audit-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+            outline: none;
+            margin-bottom: 16px;
+            font-family: inherit;
+        }
+        .audit-input:focus {
+            border-color: #1890ff;
+        }
+        .audit-input::placeholder {
+            color: #bfbfbf;
+        }
+        .audit-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-reject {
+            flex: 1;
+            height: 40px;
+            background: #ff4d4f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-reject:hover {
+            background: #ff7875;
+        }
+        .btn-pass {
+            flex: 1;
+            height: 40px;
+            background: #1890ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-pass:hover {
+            background: #40a9ff;
+        }
+
+        /* 弹窗底部退款信息 */
+        .audit-detail {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .audit-detail-item {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .audit-detail-item:last-child {
+            margin-bottom: 0;
+        }
+        .audit-detail-label {
+            color: #999;
+            flex-shrink: 0;
+            min-width: 70px;
+        }
+        .audit-detail-value {
+            color: #333;
+        }
+        .audit-attachment {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .attachment-item {
+            color: #1890ff;
+            cursor: pointer;
+        }
+        .attachment-item:hover {
+            text-decoration: underline;
+        }
+
+        /* 审核弹窗退款信息 */
+        .audit-detail-section {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+        .audit-detail-row {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .audit-detail-row:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>退款审核列表</h1>
+            <p>查看并处理退款审核流程</p>
+        </div>
+
+        <div class="search-card">
+            <div class="search-row">
+                <div class="search-item">
+                    <label>订单编号</label>
+                    <input type="text" placeholder="请输入订单编号">
+                </div>
+                <div class="search-item">
+                    <label>合同编号</label>
+                    <input type="text" placeholder="请输入合同编号">
+                </div>
+                <div class="search-item">
+                    <label>支付记录编号</label>
+                    <input type="text" placeholder="请输入支付记录编号">
+                </div>
+                <div class="search-item">
+                    <label>退款编号</label>
+                    <input type="text" placeholder="请输入退款编号">
+                </div>
+                <div class="search-item">
+                    <label>客户名</label>
+                    <input type="text" placeholder="请输入客户名">
+                </div>
+            </div>
+            <div class="search-row">
+                <div class="search-item" style="flex: 0.8;">
+                    <label>收款类型</label>
+                    <select>
+                        <option>全部</option>
+                        <option>预售金</option>
+                        <option>诚意金</option>
+                        <option>定金</option>
+                        <option>合同款</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>手机号</label>
+                    <input type="text" placeholder="请输入手机号">
+                </div>
+                <div class="search-item">
+                    <label>发起人</label>
+                    <input type="text" placeholder="请输入发起人">
+                </div>
+                <div class="search-item" style="flex: 0.8;">
+                    <label>支付方式</label>
+                    <select>
+                        <option>全部</option>
+                        <option>盛付通码牌支付</option>
+                        <option>盛付通铠尔(对公)</option>
+                        <option>盛付通铠尔码牌</option>
+                        <option>盛付通码付(农商)</option>
+                        <option>银行转账</option>
+                        <option>动态支付码</option>
+                        <option>现金</option>
+                    </select>
+                </div>
+                <div class="search-item" style="flex: 0.8;">
+                    <label>审批状态</label>
+                    <select>
+                        <option>全部</option>
+                        <option>待部门负责人审核</option>
+                        <option>待销售负责人审批</option>
+                        <option>待质量监督官审批</option>
+                        <option>待会计审核审批</option>
+                        <option>待财务负责人审核</option>
+                        <option>待总经理审核</option>
+                        <option>审核通过</option>
+                        <option>审核不通过</option>
+                    </select>
+                </div>
+                <div class="search-item" style="flex: 0.6;">
+                    <label>发放状态</label>
+                    <select>
+                        <option>全部</option>
+                        <option>未打款</option>
+                        <option>出纳待打款</option>
+                        <option>退款成功</option>
+                    </select>
+                </div>
+                <div class="search-item" style="flex: 1.1;">
+                    <label>创建日期范围</label>
+                    <div class="date-range">
+                        <input type="text" placeholder="yyyy/mm/dd">
+                        <span>至</span>
+                        <input type="text" placeholder="yyyy/mm/dd">
+                    </div>
+                </div>
+                <div class="search-buttons">
+                    <button class="btn btn-primary">查询</button>
+                    <button class="btn btn-default">重置</button>
+                    <button class="btn btn-default">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        导出
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;"><input type="checkbox" class="checkbox"></th>
+                            <th style="width: 30px;"></th>
+                            <th>创建时间</th>
+                            <th>退款发起人</th>
+                            <th>发起人部门</th>
+                            <th>客户名称</th>
+                            <th>收款类型</th>
+                            <th>支付方式</th>
+                            <th>来源</th>
+                            <th>退款原因</th>
+                            <th>退款金额</th>
+                            <th>是否签署合同</th>
+                            <th>审核状态</th>
+                            <th>发放状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/05/06 09:33</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>郑安胜#103052</td>
+                            <td>定金</td>
+                            <td>动态支付码</td>
+                            <td><span class="tag tag-blue">新系统</span></td>
+                            <td>重复支付</td>
+                            <td class="amount">¥0.10</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-green">审核通过</span></td>
+                            <td><span class="tag tag-green">退款成功</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row1')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn">退款单</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/30 16:49</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>卓大龙#17743</td>
+                            <td>定金</td>
+                            <td>盛付通铠尔(对公)</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>客户取消</td>
+                            <td class="amount">¥0.02</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-green">审核通过</span></td>
+                            <td id="payStatus-row2"><span class="tag tag-blue">出纳待打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row2')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn">退款单</span>
+                                    <span class="action-btn-primary" onclick="openPaymentModal('row2')">确认打款</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/30 14:08</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>NIKO#103085</td>
+                            <td>合同款</td>
+                            <td>盛付通铠尔码牌</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>服务质量问题</td>
+                            <td class="amount">¥0.10</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-orange">待质量监督官审批</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row3')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn-primary" onclick="openAuditActionModal()">审核</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon expanded">▶</span></td>
+                            <td>2026/04/30 11:59</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>郑羽#103089</td>
+                            <td>定金</td>
+                            <td>盛付通码付(农商)</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>客户取消</td>
+                            <td class="amount">¥1.00</td>
+                            <td><span class="tag tag-gray">否</span></td>
+                            <td><span class="tag tag-green">审核通过</span></td>
+                            <td id="payStatus-row4"><span class="tag tag-blue">出纳待打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row4')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn">退款单</span>
+                                    <span class="action-btn-primary" onclick="openPaymentModal('row4')">确认打款</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="expanded-row">
+                            <td></td>
+                            <td></td>
+                            <td colspan="12">
+                                <div class="expanded-info">
+                                    <div class="expanded-info-item">
+                                        <span class="label">订单编号：</span>
+                                        <span class="value order-no">YGOD2604281104269640856</span>
+                                    </div>
+                                    <div class="expanded-info-item">
+                                        <span class="label">合同编号：</span>
+                                        <span class="value">-</span>
+                                    </div>
+                                    <div class="expanded-info-item">
+                                        <span class="label">支付会话单号：</span>
+                                        <span class="value">YGPS20260429070000</span>
+                                    </div>
+                                    <div class="expanded-info-item">
+                                        <span class="label">退款编号：</span>
+                                        <span class="value">YGRQ20260429482000</span>
+                                    </div>
+                                    <div class="expanded-info-item">
+                                        <span class="label">联系方式：</span>
+                                        <span class="value">+8615625530835</span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/29 22:30</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>卓大龙#17743</td>
+                            <td>定金</td>
+                            <td>银行转账</td>
+                            <td><span class="tag tag-blue">新系统</span></td>
+                            <td>客户取消</td>
+                            <td class="amount">¥0.03</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-green">审核通过</span></td>
+                            <td><span class="tag tag-green">退款成功</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row5')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn">退款单</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/28 10:37</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>梦龙乐队#103081</td>
+                            <td>诚意金</td>
+                            <td>盛付通码牌支付</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>价格调整</td>
+                            <td class="amount">¥0.10</td>
+                            <td><span class="tag tag-gray">否</span></td>
+                            <td><span class="tag tag-orange">待销售负责人审批</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row6')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn-primary" onclick="openAuditActionModal()">审核</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/28 10:17</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>尹俊#103078</td>
+                            <td>定金</td>
+                            <td>盛付通铠尔码牌</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>其他</td>
+                            <td class="amount">¥50.00</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-red">审核不通过</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row7')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/24 16:34</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>测试支付客户#30884</td>
+                            <td>预售金</td>
+                            <td>盛付通码付(农商)</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>其他</td>
+                            <td class="amount">¥0.01</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-orange">待销售负责人审批</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row8')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn-primary" onclick="openAuditActionModal()">审核</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/04/23 00:10</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>苏健煜#103044</td>
+                            <td>诚意金</td>
+                            <td>现金</td>
+                            <td><span class="tag tag-blue">新系统</span></td>
+                            <td>客户取消</td>
+                            <td class="amount">¥0.01</td>
+                            <td><span class="tag tag-gray">否</span></td>
+                            <td><span class="tag tag-orange">待部门负责人审核</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row9')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn-primary" onclick="openAuditActionModal()">审核</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="checkbox"></td>
+                            <td><span class="expand-icon">▶</span></td>
+                            <td>2026/03/18 09:51</td>
+                            <td>郑安胜</td>
+                            <td>销售一部</td>
+                            <td>xxxxaaqqne#103008</td>
+                            <td>预售金</td>
+                            <td>盛付通铠尔(对公)</td>
+                            <td><span class="tag tag-orange">老系统</span></td>
+                            <td>价格调整</td>
+                            <td class="amount">¥996.00</td>
+                            <td><span class="tag tag-green">是</span></td>
+                            <td><span class="tag tag-orange">待财务负责人审核</span></td>
+                            <td><span class="tag tag-gray">未打款</span></td>
+                            <td>
+                                <div class="actions">
+                                    <span class="action-btn" onclick="openModal('row10')">审核记录</span>
+                                    <span class="action-btn">订单</span>
+                                    <span class="action-btn-primary" onclick="openAuditActionModal()">审核</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退款审核弹窗 -->
+    <div class="modal-overlay" id="auditActionModal">
+        <div class="audit-modal">
+            <div class="audit-header">
+                <h3>退款审核</h3>
+                <span class="audit-close" onclick="closeAuditActionModal()">×</span>
+            </div>
+            <div class="audit-body">
+                <div class="audit-amount-label">退款金额</div>
+                <div class="audit-amount">¥ 0.10</div>
+                <div class="audit-detail-section">
+                    <div class="audit-detail-row">
+                        <span class="audit-detail-label">退款原因：</span>
+                        <span class="audit-detail-value">重复支付</span>
+                    </div>
+                    <div class="audit-detail-row">
+                        <span class="audit-detail-label">退款描述：</span>
+                        <span class="audit-detail-value">客户重复支付了同一笔订单，需要退还多付的金额。</span>
+                    </div>
+                    <div class="audit-detail-row">
+                        <span class="audit-detail-label">附件：</span>
+                        <span class="audit-detail-value audit-attachment">
+                            <span class="attachment-item">📎 支付凭证.png</span>
+                            <span class="attachment-item">📎 退款申请表.pdf</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="audit-remark-label">审核备注</div>
+                <textarea class="audit-remark-input" placeholder="请输入审核备注"></textarea>
+                <div class="audit-buttons">
+                    <button class="btn-reject" onclick="handleReject()">不通过</button>
+                    <button class="btn-pass" onclick="handlePass()">通过</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 出纳打款弹窗 -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="audit-modal">
+            <div class="audit-header">
+                <h3>出纳打款</h3>
+                <span class="audit-close" onclick="closePaymentModal()">×</span>
+            </div>
+            <div class="audit-body">
+                <div class="audit-amount-label">打款金额</div>
+                <div class="audit-amount">¥ 0.02</div>
+                <div class="audit-remark-label">打款渠道</div>
+                <input type="text" class="audit-input" id="paymentChannel" placeholder="请输入打款渠道">
+                <div class="audit-remark-label">打款编号</div>
+                <input type="text" class="audit-input" id="paymentNo" placeholder="请输入打款编号">
+                <div class="audit-buttons">
+                    <button class="btn-pass" style="flex:1;" onclick="handlePaymentSave()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 审批记录弹窗 -->
+    <div class="modal-overlay" id="auditModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>审批记录</h3>
+                <span class="modal-close" onclick="closeModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-table-wrapper">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>审核人</th>
+                                <th>审核日期</th>
+                                <th>审核意见</th>
+                                <th>审核状态</th>
+                                <th>下一节点</th>
+                                <th>下一节点审批人</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditModalBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="audit-detail">
+                    <div class="audit-detail-item">
+                        <span class="audit-detail-label">退款原因：</span>
+                        <span class="audit-detail-value">重复支付</span>
+                    </div>
+                    <div class="audit-detail-item">
+                        <span class="audit-detail-label">退款描述：</span>
+                        <span class="audit-detail-value">客户重复支付了同一笔订单，需要退还多付的金额。</span>
+                    </div>
+                    <div class="audit-detail-item">
+                        <span class="audit-detail-label">附件：</span>
+                        <span class="audit-detail-value audit-attachment">
+                            <span class="attachment-item">📎 支付凭证.png</span>
+                            <span class="attachment-item">📎 退款申请表.pdf</span>
+                        </span>
+                    </div>
+                    <div id="paymentInfoSection" style="display:none;">
+                        <div class="audit-detail-item">
+                            <span class="audit-detail-label">打款渠道：</span>
+                            <span class="audit-detail-value">招商银行对公转账</span>
+                        </div>
+                        <div class="audit-detail-item">
+                            <span class="audit-detail-label">打款编号：</span>
+                            <span class="audit-detail-value">PAY202605060001</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const auditRecords = {
+            row1: [
+                { auditor: "郑安胜", date: "2026/05/06 09:30", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/05/06 10:00", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/05/06 11:00", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "2026/05/06 14:00", opinion: "同意", status: "通过", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "2026/05/06 16:00", opinion: "同意", status: "通过", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "2026/05/07 09:00", opinion: "同意", status: "通过", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "2026/05/07 10:00", opinion: "同意", status: "通过", nextNode: "-", nextAuditor: "-" }
+            ],
+            row2: [
+                { auditor: "郑安胜", date: "2026/04/30 16:40", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/30 16:45", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/04/30 17:00", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "2026/04/30 17:30", opinion: "同意", status: "通过", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "2026/04/30 18:00", opinion: "同意", status: "通过", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "2026/05/01 09:00", opinion: "同意", status: "通过", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "2026/05/01 10:00", opinion: "同意", status: "通过", nextNode: "-", nextAuditor: "-" }
+            ],
+            row3: [
+                { auditor: "郑安胜", date: "2026/04/30 14:00", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/30 14:05", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/04/30 15:00", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "-", opinion: "-", status: "待审核", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "-", opinion: "-", status: "待审核", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "-", opinion: "-", status: "待审核", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "-", opinion: "-", status: "待审核", nextNode: "-", nextAuditor: "-" }
+            ],
+            row4: [
+                { auditor: "郑安胜", date: "2026/04/30 11:50", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/30 12:00", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/04/30 13:00", opinion: "同意", status: "通过", nextNode: "-", nextAuditor: "-" }
+            ],
+            row5: [
+                { auditor: "郑安胜", date: "2026/04/29 22:00", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/29 22:10", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/04/29 22:30", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "2026/04/29 23:00", opinion: "同意", status: "通过", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "2026/04/29 23:30", opinion: "同意", status: "通过", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "2026/04/30 09:00", opinion: "同意", status: "通过", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "2026/04/30 10:00", opinion: "同意", status: "通过", nextNode: "-", nextAuditor: "-" }
+            ],
+            row6: [
+                { auditor: "郑安胜", date: "2026/04/28 10:30", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/28 10:35", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "-", opinion: "-", status: "待审核", nextNode: "-", nextAuditor: "-" }
+            ],
+            row7: [
+                { auditor: "郑安胜", date: "2026/04/28 10:00", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/28 10:15", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/04/28 11:00", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "2026/04/28 14:00", opinion: "同意", status: "通过", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "2026/04/28 16:00", opinion: "退款方式选择盛付通", status: "驳回", nextNode: "提交人", nextAuditor: "-" }
+            ],
+            row8: [
+                { auditor: "郑安胜", date: "2026/04/24 16:30", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/04/24 16:35", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "-", opinion: "-", status: "待审核", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "-", opinion: "-", status: "待审核", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "-", opinion: "-", status: "待审核", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "-", opinion: "-", status: "待审核", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "-", opinion: "-", status: "待审核", nextNode: "-", nextAuditor: "-" }
+            ],
+            row9: [
+                { auditor: "郑安胜", date: "2026/04/23 00:00", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "-", opinion: "-", status: "待审核", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "-", opinion: "-", status: "待审核", nextNode: "-", nextAuditor: "-" }
+            ],
+            row10: [
+                { auditor: "郑安胜", date: "2026/03/18 09:40", opinion: "", status: "提交", nextNode: "发起人部门负责人", nextAuditor: "张三" },
+                { auditor: "张三", date: "2026/03/18 09:45", opinion: "同意", status: "通过", nextNode: "销售负责人", nextAuditor: "植亚来" },
+                { auditor: "植亚来", date: "2026/03/18 10:00", opinion: "同意", status: "通过", nextNode: "质量监督官", nextAuditor: "梁艳红" },
+                { auditor: "梁艳红", date: "2026/03/18 11:00", opinion: "同意", status: "通过", nextNode: "会计审核", nextAuditor: "何才连" },
+                { auditor: "何才连", date: "2026/03/18 14:00", opinion: "同意", status: "通过", nextNode: "财务负责人审核", nextAuditor: "尹俊" },
+                { auditor: "尹俊", date: "-", opinion: "-", status: "待审核", nextNode: "总经理审核", nextAuditor: "卓大龙" },
+                { auditor: "卓大龙", date: "-", opinion: "-", status: "待审核", nextNode: "-", nextAuditor: "-" }
+            ]
+        };
+
+        function openModal(type) {
+            const tbody = document.getElementById('auditModalBody');
+            const records = auditRecords[type] || [];
+            tbody.innerHTML = records.map(r => {
+                let statusHtml = r.status;
+                if (r.status === '驳回') statusHtml = '<span class="tag tag-red">驳回</span>';
+                else if (r.status === '待审核') statusHtml = '<span class="tag tag-orange">待审核</span>';
+                return `<tr>
+                    <td>${r.auditor}</td>
+                    <td>${r.date}</td>
+                    <td>${r.opinion}</td>
+                    <td>${statusHtml}</td>
+                    <td>${r.nextNode}</td>
+                    <td>${r.nextAuditor}</td>
+                </tr>`;
+            }).join('');
+            const paymentSection = document.getElementById('paymentInfoSection');
+            if (paymentSection) {
+                const data = paymentData[type];
+                if (data && data.channel && data.no) {
+                    paymentSection.style.display = 'block';
+                    paymentSection.querySelector('.audit-detail-item:nth-child(1) .audit-detail-value').textContent = data.channel;
+                    paymentSection.querySelector('.audit-detail-item:nth-child(2) .audit-detail-value').textContent = data.no;
+                } else {
+                    paymentSection.style.display = (type === 'row1' || type === 'row5') ? 'block' : 'none';
+                    if (type === 'row1' || type === 'row5') {
+                        paymentSection.querySelector('.audit-detail-item:nth-child(1) .audit-detail-value').textContent = '招商银行对公转账';
+                        paymentSection.querySelector('.audit-detail-item:nth-child(2) .audit-detail-value').textContent = 'PAY202605060001';
+                    }
+                }
+            }
+            document.getElementById('auditModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('auditModal').style.display = 'none';
+        }
+        document.getElementById('auditModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        function openAuditActionModal() {
+            document.getElementById('auditActionModal').style.display = 'flex';
+        }
+        function closeAuditActionModal() {
+            document.getElementById('auditActionModal').style.display = 'none';
+        }
+        function handleReject() {
+            alert('已拒绝');
+            closeAuditActionModal();
+        }
+        function handlePass() {
+            alert('已通过');
+            closeAuditActionModal();
+        }
+        document.getElementById('auditActionModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAuditActionModal();
+        });
+
+        const paymentData = {};
+        let currentPaymentRow = null;
+
+        function openPaymentModal(rowId) {
+            currentPaymentRow = rowId;
+            document.getElementById('paymentChannel').value = paymentData[rowId]?.channel || '';
+            document.getElementById('paymentNo').value = paymentData[rowId]?.no || '';
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            currentPaymentRow = null;
+        }
+        function handlePaymentSave() {
+            const channel = document.getElementById('paymentChannel').value.trim();
+            const no = document.getElementById('paymentNo').value.trim();
+            if (!channel || !no) {
+                alert('请填写打款渠道和打款编号');
+                return;
+            }
+            if (currentPaymentRow) {
+                paymentData[currentPaymentRow] = { channel, no };
+                const statusCell = document.getElementById('payStatus-' + currentPaymentRow);
+                if (statusCell) {
+                    statusCell.innerHTML = '<span class="tag tag-green">退款成功</span>';
+                }
+            }
+            alert('保存成功，发放状态已更新为退款成功');
+            closePaymentModal();
+        }
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
+    </script>
+
+    <div style="text-align: center; padding: 24px; font-size: 13px; color: #999;">
+        <a href="https://hq5xfisw7w.feishu.cn/wiki/BOzGwuK5IiOltbkKA2Vcuavjncc?from=from_copylink" target="_blank" style="color: #1890ff; text-decoration: none;">📖 业务逻辑与流程规则说明</a>
+    </div>
+</body>
+</html>
