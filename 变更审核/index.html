@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单套餐变更审核</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f5f7fa;
+            color: #262626;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ========== Header ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f1f1f;
+            letter-spacing: 0.3px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e4e7ed;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 7px 18px;
+            cursor: pointer;
+            border: none;
+            background: #fff;
+            color: #606266;
+            font-size: 13px;
+            transition: all 0.25s ease;
+            border-right: 1px solid #e4e7ed;
+            font-weight: 500;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab:hover {
+            color: #409eff;
+            background: #f5f7fa;
+        }
+
+        .tab.active {
+            background: #409eff;
+            color: #fff;
+        }
+
+        /* ========== Search bar ========== */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input-wrap::before {
+            content: "🔍";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 7px 12px 7px 32px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .search-input:focus {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64,158,255,0.15);
+        }
+
+        .search-input::placeholder {
+            color: #c0c4cc;
+        }
+
+        .select-box {
+            padding: 7px 28px 7px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23909399' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+            cursor: pointer;
+            min-width: 120px;
+            appearance: none;
+            transition: all 0.2s;
+        }
+
+        .select-box:focus {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64,158,255,0.15);
+        }
+
+        .date-range-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            padding: 0 12px;
+            transition: all 0.2s;
+        }
+
+        .date-range-wrap:focus-within {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64,158,255,0.15);
+        }
+
+        .date-range-label {
+            color: #909399;
+            font-size: 12.5px;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .date-input {
+            border: none;
+            outline: none;
+            font-size: 13px;
+            color: #303133;
+            padding: 7px 0;
+            background: transparent;
+            font-family: inherit;
+            cursor: pointer;
+            width: 118px;
+        }
+
+        .date-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.5;
+            width: 14px;
+            height: 14px;
+        }
+
+        .date-range-separator {
+            color: #c0c4cc;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        /* ========== Card ========== */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #ebeef5;
+            overflow: hidden;
+        }
+
+        /* ========== Table ========== */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1000px;
+        }
+
+        th {
+            background: #f8f9fb;
+            padding: 13px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #606266;
+            border-bottom: 1px solid #e4e7ed;
+            font-size: 12.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #ebeef5;
+            color: #303133;
+            font-size: 13px;
+            vertical-align: middle;
+            transition: background 0.15s;
+        }
+
+        tbody tr {
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #f5f7fa;
+        }
+
+        tbody tr:hover td {
+            background: #f5f7fa;
+        }
+
+        .col-number {
+            text-align: right !important;
+        }
+
+        .expand-icon {
+            cursor: pointer;
+            color: #909399;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-size: 11px;
+            user-select: none;
+        }
+
+        .expand-icon:hover {
+            background: #e4e7ed;
+            color: #409eff;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+            color: #409eff;
+        }
+
+        /* ========== Status tags ========== */
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            gap: 4px;
+        }
+
+        .status-tag::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-pending-sales {
+            background: #f0e6ff;
+            color: #7a3dd1;
+        }
+        .status-pending-sales::before {
+            background: #a855f7;
+        }
+
+        .status-rejected {
+            background: #fff1f0;
+            color: #cf1322;
+        }
+        .status-rejected::before {
+            background: #ff4d4f;
+        }
+
+        .status-pending-ops {
+            background: #e6f4ff;
+            color: #096dd9;
+        }
+        .status-pending-ops::before {
+            background: #4096ff;
+        }
+
+        .status-approved {
+            background: #f6ffed;
+            color: #389e0d;
+        }
+        .status-approved::before {
+            background: #52c41a;
+        }
+
+        .status-draft {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #e8e8e8;
+        }
+        .status-draft::before {
+            background: #bfbfbf;
+        }
+
+        /* ========== Action buttons ========== */
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .btn-text {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px 12px;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            color: #606266;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-text:hover {
+            border-color: #409eff;
+            color: #409eff;
+            background: #f0f7ff;
+        }
+
+        .btn-text.primary {
+            background: #409eff;
+            color: #fff;
+            border-color: #409eff;
+        }
+
+        .btn-text.primary:hover {
+            background: #66b1ff;
+            border-color: #66b1ff;
+        }
+
+        .btn-text.success {
+            background: #52c41a;
+            color: #fff;
+            border-color: #52c41a;
+        }
+
+        .btn-text.success:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+        }
+
+        .btn-text.danger {
+            background: #ff4d4f;
+            color: #fff;
+            border-color: #ff4d4f;
+        }
+
+        .btn-text.danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+
+        /* ========== Expanded detail row ========== */
+        .detail-row td {
+            padding: 0;
+            background: #fafbfc;
+            border-bottom: 1px solid #ebeef5;
+        }
+
+        .detail-content {
+            padding: 20px 28px;
+        }
+
+        .detail-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 1100px) {
+            .detail-two-col {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #909399;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-text {
+            color: #303133;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* Vertical info list */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e4e7ed;
+            font-size: 13px;
+        }
+
+        .info-row .field-name {
+            color: #909399;
+            min-width: 90px;
+            font-weight: 500;
+        }
+
+        .info-row .field-value {
+            color: #303133;
+            font-family: "SF Mono", Monaco, "Cascadia Code", "Consolas", monospace;
+            font-weight: 500;
+        }
+
+        /* Change detail vertical */
+        .change-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .change-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #e4e7ed;
+            font-size: 13px;
+        }
+
+        .change-row .field-name {
+            color: #909399;
+            min-width: 110px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .change-row .old-value {
+            color: #909399;
+            text-decoration: line-through;
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .change-row .arrow {
+            color: #c0c4cc;
+            font-size: 12px;
+            padding: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .change-row .new-value {
+            color: #409eff;
+            font-weight: 600;
+            min-width: 90px;
+        }
+
+        .attachment-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            color: #409eff;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .attachment-link:hover {
+            border-color: #409eff;
+            background: #f0f7ff;
+        }
+
+        /* ========== Modal ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 6px;
+            width: 560px;
+            max-width: 90vw;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: slideUp 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            background: #ff4d4f;
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #ebeef5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #fafbfc;
+        }
+
+        .modal-footer .btn-text {
+            padding: 7px 20px;
+            font-size: 13px;
+        }
+
+        /* Form fields in modal */
+        .form-section {
+            margin-bottom: 16px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            color: #606266;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-value {
+            color: #303133;
+            font-size: 13px;
+            padding: 8px 12px;
+            background: #f5f7fa;
+            border-radius: 6px;
+            border: 1px solid #e4e7ed;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64,158,255,0.15);
+        }
+
+        .form-attachments {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .approval-table-wrap {
+            border: 1px solid #e4e7ed;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .approval-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: auto;
+        }
+
+        .approval-table th {
+            background: #f8f9fb;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #606266;
+            border-bottom: 1px solid #e4e7ed;
+            font-size: 12.5px;
+            white-space: nowrap;
+            position: static;
+        }
+
+        .approval-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #ebeef5;
+            color: #303133;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .approval-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .approval-table tr:hover td {
+            background: #f5f7fa;
+        }
+
+        .approval-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .approval-status.submit {
+            background: #e6f4ff;
+            color: #096dd9;
+        }
+
+        .approval-status.pass {
+            background: #f6ffed;
+            color: #389e0d;
+        }
+
+        .approval-status.reject {
+            background: #fff1f0;
+            color: #cf1322;
+        }
+
+        .approval-status.pending {
+            background: #fff7e6;
+            color: #d46b08;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ========== Pagination ========== */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-top: 1px solid #ebeef5;
+            background: #fff;
+        }
+
+        .pagination-info {
+            color: #909399;
+            font-size: 13px;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid #dcdfe6;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #606266;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #409eff;
+            color: #409eff;
+        }
+
+        .page-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background: #f5f7fa;
+        }
+
+        .page-current {
+            padding: 6px 14px;
+            border: 1px solid #409eff;
+            background: #fff;
+            border-radius: 6px;
+            color: #409eff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .page-size-select {
+            padding: 6px 10px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            background: #fff;
+            color: #606266;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>订单套餐变更审核</h1>
+            <div class="tabs">
+                <button class="tab active">全部待审核</button>
+                <button class="tab">我的提交</button>
+                <button class="tab">审核历史</button>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <div class="search-input-wrap">
+                <input type="text" class="search-input" placeholder="搜索工单号/订单号/客户名...">
+            </div>
+            <select class="select-box">
+                <option>全部状态</option>
+                <option>待销售审核</option>
+                <option>待运营审核</option>
+                <option>已通过</option>
+                <option>已驳回</option>
+                <option>草稿</option>
+            </select>
+            <div class="date-range-wrap">
+                <span class="date-range-label">提交时间</span>
+                <input type="date" class="date-input" placeholder="开始日期">
+                <span class="date-range-separator">~</span>
+                <input type="date" class="date-input" placeholder="结束日期">
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"></th>
+                            <th style="width: 90px;">客户</th>
+                            <th class="col-number" style="width: 85px;">变更前天数</th>
+                            <th class="col-number" style="width: 85px;">变更后天数</th>
+                            <th class="col-number" style="width: 100px;">变更前套餐金额</th>
+                            <th class="col-number" style="width: 100px;">变更后套餐金额</th>
+                            <th class="col-number" style="width: 90px;">变更金额</th>
+                            <th style="width: 90px;">变更类型</th>
+                            <th style="width: 75px;">变更原因</th>
+                            <th style="width: 180px;">备注</th>
+                            <th class="col-number" style="width: 85px;">退款金额</th>
+                            <th style="width: 90px;">提交人</th>
+                            <th style="width: 130px;">提交时间</th>
+                            <th style="width: 100px; text-align: center;">状态</th>
+                            <th style="width: 110px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Row 1 - Expanded: 套餐升级 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon expanded" onclick="toggleRow(this)">▶</span></td>
+                            <td>17718653518客户</td>
+                            <td class="col-number">26</td>
+                            <td class="col-number">52</td>
+                            <td class="col-number">¥18,300</td>
+                            <td class="col-number">¥36,600</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥18,300</td>
+                            <td>服务前变更</td>
+                            <td>套餐升级</td>
+                            <td>客户续单增加服务天数并升级套餐</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>测试销售01</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-05-10 00:59</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-pending-sales">待销售审核</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                    <button class="btn-text success" onclick="openAuditModal()">审核</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3622</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2605091659036720053</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2605090919007770126</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y3 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y5 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">26天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">52天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥18,300</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥36,600</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥300</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥600</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">-</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">啊1111111</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 2: 地址变更，金额不变 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">24</td>
+                            <td class="col-number">24</td>
+                            <td class="col-number">¥12,276.92</td>
+                            <td class="col-number">¥12,276.92</td>
+                            <td class="col-number" style="color: #909399;">¥0</td>
+                            <td>服务中变更</td>
+                            <td>地址变更</td>
+                            <td>客户搬家需变更服务地址</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>唯思管理员</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-05-09 18:59</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-rejected">已驳回</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3581</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2605091059526220873</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604260950346580205</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y2 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y2 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">24天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">24天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥12,276.92</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥12,276.92</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市南山区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市福田区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 3: 节假日费调整 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">24</td>
+                            <td class="col-number">24</td>
+                            <td class="col-number">¥12,276.92</td>
+                            <td class="col-number">¥12,776.92</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥500</td>
+                            <td>服务中变更</td>
+                            <td>节假日费</td>
+                            <td>春节期间需加收节假日费</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>唯思管理员</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-05-09 18:48</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-rejected">已驳回</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3581</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2605091048212750194</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604260950346580205</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y2 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y2 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">24天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">24天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥12,276.92</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥12,276.92</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥500</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市南山区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市南山区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 4: 天数微调 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">24</td>
+                            <td class="col-number">25</td>
+                            <td class="col-number">¥12,276.92</td>
+                            <td class="col-number">¥12,800.00</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥523.08</td>
+                            <td>服务中变更</td>
+                            <td>天数调整</td>
+                            <td>客户要求延长1天服务</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>唯思管理员</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-05-09 18:44</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-rejected">已驳回</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3581</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2605091044536630538</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604260950346580205</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y2 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y2 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">24天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">25天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥12,276.92</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥12,800</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市南山区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市南山区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 5: 套餐升级 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>苏翔虎</td>
+                            <td class="col-number">26</td>
+                            <td class="col-number">26</td>
+                            <td class="col-number">¥11,300</td>
+                            <td class="col-number">¥15,300</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥4,000</td>
+                            <td>服务前变更</td>
+                            <td>套餐升级</td>
+                            <td>客户要求升级至高级套餐</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>郑安胜</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-05-08 15:03</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-pending-ops">待运营审核</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                    <button class="btn-text success" onclick="openAuditModal()">审核</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3615</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2605080703574240838</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2605060631182230394</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y1 基础服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y3 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">26天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">26天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥11,300</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥15,300</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">广州市天河区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">广州市天河区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 6: 套餐降级（退款） -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">26</td>
+                            <td class="col-number">20</td>
+                            <td class="col-number">¥12,900</td>
+                            <td class="col-number">¥8,000</td>
+                            <td class="col-number" style="color: #67c23a; font-weight: 500;">¥-4,900</td>
+                            <td>服务中变更</td>
+                            <td>套餐降级</td>
+                            <td>客户经济原因需降级套餐并减天数</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥4,900</td>
+                            <td>氧阁管理员</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-04-29 18:12</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-approved">已通过</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3581</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2604291012125870714</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604260950346580205</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y5 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y3 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">26天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">20天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥12,900</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥8,000</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市南山区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市南山区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 7: 续单升级 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">15</td>
+                            <td class="col-number">20</td>
+                            <td class="col-number">¥7,742</td>
+                            <td class="col-number">¥10,222.96</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥2,480.96</td>
+                            <td>服务中变更</td>
+                            <td>续单升级</td>
+                            <td>续单5天并升级套餐等级</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>瞿梦妮</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-04-29 15:52</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-approved">已通过</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3599</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2604290752219350566</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604280945067290040</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y2 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y4 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">15天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">20天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥7,742</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥10,222.96</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市罗湖区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市罗湖区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 8: 套餐降级大额度（退款） -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>尹俊</td>
+                            <td class="col-number">26</td>
+                            <td class="col-number">15</td>
+                            <td class="col-number">¥12,901</td>
+                            <td class="col-number">¥7,742</td>
+                            <td class="col-number" style="color: #67c23a; font-weight: 500;">¥-5,159</td>
+                            <td>服务中变更</td>
+                            <td>套餐降级</td>
+                            <td>月嫂提前下户，减天数并降级</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥5,159</td>
+                            <td>瞿梦妮</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-04-29 14:56</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-approved">已通过</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">3599</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2604290656372240344</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGCC2604280945067290040</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">Y5 月子品质服务</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y2 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">26天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">15天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥12,901</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥7,742</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">深圳市罗湖区</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">深圳市罗湖区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Row 9: 新签订单变更 -->
+                        <tr>
+                            <td style="text-align: center;"><span class="expand-icon" onclick="toggleRow(this)">▶</span></td>
+                            <td>刘丹阳</td>
+                            <td class="col-number">0</td>
+                            <td class="col-number">50</td>
+                            <td class="col-number" style="color: #909399;">¥0</td>
+                            <td class="col-number">¥33,269.23</td>
+                            <td class="col-number" style="color: #f56c6c; font-weight: 500;">¥33,269.23</td>
+                            <td>服务前变更</td>
+                            <td>新签订单</td>
+                            <td>首次签订后补充服务内容</td>
+                            <td class="col-number"><span style="color: #c0c4cc;">-</span></td>
+                            <td>许晓璇</td>
+                            <td><span style="font-family: monospace; color: #606266; font-size: 12px;">2026-03-18 10:40</span></td>
+                            <td style="text-align: center;"><span class="status-tag status-draft">草稿</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-text" onclick="openModal('approvalModal')">审批记录</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" style="display: none;">
+                            <td colspan="15">
+                                <div class="detail-content">
+                                    <div class="detail-two-col">
+                                        <div class="detail-left">
+                                            <div class="detail-section">
+                                                <div class="detail-label">订单信息</div>
+                                                <div class="info-list">
+                                                    <div class="info-row">
+                                                        <span class="field-name">订单ID</span>
+                                                        <span class="field-value">2435</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">工单号</span>
+                                                        <span class="field-value">YGCR2603180240360890217</span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span class="field-name">合同编号</span>
+                                                        <span class="field-value">YGDD260305091541410292</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="detail-right">
+                                            <div class="detail-section">
+                                                <div class="detail-label">变更详情</div>
+                                                <div class="change-list">
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务套餐和等级</span>
+                                                        <span class="old-value">-</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">Y5 月子品质服务</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务天数</span>
+                                                        <span class="old-value">0天</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">50天</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">套餐金额</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥33,269.23</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">节假日费</span>
+                                                        <span class="old-value">¥0</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">¥0</span>
+                                                    </div>
+                                                    <div class="change-row">
+                                                        <span class="field-name">服务地址</span>
+                                                        <span class="old-value">-</span>
+                                                        <span class="arrow">→</span>
+                                                        <span class="new-value">广州市天河区</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-wrapper">
+                <div class="pagination-info">显示 1 到 9 条，共 9 条</div>
+                <div class="pagination">
+                    <button class="page-btn" disabled>上一页</button>
+                    <span class="page-current">1 / 1</span>
+                    <button class="page-btn" disabled>下一页</button>
+                    <select class="page-size-select">
+                        <option>10条/页</option>
+                        <option selected>20条/页</option>
+                        <option>50条/页</option>
+                        <option>100条/页</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Record Modal -->
+    <div class="modal-overlay" id="approvalModal" onclick="closeModalOutside(event, 'approvalModal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>审批记录</span>
+                <button class="modal-close" onclick="closeModal('approvalModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-table-wrap">
+                    <table class="approval-table">
+                        <thead>
+                            <tr>
+                                <th>审核人</th>
+                                <th>审核日期</th>
+                                <th>审核意见</th>
+                                <th>审核状态</th>
+                                <th>下一节点</th>
+                                <th>下一节点审批人</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>郑安胜</td>
+                                <td>2026/05/06 09:30</td>
+                                <td></td>
+                                <td><span class="approval-status submit">提交</span></td>
+                                <td>质量监督官</td>
+                                <td>梁艳红</td>
+                            </tr>
+                            <tr>
+                                <td>梁艳红</td>
+                                <td>2026/05/06 10:00</td>
+                                <td>同意</td>
+                                <td><span class="approval-status pass">通过</span></td>
+                                <td>会计</td>
+                                <td>何才连</td>
+                            </tr>
+                            <tr>
+                                <td>何才连</td>
+                                <td>2026/05/06 11:00</td>
+                                <td>同意</td>
+                                <td><span class="approval-status pass">通过</span></td>
+                                <td>财务负责人</td>
+                                <td>尹俊</td>
+                            </tr>
+                            <tr>
+                                <td>尹俊</td>
+                                <td>2026/05/06 14:00</td>
+                                <td>同意</td>
+                                <td><span class="approval-status pass">通过</span></td>
+                                <td>总经理</td>
+                                <td>卓大龙</td>
+                            </tr>
+                            <tr>
+                                <td>卓大龙</td>
+                                <td>2026/05/07 09:00</td>
+                                <td>同意</td>
+                                <td><span class="approval-status pass">通过</span></td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Modal -->
+    <div class="modal-overlay" id="auditModal" onclick="closeModalOutside(event, 'auditModal')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>审核</span>
+                <button class="modal-close" onclick="closeModal('auditModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section">
+                    <label class="form-label">变更原因</label>
+                    <div class="form-value">套餐升级，客户续单增加服务天数</div>
+                </div>
+                <div class="form-section">
+                    <label class="form-label">变更备注</label>
+                    <div class="form-value">客户要求将26天服务升级至52天，合同金额从¥18,300调整至¥36,600。</div>
+                </div>
+                <div class="form-section">
+                    <label class="form-label">变更开始时间</label>
+                    <div class="form-value">2026-05-10</div>
+                </div>
+                <div class="form-section">
+                    <label class="form-label">附件</label>
+                    <div class="form-attachments">
+                        <a href="#" class="attachment-link">📎 支付凭证.png</a>
+                        <a href="#" class="attachment-link">📎 变更申请表.pdf</a>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <label class="form-label">审批意见</label>
+                    <textarea class="form-textarea" placeholder="请输入审批意见..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-text danger" onclick="closeModal('auditModal')">不通过</button>
+                <button class="btn-text success" onclick="closeModal('auditModal')">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleRow(icon) {
+            const row = icon.closest('tr');
+            const detailRow = row.nextElementSibling;
+
+            if (detailRow && detailRow.classList.contains('detail-row')) {
+                if (detailRow.style.display === 'none') {
+                    detailRow.style.display = 'table-row';
+                    icon.classList.add('expanded');
+                } else {
+                    detailRow.style.display = 'none';
+                    icon.classList.remove('expanded');
+                }
+            }
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openAuditModal() {
+            openModal('auditModal');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeModalOutside(event, modalId) {
+            if (event.target === document.getElementById(modalId)) {
+                closeModal(modalId);
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal('approvalModal');
+                closeModal('auditModal');
+            }
+        });
+    </script>
+</body>
+</html>
