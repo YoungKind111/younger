@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月嫂反馈管理后台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F080A0',
+            primaryLight: '#FEF2F2',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      background: #fff;
+      border-right: 1px solid #e8e8e8;
+      flex-shrink: 0;
+      padding: 24px 0;
+    }
+    .sidebar-logo {
+      font-size: 18px;
+      font-weight: 600;
+      color: #F080A0;
+      padding: 0 24px 24px;
+      border-bottom: 1px solid #f5f5f5;
+      margin-bottom: 12px;
+    }
+    .sidebar-menu {
+      list-style: none;
+    }
+    .sidebar-menu li a {
+      display: block;
+      padding: 12px 24px;
+      color: #666;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-menu li a:hover,
+    .sidebar-menu li a.active {
+      background: #FEF2F2;
+      color: #F080A0;
+      border-left-color: #F080A0;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      height: 64px;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #333;
+    }
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+    .content {
+      padding: 24px 32px;
+      flex: 1;
+    }
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+    }
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .filter-tab {
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #e5e5e5;
+      background: #fff;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .filter-tab:hover {
+      border-color: #F080A0;
+      color: #F080A0;
+    }
+    .filter-tab.active {
+      background: #FEF2F2;
+      border-color: #F080A0;
+      color: #F080A0;
+    }
+    .table-wrap {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead {
+      background: #fafafa;
+    }
+    th {
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #f5f5f5;
+      color: #333;
+      vertical-align: top;
+    }
+    tr:hover td {
+      background: #fafafa;
+    }
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #F080A0;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .user-name {
+      font-weight: 500;
+    }
+    .user-phone {
+      font-size: 12px;
+      color: #999;
+      margin-top: 2px;
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-tag.pending {
+      background: #fff7e6;
+      color: #fa8c16;
+    }
+    .status-tag.resolved {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+    .salary-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #f5f5f5;
+      color: #666;
+    }
+    .thumb-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .btn {
+      padding: 5px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:active {
+      opacity: 0.9;
+    }
+    .btn-primary {
+      background: #F080A0;
+      color: #fff;
+    }
+    .btn-default {
+      background: #f5f5f5;
+      color: #666;
+      margin-right: 8px;
+    }
+    .btn-default:hover {
+      background: #eee;
+    }
+    .feedback-text {
+      max-width: 280px;
+      line-height: 1.5;
+      color: #555;
+    }
+    .remark-input {
+      width: 100%;
+      min-width: 160px;
+      padding: 6px 10px;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      color: #333;
+      transition: border-color 0.2s;
+    }
+    .remark-input:focus {
+      border-color: #F080A0;
+    }
+    @media (max-width: 1200px) {
+      .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .stat-cards { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .header { padding: 0 16px; }
+      th, td { padding: 12px 10px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- 主内容区 -->
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-title">月嫂反馈管理</div>
+        <div class="header-user">
+          <div class="avatar" style="width:28px;height:28px;font-size:12px;">管</div>
+          <span>管理员</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- 表格 -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>月嫂信息</th>
+                <th>关联工资单</th>
+                <th>反馈内容</th>
+                <th>附件</th>
+                <th>提交时间</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-status="pending">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">李</div>
+                    <div>
+                      <div class="user-name">李阿姨</div>
+                      <div class="user-phone">187****5371</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="salary-tag">2026年7月28日</span>
+                  <div style="margin-top:4px;font-size:13px;color:#F080A0;font-weight:500;">¥155.68</div>
+                </td>
+                <td>
+                  <div class="feedback-text">对费用支出有疑问，水电费100元我觉得不应该由我承担，请核实。</div>
+                </td>
+                <td>
+                  <div class="thumb-list">
+                    <div class="thumb"></div>
+                    <div class="thumb" style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                  </div>
+                </td>
+                <td style="white-space:nowrap;color:#999;font-size:13px;">2026-07-20 14:32</td>
+                <td><input type="text" class="remark-input" placeholder="请输入备注..."></td>
+              </tr>
+              <tr data-status="pending">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar" style="background:#60A5FA;">王</div>
+                    <div>
+                      <div class="user-name">王阿姨</div>
+                      <div class="user-phone">138****9123</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="salary-tag">2026年7月18日</span>
+                  <div style="margin-top:4px;font-size:13px;color:#F080A0;font-weight:500;">¥320.50</div>
+                </td>
+                <td>
+                  <div class="feedback-text">计薪时长不对，我实际上班是20天，不是18天，麻烦重新核算一下。</div>
+                </td>
+                <td>
+                  <div class="thumb-list">
+                    <div class="thumb" style="background:linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);"></div>
+                  </div>
+                </td>
+                <td style="white-space:nowrap;color:#999;font-size:13px;">2026-07-19 09:15</td>
+                <td><input type="text" class="remark-input" placeholder="请输入备注..."></td>
+              </tr>
+              <tr data-status="resolved">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar" style="background:#A78BFA;">张</div>
+                    <div>
+                      <div class="user-name">张阿姨</div>
+                      <div class="user-phone">159****2468</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="salary-tag">2026年6月28日</span>
+                  <div style="margin-top:4px;font-size:13px;color:#F080A0;font-weight:500;">¥280.00</div>
+                </td>
+                <td>
+                  <div class="feedback-text">基本工资计算有误，应该是300元不是280元，请帮忙修改。</div>
+                </td>
+                <td>
+                  <div class="thumb-list">
+                    <div class="thumb" style="background:linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);"></div>
+                  </div>
+                </td>
+                <td style="white-space:nowrap;color:#999;font-size:13px;">2026-06-10 16:48</td>
+                <td><input type="text" class="remark-input" placeholder="请输入备注..."></td>
+              </tr>
+              <tr data-status="resolved">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar" style="background:#34D399;">陈</div>
+                    <div>
+                      <div class="user-name">陈阿姨</div>
+                      <div class="user-phone">136****7755</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="salary-tag">2026年6月18日</span>
+                  <div style="margin-top:4px;font-size:13px;color:#F080A0;font-weight:500;">¥410.00</div>
+                </td>
+                <td>
+                  <div class="feedback-text">请假时长显示有误，我请了1天假不是2天。</div>
+                </td>
+                <td>—</td>
+                <td style="white-space:nowrap;color:#999;font-size:13px;">2026-05-12 11:20</td>
+                <td><input type="text" class="remark-input" placeholder="请输入备注..."></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchFilter(el, type) {
+      document.querySelectorAll('.filter-tab').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+
+      document.querySelectorAll('tbody tr').forEach(tr => {
+        if (type === 'all' || tr.dataset.status === type) {
+          tr.style.display = '';
+        } else {
+          tr.style.display = 'none';
+        }
+      });
+    }
+
+    function markResolved(btn) {
+      const row = btn.closest('tr');
+      row.dataset.status = 'resolved';
+      const tagCell = row.querySelector('.status-tag');
+      tagCell.className = 'status-tag resolved';
+      tagCell.textContent = '已处理';
+      btn.remove();
+      showToast('已标记为已处理');
+    }
+
+    function showDetail(btn) {
+      showToast('查看详情功能待开发');
+    }
+
+    function showToast(msg) {
+      let t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.3s;';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = '1';
+      setTimeout(() => { t.style.opacity = '0'; }, 2000);
+    }
+  </script>
+</body>
+</html>

@@ -115,6 +115,32 @@
     .toast.show {
       opacity: 1;
     }
+    .salary-item {
+      padding: 16px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .salary-item:last-child {
+      border-bottom: none;
+    }
+    .audit-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .audit-tag.pending {
+      background: #FEF2F2;
+      color: #F080A0;
+      border: 1px solid #FBCFE8;
+    }
+    .audit-tag.auditing {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd8bf;
+    }
   </style>
 </head>
 <body>
@@ -143,7 +169,6 @@
 
     <!-- 收款账户入口 -->
     <div class="px-4 mt-3">
-      <!-- 未开通 -->
       <a href="account.html" class="account-card active:scale-[0.98] transition-transform" id="accountCard">
         <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -157,9 +182,9 @@
         <div class="account-info">
           <div class="flex items-center gap-2">
             <span class="title">收款账户</span>
-            <span class="status-tag unopened" id="statusTag">未开通</span>
+            <span class="status-tag opening" id="statusTag">开通中</span>
           </div>
-          <div class="subtitle" id="statusDesc">查看账户状态和收款信息</div>
+          <div class="subtitle" id="statusDesc">审核中，请耐心等待</div>
         </div>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="arrowIcon">
           <path d="m9 18 6-6-6-6"/>
@@ -167,27 +192,78 @@
       </a>
     </div>
 
+    <!-- 待确认的工资单 -->
+    <div class="px-4 mt-3">
+      <div class="bg-white rounded-xl p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FA8C16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span class="text-gray-900 font-medium">待确认的工资单</span>
+        </div>
+
+        <a href="salary_detail.html" class="salary-item active:opacity-70 transition-opacity">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-900 text-[15px] font-medium">2026年7月28日</span>
+            <div class="flex items-center gap-1">
+              <span class="audit-tag pending" id="confirmStatusTag">待确认</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
     <!-- 工资账单 -->
     <div class="px-4 mt-3">
       <div class="bg-white rounded-xl p-4 shadow-sm">
-        <div class="flex items-center gap-2 mb-6">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F080A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 14l2 2 4-4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5Z"/>
+        <div class="flex items-center gap-2 mb-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
           </svg>
           <span class="text-gray-900 font-medium">工资账单</span>
         </div>
-        <!-- 空状态 -->
-        <div class="flex flex-col items-center justify-center py-16">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" class="mb-4">
-            <rect x="2" y="4" width="20" height="16" rx="2" fill="#DBEAFE"/>
-            <rect x="2" y="4" width="20" height="12" rx="2" fill="#93C5FD"/>
-            <circle cx="12" cy="10" r="3" fill="#DBEAFE"/>
-            <path d="M9 13c0 1.5 1.5 3 3 3s3-1.5 3-3" stroke="#60A5FA" stroke-width="1.5" fill="none"/>
-            <rect x="5" y="16" width="4" height="2" rx="1" fill="#60A5FA"/>
-            <rect x="15" y="16" width="4" height="2" rx="1" fill="#60A5FA"/>
-          </svg>
-          <span class="text-gray-400 text-sm">暂无工资账单</span>
+
+        <!-- 工资列表 -->
+        <div class="salary-item">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-900 text-[15px] font-medium">2026年7月18日</span>
+            <div class="flex items-center gap-1">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="salary-item">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-900 text-[15px] font-medium">2026年6月28日</span>
+            <div class="flex items-center gap-1">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="salary-item">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-900 text-[15px] font-medium">2026年6月18日</span>
+            <div class="flex items-center gap-1">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -199,7 +275,7 @@
     // 从 URL 参数读取状态，默认未开通
     // 可选值: unopened / opening / opened / failed
     const urlParams = new URLSearchParams(window.location.search);
-    const accountStatus = urlParams.get('status') || 'unopened';
+    const accountStatus = urlParams.get('status') || 'opening';
 
     const statusConfig = {
       unopened: {
@@ -269,6 +345,30 @@
     }
 
     renderStatus();
+
+    // 待确认工资单状态切换：?confirmStatus=pending (待确认) / auditing (待审批)
+    const confirmStatus = urlParams.get('confirmStatus') || 'pending';
+    const confirmStatusConfig = {
+      pending: {
+        tagClass: 'pending',
+        tagText: '待确认'
+      },
+      auditing: {
+        tagClass: 'auditing',
+        tagText: '待审批'
+      }
+    };
+
+    function renderConfirmStatus() {
+      const cfg = confirmStatusConfig[confirmStatus];
+      const tag = document.getElementById('confirmStatusTag');
+      if (tag && cfg) {
+        tag.className = 'audit-tag ' + cfg.tagClass;
+        tag.textContent = cfg.tagText;
+      }
+    }
+
+    renderConfirmStatus();
   </script>
 </body>
 </html>
