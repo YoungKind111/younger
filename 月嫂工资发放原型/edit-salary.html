@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑工资单</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            font-size: 13px;
+        }
+
+        /* 顶部导航 */
+        .topbar {
+            height: 48px;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e91e8c;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .logo-icon {
+            width: 28px; height: 28px;
+            background: #e91e8c;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+        }
+        .breadcrumb {
+            color: #999;
+            font-size: 12px;
+        }
+        .breadcrumb span { margin: 0 4px; }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: #e91e8c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .layout {
+            height: calc(100vh - 48px);
+        }
+
+        /* 主内容区 */
+        .main {
+            flex: 1;
+            overflow: auto;
+            padding: 16px 20px;
+            min-width: fit-content;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 表单卡片 */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 24px 8px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-item label {
+            font-size: 13px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .form-item input,
+        .form-item select {
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-item input:focus,
+        .form-item select:focus {
+            border-color: #e91e8c;
+        }
+        .form-item input:read-only,
+        .form-item select:disabled {
+            background: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .form-item .hint {
+            font-size: 12px;
+            color: #999;
+        }
+        .form-item .hint-inline {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+        .icon-help {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #d9d9d9;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #999;
+            cursor: help;
+        }
+
+        /* 底部汇总栏 */
+        .summary-bar {
+            position: fixed;
+            bottom: 60px;
+            left: 20px;
+            right: 20px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+        }
+        .summary-left {
+            display: flex;
+            gap: 28px;
+        }
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .summary-item .label {
+            font-size: 12px;
+            color: #666;
+        }
+        .summary-item .value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .summary-item .value.black { color: #333; }
+        .summary-item .value.green { color: #52c41a; }
+        .summary-item .value.red { color: #ff4d4f; }
+        .summary-item .value.blue { color: #1890ff; }
+
+        /* 底部按钮 */
+        .footer-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e8e8e8;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn {
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary {
+            background: #722ed1;
+            color: #fff;
+            border-color: #722ed1;
+        }
+
+        /* 结算周期标签 */
+        .cycle-tag {
+            color: #e91e8c;
+            font-size: 13px;
+        }
+
+        /* 月嫂费用模块 */
+        .fee-module {
+            margin-top: 16px;
+        }
+        .fee-left, .fee-right {
+            flex: 1;
+            min-width: 0;
+        }
+        .fee-card {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 20px 24px;
+        }
+        .fee-group {
+            margin-bottom: 20px;
+        }
+        .add-fee-btn {
+            padding: 2px 8px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .add-fee-btn:hover {
+            border-color: #722ed1;
+            color: #722ed1;
+        }
+        .fee-group-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* 左边待结算费用 — 网格形式 */
+        .fee-left .fee-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px 8px;
+        }
+        .fee-left .fee-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0;
+            border-bottom: none;
+        }
+        .fee-item {
+            position: relative;
+        }
+        .fee-item .fee-actions {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .fee-item:hover .fee-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .fee-left .fee-item-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fee-left .fee-item-name {
+            display: inline-block;
+            font-size: 13px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+            width: 90px;
+        }
+        #expenseGrid {
+            grid-template-columns: 1fr;
+        }
+        .expense-readonly-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .expense-readonly-row label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+        }
+        .expense-readonly-row input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #e91e8c;
+            cursor: pointer;
+        }
+        .expense-readonly-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+        .expense-readonly-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .expense-readonly-remark {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+        }
+        .calc-btn {
+            padding: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #722ed1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .help-tooltip-wrapper {
+            position: relative;
+            display: inline-flex;
+        }
+        .help-icon {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #999;
+            cursor: help;
+        }
+        .help-tooltip {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 8px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 10px 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            white-space: nowrap;
+            z-index: 100;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.8;
+        }
+        .help-tooltip-wrapper:hover .help-tooltip {
+            display: block;
+        }
+        .calc-btn:hover {
+            background: #f0e6ff;
+        }
+        .fee-amount-input {
+            width: 110px;
+            padding: 2px 6px;
+            border: 1px solid #d9d9d9;
+            border-radius: 3px;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+            text-align: left;
+            outline: none;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .fee-amount-input:focus {
+            border-color: #e91e8c;
+        }
+        .fee-amount-input::-webkit-inner-spin-button,
+        .fee-amount-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .fee-amount-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* 基础信息网格 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px 8px;
+        }
+        .info-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-main label {
+            display: inline-block;
+            font-size: 13px;
+            color: #999;
+            text-align: right;
+            width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+        }
+        .info-main input,
+        .info-main select {
+            width: 140px;
+            flex: none;
+            height: 28px;
+            padding: 0 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #333;
+            background: #fff;
+            outline: none;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .info-main input:read-only,
+        .info-main select:disabled {
+            background: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .info-cell .hint-inline {
+            font-size: 12px;
+            color: #999;
+            padding-left: 128px;
+        }
+
+        /* 右边本期工资结算 — 保持列表 */
+        .fee-right .fee-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .fee-right .fee-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        .fee-right .fee-group-title {
+            color: #e91e8c;
+        }
+        .fee-empty {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 20px 0;
+        }
+        .fee-right-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        .fee-right-item:last-child {
+            border-bottom: none;
+        }
+        .fee-right-item .name {
+            font-size: 13px;
+            color: #333;
+        }
+        .fee-right-item .amount {
+            font-size: 13px;
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+        .fee-right-item .amount.reward {
+            color: #52c41a;
+        }
+        .fee-right-item .amount.penalty,
+        .fee-right-item .amount.expense {
+            color: #ff4d4f;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <div class="logo-icon">氧</div>
+                氧阁集团 企业智慧管理平台
+            </div>
+            <div class="breadcrumb">首页 <span>/</span> 产品与服务 <span>/</span> 月嫂工资单</div>
+        </div>
+        <div class="topbar-right">
+            <span style="font-size:12px;color:#999;">杨楷</span>
+            <div class="user-avatar">杨</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- 主内容区 -->
+        <div class="main">
+            <div class="page-header">
+                <h1 class="page-title">编辑工资单</h1>
+            </div>
+
+            <div class="form-card">
+                <div class="section-title">
+                    基础信息
+                    <div class="help-tooltip-wrapper">
+                        <div class="help-icon">?</div>
+                        <div class="help-tooltip">
+                            <div>本期计薪起始日：2026-06-17 10:04</div>
+                            <div>本期计薪截止日：2026-08-04 10:04</div>
+                            <div>本期计薪天数:48天</div>
+                            <div>服务阶段：#186·第1任·sold</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>工资期数</label>
+                            <select disabled>
+                                <option>2026年5月28日</option>
+                                <option>2026年5月18日</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>月嫂名称</label>
+                            <select disabled>
+                                <option>赖银花</option>
+                                <option>赵阿姨</option>
+                                <option>刘阿姨</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>套餐名称</label>
+                            <input type="text" value="月子品质服务" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>套餐等级</label>
+                            <input type="text" value="Y5" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>薪资等级</label>
+                            <select>
+                                <option>Y5</option>
+                                <option>Y4</option>
+                                <option>Y3</option>
+                                <option>Y2</option>
+                                <option>Y1</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>客户姓名</label>
+                            <input type="text" value="陈瑶" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>本期计薪时长</label>
+                            <input type="text" id="workDuration" value="624小时 / 26天" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>本期请假时长</label>
+                            <input type="text" value="0小时" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>时薪</label>
+                            <input type="text" id="hourlyRate" value="14.42308元/时" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>实际上户时间</label>
+                            <input type="text" value="2026-04-05 10:30" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>实际下户时间</label>
+                            <input type="text" value="2026-05-01 10:30" readonly>
+                        </div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-main">
+                            <label>基础工资</label>
+                            <input type="text" id="baseSalaryInfo" value="9000.00" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 月嫂费用模块 -->
+            <div class="fee-module">
+                <!-- 左边：待结算费用 -->
+                <div class="fee-left">
+                    <div class="fee-card">
+                        <div class="section-title">待结算费用</div>
+
+                        <div class="fee-group">
+                            <div class="fee-group-title">
+                                <span>奖励</span>
+                                <button class="add-fee-btn" onclick="openAddFeeModal('reward')" title="添加奖励">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    添加
+                                </button>
+                            </div>
+                            <div class="fee-grid" id="rewardGrid"></div>
+                        </div>
+
+                        <div class="fee-group">
+                            <div class="fee-group-title">
+                                <span>扣罚</span>
+                                <button class="add-fee-btn" onclick="openAddFeeModal('penalty')" title="添加扣罚">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    添加
+                                </button>
+                            </div>
+                            <div class="fee-grid" id="penaltyGrid"></div>
+                        </div>
+
+                        <div class="fee-group">
+                            <div class="fee-group-title">
+                                <span>支出</span>
+                                <button class="add-fee-btn" onclick="openAddFeeModal('expense')" title="添加支出">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    添加
+                                </button>
+                            </div>
+                            <div class="fee-grid" id="expenseGrid"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 备注模块 -->
+            <div class="form-card" style="margin-top: 16px;">
+                <div class="section-title">备注</div>
+                <textarea id="remarkTextarea" placeholder="请输入备注内容..." style="width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; color: #333; outline: none; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <!-- 添加费用类型弹窗 -->
+            <div id="addFeeModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:8px;width:520px;max-height:90vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+                    <!-- 弹窗头部 -->
+                    <div style="padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;">
+                        <h3 style="font-size:16px;font-weight:600;color:#333;" id="addFeeModalTitle">添加费用类型</h3>
+                        <button onclick="closeAddFeeModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+                    </div>
+
+                    <!-- 弹窗内容 -->
+                    <div style="padding:20px 24px;">
+                        <!-- 费用类型 -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">费用类型</label>
+                            <select id="feeTypeSelect" style="width:200px;height:36px;padding:0 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;color:#333;outline:none;background:#fff;">
+                                <option value="">选择费用类型</option>
+                            </select>
+                        </div>
+
+                        <!-- 是否工资抵扣 + 金额 -->
+                        <div style="display:flex;gap:20px;margin-bottom:16px;">
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">是否工资抵扣</label>
+                                <div style="display:flex;gap:16px;align-items:center;height:36px;">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;">
+                                        <input type="radio" name="isDeduct" value="1" checked style="accent-color:#722ed1;width:14px;height:14px;"> 是
+                                    </label>
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#999;cursor:not-allowed;">
+                                        <input type="radio" name="isDeduct" value="0" disabled style="accent-color:#722ed1;width:14px;height:14px;cursor:not-allowed;"> 否
+                                    </label>
+                                </div>
+                            </div>
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">金额</label>
+                                <input type="number" id="feeAmountInput" placeholder="金额" min="0" step="0.01" style="width:100%;height:36px;padding:0 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;color:#333;outline:none;box-sizing:border-box;">
+                            </div>
+                        </div>
+
+                        <!-- 备注 -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">备注</label>
+                            <textarea id="feeRemarkInput" placeholder="备注" style="width:100%;height:80px;padding:10px 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;color:#333;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+                        </div>
+
+                        <!-- 添加按钮 -->
+                        <button onclick="saveAddFee()" style="width:100%;padding:12px 0;border:none;border-radius:4px;background:#722ed1;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
+                            <span style="font-size:18px;line-height:1;">+</span> 添加费用类型
+                        </button>
+                    </div>
+
+                    <!-- 弹窗底部 -->
+                    <div style="padding:12px 24px;border-top:1px solid #e8e8e8;display:flex;justify-content:flex-end;gap:10px;">
+                        <button onclick="closeAddFeeModal()" style="padding:8px 20px;border:1px solid #d9d9d9;background:#fff;border-radius:4px;font-size:13px;cursor:pointer;">取消</button>
+                        <button onclick="saveAddFee()" style="padding:8px 20px;border:none;background:#722ed1;color:#fff;border-radius:4px;font-size:13px;cursor:pointer;">保存</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 多胎奖励计算弹窗 -->
+            <div id="dtCalcModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:8px;width:400px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                        <h3 style="font-size:16px;font-weight:600;color:#333;">计算多胎奖励</h3>
+                        <button onclick="closeDtCalcModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">服务时长（小时）</label>
+                        <input type="number" id="dtHoursInput" placeholder="输入小时数" min="0" step="0.5" style="width:100%;height:36px;padding:0 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;color:#333;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div style="margin-bottom:20px;padding:12px;background:#f5f5f5;border-radius:4px;font-size:13px;color:#666;">
+                        计算公式：时薪(14.42) × 0.3 × 小时数
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:10px;">
+                        <button onclick="closeDtCalcModal()" style="padding:8px 20px;border:1px solid #d9d9d9;background:#fff;border-radius:4px;font-size:13px;cursor:pointer;">取消</button>
+                        <button onclick="calcDtReward()" style="padding:8px 20px;border:none;background:#722ed1;color:#fff;border-radius:4px;font-size:13px;cursor:pointer;">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 只照顾宝妈计算弹窗 -->
+            <div id="zzCalcModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+                <div style="background:#fff;border-radius:8px;width:400px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                        <h3 style="font-size:16px;font-weight:600;color:#333;">计算只照顾宝妈</h3>
+                        <button onclick="closeZzCalcModal()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">×</button>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:13px;color:#333;margin-bottom:6px;">服务时长（小时）</label>
+                        <input type="number" id="zzHoursInput" placeholder="输入小时数" min="0" step="0.5" style="width:100%;height:36px;padding:0 12px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;color:#333;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div style="margin-bottom:20px;padding:12px;background:#f5f5f5;border-radius:4px;font-size:13px;color:#666;">
+                        计算公式：时薪(14.42) × 0.3 × 小时数
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:10px;">
+                        <button onclick="closeZzCalcModal()" style="padding:8px 20px;border:1px solid #d9d9d9;background:#fff;border-radius:4px;font-size:13px;cursor:pointer;">取消</button>
+                        <button onclick="calcZzReward()" style="padding:8px 20px;border:none;background:#722ed1;color:#fff;border-radius:4px;font-size:13px;cursor:pointer;">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 占位，避免内容被固定栏遮挡 -->
+            <div style="height: 160px;"></div>
+        </div>
+    </div>
+
+    <!-- 底部汇总栏 -->
+    <div class="summary-bar">
+        <div class="summary-left">
+            <div class="summary-item">
+                <span class="label">基础工资</span>
+                <span class="value black" id="baseSalary">9000.00</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">奖励总额</span>
+                <span class="value green" id="rewardTotal">0.00</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">扣罚总额</span>
+                <span class="value red" id="penaltyTotal">0.00</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">支出总额</span>
+                <span class="value black" id="expenseTotal">0.00</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">实发工资</span>
+                <span class="value blue" id="actualSalary">9000.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部操作按钮 -->
+    <div class="footer-actions">
+        <button class="btn">取消</button>
+        <button class="btn btn-primary">确定</button>
+    </div>
+
+    <script>
+        const feeData = {
+            reward: [
+                { key: 'jx', name: '绩效奖励', value: 200, remark: '本月绩效优秀' },
+                { key: 'ry', name: '荣誉奖励', value: 100, remark: '获得月度优秀月嫂' },
+                { key: 'dt', name: '多胎奖励', value: 432.69, remark: '双胞胎服务时长100小时' },
+                { key: 'fd', name: '辅导奖励', value: 150, remark: '带教新员工' },
+                { key: 'gl', name: '工龄奖励', value: 300, remark: '入职满3年' },
+                { key: 'cb', name: '车补', value: 60, remark: '日常交通补贴，上户地址是：北京市海淀区......' },
+                { key: 'zj', name: '转介绍奖励', value: 500, remark: '成功介绍新客户' },
+                { key: 'hp', name: '好评奖', value: 200, remark: '客户五星好评' },
+                { key: 'zs', name: '证书奖励', value: 300, remark: '获得高级育婴师证书' },
+                { key: 'sbbt', name: '社保补贴', value: 200, remark: '社保个人缴纳补贴' },
+                { key: 'jjr', name: '节假日福利', value: 100, remark: '端午节福利' },
+                { key: 'nd', name: '年度贡献奖励', value: 1000, remark: '年度优秀员工' }
+            ],
+            penalty: [
+                { key: 'cd', name: '迟到', value: 50, remark: '5月3日迟到15分钟' },
+                { key: 'kg', name: '旷工', value: 200, remark: '5月10日无故缺勤' },
+                { key: 'kh', name: '客户投诉', value: 300, remark: '客户反馈服务态度问题' },
+                { key: 'zl', name: '服务质量', value: 150, remark: '服务细节不到位' },
+                { key: 'aq', name: '安全违规', value: 100, remark: '未按规定佩戴工牌' },
+                { key: 'jj', name: '降级', value: 500, remark: '月度考核不达标' },
+                { key: 'qt', name: '其他', value: 50, remark: '其他违规事项' }
+            ],
+            expense: [
+                { key: 'zz', name: '只照顾宝妈', value: 216.35, remark: '只照顾宝妈50小时' },
+                { key: 'sd', name: '水电费', value: 15, remark: '5月1号到5月3号入住' },
+                { key: 'cf', name: '餐费', value: 200, remark: '工作期间餐费补贴' },
+                { key: 'kz', name: '考证/学费', value: 500, remark: '职业技能提升培训' },
+                { key: 'jy', name: '信用保证金', value: 700, remark: '新手第1笔保证金' },
+                { key: 'jy2', name: '信用保证金', value: 600, remark: '新手第2笔保证金' },
+                { key: 'gs', name: '个税', value: 150, remark: '个人所得税代扣' },
+                { key: 'sb', name: '社保', value: 800, remark: '社会保险个人缴纳部分' },
+                { key: 'kd', name: '快递', value: 30, remark: '证件快递费用' },
+                { key: 'qtzc', name: '其他支出', value: 100, remark: '其他零星支出' }
+            ]
+        };
+
+        // 记录勾选状态
+        const checkedState = {};
+
+        function getActionButtons(type, key) {
+            return `
+                <div class="fee-actions">
+                    <button class="action-btn" onclick="editFee('${type}', '${key}')" title="编辑">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button class="action-btn" onclick="deleteFeeItem('${type}', '${key}')" title="删除">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        }
+
+        function deleteFeeItem(type, key) {
+            if (!confirm('确定要删除这条费用吗？')) return;
+            const item = feeData[type].find(i => i.key === key);
+            if (item) {
+                item.value = 0;
+                item.remark = '';
+            }
+            checkedState[key] = false;
+            renderLeft();
+            updateSummary();
+        }
+
+        function renderLeft() {
+            ['reward', 'penalty', 'expense'].forEach(type => {
+                const grid = document.getElementById(type + 'Grid');
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                const items = feeData[type];
+                if (items.length === 0) {
+                    grid.innerHTML = '<div class="fee-empty">暂无可结算支出</div>';
+                    return;
+                }
+                grid.innerHTML = items.map(item => {
+                    if (type === 'reward' && item.key === 'dt') {
+                        const checked = checkedState[item.key] ? 'checked' : '';
+                        return `
+                            <div class="fee-item">
+                                <div class="expense-readonly-row" style="gap:8px;">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;">
+                                        <input type="checkbox" ${checked}
+                                            data-type="${type}" data-key="${item.key}"
+                                            onchange="toggleFee(this)"
+                                            style="width:14px;height:14px;accent-color:#e91e8c;"
+                                        >${item.name}
+                                    </label>
+                                    <div class="expense-readonly-right" style="gap:6px;">
+                                        <span class="expense-readonly-value">¥${item.value.toFixed(2)}</span>
+                                        <button class="calc-btn" onclick="openDtCalcModal()" title="计算多胎奖励">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                        </button>
+                                        ${getActionButtons(type, item.key)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    if (type === 'expense' && item.key === 'zz') {
+                        const checked = checkedState[item.key] ? 'checked' : '';
+                        return `
+                            <div class="fee-item">
+                                <div class="expense-readonly-row" style="gap:8px;">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#333;cursor:pointer;">
+                                        <input type="checkbox" ${checked}
+                                            data-type="${type}" data-key="${item.key}"
+                                            onchange="toggleFee(this)"
+                                            style="width:14px;height:14px;accent-color:#e91e8c;"
+                                        >${item.name}
+                                    </label>
+                                    <div class="expense-readonly-right" style="gap:6px;">
+                                        <span class="expense-readonly-value">¥${item.value.toFixed(2)}</span>
+                                        <button class="calc-btn" onclick="openZzCalcModal()" title="计算只照顾宝妈">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                        </button>
+                                        ${getActionButtons(type, item.key)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    if (type === 'expense') {
+                        if (!(item.key in checkedState)) {
+                            checkedState[item.key] = true;
+                        }
+                        const checked = checkedState[item.key] ? 'checked' : '';
+                        const remarkHtml = item.remark ? `<span class="expense-readonly-remark">${item.remark}</span>` : '';
+                        return `
+                            <div class="fee-item">
+                                <div class="expense-readonly-row">
+                                    <label>
+                                        <input type="checkbox" ${checked}
+                                            data-type="${type}" data-key="${item.key}"
+                                            onchange="toggleFee(this)"
+                                        >${item.name}
+                                    </label>
+                                    <div class="expense-readonly-right">
+                                        <span class="expense-readonly-value">¥${item.value.toFixed(2)}</span>
+                                        ${remarkHtml}
+                                        ${getActionButtons(type, item.key)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    if (type === 'reward' || type === 'penalty') {
+                        if (!(item.key in checkedState)) {
+                            checkedState[item.key] = item.value > 0;
+                        }
+                        const checked = checkedState[item.key] ? 'checked' : '';
+                        return `
+                            <div class="fee-item">
+                                <div class="expense-readonly-row">
+                                    <label>
+                                        <input type="checkbox" ${checked}
+                                            data-type="${type}" data-key="${item.key}"
+                                            onchange="toggleFee(this)"
+                                        >${item.name}
+                                    </label>
+                                    <div class="expense-readonly-right">
+                                        <span class="expense-readonly-value">¥${item.value.toFixed(2)}</span>
+                                        ${getActionButtons(type, item.key)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <div class="fee-item">
+                            <div class="fee-item-main">
+                                <span class="fee-item-name">${item.name}</span>
+                                <input type="number" class="fee-amount-input"
+                                    value="${item.value}" min="0" step="0.01"
+                                    data-type="${type}" data-key="${item.key}"
+                                    oninput="updateFeeValue(this)"
+                                >
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function toggleFee(checkbox) {
+            const type = checkbox.dataset.type;
+            const key = checkbox.dataset.key;
+            checkedState[key] = checkbox.checked;
+            updateSummary();
+        }
+
+        function updateFeeValue(input) {
+            const type = input.dataset.type;
+            const key = input.dataset.key;
+            const item = feeData[type].find(i => i.key === key);
+            if (item) {
+                item.value = parseFloat(input.value) || 0;
+            }
+            updateSummary();
+        }
+
+        function openDtCalcModal() {
+            document.getElementById('dtCalcModal').style.display = 'flex';
+            document.getElementById('dtHoursInput').value = '';
+        }
+
+        function closeDtCalcModal() {
+            document.getElementById('dtCalcModal').style.display = 'none';
+        }
+
+        function calcDtReward() {
+            const hours = parseFloat(document.getElementById('dtHoursInput').value);
+            if (isNaN(hours) || hours <= 0) {
+                alert('请输入有效的服务时长');
+                return;
+            }
+            const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 14.42308;
+            const amount = Math.round(hourlyRate * 0.3 * hours * 100) / 100;
+
+            const item = feeData.reward.find(i => i.key === 'dt');
+            if (item) {
+                item.value = amount;
+            }
+
+            const dtRow = document.querySelector('#rewardGrid input[type="checkbox"][data-key="dt"]')?.closest('.fee-item');
+            const valueSpan = dtRow?.querySelector('.expense-readonly-value');
+            if (valueSpan) {
+                valueSpan.textContent = '¥' + amount.toFixed(2);
+            }
+
+            checkedState['dt'] = true;
+            const checkbox = document.querySelector('#rewardGrid input[type="checkbox"][data-key="dt"]');
+            if (checkbox) checkbox.checked = true;
+
+            updateSummary();
+            closeDtCalcModal();
+        }
+
+        function openZzCalcModal() {
+            document.getElementById('zzCalcModal').style.display = 'flex';
+            document.getElementById('zzHoursInput').value = '';
+        }
+
+        function closeZzCalcModal() {
+            document.getElementById('zzCalcModal').style.display = 'none';
+        }
+
+        function calcZzReward() {
+            const hours = parseFloat(document.getElementById('zzHoursInput').value);
+            if (isNaN(hours) || hours <= 0) {
+                alert('请输入有效的服务时长');
+                return;
+            }
+            const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 14.42308;
+            const amount = Math.round(hourlyRate * 0.3 * hours * 100) / 100;
+
+            const item = feeData.expense.find(i => i.key === 'zz');
+            if (item) {
+                item.value = amount;
+            }
+
+            const zzRow = document.querySelector('#expenseGrid input[type="checkbox"][data-key="zz"]')?.closest('.fee-item');
+            const valueSpan = zzRow?.querySelector('.expense-readonly-value');
+            if (valueSpan) {
+                valueSpan.textContent = '¥' + amount.toFixed(2);
+            }
+
+            checkedState['zz'] = true;
+            const checkbox = document.querySelector('#expenseGrid input[type="checkbox"][data-key="zz"]');
+            if (checkbox) checkbox.checked = true;
+
+            updateSummary();
+            closeZzCalcModal();
+        }
+
+        function updateBaseSalary() {
+            const rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const hours = parseFloat(document.getElementById('workDuration').value) || 0;
+            const base = Math.round(rate * hours * 100) / 100;
+            document.getElementById('baseSalaryInfo').value = base.toFixed(2);
+            document.getElementById('baseSalary').textContent = base.toFixed(2);
+        }
+
+        function onRateChange() {
+            updateBaseSalary();
+            updateSummary();
+        }
+
+        function onDurationChange() {
+            updateBaseSalary();
+            updateSummary();
+        }
+
+        function renderRight() {
+            ['reward', 'penalty', 'expense'].forEach(type => {
+                const container = document.getElementById(type + 'Settled');
+                const items = feeData[type].filter(item => checkedState[item.key]);
+                if (items.length === 0) {
+                    const emptyText = type === 'reward' ? '暂无勾选奖励项' :
+                                      type === 'penalty' ? '暂无勾选扣罚项' : '暂无勾选支出项';
+                    container.innerHTML = `<div class="fee-empty">${emptyText}</div>`;
+                } else {
+                    container.innerHTML = items.map(item => {
+                        const amountClass = type === 'reward' ? 'reward' : type;
+                        return `
+                            <div class="fee-right-item" id="right-${item.key}">
+                                <span class="name">${item.name}</span>
+                                <input type="number" class="right-amount ${amountClass}"
+                                    value="${item.value}" min="0" step="0.01"
+                                    data-type="${type}" data-key="${item.key}"
+                                    oninput="updateRightValue(this)"
+                                    style="width:80px;padding:3px 6px;border:1px solid #d9d9d9;
+                                           border-radius:3px;font-size:12px;outline:none;
+                                           text-align:right;"
+                                    onfocus="this.style.borderColor='#e91e8c'"
+                                    onblur="this.style.borderColor='#d9d9d9'"
+                                >
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+        }
+
+        function updateRightValue(input) {
+            const type = input.dataset.type;
+            const key = input.dataset.key;
+            const item = feeData[type].find(i => i.key === key);
+            if (item) {
+                item.value = parseFloat(input.value) || 0;
+            }
+            // 同步更新左边的输入框
+            const leftInput = document.querySelector(`#${type}Grid input[data-key="${key}"][type="number"]`);
+            if (leftInput) {
+                leftInput.value = input.value;
+            }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            let rewardTotal = 0;
+            let penaltyTotal = 0;
+            let expenseTotal = 0;
+
+            feeData.reward.forEach(item => {
+                if (checkedState[item.key]) rewardTotal += item.value;
+            });
+            feeData.penalty.forEach(item => {
+                if (checkedState[item.key]) penaltyTotal += item.value;
+            });
+            feeData.expense.forEach(item => {
+                if (checkedState[item.key]) expenseTotal += item.value;
+            });
+
+            const baseSalary = parseFloat(document.getElementById('baseSalaryInfo').value) || 0;
+            const actualSalary = baseSalary + rewardTotal - penaltyTotal - expenseTotal;
+
+            document.getElementById('rewardTotal').textContent = rewardTotal.toFixed(2);
+            document.getElementById('penaltyTotal').textContent = penaltyTotal.toFixed(2);
+            document.getElementById('expenseTotal').textContent = expenseTotal.toFixed(2);
+            document.getElementById('actualSalary').textContent = actualSalary.toFixed(2);
+        }
+
+        function deleteFee(type, key) {
+            const item = feeData[type].find(i => i.key === key);
+            if (item) {
+                item.value = 0;
+                item.remark = '';
+            }
+            const grid = document.getElementById(type + 'Grid');
+            const amountInput = grid.querySelector(`input[type="number"][data-key="${key}"]`);
+            if (amountInput) amountInput.value = '0';
+            updateSummary();
+        }
+
+        function editFee(type, key) {
+            const item = feeData[type].find(i => i.key === key);
+            if (!item) return;
+
+            currentAddType = type;
+            const titleMap = { reward: '编辑奖励', expense: '编辑支出', penalty: '编辑扣罚' };
+            document.getElementById('addFeeModalTitle').textContent = titleMap[type] || '编辑费用类型';
+
+            // 填充下拉框并禁用（编辑时不允许改类型）
+            const select = document.getElementById('feeTypeSelect');
+            select.innerHTML = `<option value="${item.key}">${item.name}</option>`;
+            select.value = item.key;
+            select.disabled = true;
+
+            // 回填金额和备注
+            document.getElementById('feeAmountInput').value = item.value;
+            document.getElementById('feeRemarkInput').value = item.remark || '';
+            document.querySelector('input[name="isDeduct"][value="1"]').checked = true;
+
+            document.getElementById('addFeeModal').style.display = 'flex';
+        }
+
+        let currentAddType = '';
+
+        function openAddFeeModal(type) {
+            currentAddType = type;
+            const titleMap = { reward: '添加奖励', expense: '添加支出', penalty: '添加扣罚' };
+            document.getElementById('addFeeModalTitle').textContent = titleMap[type] || '添加费用类型';
+
+            // 填充下拉框：只显示该分类下尚未添加（value === 0）的类型
+            const select = document.getElementById('feeTypeSelect');
+            select.innerHTML = '<option value="">选择费用类型</option>';
+            feeData[type].forEach(item => {
+                if (item.value === 0) {
+                    const option = document.createElement('option');
+                    option.value = item.key;
+                    option.textContent = item.name;
+                    select.appendChild(option);
+                }
+            });
+
+            // 清空表单
+            select.value = '';
+            document.getElementById('feeAmountInput').value = '';
+            document.getElementById('feeRemarkInput').value = '';
+            document.querySelector('input[name="isDeduct"][value="1"]').checked = true;
+
+            document.getElementById('addFeeModal').style.display = 'flex';
+        }
+
+        function closeAddFeeModal() {
+            document.getElementById('addFeeModal').style.display = 'none';
+            document.getElementById('feeTypeSelect').disabled = false;
+        }
+
+        function saveAddFee() {
+            const select = document.getElementById('feeTypeSelect');
+            const key = select.value;
+            const amount = parseFloat(document.getElementById('feeAmountInput').value);
+            const remark = document.getElementById('feeRemarkInput').value.trim();
+
+            if (!key) {
+                alert('请选择费用类型');
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                alert('请输入有效的金额');
+                return;
+            }
+
+            const item = feeData[currentAddType].find(i => i.key === key);
+            if (item) {
+                item.value = amount;
+                item.remark = remark;
+            }
+
+            renderLeft();
+            updateSummary();
+            closeAddFeeModal();
+        }
+
+        // 初始化
+        ['reward', 'penalty', 'expense'].forEach(type => {
+            feeData[type].forEach(item => {
+                checkedState[item.key] = item.value > 0;
+            });
+        });
+        renderLeft();
+    </script>
+</body>
+</html>
