@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>育婴师需求填写</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题 -->
+        <div class="header">
+            <div class="header-title">填写需求</div>
+            <div class="header-subtitle">告诉我们您的需求，为您匹配最合适的育婴师</div>
+        </div>
+
+        <form id="demandForm">
+            <!-- 核心信息区（必填） -->
+            <div class="core-section">
+                <div class="section-title">
+                    <span class="section-icon">👤</span>
+                    基本信息
+                    <span class="required-tag">*必填</span>
+                </div>
+
+                <div class="form-group compact">
+                    <label class="form-label required">客户姓名</label>
+                    <input type="text" class="form-input" name="customerName" placeholder="请输入您的姓名">
+                </div>
+
+                <div class="form-group compact">
+                    <label class="form-label required">联系电话</label>
+                    <input type="tel" class="form-input" name="phone" placeholder="请输入手机号码" maxlength="11">
+                </div>
+            </div>
+
+            <!-- 快速填写区（选填，默认展开） -->
+            <div class="quick-section">
+                <div class="section-title">
+                    <span class="section-icon">⚡</span>
+                    快速填写
+                    <span class="optional-tag">选填</span>
+                </div>
+
+                <div class="form-group compact">
+                    <label class="form-label">服务类型</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="serviceType" value="住家">
+                            <span class="radio-text">住家</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="serviceType" value="白班">
+                            <span class="radio-text">白班</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group compact">
+                    <label class="form-label">薪资预算（元/月）</label>
+                    <div class="salary-range">
+                        <input type="number" class="form-input" name="salaryMin" placeholder="最低">
+                        <span class="salary-separator">-</span>
+                        <input type="number" class="form-input" name="salaryMax" placeholder="最高">
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div class="form-group compact">
+                        <label class="form-label">宝宝年龄</label>
+                        <select class="form-select" name="babyAge">
+                            <option value="">请选择</option>
+                            <option value="0-6个月">0-6个月</option>
+                            <option value="6-12个月">6-12个月</option>
+                            <option value="1-2岁">1-2岁</option>
+                            <option value="2-3岁">2-3岁</option>
+                            <option value="3岁以上">3岁以上</option>
+                        </select>
+                    </div>
+                    <div class="form-group compact">
+                        <label class="form-label">期望到岗</label>
+                        <input type="date" class="form-input" name="startDate">
+                    </div>
+                </div>
+
+                <div class="form-group compact">
+                    <label class="form-label">服务地址</label>
+                    <input type="text" class="form-input" name="address" placeholder="选填，可稍后补充">
+                </div>
+            </div>
+
+            <!-- 补充信息（可折叠） -->
+            <div class="collapsible-section">
+                <div class="collapsible-header" id="extraToggle">
+                    <div class="collapsible-title">
+                        <span class="section-icon">📋</span>
+                        补充信息
+                        <span class="optional-tag">选填</span>
+                    </div>
+                    <span class="collapsible-arrow">▼</span>
+                </div>
+                <div class="collapsible-content hidden" id="extraContent">
+                
+
+                    <div class="form-group compact">
+                        <label class="form-label">服务期限</label>
+                        <div class="radio-group">
+                            <label class="radio-item small">
+                                <input type="radio" name="duration" value="3个月">
+                                <span class="radio-text">3个月</span>
+                            </label>
+                            <label class="radio-item small">
+                                <input type="radio" name="duration" value="半年">
+                                <span class="radio-text">半年</span>
+                            </label>
+                            <label class="radio-item small">
+                                <input type="radio" name="duration" value="1年或以上">
+                                <span class="radio-text">1年或以上</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="two-col">
+                        <div class="form-group compact">
+                            <label class="form-label">家庭人口</label>
+                            <div class="number-stepper">
+                                <button type="button" class="stepper-btn minus">-</button>
+                                <input type="number" class="stepper-input" name="familyCount" value="3" min="1" max="10" readonly>
+                                <button type="button" class="stepper-btn plus">+</button>
+                            </div>
+                        </div>
+                        <div class="form-group compact">
+                            <label class="form-label">住房面积</label>
+                            <div class="input-with-unit">
+                                <input type="number" class="form-input" name="houseArea" placeholder="面积">
+                                <span class="unit">㎡</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group compact">
+                        <label class="form-label">是否有宠物</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="hasPet" value="无">
+                                <span class="radio-text">无</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="hasPet" value="有">
+                                <span class="radio-text">有</span>
+                            </label>
+                        </div>
+                        <input type="text" class="form-input hidden" name="petType" placeholder="请填写宠物种类" style="margin-top: 8px;">
+                    </div>
+
+                    <div class="form-group compact">
+                        <label class="form-label">工作内容</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="needSleep" value="需要">
+                                <span class="checkbox-text">带睡</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="needHousework" value="需要">
+                                <span class="checkbox-text">家务</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="needCook" value="需要">
+                                <span class="checkbox-text">做饭</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="exclusiveCare" value="需要">
+                                <span class="checkbox-text">专带</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group compact">
+                        <label class="form-label">阿姨年龄要求</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="ageRequirement" value="50岁以下">
+                                <span class="radio-text">50岁以下</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="ageRequirement" value="48岁以下">
+                                <span class="radio-text">48岁以下</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="ageRequirement" value="45岁以下">
+                                <span class="radio-text">45岁以下</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="ageRequirement" value="40岁以下">
+                                <span class="radio-text">40岁以下</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group compact">
+                        <label class="form-label">地域要求</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="regionRequirement" value="两广优先">
+                                <span class="radio-text">两广优先</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="regionRequirement" value="无地域要求">
+                                <span class="radio-text">无地域要求</span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <div class="form-group compact">
+                        <label class="form-label">其他要求</label>
+                        <textarea class="form-textarea" name="otherRequirements" placeholder="如有其他特殊要求，请在此补充..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- 底部提交按钮 -->
+        <div class="footer-buttons">
+            <button type="button" class="btn btn-submit" id="submitBtn">提交需求</button>
+        </div>
+    </div>
+
+    <!-- 提交成功弹窗 -->
+    <div class="modal hidden" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <div class="modal-title">提交成功</div>
+            <div class="modal-text">您的需求已提交，我们会尽快为您匹配最合适的育婴师！</div>
+            <button type="button" class="btn btn-primary" id="modalConfirm">确定</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

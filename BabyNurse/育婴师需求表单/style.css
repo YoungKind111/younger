@@ -1,0 +1,552 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(180deg, #F0E6F5 0%, #FFF8FB 30%, #F5F0FA 100%);
+    color: #333;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 100px;
+}
+
+/* 顶部标题 */
+.header {
+    background: linear-gradient(135deg, #9B7ED4 0%, #7B5AA6 100%);
+    padding: 28px 20px 24px;
+    color: white;
+}
+
+.header-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.header-subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+/* 核心信息区 */
+.core-section {
+    background: white;
+    margin: 12px 12px 0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* 快速填写区 */
+.quick-section {
+    background: white;
+    margin: 12px 12px 0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* 可折叠区域 */
+.collapsible-section {
+    background: white;
+    margin: 12px 12px 0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+.collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s;
+}
+
+.collapsible-header:active {
+    background: #f9f9f9;
+}
+
+.collapsible-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.collapsible-arrow {
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.3s;
+}
+
+.collapsible-arrow.open {
+    transform: rotate(180deg);
+}
+
+.collapsible-content {
+    padding: 0 16px 16px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 区域标题 */
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.section-icon {
+    margin-right: 6px;
+    font-size: 18px;
+}
+
+.required-tag {
+    margin-left: 8px;
+    font-size: 11px;
+    color: #9B7ED4;
+    background: #F5F0FA;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.optional-tag {
+    margin-left: 8px;
+    font-size: 11px;
+    color: #999;
+    background: #f5f5f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 400;
+}
+
+/* 表单组 - 紧凑模式 */
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group.compact {
+    margin-bottom: 12px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 400;
+}
+
+.form-label.required {
+    color: #333;
+    font-weight: 500;
+}
+
+.form-label.required::after {
+    content: '*';
+    color: #9B7ED4;
+    margin-left: 2px;
+}
+
+/* 两列布局 */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* 输入框 */
+.form-input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 15px;
+    color: #333;
+    background: #fafafa;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #7B5AA6;
+    background: white;
+}
+
+.form-input::placeholder {
+    color: #ccc;
+}
+
+/* 下拉选择 */
+.form-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 15px;
+    color: #333;
+    background: #fafafa;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #7B5AA6;
+    background-color: white;
+}
+
+/* 单选按钮组 */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.radio-item {
+    position: relative;
+    cursor: pointer;
+}
+
+.radio-item input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-text {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid #e8e8e8;
+    border-radius: 18px;
+    font-size: 13px;
+    color: #666;
+    background: #fafafa;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.radio-item input:checked + .radio-text {
+    background: #F5F0FA;
+    border-color: #7B5AA6;
+    color: #7B5AA6;
+    font-weight: 500;
+}
+
+.radio-item.small .radio-text {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* 复选框组 */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.checkbox-item {
+    position: relative;
+    cursor: pointer;
+}
+
+.checkbox-item input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.checkbox-text {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid #e8e8e8;
+    border-radius: 18px;
+    font-size: 13px;
+    color: #666;
+    background: #fafafa;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.checkbox-item input:checked + .checkbox-text {
+    background: #F5F0FA;
+    border-color: #7B5AA6;
+    color: #7B5AA6;
+    font-weight: 500;
+}
+
+/* 薪资区间 */
+.salary-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.salary-range .form-input {
+    flex: 1;
+}
+
+.salary-separator {
+    color: #999;
+    font-size: 14px;
+}
+
+/* 数字步进器 */
+.number-stepper {
+    display: flex;
+    align-items: center;
+}
+
+.stepper-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e8e8e8;
+    background: #fafafa;
+    font-size: 16px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.stepper-btn:active {
+    background: #f0f0f0;
+}
+
+.stepper-btn.minus {
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+}
+
+.stepper-btn.plus {
+    border-radius: 0 8px 8px 0;
+    border-left: none;
+}
+
+.stepper-input {
+    width: 50px;
+    height: 36px;
+    border: 1px solid #e8e8e8;
+    text-align: center;
+    font-size: 15px;
+    color: #333;
+    background: white;
+    -webkit-appearance: none;
+}
+
+/* 带单位的输入框 */
+.input-with-unit {
+    position: relative;
+}
+
+.input-with-unit .form-input {
+    padding-right: 36px;
+}
+
+.input-with-unit .unit {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 13px;
+}
+
+/* 文本域 */
+.form-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: #333;
+    background: #fafafa;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    -webkit-appearance: none;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #7B5AA6;
+    background: white;
+}
+
+.form-textarea::placeholder {
+    color: #ccc;
+}
+
+/* 底部按钮 */
+.footer-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid #f0f0f0;
+    z-index: 100;
+}
+
+.btn {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 23px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #9B7ED4 0%, #7B5AA6 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(123, 90, 166, 0.3);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #9B7ED4 0%, #7B5AA6 100%);
+    color: white;
+    width: 100%;
+    margin-top: 16px;
+}
+
+/* 隐藏元素 */
+.hidden {
+    display: none !important;
+}
+
+/* 弹窗 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+    animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.modal-text {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 表单验证错误提示 */
+.form-input.error,
+.form-select.error,
+.form-textarea.error {
+    border-color: #9B7ED4;
+    background: #F5F0FA;
+}
+
+.error-message {
+    color: #9B7ED4;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* 响应式 */
+@media (max-width: 360px) {
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+    
+    .radio-text,
+    .checkbox-text {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
