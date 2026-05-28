@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推广人管理</title>
+  <link rel="stylesheet" href="../公共组件/shared-styles.css">
+  <script src="../公共组件/shared-menu.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <script src="https://unpkg.com/element-plus"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .page-title { font-size: 22px; font-weight: 600; color: #1f2d3d; margin-bottom: 24px; }
+    .stat-cards { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 13px; color: #8c8c8c; margin-top: 4px; }
+    .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card-title { font-size: 16px; font-weight: 600; color: #1f2d3d; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .level-tag-1 { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+    .level-tag-2 { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+    .level-tag-3 { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+    .level-tag-4 { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+    .level-tag-5 { background: #fff2f0; color: #f5222d; border: 1px solid #ffccc7; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+    .drawer-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e8e8e8; background: #fafafa; }
+    .drawer-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 16px; }
+    .drawer-info { flex: 1; }
+    .drawer-name { font-size: 18px; font-weight: 600; }
+    .drawer-meta { font-size: 13px; color: #8c8c8c; margin-top: 4px; }
+    .detail-tabs { display: flex; border-bottom: 1px solid #f0f0f0; background: #fff; }
+    .detail-tab { padding: 12px 20px; font-size: 14px; color: #595959; cursor: pointer; border-bottom: 2px solid transparent; }
+    .detail-tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
+    .detail-content { padding: 20px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+    .info-label { color: #8c8c8c; }
+    .info-value { font-weight: 500; }
+    .timeline-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .timeline-time { font-size: 12px; color: #8c8c8c; margin-bottom: 4px; }
+    .timeline-content { font-size: 13px; color: #262626; }
+    .team-card { background: #fafafa; border-radius: 8px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; }
+    .team-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e6f7ff; color: #1890ff; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 12px; }
+    .team-info { flex: 1; }
+    .team-name { font-size: 14px; font-weight: 500; }
+    .team-meta { font-size: 12px; color: #8c8c8c; margin-top: 2px; }
+    .team-amount { font-size: 14px; color: #f5222d; font-weight: 600; }
+    .team-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+    .team-header-title { font-size: 16px; font-weight: 600; }
+    .team-header-stat { font-size: 13px; color: #8c8c8c; }
+    .team-empty { text-align: center; padding: 48px 20px; color: #bfbfbf; }
+    .team-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .team-empty-text { font-size: 14px; }
+    .btn-primary { background: #1890ff; color: #fff; border: none; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    .btn-success { background: #52c41a; color: #fff; border: none; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    .btn-default { background: #fff; color: #595959; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    .btn-danger { background: #ff4d4f; color: #fff; border: none; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+
+    .tier-badge { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="main-nav"></div>
+    <div class="page-container">
+      <div class="page-title">推广人管理</div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-value" style="color:#1890ff;">{{ stats.total }}</div>
+          <div class="stat-label">推广人总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#8c8c8c;">{{ stats.star1 }}</div>
+          <div class="stat-label">1星</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#1890ff;">{{ stats.star2 }}</div>
+          <div class="stat-label">2星</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#52c41a;">{{ stats.star3 }}</div>
+          <div class="stat-label">3星</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#fa8c16;">{{ stats.star4 }}</div>
+          <div class="stat-label">4星</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#f5222d;">{{ stats.star5 }}</div>
+          <div class="stat-label">5星</div>
+        </div>
+      </div>
+
+      <!-- 筛选 -->
+      <div class="card">
+        <div class="filter-bar">
+          <el-input v-model="filter.name" placeholder="姓名/手机号" size="small" style="width:180px;"></el-input>
+          <el-select v-model="filter.channel" placeholder="所属渠道" size="small" style="width:140px;">
+            <el-option v-for="opt in channelOptions" :key="opt.value" :label="opt.label" :value="opt.value"></el-option>
+          </el-select>
+          <el-select v-model="filter.level" placeholder="推广星级" size="small" style="width:120px;">
+            <el-option label="全部星级" value=""></el-option>
+            <el-option label="1星" value="1"></el-option>
+            <el-option label="2星" value="2"></el-option>
+            <el-option label="3星" value="3"></el-option>
+            <el-option label="4星" value="4"></el-option>
+            <el-option label="5星" value="5"></el-option>
+          </el-select>
+          <el-select v-model="filter.status" placeholder="状态" size="small" style="width:120px;">
+            <el-option label="全部状态" value=""></el-option>
+            <el-option label="正常" value="active"></el-option>
+            <el-option label="已冻结" value="frozen"></el-option>
+          </el-select>
+          <el-date-picker v-model="filter.dateRange" type="daterange" range-separator="至" start-placeholder="注册开始" end-placeholder="注册结束" size="small" style="width:240px;"></el-date-picker>
+          <el-button type="primary" size="small" @click="handleSearch">查询</el-button>
+          <el-button size="small" @click="resetFilter">重置</el-button>
+
+        </div>
+
+        <!-- 列表 -->
+        <el-table :data="promoterList" stripe style="width:100%" v-loading="loading">
+          <el-table-column type="selection" width="50"></el-table-column>
+          <el-table-column label="推广人" width="160">
+            <template #default="scope">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1890ff,#36cfc9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;">{{ scope.row.name.charAt(0) }}</div>
+                <div>
+                  <div style="font-weight:500;">{{ scope.row.name }} <span :class="'level-tag-' + scope.row.level">{{ levelText(scope.row.level) }}</span></div>
+                  <div style="font-size:12px;color:#8c8c8c;">{{ scope.row.phone }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="所属渠道" prop="channelName" width="120"></el-table-column>
+          <el-table-column label="上级/团队" width="140">
+            <template #default="scope">
+              <div style="font-size:13px;">
+                <div v-if="scope.row.parentName">上级：{{ scope.row.parentName }}</div>
+                <div v-else style="color:#8c8c8c;">无上级</div>
+                <div style="color:#1890ff;cursor:pointer;" @click="showTeam(scope.row)">团队 {{ scope.row.teamSize }} 人 ›</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="累计业绩" width="180">
+            <template #default="scope">
+              <div style="font-size:13px;">
+                <div>推荐 {{ scope.row.clueCount }} / 签约 {{ scope.row.signedCount }} / 上户 {{ scope.row.workedCount }}单 / 下户 {{ scope.row.completedCount }}单</div>
+                <div style="color:#f5222d;font-weight:600;">佣金 ¥{{ scope.row.totalCommission }}</div>
+              </div>
+            </template>
+          </el-table-column>
+
+          <!-- 分销层级由上级关系自动推导：有上级=二级，无上级=一级 -->
+          <el-table-column label="状态" width="90">
+            <template #default="scope">
+              <el-tag size="small" :type="scope.row.status === 'active' ? 'success' : 'warning'">
+                {{ statusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="注册时间" prop="registerTime" width="150"></el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="scope">
+              <el-button type="text" size="small" @click="viewDetail(scope.row)">详情</el-button>
+
+              <el-button type="text" size="small" :style="scope.row.status === 'frozen' ? 'color:#52c41a;' : 'color:#fa8c16;'" @click="toggleStatus(scope.row, scope.row.status === 'frozen' ? 'active' : 'frozen')">
+                {{ scope.row.status === 'frozen' ? '解冻' : '冻结' }}
+              </el-button>
+
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <el-pagination layout="total, prev, pager, next" :total="86" :page-size="10"></el-pagination>
+        </div>
+      </div>
+
+      <!-- 详情抽屉 -->
+      <el-drawer v-model="detailDrawerVisible" :title="currentPromoter ? currentPromoter.name + ' 详情' : '推广人详情'" size="560px">
+        <div v-if="currentPromoter">
+          <div class="drawer-header">
+            <div class="drawer-avatar">{{ currentPromoter.name.charAt(0) }}</div>
+            <div class="drawer-info">
+              <div class="drawer-name">{{ currentPromoter.name }} <span :class="'level-tag-' + currentPromoter.level">{{ levelText(currentPromoter.level) }}</span></div>
+              <div class="drawer-meta">{{ currentPromoter.phone }} | {{ currentPromoter.channelName }} | 注册于 {{ currentPromoter.registerTime }}</div>
+            </div>
+          </div>
+          <div class="detail-tabs">
+            <div class="detail-tab" :class="{ active: detailTab === 'info' }" @click="detailTab = 'info'">基本信息</div>
+            <div class="detail-tab" :class="{ active: detailTab === 'performance' }" @click="detailTab = 'performance'">业绩统计</div>
+            <div class="detail-tab" :class="{ active: detailTab === 'commission' }" @click="detailTab = 'commission'">佣金明细</div>
+
+            <div class="detail-tab" :class="{ active: detailTab === 'team' }" @click="detailTab = 'team'">团队</div>
+
+          </div>
+          <div class="detail-content">
+            <div v-if="detailTab === 'info'">
+              <div class="info-grid">
+                <div class="info-item"><span class="info-label">姓名</span><span class="info-value">{{ currentPromoter.name }}</span></div>
+                <div class="info-item"><span class="info-label">手机号</span><span class="info-value">{{ currentPromoter.phone }}</span></div>
+                <div class="info-item"><span class="info-label">身份证号</span><span class="info-value">{{ currentPromoter.idCard }}</span></div>
+                <div class="info-item"><span class="info-label">所属渠道</span><span class="info-value">{{ currentPromoter.channelName }}</span></div>
+                <div class="info-item"><span class="info-label">推广星级</span><span class="info-value">{{ levelText(currentPromoter.level) }}</span></div>
+                <div class="info-item"><span class="info-label">上级推广人</span><span class="info-value">{{ currentPromoter.parentName || '无（一级推广人）' }}</span></div>
+                <div class="info-item"><span class="info-label">团队人数</span><span class="info-value">{{ currentPromoter.teamSize }} 人</span></div>
+
+                <div class="info-item"><span class="info-label">银行卡号</span><span class="info-value">{{ currentPromoter.bankCard }}</span></div>
+                <div class="info-item"><span class="info-label">开户行</span><span class="info-value">{{ currentPromoter.bankName }} {{ currentPromoter.bankBranch }}</span></div>
+              </div>
+            </div>
+            <div v-if="detailTab === 'performance'">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#1890ff;">{{ currentPromoter.clueCount }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">累计推荐</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#52c41a;">{{ currentPromoter.signedCount }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">累计签约</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#722ed1;">{{ currentPromoter.workedCount }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">累计上户</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#13c2c2;">{{ currentPromoter.completedCount }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">累计下户</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#f5222d;">¥{{ currentPromoter.totalCommission }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">累计佣金</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:#fafafa;border-radius:8px;">
+                  <div style="font-size:24px;font-weight:700;color:#13c2c2;">{{ currentPromoter.teamSize }}</div>
+                  <div style="font-size:12px;color:#8c8c8c;margin-top:4px;">团队成员</div>
+                </div>
+              </div>
+            </div>
+            <div v-if="detailTab === 'commission'">
+              <div style="margin-bottom:12px;font-size:14px;color:#595959;">
+                <span style="margin-right:16px;">一级佣金（直推）¥{{ directCommissionTotal }}</span>
+                <span v-if="secondCommissionTotal > 0">二级佣金（团队）¥{{ secondCommissionTotal }}</span>
+              </div>
+              <div v-for="(item, idx) in commissionRecords" :key="idx" class="timeline-item">
+                <div class="timeline-time">{{ item.time }}</div>
+                <div class="timeline-content">
+                  {{ item.person }} {{ item.action }} — 合同 ¥{{ item.contractAmount }}
+                  <span v-if="item.tier === 'second'" style="background:#fff7e6;color:#fa8c16;padding:0 6px;border-radius:4px;font-size:11px;margin-left:6px;">团队二级</span>
+                  — 佣金 <b style="color:#f5222d;">¥{{ item.amount }}</b>
+                </div>
+              </div>
+              <div v-if="commissionRecords.length === 0" style="text-align:center;padding:40px;color:#bfbfbf;font-size:13px;">暂无佣金明细</div>
+            </div>
+
+            <div v-if="detailTab === 'team'">
+              <div v-if="teamMembers.length > 0">
+                <div style="margin-bottom:12px;font-size:14px;color:#595959;">团队成员共 {{ teamMembers.length }} 人，佣金贡献 ¥{{ teamTotalContribution }}</div>
+                <div v-for="(member, idx) in teamMembers" :key="idx" class="team-card">
+                  <div class="team-avatar">{{ member.name.charAt(0) }}</div>
+                  <div class="team-info">
+                    <div class="team-name">{{ member.name }} <span :class="'level-tag-' + member.level">{{ levelText(member.level) }}</span></div>
+                    <div class="team-meta">推荐 {{ member.clueCount }}人 · 签约 {{ member.signedCount }}人 · 上户 {{ member.workedCount }}单 · 下户 {{ member.completedCount }}单</div>
+                  </div>
+                  <div class="team-amount">+¥{{ member.contribution }}</div>
+                </div>
+              </div>
+              <div v-else style="text-align:center;padding:40px;color:#bfbfbf;font-size:13px;">暂无团队成员</div>
+            </div>
+
+          </div>
+        </div>
+      </el-drawer>
+
+      <!-- 团队弹窗 -->
+      <el-dialog v-model="teamDialogVisible" title="团队成员" width="560px">
+        <div v-if="selectedTeam.length > 0">
+          <div class="team-header">
+            <div>
+              <div class="team-header-title">{{ selectedTeam[0].parentName || '团队' }} 的下级推广人</div>
+              <div class="team-header-stat">共 {{ selectedTeam.length }}人 · 累计推荐 {{ selectedTeam.reduce((s,m)=>s+m.clueCount,0) }}人 · 累计上户 {{ selectedTeam.reduce((s,m)=>s+m.workedCount,0) }}单</div>
+            </div>
+          </div>
+          <div v-for="(member, idx) in selectedTeam" :key="idx" class="team-card">
+            <div class="team-avatar">{{ member.name.charAt(0) }}</div>
+            <div class="team-info">
+              <div class="team-name">{{ member.name }} <span :class="'level-tag-' + member.level">{{ levelText(member.level) }}</span></div>
+              <div class="team-meta">{{ member.phone }} · 推荐 {{ member.clueCount }}人 · 签约 {{ member.signedCount }}人 · 上户 {{ member.workedCount }}单 · 下户 {{ member.completedCount }}单</div>
+            </div>
+            <div class="team-amount">+¥{{ member.contribution }}</div>
+          </div>
+        </div>
+        <div v-else class="team-empty">
+          <div class="team-empty-icon">👥</div>
+          <div class="team-empty-text">暂无团队成员</div>
+          <div style="font-size:12px;color:#8c8c8c;margin-top:8px;">该推广人尚未发展下级推广人</div>
+        </div>
+      </el-dialog>
+
+
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+    const app = createApp({
+      setup() {
+        const stats = ref({ total: 86, star1: 12, star2: 18, star3: 25, star4: 16, star5: 8, monthNew: 7 });
+        const loading = ref(false);
+        const filter = reactive({ name: '', channel: '', level: '', status: '', dateRange: null });
+        const channelOptions = ref([{ label: '全部渠道', value: '' }, { label: '线上推广', value: 'online' }, { label: '线下门店', value: 'offline' }, { label: '转介绍', value: 'referral' }]);
+        const parentOptions = ref([{ id: 1, name: '李秀英' }, { id: 2, name: '张丽华' }, { id: 3, name: '王小芳' }]);
+
+
+        const promoterList = ref([
+          { id: 1, name: '李秀英', phone: '138****1357', channelName: '线下门店', channelId: 'offline', level: '5', tier: 'first', parentId: null, parentName: '', teamSize: 3, clueCount: 23, signedCount: 14, workedCount: 9, completedCount: 7, totalCommission: '1,280.00', monthCommission: '225.00', status: 'active', registerTime: '2025-08-15', idCard: '310***********1234', bankCard: '6222 **** **** 5678', bankName: '中国工商银行', bankBranch: '上海浦东支行' },
+          { id: 2, name: '张丽华', phone: '139****2468', channelName: '线上推广', channelId: 'online', level: '4', tier: 'first', parentId: null, parentName: '', teamSize: 2, clueCount: 18, signedCount: 10, workedCount: 7, completedCount: 5, totalCommission: '980.00', monthCommission: '180.00', status: 'active', registerTime: '2025-09-20', idCard: '310***********5678', bankCard: '6222 **** **** 9012', bankName: '中国建设银行', bankBranch: '上海徐汇支行' },
+          { id: 3, name: '王小芳', phone: '137****3579', channelName: '转介绍', channelId: 'referral', level: '4', tier: 'first', parentId: null, parentName: '', teamSize: 1, clueCount: 15, signedCount: 9, workedCount: 6, completedCount: 4, totalCommission: '850.00', monthCommission: '150.00', status: 'active', registerTime: '2025-10-05', idCard: '310***********9012', bankCard: '6222 **** **** 3456', bankName: '中国农业银行', bankBranch: '上海静安支行' },
+          { id: 4, name: '张三', phone: '136****4680', channelName: '线下门店', channelId: 'offline', level: '3', tier: 'second', parentId: 1, parentName: '李秀英', teamSize: 0, clueCount: 8, signedCount: 5, workedCount: 3, completedCount: 2, totalCommission: '420.00', monthCommission: '75.00', status: 'active', registerTime: '2025-11-12', idCard: '310***********2468', bankCard: '6222 **** **** 7890', bankName: '中国银行', bankBranch: '上海黄浦支行' },
+          { id: 5, name: '李四', phone: '135****5791', channelName: '线上推广', channelId: 'online', level: '2', tier: 'second', parentId: 1, parentName: '李秀英', teamSize: 0, clueCount: 5, signedCount: 3, workedCount: 2, completedCount: 1, totalCommission: '280.00', monthCommission: '50.00', status: 'active', registerTime: '2025-12-01', idCard: '310***********7890', bankCard: '6222 **** **** 1234', bankName: '交通银行', bankBranch: '上海长宁支行' },
+          { id: 6, name: '陈大明', phone: '134****6802', channelName: '线下门店', channelId: 'offline', level: '5', tier: 'first', parentId: null, parentName: '', teamSize: 2, clueCount: 12, signedCount: 6, workedCount: 4, completedCount: 3, totalCommission: '620.00', monthCommission: '110.00', status: 'active', registerTime: '2025-08-22', idCard: '310***********3579', bankCard: '6222 **** **** 5678', bankName: '中国工商银行', bankBranch: '上海虹口支行' },
+          { id: 7, name: '刘小红', phone: '133****7913', channelName: '线上推广', channelId: 'online', level: '1', tier: 'first', parentId: null, parentName: '', teamSize: 0, clueCount: 4, signedCount: 2, workedCount: 1, completedCount: 0, totalCommission: '150.00', monthCommission: '25.00', status: 'frozen', registerTime: '2026-01-15', idCard: '310***********4680', bankCard: '6222 **** **** 9012', bankName: '中国建设银行', bankBranch: '上海杨浦支行' },
+          { id: 8, name: '王五', phone: '132****8024', channelName: '转介绍', channelId: 'referral', level: '2', tier: 'second', parentId: 2, parentName: '张丽华', teamSize: 0, clueCount: 3, signedCount: 2, workedCount: 1, completedCount: 1, totalCommission: '180.00', monthCommission: '30.00', status: 'active', registerTime: '2026-02-10', idCard: '310***********1357', bankCard: '6222 **** **** 3456', bankName: '中国农业银行', bankBranch: '上海普陀支行' }
+        ]);
+
+        const detailDrawerVisible = ref(false);
+        const currentPromoter = ref(null);
+        const detailTab = ref('info');
+
+        const teamDialogVisible = ref(false);
+        const selectedTeam = ref([]);
+
+        const commissionRecords = ref([
+          { time: '2026-04-18 10:30', person: '陈美华', action: '下户结算', contractAmount: '15,000', amount: '75.00', tier: 'first' },
+          { time: '2026-04-17 16:45', person: '赵小芳', action: '下户结算', contractAmount: '12,000', amount: '60.00', tier: 'first' },
+          { time: '2026-04-16 14:20', person: '张三', action: '下户结算（团队二级）', contractAmount: '4,200', amount: '63.00', tier: 'second' },
+          { time: '2026-04-15 09:18', person: '李明', action: '下户结算', contractAmount: '15,000', amount: '75.00', tier: 'first' },
+          { time: '2026-04-12 16:00', person: '李四', action: '下户结算（团队二级）', contractAmount: '2,800', amount: '42.00', tier: 'second' },
+          { time: '2026-04-10 11:05', person: '张秀英', action: '下户结算（第2次）', contractAmount: '18,000', amount: '99.00', tier: 'first' },
+          { time: '2026-04-05 14:22', person: '周丽华', action: '下户结算', contractAmount: '10,000', amount: '50.00', tier: 'first' }
+        ]);
+
+        const teamMembers = computed(() => {
+          if (!currentPromoter.value) return [];
+          return promoterList.value.filter(p => p.parentId === currentPromoter.value.id).map(p => ({
+            ...p, contribution: (parseFloat(p.totalCommission.replace(/,/g, '')) * 0.15).toFixed(2)
+          }));
+        });
+        const teamTotalContribution = computed(() => teamMembers.value.reduce((sum, m) => sum + parseFloat(m.contribution), 0).toFixed(2));
+        const directCommissionTotal = computed(() => commissionRecords.value.filter(r => r.tier === 'first').reduce((sum, r) => sum + parseFloat(r.amount), 0).toFixed(2));
+        const secondCommissionTotal = computed(() => commissionRecords.value.filter(r => r.tier === 'second').reduce((sum, r) => sum + parseFloat(r.amount), 0).toFixed(2));
+
+
+        const levelText = (l) => ({ '1': '1星', '2': '2星', '3': '3星', '4': '4星', '5': '5星' }[l] || l);
+        const statusText = (s) => ({ active: '正常', frozen: '已冻结' }[s] || s);
+
+        const handleSearch = () => { ElementPlus.ElMessage.info('执行查询'); };
+        const resetFilter = () => { Object.assign(filter, { name: '', channel: '', level: '', status: '', dateRange: null }); };
+
+        const viewDetail = (row) => { currentPromoter.value = row; detailDrawerVisible.value = true; detailTab.value = 'info'; };
+        const showTeam = (row) => {
+          const members = promoterList.value.filter(p => p.parentId === row.id);
+          selectedTeam.value = members.map(p => ({
+            ...p,
+            parentName: row.name,
+            contribution: (parseFloat(p.totalCommission.replace(/,/g, '')) * 0.15).toFixed(2)
+          }));
+          teamDialogVisible.value = true;
+        };
+        const toggleStatus = (row, status) => { row.status = status; ElementPlus.ElMessage.success(`已${status === 'frozen' ? '冻结' : '解冻'}`); };
+
+
+
+        return {
+          stats, loading, filter, channelOptions, parentOptions, promoterList,
+          detailDrawerVisible, currentPromoter, detailTab,
+          teamDialogVisible, selectedTeam,
+          commissionRecords, teamMembers, teamTotalContribution, directCommissionTotal, secondCommissionTotal,
+          levelText, statusText, handleSearch, resetFilter,
+          viewDetail, showTeam, toggleStatus
+        };
+      }
+    });
+    app.use(ElementPlus);
+    app.mount('#app');
+    SharedMenu.initPageLayout('promoter', { title: '推广人管理', breadcrumb: '<a href="/招募与培训/首页看板/dashboard.html">首页</a> / <a href="/招募与培训/推广管理/channel-enhanced.html">渠道管理</a> / 推广人管理' });
+  </script>
+</body>
+</html>

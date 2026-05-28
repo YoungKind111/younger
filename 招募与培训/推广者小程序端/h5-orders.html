@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>接单赚钱 - 护理招募</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #262626; -webkit-tap-highlight-color: transparent; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+
+    /* 轮播图 */
+    .banner-carousel { position: relative; overflow: hidden; border-radius: 12px; margin: 12px; height: 120px; }
+    .banner-track { display: flex; transition: transform 0.4s ease; height: 100%; }
+    .banner-slide { min-width: 100%; height: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff4d8f, #ff1a6c); border-radius: 12px; color: #fff; text-align: center; padding: 20px; }
+    .banner-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .banner-desc { font-size: 13px; opacity: 0.9; }
+    .banner-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+    .banner-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+    .banner-dot.active { background: #fff; }
+
+    /* 头部 */
+    .order-header { background: #fff; padding: 16px; position: sticky; top: 0; z-index: 50; }
+    .order-header-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    .order-header-sub { font-size: 12px; color: #8c8c8c; }
+
+    /* 月份选择 */
+    .month-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .month-scroll::-webkit-scrollbar { display: none; }
+    .month-tag { flex-shrink: 0; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 500; background: #f5f5f5; color: #595959; cursor: pointer; border: none; }
+    .month-tag.active { background: linear-gradient(135deg, #ff4d8f, #ff1a6c); color: #fff; font-weight: 600; }
+
+    /* 订单卡片 */
+    .order-card { background: #fff; margin: 12px; border-radius: 12px; padding: 16px; }
+    .order-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .order-type-tag { font-size: 12px; color: #fa8c16; background: #fff7e6; padding: 3px 10px; border-radius: 6px; font-weight: 500; }
+    .order-fee { display: flex; align-items: baseline; gap: 4px; }
+    .order-fee-label { font-size: 12px; color: #8c8c8c; }
+    .order-fee-value { font-size: 24px; font-weight: 700; color: #f5222d; }
+
+    /* 订单信息 */
+    .order-info-list { margin-bottom: 14px; }
+    .order-info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+    .order-info-row:last-child { border-bottom: none; }
+    .order-info-label { color: #8c8c8c; }
+    .order-info-value { color: #262626; font-weight: 500; }
+
+    /* 操作按钮 */
+    .order-actions { display: flex; gap: 10px; }
+    .btn-share { flex: 1; padding: 11px 0; border-radius: 22px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid #ff4d8f; color: #ff4d8f; background: #fff; }
+    .btn-grab { flex: 1; padding: 11px 0; border-radius: 22px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; color: #fff; background: linear-gradient(135deg, #ff4d8f, #ff1a6c); }
+
+    /* 底部导航 */
+    .tabbar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: #fff; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
+    .tabbar-item { text-align: center; flex: 1; cursor: pointer; }
+    .tabbar-icon { font-size: 22px; color: #8c8c8c; }
+    .tabbar-item.active .tabbar-icon { color: #ff4d8f; }
+    .tabbar-label { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+    .tabbar-item.active .tabbar-label { color: #ff4d8f; }
+
+    /* 弹窗 */
+
+    /* 滚动通知 */
+    .notice-bar { display: flex; align-items: center; background: #fff; margin: 0 12px 10px; border-radius: 10px; padding: 0 12px; height: 32px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .notice-icon { font-size: 12px; margin-right: 8px; flex-shrink: 0; color: #ff4d8f; }
+    .notice-scroll { flex: 1; height: 32px; overflow: hidden; position: relative; }
+    .notice-track { transition: transform 0.5s ease-in-out; }
+    .notice-item { height: 32px; display: flex; align-items: center; font-size: 12px; color: #595959; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 轮播图 -->
+    <div class="banner-carousel">
+      <div class="banner-track" :style="{ transform: 'translateX(-' + bannerIndex * 100 + '%)' }">
+        <div class="banner-slide" v-for="(b, i) in banners" :key="i">
+          <div>
+            <div class="banner-title">{{ b.title }}</div>
+            <div class="banner-desc">{{ b.desc }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="banner-dots">
+        <div v-for="(b, i) in banners" :key="i" class="banner-dot" :class="{ active: bannerIndex === i }"></div>
+      </div>
+    </div>
+
+    <!-- 滚动通知 -->
+    <div class="notice-bar">
+      <div class="notice-icon">🔥</div>
+      <div class="notice-scroll">
+        <div class="notice-track" :style="{ transform: 'translateY(-' + noticeIndex * 32 + 'px)' }">
+          <div class="notice-item" v-for="(n, i) in noticeList" :key="i">{{ n }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 头部 -->
+    <div class="order-header">
+      <div class="order-header-title">  <span class="order-header-sub">可滑动选择适合您的上单时间</span></div>
+      <div class="month-scroll">
+        <button
+          v-for="m in months"
+          :key="m.value"
+          class="month-tag"
+          :class="{ active: currentMonth === m.value }"
+          @click="currentMonth = m.value"
+        >{{ m.label }}</button>
+      </div>
+    </div>
+
+    <!-- 订单列表 -->
+    <div v-for="(order, idx) in filteredOrders" :key="idx" class="order-card">
+      <div class="order-card-header">
+        <div class="order-type-tag">{{ order.type }}</div>
+        <div class="order-fee">
+          <span class="order-fee-label">到手服务费</span>
+          <span class="order-fee-value">¥{{ order.fee }}</span>
+        </div>
+      </div>
+      <div class="order-info-list">
+        <div class="order-info-row">
+          <span class="order-info-label">预产期</span>
+          <span class="order-info-value">{{ order.dueDate }}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">服务地址</span>
+          <span class="order-info-value">{{ order.address }}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">胎次</span>
+          <span class="order-info-value">{{ order.parity }}</span>
+        </div>
+        <div class="order-info-row">
+          <span class="order-info-label">服务要求</span>
+          <span class="order-info-value">{{ order.requirements }}</span>
+        </div>
+      </div>
+      <div class="order-actions">
+        <button class="btn-share" @click="shareOrder(order)">分享给姐妹</button>
+        <button class="btn-grab" @click="grabOrder(order)">立即抢单</button>
+      </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="tabbar">
+      <div class="tabbar-item active">
+        <div class="tabbar-icon">📋</div>
+        <div class="tabbar-label">接单赚钱</div>
+      </div>
+      <div class="tabbar-item" @click="goTo('h5-center.html')">
+        <div class="tabbar-icon">🏠</div>
+        <div class="tabbar-label">推荐赚钱</div>
+      </div>
+      <div class="tabbar-item" @click="goTo('h5-profile.html')">
+        <div class="tabbar-icon">👤</div>
+        <div class="tabbar-label">我的</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onUnmounted } = Vue;
+    createApp({
+      setup() {
+        const currentMonth = ref('2026-06');
+        const bannerIndex = ref(0);
+        let bannerTimer = null;
+        const banners = ref([
+          { title: '专业月嫂服务', desc: '十年经验，品质保障' },
+          { title: '高额佣金奖励', desc: '推荐成功即享分成' },
+          { title: '灵活接单时间', desc: '自主选择上单档期' }
+        ]);
+        const startBanner = () => {
+          bannerTimer = setInterval(() => {
+            bannerIndex.value = (bannerIndex.value + 1) % banners.value.length;
+          }, 3000);
+        };
+        onUnmounted(() => clearInterval(bannerTimer));
+        startBanner();
+        const months = ref([
+          { label: '2026.06', value: '2026-06' },
+          { label: '2026.07', value: '2026-07' },
+          { label: '2026.08', value: '2026-08' },
+          { label: '2026.09', value: '2026-09' },
+          { label: '2026.10', value: '2026-10' }
+        ]);
+        const orders = ref([
+          {
+            type: '月嫂单',
+            fee: '11500',
+            dueDate: '2026-06-02',
+            address: '广东省深圳市南山区',
+            parity: '一胎',
+            requirements: '懂点中医按摩调理，会广式月子餐',
+            month: '2026-06'
+          },
+          {
+            type: '月嫂单',
+            fee: '12000',
+            dueDate: '2026-06-02',
+            address: '广东省深圳市光明区',
+            parity: '一胎',
+            requirements: '年纪35-45岁，精力好，做事利索',
+            month: '2026-06'
+          },
+          {
+            type: '月嫂单',
+            fee: '13500',
+            dueDate: '2026-07-15',
+            address: '广东省深圳市福田区',
+            parity: '二胎',
+            requirements: '经验丰富，会催乳，懂产后恢复',
+            month: '2026-07'
+          },
+          {
+            type: '育婴师单',
+            fee: '8500',
+            dueDate: '2026-07-20',
+            address: '广东省深圳市宝安区',
+            parity: '一胎',
+            requirements: '有早教经验，会做辅食，耐心细致',
+            month: '2026-07'
+          },
+          {
+            type: '月嫂单',
+            fee: '15000',
+            dueDate: '2026-08-10',
+            address: '广东省深圳市罗湖区',
+            parity: '一胎',
+            requirements: '金牌月嫂经验，会月子餐，懂新生儿护理',
+            month: '2026-08'
+          }
+        ]);
+
+        const filteredOrders = computed(() => {
+          return orders.value.filter(o => o.month === currentMonth.value);
+        });
+
+        const grabOrder = (order) => {
+          window.location.href = 'registration-form.html';
+        };
+        const shareOrder = (order) => {
+          alert('分享订单给姐妹：' + order.type + ' ¥' + order.fee);
+        };
+        const goTo = (url) => { window.location.href = url; };
+        const noticeList = ref([
+          '月嫂叶凡被深圳市龙岗区客户***预订52天',
+          '月嫂王芳被深圳市南山区客户***预订42天',
+          '月嫂李秀英被深圳市福田区客户***预订26天',
+          '月嫂陈美华被深圳市宝安区客户***预订78天',
+          '月嫂赵小芳被深圳市罗湖区客户***预订30天',
+          '月嫂张红霞被深圳市光明区客户***预订45天',
+          '月嫂刘丽被深圳市龙华区客户***预订52天',
+          '月嫂周秀英被深圳市坪山区客户***预订38天'
+        ]);
+        const noticeIndex = ref(0);
+        let noticeTimer = null;
+        const startNotice = () => {
+          noticeTimer = setInterval(() => {
+            noticeIndex.value = (noticeIndex.value + 1) % noticeList.value.length;
+          }, 3000);
+        };
+        onUnmounted(() => clearInterval(noticeTimer));
+        startNotice();
+
+        return { currentMonth, months, orders, filteredOrders, grabOrder, shareOrder, goTo, bannerIndex, banners, noticeList, noticeIndex };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

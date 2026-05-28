@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>佣金钱包 - 护理招募</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #262626; -webkit-tap-highlight-color: transparent; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; }
+
+    /* 余额头部 */
+    .wallet-header { background: linear-gradient(135deg, #ff4d4f, #ff7875); color: #fff; padding: 16px 20px 28px; }
+    .wallet-header-label { font-size: 13px; opacity: 0.9; }
+    .wallet-header-amount { font-size: 44px; font-weight: 700; margin-top: 4px; }
+    .wallet-header-unit { font-size: 14px; opacity: 0.85; margin-top: 2px; }
+
+    /* 统计卡片（悬浮在头部下方） */
+    .stat-card { display: flex; background: #fff; margin: 0 12px; border-radius: 12px; padding: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; top: -16px; }
+    .stat-item { flex: 1; text-align: center; position: relative; }
+    .stat-item:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px; background: #f0f0f0; }
+    .stat-value { font-size: 18px; font-weight: 700; }
+    .stat-value.pending { color: #fa8c16; }
+    .stat-value.total { color: #262626; }
+    .stat-label { font-size: 11px; color: #8c8c8c; margin-top: 4px; }
+
+    /* 头部提现按钮 */
+    .header-action { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .btn-withdraw-sm { padding: 8px 18px; background: #fff; color: #ff4d4f; border: none; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    /* 标签页 */
+    .tabs { display: flex; background: #fff; margin: 0 12px; border-radius: 12px 12px 0 0; overflow: hidden; }
+    .tab-item { flex: 1; text-align: center; padding: 14px; font-size: 14px; color: #8c8c8c; position: relative; cursor: pointer; }
+    .tab-item.active { color: #ff4d4f; font-weight: 600; background: #fff; }
+    .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 25%; right: 25%; height: 3px; background: #ff4d4f; border-radius: 2px; }
+
+    /* 列表容器 */
+    .list-wrap { background: #fff; margin: 0 12px 12px; border-radius: 0 0 12px 12px; padding-bottom: 8px; }
+    .list-item { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; }
+    .list-item:last-child { border-bottom: none; }
+    .list-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-right: 12px; }
+    .list-avatar.in { background: #f6ffed; color: #52c41a; }
+    .list-avatar.out { background: #fff2f0; color: #ff4d4f; }
+    .list-avatar.pending { background: #fff7e6; color: #fa8c16; }
+    .list-info { flex: 1; min-width: 0; }
+    .list-title { font-size: 14px; font-weight: 500; }
+    .list-desc { font-size: 12px; color: #8c8c8c; margin-top: 2px; }
+    .list-right { text-align: right; flex-shrink: 0; }
+    .list-amount { font-size: 15px; font-weight: 600; }
+    .list-amount.in { color: #52c41a; }
+    .list-amount.out { color: #262626; }
+    .list-amount.pending { color: #fa8c16; }
+    .list-status { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+    .empty { text-align: center; padding: 48px 20px; color: #bfbfbf; font-size: 13px; }
+
+    /* 底部导航 */
+    .tabbar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: #fff; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
+    .tabbar-item { text-align: center; flex: 1; }
+    .tabbar-icon { font-size: 22px; color: #8c8c8c; }
+    .tabbar-item.active .tabbar-icon { color: #ff4d4f; }
+    .tabbar-label { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+    .tabbar-item.active .tabbar-label { color: #ff4d4f; }
+
+    /* 弹窗 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    .modal-content { background: #fff; width: 100%; max-width: 430px; border-radius: 20px 20px 0 0; padding: 24px 20px 32px; max-height: 85vh; overflow: auto; }
+    .modal-title { font-size: 18px; font-weight: 600; text-align: center; margin-bottom: 24px; }
+    .modal-close { position: absolute; top: 16px; right: 20px; font-size: 20px; color: #8c8c8c; cursor: pointer; }
+    .input-wrap { display: flex; align-items: center; padding: 16px 0; border-bottom: 2px solid #f0f0f0; margin-bottom: 8px; }
+    .input-prefix { font-size: 28px; font-weight: 600; margin-right: 8px; color: #262626; }
+    .input-field { flex: 1; border: none; font-size: 28px; font-weight: 600; outline: none; background: transparent; }
+    .input-field::placeholder { font-size: 16px; font-weight: normal; color: #bfbfbf; }
+    .form-input { width: 100%; border: none; border-bottom: 1px solid #f0f0f0; padding: 12px 0; font-size: 15px; outline: none; margin-bottom: 4px; }
+    .form-input::placeholder { color: #bfbfbf; }
+    .form-label { font-size: 12px; color: #8c8c8c; margin-bottom: 2px; }
+    .bank-info-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-size: 14px; }
+    .bank-info-label { color: #8c8c8c; white-space: nowrap; }
+    .bank-info-value { font-weight: 500; }
+    .btn-primary { background: #ff4d4f; color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 16px; width: 100%; margin-top: 24px; font-weight: 600; cursor: pointer; }
+    .btn-primary:disabled { background: #ffccc7; }
+    .tip-text { font-size: 12px; color: #8c8c8c; margin-top: 12px; line-height: 1.8; }
+    .rule-block { background: #fafafa; border-radius: 10px; padding: 14px; margin-top: 12px; }
+    .rule-title { font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+    .rule-row { display: flex; justify-content: space-between; font-size: 13px; color: #595959; margin-bottom: 6px; }
+    .exchange-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    .exchange-item { background: #fafafa; border-radius: 10px; padding: 14px; text-align: center; border: 2px solid transparent; cursor: pointer; }
+    .exchange-item.selected { border-color: #ff4d4f; background: #fff2f0; }
+    .exchange-name { font-size: 14px; font-weight: 500; }
+
+    .exchange-desc { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+
+    /* 未登录 */
+    .login-overlay { position: fixed; inset: 0; background: #f5f5f5; z-index: 150; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+    .login-overlay-icon { font-size: 64px; margin-bottom: 16px; }
+    .login-overlay-title { font-size: 20px; font-weight: 600; color: #262626; margin-bottom: 8px; }
+    .login-overlay-desc { font-size: 14px; color: #8c8c8c; margin-bottom: 32px; line-height: 1.6; }
+    .login-overlay-btn { background: #1890ff; color: #fff; border: none; border-radius: 10px; padding: 14px 48px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 未登录引导 -->
+    <div v-if="!isLoggedIn" class="login-overlay">
+      <div class="login-overlay-icon">🔒</div>
+      <div class="login-overlay-title">请先登录</div>
+      <div class="login-overlay-desc">登录后即可查看您的佣金钱包<br>管理余额与提现</div>
+      <button class="login-overlay-btn" @click="goTo('h5-register.html')">去登录 / 注册</button>
+    </div>
+
+    <!-- 顶部返回 -->
+    <div style="display:flex;align-items:center;padding:12px 16px 0;background:linear-gradient(135deg,#ff4d4f,#ff7875);color:#fff;">
+      <span style="font-size:20px;cursor:pointer;padding:4px 8px 4px 0;" @click="goBack">←</span>
+      <span style="flex:1;text-align:center;font-size:16px;font-weight:600;">佣金钱包</span>
+      <span style="width:28px;"></span>
+    </div>
+
+    <!-- 余额头部 -->
+    <div class="wallet-header">
+      <div class="wallet-header-label">可提现余额（元）</div>
+      <div class="header-action">
+        <div class="wallet-header-amount" style="margin-top:0;">{{ wallet.balance }}</div>
+        <button class="btn-withdraw-sm" @click="openWithdraw">申请提现</button>
+      </div>
+      <div class="wallet-header-unit">约 ¥{{ wallet.pending }} 待结算</div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stat-card">
+      <div class="stat-item">
+        <div class="stat-value pending">¥{{ wallet.pending }}</div>
+        <div class="stat-label">待结算</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value total">¥{{ wallet.totalEarned }}</div>
+        <div class="stat-label">累计收入</div>
+      </div>
+    </div>
+
+    <!-- 标签页 -->
+    <div class="tabs">
+      <div class="tab-item" :class="{ active: activeTab === 'income' }" @click="activeTab = 'income'">佣金明细</div>
+      <div class="tab-item" :class="{ active: activeTab === 'withdraw' }" @click="activeTab = 'withdraw'">提现记录</div>
+    </div>
+
+    <!-- 列表 -->
+    <div class="list-wrap">
+      <!-- 佣金明细 -->
+      <div v-if="activeTab === 'income'">
+        <div v-for="(item, idx) in incomeList" :key="idx" class="list-item">
+          <div class="list-avatar in">+</div>
+          <div class="list-info">
+            <div class="list-title">{{ item.type }} — {{ item.person }}</div>
+            <div class="list-desc">{{ item.time }} · 合同金额 ¥{{ item.contractAmount }}</div>
+          </div>
+          <div class="list-right">
+            <div class="list-amount in">+{{ item.amount }}</div>
+            <div class="list-status">{{ item.status }}</div>
+          </div>
+        </div>
+        <div v-if="incomeList.length === 0" class="empty">暂无佣金明细</div>
+      </div>
+
+      <!-- 提现记录 -->
+      <div v-if="activeTab === 'withdraw'">
+        <div v-for="(item, idx) in withdrawList" :key="idx" class="list-item">
+          <div class="list-avatar" :class="item.status === '已到账' ? 'out' : 'pending'">¥</div>
+          <div class="list-info">
+            <div class="list-title">提现到{{ item.method }}</div>
+            <div class="list-desc">{{ item.applyTime }}</div>
+          </div>
+          <div class="list-right">
+            <div class="list-amount out">-{{ item.amount }}</div>
+            <div class="list-status" :style="item.status==='已到账'?'color:#52c41a;':item.status==='处理中'?'color:#fa8c16;':'color:#ff4d4f;'">{{ item.status }}</div>
+          </div>
+        </div>
+        <div v-if="withdrawList.length === 0" class="empty">暂无提现记录</div>
+      </div>
+    </div>
+
+    <!-- 银行卡配置弹窗 -->
+    <div v-if="showBankConfig" class="modal-overlay" @click.self="showBankConfig = false">
+      <div class="modal-content">
+        <div class="modal-title">配置提现信息</div>
+        <div style="margin-bottom:16px;">
+          <div class="form-label">真实姓名</div>
+          <input class="form-input" v-model="bankInfo.realName" placeholder="请输入真实姓名" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <div class="form-label">身份证号</div>
+          <input class="form-input" v-model="bankInfo.idCard" placeholder="请输入18位身份证号" maxlength="18" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <div class="form-label">开户银行</div>
+          <input class="form-input" v-model="bankInfo.bankName" placeholder="如：中国工商银行" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <div class="form-label">银行卡号</div>
+          <input class="form-input" v-model="bankInfo.bankCard" placeholder="请输入银行卡号" maxlength="19" />
+        </div>
+        <button class="btn-primary" :disabled="!canSaveBank" @click="saveBankInfo">保存并继续</button>
+        <div class="tip-text">提现信息仅用于佣金发放，平台将严格保密</div>
+      </div>
+    </div>
+
+    <!-- 提现弹窗 -->
+    <div v-if="showWithdraw" class="modal-overlay" @click.self="showWithdraw = false">
+      <div class="modal-content">
+        <div class="modal-title">申请提现</div>
+        <div style="background:#fafafa;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+          <div class="bank-info-row">
+            <span class="bank-info-label">持卡人：</span>
+            <span class="bank-info-value">{{ bankInfo.realName }}</span>
+          </div>
+          <div class="bank-info-row">
+            <span class="bank-info-label">银行卡：</span>
+            <span class="bank-info-value">{{ bankInfo.bankName }} ({{ bankInfo.bankCard.slice(-4) }})</span>
+          </div>
+          <div style="text-align:right;font-size:12px;color:#1890ff;cursor:pointer;" @click="editBankInfo">修改提现信息</div>
+        </div>
+        <div style="padding:16px 0; border-bottom:2px solid #f0f0f0; margin-bottom:8px;">
+          <div style="font-size:12px;color:#8c8c8c;margin-bottom:4px;">本次提现金额</div>
+          <div style="font-size:32px;font-weight:700;color:#262626;">¥{{ wallet.balance }}</div>
+        </div>
+        <div style="font-size:12px; color:#8c8c8c; margin-bottom:24px;">
+          可提现余额将全部提现至您的银行卡
+        </div>
+        <button class="btn-primary" :disabled="!canWithdraw" @click="confirmWithdraw">确认提现</button>
+        <div class="tip-text">
+          • 最低提现金额 50 元<br>
+          • 预计 1-3 个工作日到账<br>
+          • 单月超过 800 元将代扣个税<br>
+          • 每月 1-5 日、15-20 日可提现
+        </div>
+      </div>
+    </div>
+
+    <!-- 奖励规则弹窗 -->
+    <div v-if="showRules" class="modal-overlay" @click.self="showRules = false">
+      <div class="modal-content">
+        <div class="modal-title">奖励规则说明</div>
+        <div class="rule-block">
+          <div class="rule-title">佣金规则</div>
+          <div class="rule-row"><span>佣金计算</span><span>比例提成（合同金额 × 0.5%）</span></div>
+          <div class="rule-row"><span>奖励次数上限</span><span>同一月嫂最多 5 次</span></div>
+          <div class="rule-row"><span>结算节点</span><span>订单完成后结算</span></div>
+          <div class="rule-row"><span>绑定有效期</span><span>6 个月无上户自动解绑</span></div>
+          <div class="rule-row"><span>我的等级加成</span><span>金牌 +10%，实际 0.55%</span></div>
+        </div>
+
+        <button class="btn-primary" @click="showRules = false" style="margin-top:20px;">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+    createApp({
+      setup() {
+        const isLoggedIn = ref(localStorage.getItem('promoter_logged_in') === '1');
+        const wallet = ref({ balance: '45.00', pending: '54.00', totalEarned: '231.00' });
+        const activeTab = ref('income');
+        const showWithdraw = ref(false);
+        const showRules = ref(false);
+        const showBankConfig = ref(false);
+        const withdrawAmount = ref('');
+        const withdrawMethod = ref('中国工商银行(5678)');
+        const bankInfo = ref({
+          realName: '张秀英',
+          idCard: '310101199003072345',
+          bankName: '中国工商银行',
+          bankCard: '6222021234567890123'
+        });
+        const canWithdraw = computed(() => {
+          return parseFloat(wallet.value.balance) >= 50;
+        });
+        const canSaveBank = computed(() => {
+          const b = bankInfo.value;
+          return b.realName.trim() && b.idCard.trim().length >= 15 && b.bankName.trim() && b.bankCard.trim().length >= 16;
+        });
+        const incomeList = ref([
+          { type: '上户佣金', person: '陈美华', amount: '75.00', contractAmount: '15,000', time: '2026-04-18 10:30', status: '已结算' },
+          { type: '上户佣金', person: '赵小芳', amount: '60.00', contractAmount: '12,000', time: '2026-04-17 16:45', status: '已结算' },
+          { type: '签约预计', person: '王丽华', amount: '0.00', contractAmount: '18,000', time: '2026-04-16 14:22', status: '待订单完成' },
+          { type: '上户佣金', person: '李明', amount: '75.00', contractAmount: '15,000', time: '2026-04-15 09:18', status: '已结算' },
+          { type: '上户佣金', person: '张秀英', amount: '99.00', contractAmount: '18,000', time: '2026-04-10 11:05', status: '已结算' }
+        ]);
+        const withdrawList = ref([
+          { amount: '100.00', method: '中国工商银行(5678)', applyTime: '2026-04-01 10:00', status: '已到账' },
+          { amount: '50.00', method: '中国工商银行(5678)', applyTime: '2026-03-15 14:30', status: '已到账' }
+        ]);
+        const goTo = (url) => { window.location.href = url; };
+        const goBack = () => { window.history.back(); };
+        const openWithdraw = () => {
+          withdrawAmount.value = '';
+          const b = bankInfo.value;
+          if (!b.realName || !b.idCard || !b.bankName || !b.bankCard) {
+            showBankConfig.value = true;
+          } else {
+            showWithdraw.value = true;
+          }
+        };
+        const saveBankInfo = () => {
+          alert('提现信息已保存');
+          showBankConfig.value = false;
+          showWithdraw.value = true;
+        };
+        const editBankInfo = () => {
+          showWithdraw.value = false;
+          showBankConfig.value = true;
+        };
+        const confirmWithdraw = () => { alert(`提现申请 ¥${wallet.value.balance} 已提交，预计1-3个工作日到账`); showWithdraw.value = false; };
+        const changeMethod = () => { alert('目前仅支持提现到银行卡'); };
+        return { isLoggedIn, wallet, activeTab, showWithdraw, showRules, showBankConfig, withdrawAmount, withdrawMethod, bankInfo, canWithdraw, canSaveBank, incomeList, withdrawList, goTo, goBack, openWithdraw, saveBankInfo, editBankInfo, confirmWithdraw, changeMethod };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

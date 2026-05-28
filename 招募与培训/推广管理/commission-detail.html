@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金明细管理</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+  <link rel="stylesheet" href="../公共组件/shared-styles.css">
+  <script src="../公共组件/shared-menu.js"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-value { font-size: 24px; font-weight: 700; color: #f5222d; }
+    .stat-label { font-size: 13px; color: #8c8c8c; margin-top: 4px; }
+    .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .filter-bar { margin-bottom: 20px; }
+    .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-row + .filter-row { margin-top: 12px; }
+    .filter-label { font-size: 13px; color: #595959; white-space: nowrap; }
+    .date-input { height: 32px; padding: 0 10px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 13px; color: #606266; outline: none; font-family: inherit; }
+    .date-input:focus { border-color: #409eff; }
+    .date-input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+    .date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .data-table th { background: #fafafa; padding: 12px 8px; text-align: left; font-weight: 500; color: #595959; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
+    .data-table td { padding: 14px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    .data-table tr:hover { background: #f5f7fa; }
+    .cell-promoter { font-weight: 500; }
+    .cell-sub { font-size: 12px; color: #8c8c8c; margin-top: 2px; }
+    .cell-amount { color: #f5222d; font-weight: 700; font-size: 15px; }
+    .tag-status { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 10px; white-space: nowrap; }
+    .tag-available { background: #e6f7ff; color: #1890ff; }
+    .tag-withdrawn { background: #f6ffed; color: #52c41a; }
+    .tag-tier { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 4px; }
+    .tag-tier-first { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+    .tag-tier-second { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .btn-text { color: #1890ff; cursor: pointer; font-size: 14px; }
+    .btn-text:hover { text-decoration: underline; }
+    .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 20px; }
+    .pagination-btn { padding: 6px 12px; border: 1px solid #d9d9d9; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .pagination-btn:hover { border-color: #1890ff; color: #1890ff; }
+    .pagination-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+    .pagination-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .detail-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+    .detail-content { background: #fff; border-radius: 8px; width: 640px; max-height: 85vh; overflow: auto; padding: 24px; }
+    .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .detail-section { margin-bottom: 20px; }
+    .detail-section-title { font-size: 14px; font-weight: 600; color: #1f2d3d; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+    .detail-label { color: #8c8c8c; }
+    .detail-value { font-weight: 500; }
+    .split-card { background: #fafafa; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .split-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .split-name { font-size: 14px; font-weight: 600; }
+    .split-tag { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+    .split-tag-first { background: #e6f7ff; color: #1890ff; }
+    .split-tag-second { background: #f6ffed; color: #52c41a; }
+    .split-amount { font-size: 18px; font-weight: 700; color: #f5222d; }
+    .split-detail { font-size: 13px; color: #8c8c8c; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="main-nav"></div>
+    <div class="page-container">
+      <!-- 统计卡片 -->
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.totalCommission }}</div>
+          <div class="stat-label">累计佣金总额</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.withdrawnAmount }}</div>
+          <div class="stat-label">已提现金额</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.monthAmount }}</div>
+          <div class="stat-label">本月佣金</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.totalCount }}</div>
+          <div class="stat-label">累计笔数</div>
+        </div>
+      </div>
+
+      <!-- 筛选栏 -->
+      <div class="card">
+        <div class="filter-bar">
+          <div class="filter-row">
+            <span class="filter-label">产生时间：</span>
+            <input type="date" class="date-input" v-model="filter.startDate" />
+            <span style="color: #8c8c8c;">至</span>
+            <input type="date" class="date-input" v-model="filter.endDate" />
+            <span class="filter-label" style="margin-left: 8px;">提现时间：</span>
+            <input type="date" class="date-input" v-model="filter.withdrawStartDate" />
+            <span style="color: #8c8c8c;">至</span>
+            <input type="date" class="date-input" v-model="filter.withdrawEndDate" />
+          </div>
+          <div class="filter-row">
+            <el-select v-model="filter.promoter" placeholder="选择推广人" style="width: 150px;" clearable>
+              <el-option v-for="p in promoterOptions" :key="p.id" :label="p.name" :value="p.name" />
+            </el-select>
+            <el-select v-model="filter.status" placeholder="佣金状态" style="width: 120px;" clearable>
+              <el-option label="可提现" value="available" />
+              <el-option label="已提现" value="withdrawn" />
+            </el-select>
+            <el-select v-model="filter.channel" placeholder="所属渠道" style="width: 140px;" clearable>
+              <el-option v-for="c in channelOptions" :key="c" :label="c" :value="c" />
+            </el-select>
+            <el-select v-model="filter.tier" placeholder="分销层级" style="width: 130px;" clearable>
+              <el-option label="一级（直推）" value="first" />
+              <el-option label="二级（团队）" value="second" />
+            </el-select>
+          </div>
+          <div class="filter-row" style="justify-content: flex-end;">
+            <el-button type="primary" @click="handleSearch">确定</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </div>
+        </div>
+
+        <!-- 佣金明细表格 -->
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>产生时间</th>
+                <th>提现时间</th>
+                <th>推广人</th>
+                <th>被推荐人</th>
+                <th>所属渠道</th>
+                <th style="text-align: right;">合同金额</th>
+                <th style="text-align: center;">佣金比例</th>
+                <th style="text-align: right;">佣金金额</th>
+                <th style="text-align: center;">状态</th>
+                <th style="text-align: center;">分销层级</th>
+                <th style="text-align: center;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, idx) in pagedRecords" :key="idx">
+                <td>{{ row.date }}</td>
+                <td>{{ row.withdrawDate || '-' }}</td>
+                <td>
+                  <div class="cell-promoter">{{ row.promoterName }}</div>
+                  <div class="cell-sub">{{ row.promoterId }}</div>
+                </td>
+                <td>
+                  <div class="cell-promoter">{{ row.referrerName }}</div>
+                  <div class="cell-sub">{{ row.referrerPhone }}</div>
+                </td>
+                <td>{{ row.channel }}</td>
+                <td style="text-align: right;">¥{{ row.contractAmount.toLocaleString() }}</td>
+                <td style="text-align: center;">{{ row.commissionRate }}%</td>
+                <td style="text-align: right;"><span class="cell-amount">¥{{ row.commissionAmount }}</span></td>
+                <td style="text-align: center;"><span class="tag-status" :class="'tag-' + row.status">{{ statusText(row.status) }}</span></td>
+                <td style="text-align: center;">
+                  <span v-if="row.tier === 'first'" class="tag-tier tag-tier-first">一级</span>
+                  <span v-else class="tag-tier tag-tier-second">二级</span>
+                </td>
+                <td style="text-align: center;"><span class="btn-text" @click="showDetail(row)">详情</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination">
+          <span style="font-size: 13px; color: #8c8c8c;">共 {{ filteredRecords.length }} 条</span>
+          <button class="pagination-btn" :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+          <button v-for="p in pageList" :key="p" class="pagination-btn" :class="{ active: p === currentPage }" @click="currentPage = p">{{ p }}</button>
+          <button class="pagination-btn" :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+        </div>
+      </div>
+
+      <!-- 详情弹窗 -->
+      <div v-if="detailVisible" class="detail-modal" @click.self="detailVisible = false">
+        <div class="detail-content">
+          <div class="detail-title">佣金明细详情</div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">基本信息</div>
+            <div class="detail-row"><span class="detail-label">佣金编号</span><span class="detail-value">{{ currentDetail.id }}</span></div>
+            <div class="detail-row"><span class="detail-label">合同编号</span><span class="detail-value">{{ currentDetail.contractNo }}</span></div>
+            <div class="detail-row"><span class="detail-label">产生时间</span><span class="detail-value">{{ currentDetail.date }}</span></div>
+            <div class="detail-row"><span class="detail-label">提现时间</span><span class="detail-value">{{ currentDetail.withdrawDate || '-' }}</span></div>
+            <div class="detail-row"><span class="detail-label">服务类型</span><span class="detail-value">{{ currentDetail.serviceType }}</span></div>
+            <div class="detail-row"><span class="detail-label">合同金额</span><span class="detail-value">¥{{ currentDetail.contractAmount.toLocaleString() }}</span></div>
+            <div class="detail-row"><span class="detail-label">佣金比例</span><span class="detail-value">{{ currentDetail.commissionRate }}%</span></div>
+            <div class="detail-row"><span class="detail-label">佣金金额</span><span class="detail-value" style="color: #f5222d; font-weight: 700;">¥{{ currentDetail.commissionAmount }}</span></div>
+            <div class="detail-row">
+              <span class="detail-label">当前状态</span>
+              <span class="detail-value"><span class="tag-status" :class="'tag-' + currentDetail.status">{{ statusText(currentDetail.status) }}</span></span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">推广人信息</div>
+            <div class="detail-row"><span class="detail-label">推广人姓名</span><span class="detail-value">{{ currentDetail.promoterName }}</span></div>
+            <div class="detail-row"><span class="detail-label">推广人ID</span><span class="detail-value">{{ currentDetail.promoterId }}</span></div>
+            <div class="detail-row"><span class="detail-label">所属渠道</span><span class="detail-value">{{ currentDetail.channel }}</span></div>
+            <div class="detail-row">
+              <span class="detail-label">分销层级</span>
+              <span class="detail-value">
+                <span v-if="currentDetail.tier === 'first'" class="tag-tier tag-tier-first">一级（直推）</span>
+                <span v-else class="tag-tier tag-tier-second">二级（团队）</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">被推荐人信息</div>
+            <div class="detail-row"><span class="detail-label">被推荐人姓名</span><span class="detail-value">{{ currentDetail.referrerName }}</span></div>
+            <div class="detail-row"><span class="detail-label">手机号</span><span class="detail-value">{{ currentDetail.referrerPhone }}</span></div>
+            <div class="detail-row"><span class="detail-label">订单完成时间</span><span class="detail-value">{{ currentDetail.orderCompleteDate }}</span></div>
+          </div>
+
+          <div class="detail-section" v-if="currentDetail.splits && currentDetail.splits.length > 0">
+            <div class="detail-section-title">佣金分配明细</div>
+            <div v-for="(split, idx) in currentDetail.splits" :key="idx" class="split-card">
+              <div class="split-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="split-name">{{ split.name }}</span>
+                  <span class="split-tag" :class="split.tier === 'first' ? 'split-tag-first' : 'split-tag-second'">{{ split.tier === 'first' ? '一级' : '二级' }}</span>
+                </div>
+                <span class="split-amount">¥{{ split.amount }}</span>
+              </div>
+              <div class="split-detail">分成比例 {{ split.rate }}% · {{ split.promoterId }}</div>
+            </div>
+          </div>
+
+          <div style="text-align: right; margin-top: 20px;">
+            <el-button @click="detailVisible = false">关闭</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+      setup() {
+        const loading = ref(false);
+        const currentPage = ref(1);
+        const pageSize = ref(10);
+        const detailVisible = ref(false);
+        const currentDetail = ref({});
+
+        const stats = ref({
+          totalCommission: '128,560.50',
+          withdrawnAmount: '96,380.50',
+          monthAmount: '15,420.00',
+          totalCount: 1685
+        });
+
+        const filter = ref({
+          startDate: '',
+          endDate: '',
+          withdrawStartDate: '',
+          withdrawEndDate: '',
+          promoter: '',
+          status: '',
+          channel: '',
+          tier: ''
+        });
+
+        const channelOptions = ref(['老带新转介绍', '微信广告', '地推团队', '培训机构', '在岗阿姨推荐']);
+
+        const promoterOptions = computed(() => {
+          const map = new Map();
+          records.value.forEach(r => {
+            if (!map.has(r.promoterId)) {
+              map.set(r.promoterId, { id: r.promoterId, name: r.promoterName });
+            }
+          });
+          return Array.from(map.values());
+        });
+
+        const records = ref([
+          { id: 'C20240115001', contractNo: 'HT20240110001', date: '2024-01-15', withdrawDate: '2024-01-16', promoterName: '张阿姨', promoterId: 'P001', channel: '老带新转介绍', referrerName: '王姐', referrerPhone: '138****5678', contractAmount: 15000, commissionRate: 0.5, commissionAmount: '75.00', status: 'withdrawn', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-10', splits: [] },
+          { id: 'C20240115002', contractNo: 'HT20240114002', date: '2024-01-15', withdrawDate: '', promoterName: '李经理', promoterId: 'P008', channel: '微信广告', referrerName: '赵妹', referrerPhone: '139****1234', contractAmount: 18000, commissionRate: 0.5, commissionAmount: '90.00', status: 'available', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-14', splits: [] },
+          { id: 'C20240114003', contractNo: 'HT20240108003', date: '2024-01-14', withdrawDate: '', promoterName: '刘阿姨', promoterId: 'P015', channel: '在岗阿姨推荐', referrerName: '陈姐', referrerPhone: '137****9876', contractAmount: 12000, commissionRate: 0.5, commissionAmount: '48.00', status: 'available', tier: 'second', serviceType: '育婴师', orderCompleteDate: '2024-01-08', splits: [{ name: '刘阿姨', promoterId: 'P015', tier: 'second', rate: 20, amount: '48.00' }, { name: '李经理', promoterId: 'P008', tier: 'first', rate: 80, amount: '72.00' }] },
+          { id: 'C20240113004', contractNo: 'HT20240105004', date: '2024-01-13', withdrawDate: '2024-01-15', promoterName: '王阿姨', promoterId: 'P003', channel: '地推团队', referrerName: '孙姐', referrerPhone: '136****4567', contractAmount: 20000, commissionRate: 0.5, commissionAmount: '100.00', status: 'withdrawn', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-05', splits: [] },
+          { id: 'C20240112005', contractNo: 'HT20240111005', date: '2024-01-12', withdrawDate: '', promoterName: '张阿姨', promoterId: 'P001', channel: '老带新转介绍', referrerName: '周妹', referrerPhone: '135****7890', contractAmount: 16000, commissionRate: 0.5, commissionAmount: '80.00', status: 'available', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-11', splits: [] },
+          { id: 'C20240111006', contractNo: 'HT20240106006', date: '2024-01-11', withdrawDate: '', promoterName: '陈阿姨', promoterId: 'P022', channel: '培训机构', referrerName: '吴姐', referrerPhone: '134****3210', contractAmount: 14000, commissionRate: 0.5, commissionAmount: '70.00', status: 'available', tier: 'first', serviceType: '育婴师', orderCompleteDate: '2024-01-06', splits: [] },
+          { id: 'C20240110007', contractNo: 'HT20240102007', date: '2024-01-10', withdrawDate: '2024-01-12', promoterName: '李经理', promoterId: 'P008', channel: '微信广告', referrerName: '郑妹', referrerPhone: '133****6543', contractAmount: 22000, commissionRate: 0.5, commissionAmount: '110.00', status: 'withdrawn', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-02', splits: [] },
+          { id: 'C20240109008', contractNo: 'HT20240107008', date: '2024-01-09', withdrawDate: '', promoterName: '赵阿姨', promoterId: 'P031', channel: '在岗阿姨推荐', referrerName: '钱姐', referrerPhone: '132****0987', contractAmount: 13000, commissionRate: 0.5, commissionAmount: '52.00', status: 'available', tier: 'second', serviceType: '月嫂', orderCompleteDate: '2024-01-07', splits: [{ name: '赵阿姨', promoterId: 'P031', tier: 'second', rate: 20, amount: '52.00' }, { name: '张阿姨', promoterId: 'P001', tier: 'first', rate: 80, amount: '78.00' }] },
+          { id: 'C20240108009', contractNo: 'HT20240103009', date: '2024-01-08', withdrawDate: '', promoterName: '孙阿姨', promoterId: 'P012', channel: '老带新转介绍', referrerName: '冯妹', referrerPhone: '131****8765', contractAmount: 17000, commissionRate: 0.5, commissionAmount: '85.00', status: 'available', tier: 'first', serviceType: '月嫂', orderCompleteDate: '2024-01-03', splits: [] },
+          { id: 'C20240107010', contractNo: 'HT20231228010', date: '2024-01-07', withdrawDate: '2024-01-09', promoterName: '周阿姨', promoterId: 'P019', channel: '地推团队', referrerName: '杨姐', referrerPhone: '130****5432', contractAmount: 19000, commissionRate: 0.5, commissionAmount: '95.00', status: 'withdrawn', tier: 'first', serviceType: '育婴师', orderCompleteDate: '2024-12-28', splits: [] }
+        ]);
+
+        const filteredRecords = computed(() => {
+          let result = records.value;
+          if (filter.value.startDate) {
+            const start = new Date(filter.value.startDate + 'T00:00:00').getTime();
+            result = result.filter(r => new Date(r.date).getTime() >= start);
+          }
+          if (filter.value.endDate) {
+            const end = new Date(filter.value.endDate + 'T23:59:59').getTime();
+            result = result.filter(r => new Date(r.date).getTime() <= end);
+          }
+          if (filter.value.withdrawStartDate) {
+            const start = new Date(filter.value.withdrawStartDate + 'T00:00:00').getTime();
+            result = result.filter(r => {
+              if (!r.withdrawDate) return false;
+              return new Date(r.withdrawDate).getTime() >= start;
+            });
+          }
+          if (filter.value.withdrawEndDate) {
+            const end = new Date(filter.value.withdrawEndDate + 'T23:59:59').getTime();
+            result = result.filter(r => {
+              if (!r.withdrawDate) return false;
+              return new Date(r.withdrawDate).getTime() <= end;
+            });
+          }
+          if (filter.value.promoter) {
+            result = result.filter(r => r.promoterName.includes(filter.value.promoter) || r.promoterId.includes(filter.value.promoter));
+          }
+          if (filter.value.status) {
+            result = result.filter(r => r.status === filter.value.status);
+          }
+          if (filter.value.channel) {
+            result = result.filter(r => r.channel === filter.value.channel);
+          }
+          if (filter.value.tier) {
+            result = result.filter(r => r.tier === filter.value.tier);
+          }
+          return result;
+        });
+
+        const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize.value));
+
+        const pagedRecords = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          return filteredRecords.value.slice(start, start + pageSize.value);
+        });
+
+        const pageList = computed(() => {
+          const pages = [];
+          for (let i = 1; i <= totalPages.value; i++) pages.push(i);
+          return pages;
+        });
+
+        const statusText = (status) => {
+          const map = { available: '可提现', withdrawn: '已提现' };
+          return map[status] || status;
+        };
+
+        const handleSearch = () => { currentPage.value = 1; };
+        const handleReset = () => {
+          filter.value = { startDate: '', endDate: '', withdrawStartDate: '', withdrawEndDate: '', promoter: '', status: '', channel: '', tier: '' };
+          currentPage.value = 1;
+        };
+
+        const showDetail = (row) => {
+          currentDetail.value = row;
+          detailVisible.value = true;
+        };
+
+        return {
+          loading, currentPage, pageSize, detailVisible, currentDetail,
+          stats, filter, channelOptions, promoterOptions, records, filteredRecords,
+          totalPages, pagedRecords, pageList,
+          statusText, handleSearch, handleReset, showDetail
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+    SharedMenu.initPageLayout('commission-detail', { title: '佣金明细管理', breadcrumb: '<a href="/招募与培训/首页看板/dashboard.html">首页</a> / <a href="/招募与培训/推广管理/channel-enhanced.html">渠道管理</a> / 佣金明细' });
+  </script>
+</body>
+</html>

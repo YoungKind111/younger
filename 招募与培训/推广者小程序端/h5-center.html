@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>推荐赚钱 - 护理招募</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #262626; -webkit-tap-highlight-color: transparent; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+    .header { background: linear-gradient(135deg, #ff4d8f, #ff1a6c); color: #fff; padding: 24px 16px; }
+    .header-title { font-size: 20px; font-weight: 600; }
+    .header-sub { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .header-stats { display: flex; margin-top: 16px; gap: 8px; }
+    .header-stat { flex: 1; background: rgba(255,255,255,0.15); border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #fff; }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+    /* 卡片通用 */
+    .card { background: #fff; margin: 0 12px 12px; border-radius: 12px; padding: 16px; }
+    .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .card-title-icon { font-size: 16px; }
+
+    /* 功能入口网格 */
+    .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .feature-item { text-align: center; padding: 12px 8px; border-radius: 10px; background: #fafafa; cursor: pointer; }
+    .feature-icon { font-size: 28px; margin-bottom: 6px; }
+    .feature-name { font-size: 14px; font-weight: 600; color: #262626; }
+    .feature-desc { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+
+    /* 邀请码区域 */
+    .invite-card { background: linear-gradient(135deg, #ff4d8f, #ff1a6c); color: #fff; border-radius: 12px; padding: 20px; margin: 0 12px 12px; text-align: center; }
+    .invite-code { font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 12px 0; }
+    .invite-btn { background: #fff; color: #ff4d8f; border: none; border-radius: 8px; padding: 10px 28px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    /* 奖励规则 */
+    .reward-card { background: linear-gradient(135deg, #fff2f0, #fff); border-radius: 12px; padding: 16px; margin: 0 12px 12px; border: 1px solid #ffccc7; }
+    .reward-title { font-size: 15px; font-weight: 600; color: #ff4d8f; margin-bottom: 10px; }
+    .reward-row { display: flex; justify-content: space-between; font-size: 13px; color: #595959; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+    .reward-row:last-child { border-bottom: none; }
+    .reward-commission { font-size: 18px; font-weight: 700; color: #ff4d8f; margin-top: 6px; }
+
+    /* 排行榜 */
+    .rank-list { display: flex; flex-direction: column; gap: 8px; }
+    .rank-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .rank-num.top { background: #fff2f0; color: #ff4d8f; }
+    .rank-num.normal { background: #f5f5f5; color: #8c8c8c; }
+    .rank-info { flex: 1; }
+    .rank-name { font-size: 14px; font-weight: 500; }
+    .rank-desc { font-size: 12px; color: #8c8c8c; }
+    .rank-amount { font-size: 15px; font-weight: 600; color: #ff4d8f; }
+
+    /* 按钮 */
+    .btn-primary { background: #ff4d8f; color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 16px; width: 100%; margin-top: 20px; font-weight: 600; cursor: pointer; }
+
+    /* 底部导航 */
+    .tabbar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: #fff; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
+    .tabbar-item { text-align: center; flex: 1; cursor: pointer; }
+    .tabbar-icon { font-size: 22px; color: #8c8c8c; }
+    .tabbar-item.active .tabbar-icon { color: #ff4d8f; }
+    .tabbar-label { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+    .tabbar-item.active .tabbar-label { color: #ff4d8f; }
+
+    /* 弹窗 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal-content { background: #fff; border-radius: 16px; padding: 24px; text-align: center; width: 100%; max-width: 340px; }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .modal-btn { background: #ff4d8f; color: #fff; border: none; border-radius: 8px; padding: 12px 32px; font-size: 15px; margin-top: 16px; cursor: pointer; }
+
+    /* 轮播 */
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: #e8e8e8; }
+    .carousel-dot.active { background: #ff4d8f; }
+
+    /* 未登录 */
+    .login-overlay { position: fixed; inset: 0; background: #f5f5f5; z-index: 150; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+    .login-overlay-icon { font-size: 64px; margin-bottom: 16px; }
+    .login-overlay-title { font-size: 20px; font-weight: 600; color: #262626; margin-bottom: 8px; }
+    .login-overlay-desc { font-size: 14px; color: #8c8c8c; margin-bottom: 32px; line-height: 1.6; }
+    .login-overlay-btn { background: #ff4d8f; color: #fff; border: none; border-radius: 10px; padding: 14px 48px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 未登录引导 -->
+    <div v-if="!isLoggedIn" class="login-overlay">
+      <div class="login-overlay-icon">🤝</div>
+      <div class="login-overlay-title">加入推广人计划</div>
+      <div class="login-overlay-desc">推荐护理人员加入，赚取高额佣金奖励<br>佣金最高可达合同金额的 0.55%</div>
+      <button class="login-overlay-btn" @click="goTo('h5-register.html')">立即注册</button>
+    </div>
+
+    <!-- 头部 -->
+    <div class="header">
+      <div class="header-title">推荐赚钱</div>
+      <div class="header-sub">推荐月嫂/护理人员，赚取佣金奖励</div>
+    </div>
+
+    <!-- 功能入口 -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-icon">⚡</span>快速入口</div>
+      <div class="feature-grid">
+        <div class="feature-item" @click="sharePoster">
+          <div class="feature-icon">📱</div>
+          <div class="feature-name">分享海报</div>
+          <div class="feature-desc">推广赚钱</div>
+        </div>
+        <div class="feature-item" @click="showReward = true">
+          <div class="feature-icon">🎁</div>
+          <div class="feature-name">奖励规则</div>
+          <div class="feature-desc">点击查看</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 本月排行 -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-icon">🏆</span>本月推荐排行</div>
+      <div class="rank-list">
+        <div v-for="(item, idx) in rankList" :key="idx" class="rank-item">
+          <div class="rank-num" :class="idx < 3 ? 'top' : 'normal'">{{ idx + 1 }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ item.name.charAt(0) + '**' }}</div>
+            <div class="rank-desc">推荐 {{ item.count }} 人 · {{ item.level }}</div>
+          </div>
+          <div class="rank-amount">¥{{ item.amount }}</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 底部导航 -->
+    <div class="tabbar">
+      <div class="tabbar-item" @click="goTo('h5-orders.html')">
+        <div class="tabbar-icon">📋</div>
+        <div class="tabbar-label">接单赚钱</div>
+      </div>
+      <div class="tabbar-item active">
+        <div class="tabbar-icon">🏠</div>
+        <div class="tabbar-label">推荐赚钱</div>
+      </div>
+      <div class="tabbar-item" @click="goTo('h5-profile.html')">
+        <div class="tabbar-icon">👤</div>
+        <div class="tabbar-label">我的</div>
+      </div>
+    </div>
+
+    <!-- 奖励规则弹窗 -->
+    <div v-if="showReward" class="modal-overlay" @click.self="showReward = false">
+      <div class="modal-content" style="text-align:left;">
+        <div class="modal-title" style="text-align:center;">奖励规则</div>
+        <div class="reward-card" style="margin:0;border:none;border-radius:0;background:none;padding:0;">
+          <div class="reward-row">
+            <span>佣金计算</span>
+            <span>比例提成（合同金额 × 0.5%）</span>
+          </div>
+          <div class="reward-row">
+            <span>奖励次数上限</span>
+            <span>同一月嫂最多 5 次</span>
+          </div>
+          <div class="reward-row">
+            <span>结算节点</span>
+            <span>订单完成后结算</span>
+          </div>
+          <div class="reward-row">
+            <span>绑定有效期</span>
+            <span>6 个月无上户自动解绑</span>
+          </div>
+        </div>
+
+        <!-- 等级说明 -->
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #f5f5f5;">
+          <div style="font-size:14px;font-weight:600;color:#ff4d8f;margin-bottom:8px;">🎖️ 等级加成说明</div>
+          <div style="font-size:12px;color:#8c8c8c;line-height:1.6;margin-bottom:10px;">每月1号根据上月累计佣金自动评定等级，等级越高佣金加成比例越高</div>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div class="reward-row" style="padding:8px 0;">
+              <span style="font-weight:500;">1星推广人</span>
+              <span>加成 0%（≥0元）</span>
+            </div>
+            <div class="reward-row" style="padding:8px 0;">
+              <span style="font-weight:500;">2星推广人</span>
+              <span>加成 5%（≥500元）</span>
+            </div>
+            <div class="reward-row" style="padding:8px 0;">
+              <span style="font-weight:500;">3星推广人</span>
+              <span>加成 8%（≥1,500元）</span>
+            </div>
+            <div class="reward-row" style="padding:8px 0;">
+              <span style="font-weight:500;">4星推广人</span>
+              <span>加成 10%（≥5,000元）</span>
+            </div>
+            <div class="reward-row" style="padding:8px 0;border-bottom:none;">
+              <span style="font-weight:500;">5星推广人</span>
+              <span>加成 15%（≥15,000元）</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#8c8c8c;line-height:1.6;margin-top:8px;background:#fafafa;border-radius:6px;padding:8px;">
+            <div>等级规则：</div>
+            <div>1. 每月1号凌晨自动重置为1星推广人</div>
+            <div>2. 系统根据上月累计佣金金额自动匹配对应等级</div>
+            <div>3. 高等级可享受额外权益（优先派单、专属客服等）</div>
+          </div>
+        </div>
+        <button class="modal-btn" style="width:100%;" @click="showReward = false">我知道了</button>
+      </div>
+    </div>
+
+    <!-- 海报弹窗 -->
+    <div v-if="showPoster" class="modal-overlay" @click.self="showPoster = false">
+      <div class="modal-content">
+        <div class="modal-title">推广海报</div>
+        <div style="background:linear-gradient(135deg,#ff4d8f,#ff1a6c);border-radius:10px;padding:28px;color:#fff;text-align:center;margin-bottom:16px;">
+          <div style="font-size:20px;font-weight:600;">推荐月嫂赚佣金</div>
+     
+          <div style="font-size:13px;opacity:0.9;">佣金比例 · 立即加入</div>
+
+        </div>
+        <div style="font-size:13px;color:#8c8c8c;">长按识别二维码或保存海报</div>
+        <button class="modal-btn" @click="showPoster = false">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+    createApp({
+      setup() {
+        const isLoggedIn = ref(localStorage.getItem('promoter_logged_in') === '1');
+        const showPoster = ref(false);
+        const showReward = ref(false);
+        const inviteCode = ref('PROA8K9');
+        const stats = ref({ members: 12, balance: '231.00', totalEarned: '1,580' });
+        const rankList = ref([
+          { name: '王秀英', count: 18, level: '5星推广人', amount: '2,450' },
+          { name: '陈美华', count: 15, level: '5星推广人', amount: '1,890' },
+          { name: '李秀英', count: 12, level: '4星推广人', amount: '1,580' },
+          { name: '赵小芳', count: 10, level: '4星推广人', amount: '1,320' },
+          { name: '张红霞', count: 8, level: '3星推广人', amount: '980' }
+        ]);
+        const teamMembers = ref([
+          { name: '陈美华', level: '5星推广人', contribution: 1890, count: 15 },
+          { name: '赵小芳', level: '4星推广人', contribution: 1320, count: 10 }
+        ]);
+
+        const goTo = (url) => { window.location.href = url; };
+        const copyInvite = () => {
+          navigator.clipboard?.writeText(inviteCode.value);
+          alert('邀请码已复制：' + inviteCode.value);
+        };
+        const sharePoster = () => { showPoster.value = true; };
+
+        return { isLoggedIn, showPoster, showReward, inviteCode, stats, rankList, teamMembers, goTo, copyInvite, sharePoster };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

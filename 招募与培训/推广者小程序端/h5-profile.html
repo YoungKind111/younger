@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的 - 护理招募</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f5f5f5; color: #262626; -webkit-tap-highlight-color: transparent; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+
+    /* 头部 */
+    .profile-header { background: linear-gradient(135deg, #ff4d8f, #ff1a6c); color: #fff; padding: 32px 20px 24px; }
+    .profile-header-top { display: flex; align-items: center; justify-content: space-between; }
+    .profile-user { display: flex; align-items: center; gap: 14px; }
+    .profile-avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 26px; border: 2px solid rgba(255,255,255,0.4); }
+    .profile-name { font-size: 20px; font-weight: 600; }
+    .profile-meta { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+    .profile-tag { display: inline-block; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 10px; font-size: 11px; margin-top: 6px; }
+    .profile-arrow { font-size: 20px; opacity: 0.6; }
+
+    /* 统计条 */
+    .stat-bar { display: flex; background: #fff; margin: 0 12px 12px; border-radius: 0 0 12px 12px; padding: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; top: -12px; }
+    .stat-bar-item { flex: 1; text-align: center; position: relative; }
+    .stat-bar-item:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 20%; bottom: 20%; width: 1px; background: #f0f0f0; }
+    .stat-bar-value { font-size: 18px; font-weight: 700; color: #262626; }
+    .stat-bar-label { font-size: 11px; color: #8c8c8c; margin-top: 4px; }
+
+    /* 卡片通用 */
+    .card { background: #fff; margin: 0 12px 12px; border-radius: 12px; padding: 16px; }
+    .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .card-title-icon { font-size: 16px; }
+
+    /* 等级进度 */
+    .level-tag { font-size: 11px; color: #fa8c16; background: #fff7e6; padding: 2px 8px; border-radius: 8px; margin-left: auto; }
+    .level-progress { background: #f5f5f5; border-radius: 6px; height: 8px; overflow: hidden; margin-top: 8px; }
+    .level-bar { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #fa8c16, #ffc53d); }
+    .level-desc { font-size: 12px; color: #8c8c8c; margin-top: 8px; }
+
+    /* 绑定关系 */
+    .bind-tabs { display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
+    .bind-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 14px; color: #8c8c8c; cursor: pointer; position: relative; }
+    .bind-tab.active { color: #ff4d8f; font-weight: 600; }
+    .bind-tab.active::after { content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px; background: #ff4d8f; border-radius: 1px; }
+    .bind-list { display: flex; flex-direction: column; gap: 10px; }
+    .bind-card-item { background: #fafafa; border-radius: 10px; padding: 12px; position: relative; overflow: hidden; }
+    .bind-card-item::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: #ff4d8f; }
+    .bind-card-item.second::before { background: #fa8c16; }
+    .bind-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bind-avatar { width: 36px; height: 36px; border-radius: 50%; background: #fff2f0; color: #ff4d8f; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .bind-card-item.second .bind-avatar { background: #fff7e6; color: #fa8c16; }
+    .bind-info { flex: 1; min-width: 0; }
+    .bind-name { font-size: 14px; font-weight: 500; }
+    .bind-phone { font-size: 12px; color: #8c8c8c; }
+    .bind-status-tag { font-size: 11px; padding: 2px 8px; border-radius: 8px; flex-shrink: 0; }
+    .bind-status-tag.clue { background: #fff2f0; color: #ff4d8f; }
+    .bind-status-tag.signed { background: #fff7e6; color: #fa8c16; }
+    .bind-status-tag.worked { background: #f6ffed; color: #52c41a; }
+    .bind-status-tag.lost { background: #f5f5f5; color: #8c8c8c; }
+    .bind-status-tag.expired { background: #f5f5f5; color: #8c8c8c; }
+    .bind-empty { text-align: center; padding: 20px; color: #bfbfbf; font-size: 13px; }
+
+    /* 菜单网格 */
+    /* 列表菜单 */
+    .list-menu { background: #fff; margin: 0 12px 12px; border-radius: 12px; overflow: hidden; }
+    .list-item { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .list-item:last-child { border-bottom: none; }
+    .list-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 12px; }
+    .list-text { flex: 1; font-size: 14px; }
+    .list-arrow { color: #bfbfbf; font-size: 13px; }
+
+    /* 底部 */
+    .logout-wrap { margin: 12px; }
+    .logout-btn { width: 100%; padding: 14px; background: #fff; color: #ff4d4f; border: 1px solid #ffccc7; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; }
+    .version { text-align: center; font-size: 11px; color: #bfbfbf; margin: 8px 0 24px; }
+
+    /* 底部导航 */
+    .tabbar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: #fff; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
+    .tabbar-item { text-align: center; flex: 1; cursor: pointer; }
+    .tabbar-icon { font-size: 22px; color: #8c8c8c; }
+    .tabbar-item.active .tabbar-icon { color: #ff4d8f; }
+    .tabbar-label { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+    .tabbar-item.active .tabbar-label { color: #ff4d8f; }
+
+    /* 弹窗 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    .modal-content { background: #fff; width: 100%; max-width: 430px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 80vh; overflow: auto; }
+    .modal-title { font-size: 18px; font-weight: 600; text-align: center; margin-bottom: 20px; }
+
+    /* 搜索 */
+    .search-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .search-input { flex: 1; background: #f5f5f5; border: none; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none; }
+    .search-input::placeholder { color: #bfbfbf; }
+    .filter-btn { font-size: 13px; color: #595959; padding: 8px 12px; background: #f5f5f5; border-radius: 10px; white-space: nowrap; cursor: pointer; border: none; }
+    .filter-btn.active { background: #fff2f0; color: #ff4d8f; }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+    /* 未登录 */
+    .login-overlay { position: fixed; inset: 0; background: #f5f5f5; z-index: 150; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
+    .login-overlay-icon { font-size: 64px; margin-bottom: 16px; }
+    .login-overlay-title { font-size: 20px; font-weight: 600; color: #262626; margin-bottom: 8px; }
+    .login-overlay-desc { font-size: 14px; color: #8c8c8c; margin-bottom: 32px; line-height: 1.6; }
+    .login-overlay-btn { background: #ff4d8f; color: #fff; border: none; border-radius: 10px; padding: 14px 48px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 未登录引导 -->
+    <div v-if="!isLoggedIn" class="login-overlay">
+      <div class="login-overlay-icon">🔒</div>
+      <div class="login-overlay-title">请先登录</div>
+      <div class="login-overlay-desc">登录后即可查看个人中心<br>管理团队与绑定关系</div>
+      <button class="login-overlay-btn" @click="goTo('h5-register.html')">去登录 / 注册</button>
+    </div>
+
+    <!-- 头部 -->
+    <div class="profile-header">
+      <div class="profile-header-top">
+        <div class="profile-user">
+          <div class="profile-avatar">李</div>
+          <div>
+            <div class="profile-name">李秀英</div>
+            <div class="profile-meta">ID: PRO-20260312-0001 · 4星推广人</div>
+            <div class="profile-tag">佣金加成 +10% · 优先派单</div>
+          </div>
+        </div>
+        <div class="profile-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- 功能菜单 -->
+    <div class="list-menu" style="margin-top:12px;">
+      <div class="list-item" @click="goTo('h5-wallet.html')">
+        <div class="list-icon" style="background:#fff2f0;color:#ff4d4f;">💰</div>
+        <div class="list-text">我的钱包</div>
+        <div class="list-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- 等级进度 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;">
+        <div class="card-title" style="margin-bottom:0;">推广等级</div>
+        <div class="level-tag">4星推广人</div>
+      </div>
+      <div class="level-progress">
+        <div class="level-bar" style="width:60%;"></div>
+      </div>
+      <div class="level-desc">距「5星推广人」还差佣金¥5,000 · 本月佣金 ¥10,000</div>
+    </div>
+
+    <!-- 统计条 -->
+    <div class="stat-bar">
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" style="color:#ff4d8f;">{{ statTotal }}</div>
+        <div class="stat-bar-label">累计报名</div>
+      </div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" style="color:#52c41a;">{{ statSigned }}</div>
+        <div class="stat-bar-label">累计签约</div>
+      </div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" style="color:#722ed1;">{{ statWorked }}</div>
+        <div class="stat-bar-label">累计上户</div>
+      </div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" style="color:#ff4d4f;">{{ statLost }}</div>
+        <div class="stat-bar-label">累计下户</div>
+      </div>
+    </div>
+
+    <!-- 绑定关系 -->
+    <div class="card">
+      <div class="search-wrap">
+        <input class="search-input" v-model="searchKey" placeholder="搜索姓名 / 手机号" />
+        <button class="filter-btn" :class="{ active: showFilter }" @click="showFilter = !showFilter">筛选</button>
+      </div>
+      <div v-if="showFilter" class="filter-bar">
+        <button class="filter-btn" :class="{ active: filterStatus === '' }" @click="filterStatus = ''">全部</button>
+        <button class="filter-btn" :class="{ active: filterStatus === 'clue' }" @click="filterStatus = 'clue'">已报名</button>
+        <button class="filter-btn" :class="{ active: filterStatus === 'signed' }" @click="filterStatus = 'signed'">已签约</button>
+        <button class="filter-btn" :class="{ active: filterStatus === 'worked' }" @click="filterStatus = 'worked'">已上户</button>
+        <button class="filter-btn" :class="{ active: filterStatus === 'lost' }" @click="filterStatus = 'lost'">已下户</button>
+      </div>
+      <div class="bind-tabs">
+        <div class="bind-tab" :class="{ active: bindTab === 'first' }" @click="bindTab = 'first'">直接推荐（{{ filteredFirstBinds.length }}人）</div>
+        <div class="bind-tab" :class="{ active: bindTab === 'second' }" @click="bindTab = 'second'">团队推荐（{{ filteredSecondBinds.length }}人）</div>
+      </div>
+      <div v-if="bindTab === 'first'" class="bind-list">
+        <div v-for="(item, idx) in filteredFirstBinds" :key="idx" class="bind-card-item">
+          <div class="bind-card-header">
+            <div class="bind-avatar">{{ item.name[0] }}</div>
+            <div class="bind-info">
+              <div class="bind-name">{{ item.name }} <span class="bind-phone">{{ item.phone }}</span></div>
+              <div style="font-size:11px;color:#8c8c8c;margin-top:2px;">推荐时间：{{ item.registerTime }}</div>
+            </div>
+            <div class="bind-status-tag" :class="item.status">{{ statusText(item.status) }}</div>
+          </div>
+        </div>
+        <div v-if="filteredFirstBinds.length === 0" class="bind-empty">暂无直接推荐</div>
+      </div>
+      <div v-if="bindTab === 'second'" class="bind-list">
+        <div v-for="(item, idx) in filteredSecondBinds" :key="idx" class="bind-card-item second">
+          <div class="bind-card-header">
+            <div class="bind-avatar">{{ item.name[0] }}</div>
+            <div class="bind-info">
+              <div class="bind-name">{{ item.name }} <span class="bind-phone">{{ item.phone }}</span></div>
+              <div style="font-size:11px;color:#8c8c8c;margin-top:2px;">推荐时间：{{ item.registerTime }}</div>
+            </div>
+            <div class="bind-status-tag" :class="item.status">{{ statusText(item.status) }}</div>
+          </div>
+          <div style="font-size:11px;color:#8c8c8c;margin-top:4px;">通过 <span style="color:#ff4d8f;">{{ item.referrer }}</span> 推荐</div>
+        </div>
+        <div v-if="filteredSecondBinds.length === 0" class="bind-empty">暂无团队推荐</div>
+      </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="tabbar">
+      <div class="tabbar-item" @click="goTo('h5-orders.html')">
+        <div class="tabbar-icon">📋</div>
+        <div class="tabbar-label">接单赚钱</div>
+      </div>
+      <div class="tabbar-item" @click="goTo('h5-center.html')">
+        <div class="tabbar-icon">🏠</div>
+        <div class="tabbar-label">推荐赚钱</div>
+      </div>
+      <div class="tabbar-item active">
+        <div class="tabbar-icon">👤</div>
+        <div class="tabbar-label">我的</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+    createApp({
+      setup() {
+        const isLoggedIn = ref(localStorage.getItem('promoter_logged_in') === '1');
+        const bindTab = ref('first');
+        const searchKey = ref('');
+        const showFilter = ref(false);
+        const filterStatus = ref('');
+        const firstBinds = ref([
+          { name: '陈美华', phone: '135****1357', status: 'worked', registerTime: '2026-03-15', signedTime: '2026-03-20', workedTime: '2026-04-10', orderCompleted: true, orderCompletedTime: '2026-04-15', totalCommission: '75.00', commissionStatus: '已结算', workedCount: 1, maxRewards: 5, signedEstimate: '75', workedCommission: '75', expanded: false },
+          { name: '赵小芳', phone: '138****2468', status: 'worked', registerTime: '2026-03-20', signedTime: '2026-03-25', workedTime: '2026-04-15', orderCompleted: false, orderCompletedTime: '', totalCommission: '60.00', commissionStatus: '待订单完成', workedCount: 1, maxRewards: 5, signedEstimate: '60', workedCommission: '60', expanded: false },
+          { name: '王丽华', phone: '139****3579', status: 'signed', registerTime: '2026-04-01', signedTime: '2026-04-08', workedTime: '', orderCompleted: false, orderCompletedTime: '', totalCommission: '0.00', commissionStatus: '待上户', workedCount: 0, maxRewards: 5, signedEstimate: '90', workedCommission: '0', expanded: false },
+          { name: '周丽华', phone: '139****8024', status: 'lost', registerTime: '2026-03-01', signedTime: '', workedTime: '', orderCompleted: false, orderCompletedTime: '', totalCommission: '0.00', commissionStatus: '-', workedCount: 0, maxRewards: 5, signedEstimate: '0', workedCommission: '0', expanded: false }
+        ]);
+        const secondBinds = ref([
+          { name: '刘小明', phone: '138****1234', status: 'worked', referrer: '张三', registerTime: '2026-03-10', signedTime: '2026-03-18', workedTime: '2026-04-08', orderCompleted: true, orderCompletedTime: '2026-04-12', totalCommission: '45.00', commissionStatus: '已结算', workedCount: 1, maxRewards: 5, signedEstimate: '45', workedCommission: '45', expanded: false },
+          { name: '陈小燕', phone: '137****5678', status: 'signed', referrer: '李四', registerTime: '2026-04-05', signedTime: '2026-04-14', workedTime: '', orderCompleted: false, orderCompletedTime: '', totalCommission: '0.00', commissionStatus: '待上户', workedCount: 0, maxRewards: 5, signedEstimate: '70', workedCommission: '0', expanded: false },
+          { name: '王大伟', phone: '136****9012', status: 'lost', referrer: '张三', registerTime: '2026-02-01', signedTime: '', workedTime: '', orderCompleted: false, orderCompletedTime: '', totalCommission: '0.00', commissionStatus: '-', workedCount: 0, maxRewards: 5, signedEstimate: '0', workedCommission: '0', expanded: false }
+        ]);
+        const statTotal = computed(() => firstBinds.value.length);
+        const statSigned = computed(() => firstBinds.value.filter(r => r.status === 'signed' || r.status === 'worked').length);
+        const statWorked = computed(() => firstBinds.value.filter(r => r.status === 'worked').length);
+        const statLost = computed(() => firstBinds.value.filter(r => r.status === 'lost').length);
+
+        const filteredFirstBinds = computed(() => {
+          return firstBinds.value.filter(r => {
+            const matchKey = !searchKey.value || r.name.includes(searchKey.value) || r.phone.includes(searchKey.value);
+            const matchStatus = !filterStatus.value || r.status === filterStatus.value;
+            return matchKey && matchStatus;
+          }).sort((a, b) => b.registerTime.localeCompare(a.registerTime));
+        });
+        const filteredSecondBinds = computed(() => {
+          return secondBinds.value.filter(r => {
+            const matchKey = !searchKey.value || r.name.includes(searchKey.value) || r.phone.includes(searchKey.value);
+            const matchStatus = !filterStatus.value || r.status === filterStatus.value;
+            return matchKey && matchStatus;
+          }).sort((a, b) => b.registerTime.localeCompare(a.registerTime));
+        });
+
+        const statusText = (s) => ({ clue: '已报名', signed: '已签约', worked: '已上户', lost: '已下户', active: '有效', expired: '已过期' }[s] || s);
+        const logout = () => { localStorage.removeItem('promoter_logged_in'); window.location.reload(); };
+        const goTo = (url) => { window.location.href = url; };
+
+        return { isLoggedIn, searchKey, showFilter, filterStatus, filteredFirstBinds, filteredSecondBinds, firstBinds, secondBinds, statusText, logout, goTo, statTotal, statSigned, statWorked, statLost, bindTab };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

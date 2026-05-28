@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金规则管理</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+  <link rel="stylesheet" href="../公共组件/shared-styles.css">
+  <script src="../公共组件/shared-menu.js"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .page-container { padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .page-title { font-size: 22px; font-weight: 600; color: #1f2d3d; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card-title { font-size: 16px; font-weight: 600; color: #1f2d3d; margin-bottom: 20px; }
+    .form-row { display: flex; gap: 24px; margin-bottom: 16px; align-items: center; }
+    .form-item { display: flex; align-items: center; gap: 12px; }
+    .form-label { font-size: 14px; color: #606266; white-space: nowrap; font-weight: 500; }
+    .form-value { font-size: 24px; font-weight: 700; color: #f5222d; }
+    .calc-section { background: #fafafa; border-radius: 8px; padding: 20px; margin-top: 16px; }
+    .calc-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #1f2d3d; }
+    .calc-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+    .calc-op { color: #8c8c8c; font-size: 18px; }
+    .calc-result { background: #fff2f0; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .calc-result-label { font-size: 13px; color: #595959; margin-bottom: 4px; }
+    .calc-result-value { font-size: 28px; font-weight: 700; color: #f5222d; }
+    .tier-card { background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .tier-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+    .tier-desc { font-size: 13px; color: #595959; margin-bottom: 12px; }
+    .tier-table { width: 100%; border-collapse: collapse; }
+    .tier-table th, .tier-table td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+    .tier-table th { background: #fafafa; font-weight: 500; color: #595959; }
+    .distribution-card { background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .distribution-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+    .btn-primary { background: #1890ff; color: #fff; border: none; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-default { background: #fff; color: #595959; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    .rule-list { margin-top: 16px; }
+    .rule-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #f0f0f0; border-radius: 8px; margin-bottom: 8px; }
+    .rule-item-info { flex: 1; }
+    .rule-item-name { font-size: 14px; font-weight: 500; }
+    .rule-item-desc { font-size: 12px; color: #8c8c8c; margin-top: 2px; }
+    .rule-item-actions { display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="main-nav"></div>
+    <div class="page-container">
+      <div class="page-title">佣金规则管理</div>
+
+      <!-- 全局规则配置 -->
+      <div class="card">
+        <div class="card-title">全局佣金规则</div>
+        <div class="form-row">
+          <div class="form-item">
+            <span class="form-label">基础提成比例</span>
+            <el-input-number v-model.number="globalRule.ratio" :min="0.1" :max="5" :step="0.1" :precision="1" controls-position="right" style="width:120px;"></el-input-number>
+            <span>%</span>
+          </div>
+          <div class="form-item">
+            <span class="form-label">结算节点</span>
+            <span style="font-size:14px;color:#1f2d3d;font-weight:500;">订单完成后结算</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="form-label">奖励次数上限</span>
+              <el-input-number v-model.number="globalRule.maxRewards" :min="2" :max="10" :step="1" controls-position="right" style="width:100px;"></el-input-number>
+              <span>次/人</span>
+            </div>
+            <div style="font-size:12px;color:#8c8c8c;line-height:1.5;">同一被推荐人最多产生多少次佣金奖励。例：设置为5次，张阿姨推荐李姐后，李姐前5次上户都会产生佣金</div>
+          </div>
+          <div class="form-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="form-label">绑定有效期</span>
+              <el-input-number v-model.number="globalRule.bindExpiryMonths" :min="3" :max="12" :step="1" controls-position="right" style="width:100px;"></el-input-number>
+              <span>个月</span>
+            </div>
+            <div style="font-size:12px;color:#8c8c8c;line-height:1.5;">推广人与被推荐人的绑定关系有效期。例：6个月，若李姐6个月内无上户记录则自动解绑</div>
+          </div>
+          <div class="form-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="form-label">等级加成</span>
+              <el-switch v-model="globalRule.levelBonus" active-text="启用"></el-switch>
+            </div>
+            <div style="font-size:12px;color:#8c8c8c;line-height:1.5;">启用后不同等级推广人可享受额外佣金加成，如金牌推广人额外+10%</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button class="btn-primary" @click="saveGlobal">保存全局规则</button>
+        </div>
+      </div>
+
+      <!-- 二级分销配置 -->
+      <div class="card">
+        <div class="card-title">二级分销分成配置</div>
+        <div class="distribution-card">
+          <div class="distribution-title">分销层级说明</div>
+          <div class="tier-desc">渠道/员工（一级分销商）→ 月嫂/阿姨（二级推广人）→ 被推荐人（新月嫂）。佣金按以下比例分配给一、二级推广人：</div>
+          <div class="form-row">
+            <div class="form-item">
+              <span class="form-label">一级推广人分成</span>
+              <el-input-number v-model.number="globalRule.firstTierRatio" :min="0" :max="100" :step="5" controls-position="right" style="width:100px;"></el-input-number>
+              <span>%</span>
+            </div>
+            <div class="form-item">
+              <span class="form-label">二级推广人分成</span>
+              <el-input-number v-model.number="globalRule.secondTierRatio" :min="0" :max="100" :step="5" controls-position="right" style="width:100px;"></el-input-number>
+              <span>%</span>
+            </div>
+          </div>
+          <div style="font-size:13px;color:#8c8c8c;margin-top:8px;">
+            说明：一级 + 二级 = 100%，例如一级70%、二级30%
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button class="btn-primary" @click="saveGlobal">保存分销配置</button>
+        </div>
+        <div class="calc-section">
+          <div class="calc-title">分销分成示例（合同金额 ¥15,000）</div>
+          <div class="calc-row">
+            <span>合同金额</span>
+            <span class="calc-op">×</span>
+            <span>提成比例 {{ globalRule.ratio }}%</span>
+            <span class="calc-op">=</span>
+            <span>总佣金 <b>¥{{ (15000 * globalRule.ratio / 100).toFixed(2) }}</b></span>
+          </div>
+          <div class="calc-row">
+            <span>一级推广人获得</span>
+            <span class="calc-op">¥{{ (15000 * globalRule.ratio / 100 * globalRule.firstTierRatio / 100).toFixed(2) }}</span>
+            <span style="color:#8c8c8c;">（{{ globalRule.firstTierRatio }}%）</span>
+          </div>
+          <div class="calc-row" v-if="globalRule.secondTierRatio > 0">
+            <span>二级推广人获得</span>
+            <span class="calc-op">¥{{ (15000 * globalRule.ratio / 100 * globalRule.secondTierRatio / 100).toFixed(2) }}</span>
+            <span style="color:#8c8c8c;">（{{ globalRule.secondTierRatio }}%）</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 等级加成配置 -->
+      <div class="card">
+        <div class="card-title">
+          <span>推广人等级加成配置</span>
+          <span style="font-size:13px;color:#8c8c8c;font-weight:normal;">每月1号自动重置到最低等级，根据上月佣金重新评定</span>
+        </div>
+        <div class="tier-card">
+          <table class="tier-table">
+            <thead>
+              <tr><th>等级</th><th>名称</th><th>加成比例</th><th>升级条件（上月佣金）</th><th>其他权益</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="(tier, idx) in tierList" :key="idx">
+                <td>{{ tier.level }}</td>
+                <td><el-input v-model="tier.name" size="small" style="width:100px;"></el-input></td>
+                <td><el-input-number v-model="tier.bonus" :min="0" :max="50" size="small" style="width:80px;"></el-input-number>%</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:4px;">
+                    <span>≥</span>
+                    <el-input-number v-model="tier.minCommission" :min="0" :step="100" size="small" style="width:100px;"></el-input-number>
+                    <span>元</span>
+                  </div>
+                </td>
+                <td><el-input v-model="tier.benefits" size="small" style="width:200px;"></el-input></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:13px;color:#8c8c8c;line-height:1.6;">
+          <div>等级规则说明：</div>
+          <div>1. 每月1号凌晨系统自动将所有推广人等级重置为「1星推广人」</div>
+          <div>2. 系统根据推广人上月累计佣金金额，自动匹配对应等级</div>
+          <div>3. 等级越高，佣金加成比例越高，享受的权益越多</div>
+        </div>
+        <button class="btn-primary" style="margin-top:12px;" @click="saveTiers">保存等级配置</button>
+      </div>
+
+      <!-- 实时计算器 -->
+      <div class="card">
+        <div class="card-title">佣金实时计算器</div>
+        <div class="form-row">
+          <div class="form-item">
+            <span class="form-label">合同金额</span>
+            <el-input-number v-model.number="calc.contractAmount" :min="1000" :step="1000" style="width:160px;"></el-input-number>
+          </div>
+          <div class="form-item">
+            <span class="form-label">提成比例</span>
+            <el-input-number v-model.number="calc.ratio" :min="0.1" :max="5" :step="0.1" style="width:120px;"></el-input-number>
+            <span>%</span>
+          </div>
+          <div class="form-item">
+            <span class="form-label">推广人等级</span>
+            <el-select v-model="calc.tier" style="width:120px;">
+              <el-option v-for="t in tierList" :key="t.level" :label="t.name" :value="t.level"></el-option>
+            </el-select>
+          </div>
+        </div>
+        <div class="calc-result">
+          <div class="calc-result-label">预估佣金（含等级加成）</div>
+          <div class="calc-result-value">¥{{ calculateCommission() }}</div>
+          <div style="font-size:13px;color:#595959;margin-top:8px;">
+            基础佣金 ¥{{ (calc.contractAmount * calc.ratio / 100).toFixed(2) }} + 
+            等级加成 ¥{{ (calc.contractAmount * calc.ratio / 100 * (tierBonus(calc.tier) / 100)).toFixed(2) }} 
+            （{{ tierBonus(calc.tier) }}%加成）
+          </div>
+        </div>
+      </div>
+
+      <!-- 渠道级独立规则 -->
+      <div class="card">
+        <div class="card-title">渠道级独立规则配置</div>
+        <div style="margin-bottom:16px;font-size:13px;color:#595959;">为特定渠道设置独立佣金规则，覆盖全局规则</div>
+        <div class="form-row">
+          <div class="form-item">
+            <span class="form-label">选择渠道</span>
+            <el-select v-model="channelRule.channelId" style="width:180px;" placeholder="请选择渠道">
+              <el-option label="微信广告" value="wx001"></el-option>
+              <el-option label="抖音推广" value="dy001"></el-option>
+              <el-option label="老带新转介绍" value="referral"></el-option>
+              <el-option label="地推团队A" value="dt001"></el-option>
+              <el-option label="合作伙伴B" value="hb001"></el-option>
+            </el-select>
+          </div>
+          <div class="form-item">
+            <span class="form-label">独立提成比例</span>
+            <el-input-number v-model.number="channelRule.ratio" :min="0.1" :max="5" :step="0.1" style="width:120px;"></el-input-number>
+            <span>%</span>
+          </div>
+          <div class="form-item">
+            <span class="form-label">奖励次数上限</span>
+            <el-input-number v-model.number="channelRule.maxRewards" :min="2" :max="10" style="width:100px;"></el-input-number>
+            <span>次/人</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-item">
+            <span class="form-label">结算节点</span>
+            <span style="font-size:14px;color:#1f2d3d;font-weight:500;">订单完成后结算</span>
+          </div>
+          <div class="form-item">
+            <span class="form-label">规则状态</span>
+            <el-switch v-model="channelRule.status" active-text="生效中" inactive-text="已停用"></el-switch>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-item">
+            <span class="form-label">规则说明</span>
+            <el-input v-model="channelRule.remark" placeholder="请输入规则说明" style="width:400px;"></el-input>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button class="btn-primary" @click="saveChannelRule">保存渠道规则</button>
+        </div>
+        <div class="rule-list" style="margin-top:20px;">
+          <div class="card-title" style="font-size:14px;margin-bottom:12px;">已配置渠道规则</div>
+          <div v-for="(rule, idx) in channelRules" :key="idx" class="rule-item">
+            <div class="rule-item-info">
+              <div class="rule-item-name">{{ rule.channelName }}</div>
+              <div class="rule-item-desc">提成 {{ rule.ratio }}% | 上限 {{ rule.maxRewards }}次 | 订单完成后结算</div>
+            </div>
+            <div class="rule-item-actions">
+              <el-tag :type="rule.status ? 'success' : 'info'" size="small">{{ rule.status ? '生效中' : '已停用' }}</el-tag>
+              <el-button type="text" size="small" @click="editChannelRule(idx)">编辑</el-button>
+              <el-button type="text" size="small" style="color:#f5222d;" @click="deleteChannelRule(idx)">删除</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 积分规则配置 -->
+      <div class="card">
+        <div class="card-title">积分规则配置</div>
+        <div class="rule-list">
+          <div v-for="(rule, idx) in pointRules" :key="idx" class="rule-item">
+            <div class="rule-item-info">
+              <div class="rule-item-name">{{ rule.action }}</div>
+              <div class="rule-item-desc">{{ rule.desc }}</div>
+            </div>
+            <div class="rule-item-actions">
+              <el-input-number v-model="rule.points" :min="0" :step="10" size="small" style="width:100px;"></el-input-number>
+              <span style="font-size:13px;color:#8c8c8c;">积分</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" @click="savePointRules">保存积分规则</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+    const app = createApp({
+      setup() {
+        const globalRule = ref({
+          mode: 'ratio',
+          ratio: 0.5,
+
+          settlementNode: 'order_complete',
+          maxRewards: 5,
+          bindExpiryMonths: 6,
+          levelBonus: true,
+          firstTierRatio: 80,
+          secondTierRatio: 20
+        });
+        const tierList = ref([
+          { level: 1, name: '1星推广人', bonus: 0, minCommission: 0, benefits: '基础佣金比例' },
+          { level: 2, name: '2星推广人', bonus: 5, minCommission: 500, benefits: '佣金加成5%' },
+          { level: 3, name: '3星推广人', bonus: 8, minCommission: 1500, benefits: '佣金加成8%' },
+          { level: 4, name: '4星推广人', bonus: 10, minCommission: 5000, benefits: '佣金加成10%+优先派单' },
+          { level: 5, name: '5星推广人', bonus: 15, minCommission: 15000, benefits: '佣金加成15%+专属客服' }
+        ]);
+        const calc = ref({ contractAmount: 15000, ratio: 0.5, tier: 4 });
+        const channelRule = ref({ channelId: '', ratio: 0.5, maxRewards: 5, settlementNode: 'order_complete', status: true, remark: '' });
+        const channelRules = ref([
+          { channelName: '老带新转介绍', ratio: 1.0, maxRewards: 10, status: true },
+          { channelName: '微信广告', ratio: 0.8, maxRewards: 5, status: false }
+        ]);
+
+
+        const pointRules = ref([
+          { action: '报名入册', desc: '被推荐人完成报名注册', points: 100 },
+          { action: '首次签约', desc: '被推荐人签订培训合同', points: 200 },
+          { action: '首次上户', desc: '被推荐人首次实际上岗', points: 500 },
+          { action: '分享海报', desc: '推广人分享专属海报', points: 20 },
+          { action: '邀请新推广人', desc: '邀请他人成为推广人', points: 150 }
+        ]);
+
+        const calculateCommission = () => {
+          const base = calc.value.contractAmount * calc.value.ratio / 100;
+          const bonus = base * (tierBonus(calc.value.tier) / 100);
+          return (base + bonus).toFixed(2);
+        };
+        const tierBonus = (level) => {
+          const t = tierList.value.find(x => x.level === level);
+          return t ? t.bonus : 0;
+        };
+        const saveGlobal = () => { alert('全局规则已保存'); };
+        const resetGlobal = () => { globalRule.value = { mode: 'ratio', ratio: 0.5, settlementNode: 'order_complete', maxRewards: 5, bindExpiryMonths: 6, levelBonus: true, firstTierRatio: 80, secondTierRatio: 20 }; };
+
+        const saveTiers = () => { alert('等级配置已保存'); };
+        const savePointRules = () => { alert('积分规则已保存'); };
+        const saveChannelRule = () => { 
+          if (!channelRule.value.channelId) { alert('请选择渠道'); return; }
+          alert('渠道规则已保存'); 
+        };
+        const resetChannelRule = () => { channelRule.value = { channelId: '', ratio: 0.5, maxRewards: 5, settlementNode: 'order_complete', status: true, remark: '' }; };
+        const editChannelRule = (idx) => { alert('编辑渠道规则：' + channelRules.value[idx].channelName); };
+        const deleteChannelRule = (idx) => { 
+          if (confirm('确定删除该渠道规则吗？')) { channelRules.value.splice(idx, 1); }
+        };
+
+
+        return { globalRule, tierList, calc, pointRules, channelRule, channelRules, calculateCommission, tierBonus, saveGlobal, resetGlobal, saveTiers, savePointRules, saveChannelRule, resetChannelRule, editChannelRule, deleteChannelRule };
+      }
+    });
+    app.use(ElementPlus);
+    app.mount('#app');
+    SharedMenu.initPageLayout('commission-rule', { title: '佣金规则管理', breadcrumb: '<a href="/招募与培训/首页看板/dashboard.html">首页</a> / <a href="/招募与培训/推广管理/channel-enhanced.html">渠道管理</a> / 佣金规则' });
+  </script>
+</body>
+</html>

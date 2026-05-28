@@ -1,0 +1,1482 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-04-06",
+  "description": "月嫂服务标签体系 - 可直接导入系统的结构化数据",
+  "categories": [
+    {
+      "id": "CAT001",
+      "name": "基础准入条件",
+      "nameEn": "BasicAdmission",
+      "sortOrder": 1,
+      "responsibleDept": "招生部（招募组）",
+      "coverage": "月嫂入职前硬性筛选+准入后定级合规，筑牢源头门槛",
+      "tags": [
+        {
+          "id": "TAG001",
+          "name": "年龄条件",
+          "nameEn": "AgeRequirement",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM001",
+              "name": "符合28-48岁（优秀可放宽）",
+              "description": "28-48岁，优秀者（学历、护理专业、情商沟通、形象达标）可放宽至26-49岁",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "审核时按对应年龄范围核查身份证原件，上户后发现年龄造假或隐瞒不适宜服务的年龄相关问题，责任归属招生部审核失职",
+              "evaluationCriteria": "身份证核验",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG002",
+          "name": "身体条件",
+          "nameEn": "PhysicalCondition",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM002",
+              "name": "视力达标（≤500度）",
+              "description": "近视度数≤500度，确保清晰观察宝宝黄疸、伤口细节、药品刻度及客户指令",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "审核时通过视力检测表或询问佩戴眼镜情况核实，上户后发现视力不达标影响护理操作，责任归属招生部审核不严",
+              "evaluationCriteria": "视力检测表或询问佩戴眼镜情况",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM003",
+              "name": "听力正常",
+              "description": "能正常应答日常沟通，听清宝宝哭声、客户轻声指令及护理相关提示，无听力障碍或明显听力衰减",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "审核时通过面对面沟通、简单声音测试（如轻声呼叫）核实，上户后发现听力问题导致服务失误，责任归属招生部未严格核查",
+              "evaluationCriteria": "面对面沟通、简单声音测试",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM004",
+              "name": "无近期手术史",
+              "description": "近6个月内无重大手术（如子宫肌瘤、剖腹产等），需完全恢复",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "上户后发现隐瞒病史可回溯追责，责任归属招生部审核不严",
+              "evaluationCriteria": "面试询问+病史申报",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM005",
+              "name": "可熬夜适配",
+              "description": "能适应月嫂24小时住家服务（含夜间频繁起夜、哺乳、哄睡），无熬夜禁忌，且无影响夜间服务的身体疾病/不适",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "面试时明确告知24小时住家服务特性，核实身体条件与适配性；上户后因熬夜或身体问题无法履职，责任归属招生部未充分核实",
+              "evaluationCriteria": "面试告知+身体问询",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG003",
+          "name": "开放档期",
+          "nameEn": "AvailableSchedule",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM006",
+              "name": "符合档期要求",
+              "description": "月嫂与公司交接起6个月内，需最少开放4个可上户档期，保障派单需求匹配",
+              "responsible": "招生部",
+              "applicable": ["合格证"],
+              "liability": "招生部需在准入时核验月嫂档期承诺，留存书面/系统确认记录；若后续发现未按承诺开放档期，责任归属招生部准入时未明确档期要求或核验不到位",
+              "evaluationCriteria": "档期承诺记录",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG004",
+          "name": "定级合规",
+          "nameEn": "LevelCompliance",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM007",
+              "name": "定级标准合规",
+              "description": "月嫂需提供与对应服务等级（如Y3/Y4/Y5等）匹配的证明资料：上户量需附历史服务照片等相关佐证，证书需为国家认可的正规母婴护理类证书",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部需逐一核验资料真实性（如核查照护照片、验证证书编号），杜绝资料造假；上户后若发现资料不符导致等级错定，由招生部承担核验失职责任",
+              "evaluationCriteria": "资料核验（照护照片、证书编号验证）",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG005",
+          "name": "学历证明",
+          "nameEn": "EducationCertificate",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM008",
+              "name": "学历符合要求",
+              "description": "月嫂需具备起码初中学历，或具备对应书写能力（独立完成护理日志）、智能手机应用能力（如月嫂小程序、导航、打车）",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部审核时核实学历或能力（测试书写/手机操作），上户后发现不达标影响服务的，责任归属招生部准入核查失职",
+              "evaluationCriteria": "学历证书核验或能力测试",
+              "isRequired": true,
+              "scoreWeight": 5
+            }
+          ]
+        },
+        {
+          "id": "TAG006",
+          "name": "外貌形象",
+          "nameEn": "Appearance",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM009",
+              "name": "无面部/手部纹身",
+              "description": "面部或手部无直径＞1cm的纹身",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "面试肉眼观察核实，签约后客户因纹身投诉，责任归属招生部未提前告知客户",
+              "evaluationCriteria": "面试现场观察",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM010",
+              "name": "无明显疤痕",
+              "description": "面部或手部无大面积烧伤、外伤等明显疤痕",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "现场观察核实，客户因疤痕要求更换月嫂则归属招生部责任",
+              "evaluationCriteria": "面试现场观察",
+              "isRequired": false,
+              "scoreWeight": 3
+            }
+          ]
+        },
+        {
+          "id": "TAG007",
+          "name": "健康合规",
+          "nameEn": "HealthCompliance",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM011",
+              "name": "无传染病",
+              "description": "无乙肝、肺结核、梅毒、HIV等传染性疾病",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "体检报告可查，属母婴安全红线；上户后疾病暴露，责任归属招生部审核失职",
+              "evaluationCriteria": "3个月内三甲医院体检报告",
+              "isRequired": true,
+              "scoreWeight": 15,
+              "isRedLine": true
+            },
+            {
+              "id": "ITEM012",
+              "name": "无重大病史",
+              "description": "无心脏病、癫痫、严重高血压（≥160/100）、糖尿病等",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "疾病突发可能影响服务安全，面试时需向月嫂核实历史病情；月嫂隐瞒病史的，责任归属招生部背调失职",
+              "evaluationCriteria": "面试询问+体检报告",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM013",
+              "name": "体检有效",
+              "description": "提供3个月内三甲或指定机构体检报告，项目齐全",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "体检是健康证明唯一依据，报告造假或过期，责任归属招生部审核失职",
+              "evaluationCriteria": "体检报告核验（3个月内、指定机构、项目齐全）",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM014",
+              "name": "不带药上户",
+              "description": "严禁携带任何药品上户（如鼻炎药等，需与运营组说明情况判定是否录用）；同时严禁自行喂药、不做医疗行为",
+              "responsible": "招生部+培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部面试核实是否必须携带药品，培训组强调上户不带药、不擅自喂药、不做医疗行为的红线；违规则责任归属双部门（招生部审核不严+培训组警示不到位）",
+              "evaluationCriteria": "面试询问+培训宣导",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM015",
+              "name": "无灰指甲",
+              "description": "不得患有灰指甲，避免给母婴造成交叉感染风险",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部面试现场核查手部状况，上户后发现隐瞒病情的，责任归属招生部审核失职",
+              "evaluationCriteria": "面试现场手部检查",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM016",
+              "name": "无明显染发",
+              "description": "头发颜色自然，无鲜艳、夸张染发（契合客户家庭审美偏好）",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部面试核查形象，上户后因明显染发引发客户投诉的，责任归属招生部审核不严",
+              "evaluationCriteria": "面试现场观察",
+              "isRequired": false,
+              "scoreWeight": 3
+            },
+            {
+              "id": "ITEM017",
+              "name": "无严重打呼噜",
+              "description": "无严重打呼噜情况，避免影响客户及母婴休息",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "月嫂在岗前培训期间，招生部需关注睡眠情况、核查是否有严重打呼噜，若存在该现象须劝退，否则责任归属招生部",
+              "evaluationCriteria": "岗前培训期间观察",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM018",
+              "name": "无明显体味（狐臭）",
+              "description": "无明显体味（狐臭），避免异味影响客户及母婴生活环境",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "月嫂面试/岗前培训阶段，招生部需通过观察、沟通确认是否存在该问题，若存在须劝退，未排查导致客诉的，责任归属招生部",
+              "evaluationCriteria": "面试/岗前培训观察",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM019",
+              "name": "无严重腰痛",
+              "description": "月嫂入册时需通过健康筛查，确认无严重腰痛症状（避免影响抱护宝宝、日常护理等服务动作）；上户期间需维持健康状态，无因腰痛导致服务能力下降或无法履约的情况",
+              "responsible": "招生部+督导组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部：入册时核查健康证明，专项问询腰痛病史，必要时要求提供相关检查报告，确保无严重腰痛；筛查遗漏致后续服务问题的，追责招生部。督导组：上户后定期关注月嫂健康状态，若出现严重腰痛影响服务的，需通知客服、月嫂老师换人，未及时处理的，追溯督导组监督责任",
+              "evaluationCriteria": "健康证明核查+病史问询",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM021",
+              "name": "不可抽烟",
+              "description": "上户明确不可有抽烟现象",
+              "responsible": "招生部+培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部面试核实抽烟情况，培训组强调禁烟红线；运营组上户督导巡查，发现违规及时制止；上户抽烟的，三部门共担责任（核实不严+警示不到位+督导失职）",
+              "evaluationCriteria": "面试询问+培训宣导+上户监督",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG008",
+          "name": "烹饪能力",
+          "nameEn": "CookingAbility",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM020",
+              "name": "烹饪能力（煮饭核心）",
+              "description": "熟练掌握月子餐相关煮饭技能，能煮制软硬适中、不夹生的米饭（含杂粮饭、粥品），符合清淡无油、适配产妇消化的月子餐要求，确保煮制卫生、熟制到位",
+              "responsible": "招生部+培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部面试时询问核实煮饭基础经验（如日常做菜频次、对月子餐相关菜谱的了解程度）；培训组负责月子餐煮饭标准教学与实操考核（如米水比例、煮制时长把控）；上户后若因煮饭能力不足（夹生、过软过硬等）引发客户不满，责任归属双部门共同承担（招生部初核不严+培训组培训未达标）",
+              "evaluationCriteria": "面试询问经验+培训实操考核",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG009",
+          "name": "MBTI测试",
+          "nameEn": "MBTITest",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM022",
+              "name": "性格温和",
+              "description": "适配参考ESTP、ENTP型：缺乏共情力、耐心不足、沟通被动、抗压差、控制欲强，倾向不适合月嫂工作",
+              "responsible": "招生部",
+              "applicable": ["合格证"],
+              "liability": "招生部面试前引导月嫂测试，结果仅作参考，不列入册必选项",
+              "evaluationCriteria": "MBTI测试（参考项）",
+              "isRequired": false,
+              "scoreWeight": 0
+            }
+          ]
+        },
+        {
+          "id": "TAG010",
+          "name": "婚育情况",
+          "nameEn": "MarriageChildbearing",
+          "type": "basic",
+          "items": [
+            {
+              "id": "ITEM023",
+              "name": "婚育情况",
+              "description": "需确认婚姻及生育情况，佐证实际育儿经验基础，适配母婴护理服务需求",
+              "responsible": "招生部",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部核验证明真实性，造假或不符影响定级的，由招生部承担核验失职责任",
+              "evaluationCriteria": "相关证明核验",
+              "isRequired": true,
+              "scoreWeight": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CAT002",
+      "name": "宝宝护理",
+      "nameEn": "BabyCare",
+      "sortOrder": 2,
+      "responsibleDept": "培训组+督导组",
+      "coverage": "新生儿核心护理技能与服务质量",
+      "tags": [
+        {
+          "id": "TAG011",
+          "name": "洗澡护理规范",
+          "nameEn": "BathingCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM033",
+              "name": "洗澡护理规范",
+              "description": "掌握新生儿洗澡全流程（水温测试、姿势、擦洗顺序、保暖）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责教学与考核，上户后操作不当视为培训未到位",
+              "evaluationCriteria": "实操考核：水温测试、姿势、擦洗顺序、保暖",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG012",
+          "name": "脐带护理规范",
+          "nameEn": "UmbilicalCordCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM034",
+              "name": "脐带护理规范",
+              "description": "掌握消毒流程、棉签使用、观察感染迹象",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "操作规范由培训组统一制定，考核不合格不发证",
+              "evaluationCriteria": "实操考核：消毒流程、棉签使用、感染迹象观察",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG013",
+          "name": "黄疸观察规范",
+          "nameEn": "JaundiceObservation",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM035",
+              "name": "黄疸观察规范",
+              "description": "能识别面部黄疸、建议就医、不自行处理",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责健康监测标准教学，属新生儿安全关键项",
+              "evaluationCriteria": "理论+实操：黄疸识别、就医建议、红线意识",
+              "isRequired": true,
+              "scoreWeight": 10,
+              "isRedLine": true
+            }
+          ]
+        },
+        {
+          "id": "TAG014",
+          "name": "呛奶急救规范",
+          "nameEn": "ChokingFirstAid",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM036",
+              "name": "呛奶急救规范",
+              "description": "掌握拍背体位、清理口鼻、呼叫流程",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "急救技能需实操考核，确保应急能力",
+              "evaluationCriteria": "实操考核：拍背体位、清理口鼻、呼叫流程",
+              "isRequired": true,
+              "scoreWeight": 12
+            }
+          ]
+        },
+        {
+          "id": "TAG015",
+          "name": "心肺复苏规范",
+          "nameEn": "CPR",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM037",
+              "name": "心肺复苏规范",
+              "description": "掌握按压位置、频率、回弹标准，模拟考核达标",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "急救技能需实操认证，确保应急能力",
+              "evaluationCriteria": "实操考核：按压位置、频率、回弹标准",
+              "isRequired": true,
+              "scoreWeight": 12
+            }
+          ]
+        },
+        {
+          "id": "TAG016",
+          "name": "高热处理规范",
+          "nameEn": "FeverManagement",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM038",
+              "name": "高热处理规范",
+              "description": "不自行用药，建议就医，记录体温变化",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组明确"不做什么"，防止医疗风险",
+              "evaluationCriteria": "理论考核：红线意识（不自行用药）、就医建议、体温记录",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG017",
+          "name": "喂养规范",
+          "nameEn": "FeedingStandards",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM039",
+              "name": "喂养规范",
+              "description": "综合遵循母乳"按需喂养"、人工"定时定量"核心原则，不擅自调整喂养量/频次；规范执行两类喂养的基础操作（如拍嗝、消毒），保障宝宝喂养安全与消化健康",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "用于综合喂养场景（含双喂养方式）或笼统喂养问题；上户后出现跨场景喂养不当，关联培训组综合教学责任",
+              "evaluationCriteria": "理论+实操：喂养原则、拍嗝、消毒",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG018",
+          "name": "睡眠培养规范",
+          "nameEn": "SleepTraining",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM040",
+              "name": "睡眠培养规范",
+              "description": "掌握科学哄睡方法（不摇晃、不抱睡过度），辅助建立规律作息",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组提供标准化方法，上户后无法完成哄睡且无合理原因，追溯培训责任",
+              "evaluationCriteria": "实操考核：哄睡方法（不摇晃、不抱睡过度）",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG019",
+          "name": "能哄宝宝",
+          "nameEn": "SoothingBaby",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM041",
+              "name": "能哄宝宝",
+              "description": "宝宝哭闹时能快速识别情绪诱因（如饥饿、尿布湿、肠胀气等），采用轻柔安抚方式（如轻拍、哼唱、包裹等），避免剧烈摇晃、大声呵斥等不当行为，快速稳定宝宝情绪",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组开展情绪识别与标准化安抚技巧培训，配套实操演练；上户后若出现宝宝持续哭闹且月嫂无有效安抚手段，或存在不当安抚行为，追溯培训责任",
+              "evaluationCriteria": "实操考核：情绪识别、安抚技巧",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG020",
+          "name": "拍嗝规范",
+          "nameEn": "Burping",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM042",
+              "name": "拍嗝规范",
+              "description": "掌握竖抱拍嗝、空心掌拍击方式，有效缓解宝宝胀气",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "实操考核通过方可上岗，上户后拍嗝无效视为培训不到位",
+              "evaluationCriteria": "实操考核：竖抱拍嗝、空心掌拍击",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG021",
+          "name": "抱姿规范",
+          "nameEn": "HoldingPosture",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM043",
+              "name": "抱姿规范",
+              "description": "掌握新生儿正确抱姿（托头托腰、避免压迫腹部），杜绝危险姿势",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组强调安全要点，上户后出现不当抱姿可追溯培训责任",
+              "evaluationCriteria": "实操考核：托头托腰、避免压迫腹部",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG022",
+          "name": "包裹规范",
+          "nameEn": "Swaddling",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM044",
+              "name": "包裹规范",
+              "description": "采用"松而不散"包裹方式，不束缚宝宝肢体活动",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学包裹技巧，上户后包裹不当导致宝宝不适，追溯培训责任",
+              "evaluationCriteria": "实操考核：松而不散、不束缚肢体",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG023",
+          "name": "穿脱衣物纸尿裤规范",
+          "nameEn": "ClothingDiaperChanging",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM045",
+              "name": "穿脱衣物纸尿裤规范",
+              "description": "操作轻柔无粗暴动作，避免划伤宝宝；纸尿裤穿戴贴合（不松不紧），无渗漏风险；穿脱后整理衣物，确保宝宝肢体活动不受限、体感舒适",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "属岗前核心技能，由培训组教学考核，上户相关问题关联培训成效跟进",
+              "evaluationCriteria": "实操考核：操作轻柔、贴合度、整理",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG024",
+          "name": "母乳喂养规范",
+          "nameEn": "Breastfeeding",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM046",
+              "name": "母乳喂养规范",
+              "description": "遵循"按需喂养"核心原则，不擅自调整喂养频次/时长；指导宝妈正确含接姿势，保障有效进食；哺乳后及时拍嗝，同步宝妈哺乳护理要点",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "岗前核心技能，培训组开展"理论+实操"考核；上户后出现喂养量不当、含接错误等问题，关联培训组责任",
+              "evaluationCriteria": "理论+实操：喂养原则、含接姿势指导、拍嗝",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG025",
+          "name": "人工喂养规范",
+          "nameEn": "FormulaFeeding",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM047",
+              "name": "人工喂养规范",
+              "description": "遵循"定时定量"核心原则，不擅自增减奶量；按"先水后粉"标准冲调、做好奶瓶消毒与水温控制；喂养时防胀气，餐后拍嗝并观察宝宝消化情况",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "岗前核心技能，培训组开展场景化考核；上户后出现冲调比例错误、消毒不到位、喂养量不当等问题，关联培训组责任",
+              "evaluationCriteria": "实操考核：冲调比例、消毒、水温控制、拍嗝",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG026",
+          "name": "红屁屁（尿布疹）",
+          "nameEn": "DiaperRash",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM048",
+              "name": "红屁屁（尿布疹）",
+              "description": "能准确识别红屁屁轻中重度症状；按"清洁-干燥-护臀膏涂抹-尿布更换调整"标准流程操作；护理中避免摩擦刺激，预防措施到位（如控制尿布更换间隔）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "需培训组系统培育规范，相关问题由培训组对接优化，保障技能落地",
+              "evaluationCriteria": "理论+实操：症状识别、护理流程",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG027",
+          "name": "皮肤护理（湿疹/热疹）",
+          "nameEn": "SkinCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM049",
+              "name": "皮肤护理（湿疹/热疹）",
+              "description": "能准确识别湿疹/热疹典型症状；清洁时避免过度揉搓、使用刺激性产品；保湿需选用适配宝宝肤质的产品，涂抹均匀；环境温湿度控制在适宜范围，避免刺激皮肤的护理行为",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "专业技能依赖培训组教学考核，相关问题由培训组协调完善",
+              "evaluationCriteria": "理论+实操：症状识别、护理方法",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG028",
+          "name": "宝宝剪指甲规整",
+          "nameEn": "NailTrimming",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM050",
+              "name": "宝宝剪指甲规整",
+              "description": "按标准流程操作，确保工具消毒、手法正确，避免宝宝受伤，指甲边缘光滑无毛刺",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定操作标准及培训考核；护理督导组负责日常服务中的操作指导、过程监督与规范核查；出现客诉或宝宝受伤，同步追溯培训组（培训是否到位）与护理督导组（指导监督是否缺位）责任",
+              "evaluationCriteria": "实操考核：工具消毒、手法、安全性",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG029",
+          "name": "便便观察规范",
+          "nameEn": "StoolObservation",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM051",
+              "name": "便便观察规范",
+              "description": "按服务标准观察宝宝便便的性状、颜色、频次及异常情况（如奶瓣、血丝、腹泻、便秘等），及时准确记录并同步家长，助力宝宝肠道健康监测与异常预警",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定宝宝便便观察标准、记录规范及异常反馈流程并组织培训考核；护理督导负责日常服务中的指导、执行监督及异常情况核查；出现未按规范操作或反馈不及时导致客诉，同步追溯培训组（培训是否到位）与护理督导（指导监督是否缺位）责任",
+              "evaluationCriteria": "理论+实操：性状/颜色/频次观察、记录、异常反馈",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG030",
+          "name": "肠胀气护理规范",
+          "nameEn": "ColicCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM052",
+              "name": "肠胀气护理规范",
+              "description": "宝宝肠胀气时，先评估症状（频繁哭闹、腹部鼓胀等），按标操作：顺时针排气操、空心掌竖抱拍嗝、调整喂养姿势防胀气；护理后观察缓解情况，症状持续需提醒就医，防不当护理加重不适",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组：制定肠胀气护理标程与手册，开展理论+实操培训（含手法细节），纳入考核；因培训不到位致护理不规范、引发客诉的，追溯责任并优化培训",
+              "evaluationCriteria": "实操考核：症状评估、排气操、拍嗝、喂养姿势调整",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG031",
+          "name": "基础护理能力",
+          "nameEn": "BasicBabyCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM053",
+              "name": "基础护理能力",
+              "description": "具备宝宝喂养、作息调整、清洁护理、常见不适应对等基础护理技能，综合服务水平达客户预期",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定基础护理标准及系统培训考核；护理督导组负责上户后实操指导、服务质量监督与技能强化；客户反馈综合护理能力不达标，同步追溯培训组与护理督导组责任",
+              "evaluationCriteria": "综合实操考核：喂养、作息、清洁、常见问题处理",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CAT003",
+      "name": "妈妈护理",
+      "nameEn": "MotherCare",
+      "sortOrder": 3,
+      "responsibleDept": "培训组+督导组",
+      "coverage": "产妇核心护理技能与服务质量",
+      "tags": [
+        {
+          "id": "TAG032",
+          "name": "医院陪护流程规范",
+          "nameEn": "HospitalAccompaniment",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM054",
+              "name": "医院陪护流程规范",
+              "description": "掌握住院期间宝妈护理核心（饮食协助、伤口观察、情绪安抚、物品整理）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组制定标准化流程，考核通过方可上岗，上户后流程遗漏追溯培训责任",
+              "evaluationCriteria": "实操考核：饮食协助、伤口观察、情绪安抚、物品整理",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG033",
+          "name": "情绪观察规范",
+          "nameEn": "EmotionalObservation",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM055",
+              "name": "情绪观察规范",
+              "description": "能精准识别宝妈产后焦虑、抑郁等情绪异常信号，第一时间给予简单安抚并同步反馈至运营组/客服组，保障宝妈产后情绪健康",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学情绪识别技巧，上户后未及时发现情绪异常视为培训不到位",
+              "evaluationCriteria": "理论+情景模拟：情绪识别、安抚、反馈",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG034",
+          "name": "会阴清洁规范",
+          "nameEn": "PerinealCleaning",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM056",
+              "name": "会阴清洁规范",
+              "description": "掌握"从前往后"清洁顺序、棉片不重复使用、观察红肿情况",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "操作流程由培训组制定，属产妇护理核心技能，操作不当追溯培训责任",
+              "evaluationCriteria": "实操考核：清洁顺序、棉片使用、观察",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG035",
+          "name": "乳房护理规范",
+          "nameEn": "BreastCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM057",
+              "name": "乳房护理规范",
+              "description": "可指导正确哺乳姿势，严禁通乳、贴膏药等越界操作",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组明确操作边界，上户后越界操作视为培训未到位",
+              "evaluationCriteria": "理论+实操：正确指导、红线意识（越界操作）",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG036",
+          "name": "开奶指导规范",
+          "nameEn": "LactationGuidance",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM058",
+              "name": "开奶指导规范",
+              "description": "指导宝妈正确含接姿势、哺乳频率，不做暴力按压、强行挤压等伤害乳腺的开奶操作",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组明确指导边界，上户后违规开奶则追溯培训责任",
+              "evaluationCriteria": "实操考核：含接姿势指导、红线意识",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG037",
+          "name": "伤口护理规范",
+          "nameEn": "WoundCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM059",
+              "name": "伤口护理规范",
+              "description": "掌握剖腹产/顺产伤口清洁、消毒、观察感染迹象（不擅自用药）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学基础护理流程，上户后护理不当或越界操作视为培训未达标",
+              "evaluationCriteria": "实操考核：伤口清洁、消毒、观察、红线意识",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG038",
+          "name": "居家洗浴护理",
+          "nameEn": "HomeBathingCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM060",
+              "name": "居家洗浴护理",
+              "description": "掌握产后宝妈居家洗浴要点（水温控制、保暖防护、顺剖差异化护理），避免伤口沾水，观察身体反应（不擅自处理异常）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学洗浴流程及注意事项，上户后因护理不当引发不适或影响恢复，视为培训未达标",
+              "evaluationCriteria": "实操考核：水温控制、保暖、顺剖差异、红线意识",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG039",
+          "name": "产康护理能力",
+          "nameEn": "PostpartumRecovery",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM061",
+              "name": "产康护理能力",
+              "description": "掌握专业产康按摩手法，结合宝妈产后体质（如顺产/剖腹产、恢复情况），按标准流程操作，确保按摩安全、舒适，助力产后恢复",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定产康按摩操作标准及培训考核；护理督导组负责日常服务中的实操指导、过程监督与服务质量核查；出现手法不专业、适配不当导致客诉或不适，同步追溯培训组（培训是否到位）与护理督导组（指导监督是否缺位）责任",
+              "evaluationCriteria": "实操考核：按摩手法、体质适配、安全性",
+              "isRequired": false,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG040",
+          "name": "基础护理能力",
+          "nameEn": "BasicMotherCare",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM062",
+              "name": "基础护理能力",
+              "description": "掌握宝妈产后伤口护理、饮食协助、起居照料、情绪关怀等基础服务技能，满足产后日常护理需求",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定宝妈基础护理标准及培训考核；护理督导组负责上户后实操指导、服务质量监督与技能强化；客户反馈基础护理服务不达标，同步追溯培训组与护理督导组责任",
+              "evaluationCriteria": "综合实操考核：伤口护理、饮食协助、起居照料、情绪关怀",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CAT004",
+      "name": "月子餐制作",
+      "nameEn": "PostpartumMeal",
+      "sortOrder": 4,
+      "responsibleDept": "培训组+督导组",
+      "coverage": "月子餐及相关饮食制作技能与服务质量",
+      "tags": [
+        {
+          "id": "TAG041",
+          "name": "禁忌识别规范",
+          "nameEn": "FoodTaboos",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM063",
+              "name": "禁忌识别规范",
+              "description": "不使用韭菜、人参、大麦茶等回奶食材",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "食材禁忌统一培训，考核通过方可上岗，使用禁忌食材则追溯培训责任",
+              "evaluationCriteria": "理论考核：禁忌食材清单",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG042",
+          "name": "口味适配规范",
+          "nameEn": "TasteAdaptation",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM064",
+              "name": "口味适配规范",
+              "description": "清淡少盐、不油腻，根据客户口味微调（不偏离四阶段原则）",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学口味把控技巧，客户投诉口味问题且无合理调整，追溯培训责任",
+              "evaluationCriteria": "实操考核：菜品口味（清淡少盐、不油腻）",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG043",
+          "name": "制作时效规范",
+          "nameEn": "CookingEfficiency",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM065",
+              "name": "制作时效规范",
+              "description": "按"三餐三点"时间节点交付，单次制作时长不超过90分钟",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组优化制作流程教学，超时交付且无合理原因视为培训未达标",
+              "evaluationCriteria": "实操考核：制作时长控制（≤90分钟）",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG044",
+          "name": "品种搭配规范",
+          "nameEn": "DishVariety",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM066",
+              "name": "品种搭配规范",
+              "description": "四阶段内每日菜品不重复，确保"三餐三点"足量供应，掌握常见食材烹饪方法",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组教学菜品搭配逻辑，品种单一或未达标则追溯培训责任",
+              "evaluationCriteria": "实操考核：菜品搭配、不重复、足量供应",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG045",
+          "name": "客户沟通规范",
+          "nameEn": "MealCommunication",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM067",
+              "name": "客户沟通规范",
+              "description": "上户前确认饮食偏好，服务中每日同步次日餐单，主动询问反馈",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组培养沟通意识，未主动沟通导致客户不满视为培训不到位",
+              "evaluationCriteria": "情景模拟：确认偏好、同步餐单、询问反馈",
+              "isRequired": true,
+              "scoreWeight": 5
+            }
+          ]
+        },
+        {
+          "id": "TAG046",
+          "name": "按体质调整月子餐",
+          "nameEn": "ConstitutionAdaptation",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM068",
+              "name": "按体质调整月子餐",
+              "description": "结合宝妈体质（顺产/剖腹产、寒热体质等），遵循月子餐营养配比原则，调整食材搭配与烹饪方式，满足产后恢复需求",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定体质适配标准及餐食搭配方案，组织月嫂培训考核；出现口味不符、营养失衡相关客诉，追溯培训责任",
+              "evaluationCriteria": "理论+实操：体质判断、食材调整、烹饪方式",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG047",
+          "name": "未做三餐三点",
+          "nameEn": "ThreeMealsThreeSnacks",
+          "type": "negative",
+          "items": [
+            {
+              "id": "ITEM069",
+              "name": "未做三餐三点",
+              "description": "未按月子餐服务标准提供"三餐三点"（正餐+加餐）配置，或加餐频次、品类未达到约定要求，影响宝妈产后营养补给",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定月子餐"三餐三点"配置标准及实操培训；运营组负责服务标准宣导、日常监督抽查与客户反馈跟进；出现未按要求提供的情况，同步追溯培训组（培训是否到位）与运营组（监督是否缺位）责任",
+              "evaluationCriteria": "服务检查：三餐三点配置",
+              "isRequired": false,
+              "scoreWeight": 0
+            }
+          ]
+        },
+        {
+          "id": "TAG048",
+          "name": "不会做饭/做饭不好吃",
+          "nameEn": "PoorCooking",
+          "type": "negative",
+          "items": [
+            {
+              "id": "ITEM070",
+              "name": "不会做饭/做饭不好吃",
+              "description": "不具备月子餐基础烹饪技能，或菜品口味、口感、品相未达服务标准，无法满足宝妈产后饮食需求与口味预期",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定月子餐烹饪技能标准、食谱教学及入职/在岗考核；因培训不到位、考核不严格导致服务不达标引发客诉，追溯培训组责任",
+              "evaluationCriteria": "实操考核：菜品口味、口感、品相",
+              "isRequired": false,
+              "scoreWeight": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CAT005",
+      "name": "服务素养与行为规范",
+      "nameEn": "ServiceQuality",
+      "sortOrder": 5,
+      "responsibleDept": "培训组+运营组",
+      "coverage": "月嫂服务意识、职业态度、标准化服务流程与综合服务能力",
+      "tags": [
+        {
+          "id": "TAG049",
+          "name": "个人素养",
+          "nameEn": "PersonalQuality",
+          "type": "quality",
+          "items": [
+            {
+              "id": "ITEM024",
+              "name": "责任心&爱心",
+              "description": "主动履行母婴护理核心职责，不敷衍、不隐瞒母婴异常情况；服务中动作轻柔，主动关注母婴需求（如宝宝哭闹时耐心安抚、宝妈产后主动提醒休息），以细致关怀保障服务安全与温度",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部情景提问初筛；培训组实操演练强化；运营组（月嫂老师）日常管理月嫂、跟踪履职情况；客服组接收客户反馈并同步；护理督导在线查房时抽查服务细节（如日志完整性、护理动作），对不足项给出指导，出现问题按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训观察+客户反馈+督导抽查",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM025",
+              "name": "同理心&耐心",
+              "description": "能换位思考理解客户（新手妈妈、老人）的情绪与育儿需求，面对分歧不对立；客户反复提问或质疑时，保持温和态度细致解释，不急躁、不敷衍，有效化解沟通矛盾",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部冲突场景提问初筛；培训组角色扮演演练沟通技巧；运营组（月嫂老师）针对性沟通引导；客服组对接客户反馈、安抚情绪；护理督导在线观察沟通场景，对沟通不当的月嫂给予线上指导。出现问题按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训演练+客户反馈+督导观察",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM026",
+              "name": "性格温柔&细心",
+              "description": "如宝宝夜醒反复安抚、产妇疑问耐心解答；关注服务细节，能及时发现母婴细微变化（如宝宝体温波动、皮肤异常、产妇情绪低落），细致处理护理环节（如奶瓶彻底消毒、衣物分类清洗、护理记录精准填写），避免因疏忽导致服务疏漏",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部经面试观察、过往服务评价初筛；培训组开展服务细节规范教学及情景模拟演练；运营组（月嫂老师）日常跟踪表现并针对性引导；客服组收集客户对服务态度及细节的反馈；护理督导在线抽查服务记录，对态度急躁、细节疏忽者给予指导。出现安抚无耐心、护理漏项等相关投诉，按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训观察+客户反馈+督导抽查",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM027",
+              "name": "抗压能力",
+              "description": "面对宝宝频繁夜醒、客户高要求、连续高强度服务等场景时，能稳定情绪，不抱怨、不消极怠工，保持护理标准不打折，确保服务稳定性",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部高压场景假设初筛；培训组心态引导+高压模拟演练；运营组（月嫂老师）关注月嫂状态、及时疏导；客服组收集客户反馈（如"月嫂抱怨"）并同步；护理督导针对服务下滑的月嫂给出调整建议。出现相关问题按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训演练+客户反馈+督导观察",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM028",
+              "name": "积极主动（眼里有活）",
+              "description": "超出约定服务范围，预判需求并提供增值支持；不被动等待客户指令，能预判母婴潜在需求（如提前消毒奶瓶、宝宝揉眼睛时准备哄睡）；主动完成约定外的增值服务（如整理育儿区域、提醒护理注意事项），帮客户减轻额外负担",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部过往经历提问初筛；培训组"主动行为清单"教学；运营组（月嫂老师）督促月嫂落实增值服务；客服组收集客户满意度反馈；护理督导在线抽查主动服务痕迹（如日志中增值服务记录），对被动服务的给出指导。出现投诉按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训教学+客户反馈+督导抽查",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM029",
+              "name": "情商沟通",
+              "description": "能精准捕捉服务相关方（如新手爸妈焦虑、老人育儿观念差异）的情绪，沟通时语气温和、表达清晰；面对分歧不争执，用通俗语言解释护理逻辑，化解育儿观念冲突；及时回应各类疑问，不敷衍、不急躁，维护良好服务关系",
+              "responsible": "招生部+培训组+运营组+客服组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部通过冲突场景提问初筛；培训组开展角色扮演教学沟通技巧；运营组（月嫂老师）针对性引导沟通方式；客服组同步客户沟通反馈；护理督导在线观察服务沟通场景，对沟通不当的给出指导。出现沟通类投诉按对应环节追溯责任",
+              "evaluationCriteria": "面试评估+培训演练+客户反馈+督导观察",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM030",
+              "name": "工作期间规范用机",
+              "description": "工作时间内专注服务，不随意玩手机（如无必要不手持手机、不边护理边刷手机），避免影响宝宝护理、月子餐制作等核心工作",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责入职时培训工作用机规范；月嫂管理组负责日常监督、案例宣导与行为纠偏；出现工作期间违规用机导致服务疏忽或客诉，同步追溯培训组与管理组责任",
+              "evaluationCriteria": "培训宣导+日常监督",
+              "isRequired": true,
+              "scoreWeight": 6
+            },
+            {
+              "id": "ITEM031",
+              "name": "责任担当（无借口推诿）",
+              "description": "工作中出现问题主动承担责任，不找借口、不推卸责任，积极配合解决问题",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定个人素养培训标准及入职考核；运营组负责日常宣导、行为监督与规范强化；出现推诿扯皮情况，同步追溯培训组（培训是否到位）与管理组（日常宣导监督是否缺位）责任",
+              "evaluationCriteria": "培训考核+日常观察",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM032",
+              "name": "综合服务素养",
+              "description": "牢记客户叮嘱及服务要求，反应敏捷响应突发/临时诉求；按流程高效推进工作，条理清晰，确保服务无遗漏、进度无延误",
+              "responsible": "招生部+培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "招生部入职初筛；培训组开展筛查及记忆、应急、高效条理技巧培训；运营组日常监督辅导；出现相关客诉，追溯三方筛查/培训/监督责任",
+              "evaluationCriteria": "面试评估+培训考核+日常观察",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG050",
+          "name": "家政能力",
+          "nameEn": "Housekeeping",
+          "type": "skill",
+          "items": [
+            {
+              "id": "ITEM071",
+              "name": "家务活整理",
+              "description": "及时清洗宝宝衣物（分类洗涤、漂洗干净无残留）、宝妈贴身衣物（用温和洗涤剂单独清洗），餐具使用后1小时内清洗并消毒，护理用品（奶瓶、湿巾、抚触油等）按客户指定位置归置整齐，保持母婴护理区域（如卧室、婴儿床周边）整洁无杂物",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责上岗前操作规范教学与场景考核，确保月嫂掌握清洁标准；运营组通过客户反馈、在线查房核查实际执行情况；若出现未及时清洁、物品归置混乱或消毒不到位的情况，既追溯培训组考核不严的责任，也追责运营组日常监督管理失职",
+              "evaluationCriteria": "实操考核：分类洗涤、餐具消毒、物品归置",
+              "isRequired": true,
+              "scoreWeight": 8
+            }
+          ]
+        },
+        {
+          "id": "TAG051",
+          "name": "每日护理流程",
+          "nameEn": "DailyCareProcess",
+          "type": "process",
+          "items": [
+            {
+              "id": "ITEM072",
+              "name": "上户安全规范",
+              "description": "严格遵守客户家庭安全管理规定，规范操作水电、燃气设备并及时关闭，妥善管理门窗；宝宝外出时做好安全防护与陌生人防范，日常护理中（如喂奶台、婴儿床使用场景）全程监护宝宝，杜绝跌落、磕碰等安全风险，不擅自操作危险物品",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组强调安全要点，上户后出现安全隐患视为培训未达标",
+              "evaluationCriteria": "培训宣导+安全检查",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM073",
+              "name": "上户护理红线",
+              "description": "严禁使用偏方/土方子（如草药敷贴、偏方退黄疸等）；严禁擅自进行针灸、拔罐、刮痧等非正规护理行为；不擅自调整医嘱、不隐瞒母婴重大异常情况",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组：岗前明确法律安全边界，红线必考，教学考核传达到位；运营组：上户后沟通提醒强化红线，凭客户反馈、日志核查监督引导；违规则追溯双方连带责任（培训警示考核不严+运营宣导监督不力）",
+              "evaluationCriteria": "理论考核+红线意识",
+              "isRequired": true,
+              "scoreWeight": 12,
+              "isRedLine": true
+            },
+            {
+              "id": "ITEM077",
+              "name": "护理日志规范",
+              "description": "按要求如实填写（宝宝喂养、排便、体温等），及时上报，不虚假记录",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "属上户后行为管理，日志填写不规范由运营组督导整改",
+              "evaluationCriteria": "日常监督+日志抽查",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG052",
+          "name": "工作规划与执行",
+          "nameEn": "WorkPlanning",
+          "type": "process",
+          "items": [
+            {
+              "id": "ITEM074",
+              "name": "上户流程规范",
+              "description": "严格遵循公司固定一日工作流程，按既定顺序推进宝宝护理、月子餐制作、家务整理等所有服务项，确保环节衔接顺畅、无服务遗漏、无流程混乱",
+              "responsible": "培训组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组开展"固定工作流程+环节衔接"专项培训，明确服务项完成标准；上户后出现未按固定流程执行、服务遗漏、流程混乱等问题，追溯培训组教学责任",
+              "evaluationCriteria": "培训考核+流程抽查",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM075",
+              "name": "应急事项提前筹备",
+              "description": "针对就医、外出等应急场景，提前梳理所需物品清单并准备到位，避免临时慌乱影响服务效率",
+              "responsible": "培训组+护理督导",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责制定应急场景筹备清单及培训；护理督导组负责日常监督抽查、上户后实操指导与执行核查；出现应急事项未提前准备导致客诉，同步追溯培训组（培训是否到位）与护理督导组（监督指导是否缺位）责任",
+              "evaluationCriteria": "培训考核+应急演练",
+              "isRequired": true,
+              "scoreWeight": 6
+            },
+            {
+              "id": "ITEM076",
+              "name": "执行效率与规划能力",
+              "description": "接受指导后能按要求高效推进工作（不拖沓），主动规划工作步骤，确保服务环节衔接顺畅",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责培训工作规划方法与效率提升技巧；月嫂管理组负责日常监督、实操跟踪与行为纠偏；出现经指导后仍做事拖沓、无规划导致服务滞后，同步追溯培训组与管理组责任",
+              "evaluationCriteria": "培训考核+日常观察",
+              "isRequired": true,
+              "scoreWeight": 6
+            }
+          ]
+        },
+        {
+          "id": "TAG053",
+          "name": "职业行为规范",
+          "nameEn": "ProfessionalConduct",
+          "type": "behavior",
+          "items": [
+            {
+              "id": "ITEM078",
+              "name": "着装规范",
+              "description": "上户穿工作服，衣服整洁、头发束起、衣物洁净、带口罩服务",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责岗前规范教学与场景考核；运营组上户后日常监督，违规未整改则追溯双方责任（培训考核不严+运营管理失职）",
+              "evaluationCriteria": "培训考核+日常监督",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM079",
+              "name": "餐前洗手规范",
+              "description": "接触宝宝餐具/冲调奶粉前、换尿布时洗手",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组负责上岗前模拟场景教学与考核，确保月嫂掌握规范；运营组通过日常督导（如在线查房、客户反馈）核查执行情况，未规范洗手既追溯培训责任，也追责运营组日常管控不到位",
+              "evaluationCriteria": "培训考核+日常监督",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM080",
+              "name": "不谈客户隐私",
+              "description": "不打听、不传播客户家庭信息（收入、关系等）",
+              "responsible": "培训组+运营组",
+              "applicable": ["合格证", "质量追溯"],
+              "liability": "培训组将职业道德教育纳入准入必考项，确保月嫂知晓红线；运营组负责日常宣导与违规追责，发现传播隐私行为，既追溯培训组教育不扎实责任，也追责运营组日常管理疏漏",
+              "evaluationCriteria": "培训考核+红线意识",
+              "isRequired": true,
+              "scoreWeight": 10
+            },
+            {
+              "id": "ITEM081",
+              "name": "个人卫生规范",
+              "description": "指甲修剪整齐、无日常清洁不当导致的临时体味",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "上户后行为管理，由运营组通过督导查访纠正，屡教不改则追责运营组",
+              "evaluationCriteria": "日常监督",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM082",
+              "name": "服务主动规范（基础服务）",
+              "description": "属基础服务义务，不包含约定外的增值行为；按公司固定服务标准及工作流程履约，不擅自简化/变更服务内容；每日主动向客户同步服务进度（如已完成项、待完成项、宝宝护理关键信息），如实、完整填写护理日志并留存记录",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组监督月嫂执行落地，对未按标准履约、未主动同步信息、日志填写不规范的月嫂约谈整改；未及时处理导致客诉的，追责运营组管理失职",
+              "evaluationCriteria": "日常监督+客户反馈",
+              "isRequired": true,
+              "scoreWeight": 8
+            },
+            {
+              "id": "ITEM083",
+              "name": "衣物分洗规范",
+              "description": "个人衣物与客户衣物分开清洗，不混用洗涤工具",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "属生活习惯管理，由运营组督导纠正，违规则追责运营组",
+              "evaluationCriteria": "日常监督",
+              "isRequired": true,
+              "scoreWeight": 5
+            },
+            {
+              "id": "ITEM084",
+              "name": "服务态度规范",
+              "description": "语气温和、有耐心，及时回应客户需求",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组需现场干预或安排提前下户，未及时处理视为管理失职",
+              "evaluationCriteria": "客户反馈+日常监督",
+              "isRequired": true,
+              "scoreWeight": 10
+            }
+          ]
+        },
+        {
+          "id": "TAG054",
+          "name": "月嫂原因",
+          "nameEn": "MaternalReason",
+          "type": "negative",
+          "items": [
+            {
+              "id": "ITEM085",
+              "name": "客户争执管控",
+              "description": "与客户产生分歧时主动沟通，不发生争执，及时上报月嫂老师/客服",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组负责调解处理，未有效干预导致矛盾升级则追责运营组",
+              "evaluationCriteria": "客户反馈+投诉处理",
+              "isRequired": false,
+              "scoreWeight": 0
+            },
+            {
+              "id": "ITEM086",
+              "name": "家庭事务处置",
+              "description": "因家庭事务需请假或离岗，需提前3天报备",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组负责协调订单衔接，未提前报备导致客诉追责运营组",
+              "evaluationCriteria": "报备记录核查",
+              "isRequired": false,
+              "scoreWeight": 0
+            },
+            {
+              "id": "ITEM087",
+              "name": "健康异常处置",
+              "description": "月嫂感冒、咳嗽、怀孕等身体不适，需及时上报",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组负责安排替换人员，未及时处理影响服务则追责运营组",
+              "evaluationCriteria": "上报记录+处理时效",
+              "isRequired": false,
+              "scoreWeight": 0
+            },
+            {
+              "id": "ITEM088",
+              "name": "飞单/拒单管控",
+              "description": "严禁答应订单后上户前拒单，或私下承接客户订单",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "运营组负责合同约束与追责，出现飞单/拒单则追责运营组监管不力",
+              "evaluationCriteria": "订单记录核查",
+              "isRequired": false,
+              "scoreWeight": 0
+            },
+            {
+              "id": "ITEM089",
+              "name": "夜间值守规范",
+              "description": "夜间保持警觉，确保及时响应宝宝/宝妈需求",
+              "responsible": "运营组",
+              "applicable": ["质量追溯"],
+              "liability": "属上户后行为管理，睡觉太沉叫不醒由运营组督导整改",
+              "evaluationCriteria": "客户反馈",
+              "isRequired": false,
+              "scoreWeight": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "totalCategories": 5,
+    "totalTags": 54,
+    "totalItems": 89,
+    "importInstructions": {
+      "step1": "使用JSON文件直接导入系统（推荐）",
+      "step2": "或通过CSV文件在Excel中编辑后再导入",
+      "step3": "导入后需配置标签与岗位的关联关系",
+      "step4": "配置考核标准和分值权重"
+    }
+  }
+}

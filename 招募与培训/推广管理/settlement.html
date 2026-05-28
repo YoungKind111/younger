@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金结算管理</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+  <link rel="stylesheet" href="../公共组件/shared-styles.css">
+  <script src="../公共组件/shared-menu.js"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .page-title { font-size: 22px; font-weight: 600; color: #1f2d3d; margin-bottom: 24px; }
+    .stat-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-value { font-size: 24px; font-weight: 700; color: #f5222d; }
+    .stat-label { font-size: 13px; color: #8c8c8c; margin-top: 4px; }
+    .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card-title { font-size: 16px; font-weight: 600; color: #1f2d3d; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .withdrawal-card { background: #fafafa; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #e8e8e8; }
+    .withdrawal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .withdrawal-user { display: flex; align-items: center; gap: 10px; }
+    .withdrawal-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .withdrawal-user-info { font-size: 14px; }
+    .withdrawal-user-name { font-weight: 600; }
+    .withdrawal-user-meta { font-size: 12px; color: #8c8c8c; }
+    .withdrawal-amount { font-size: 22px; font-weight: 700; color: #f5222d; }
+    .withdrawal-status { font-size: 12px; padding: 4px 12px; border-radius: 10px; }
+    .status-pending { background: #fff7e6; color: #fa8c16; }
+    .status-paid { background: #f6ffed; color: #52c41a; }
+    .status-failed { background: #fff2f0; color: #ff4d4f; }
+    .withdrawal-detail { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px dashed #e8e8e8; }
+    .withdrawal-info { font-size: 13px; color: #595959; }
+    .withdrawal-actions { display: flex; gap: 8px; }
+    .detail-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+    .detail-content { background: #fff; border-radius: 8px; width: 600px; max-height: 80vh; overflow: auto; padding: 24px; }
+    .detail-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+    .detail-label { color: #8c8c8c; }
+    .detail-value { font-weight: 500; }
+    .commission-item { background: #f5f5f5; padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; }
+    .commission-item-amount { color: #f5222d; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="main-nav"></div>
+    <div class="page-container">
+      <div class="page-title">佣金结算管理</div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.pendingAmount }}</div>
+          <div class="stat-label">待打款金额</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.pendingCount }}</div>
+          <div class="stat-label">待打款笔数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.todayPaid }}</div>
+          <div class="stat-label">今日已打款</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.monthTotal }}</div>
+          <div class="stat-label">本月打款总额</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">¥{{ stats.totalPaid }}</div>
+          <div class="stat-label">累计打款总额</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>提现申请列表</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <el-button v-if="filterStatus === 'pending'" type="success" size="small" @click="batchApprove">全部打款</el-button>
+            <el-select v-model="dateType" size="small" style="width:100px;">
+              <el-option label="申请时间" value="apply"></el-option>
+              <el-option label="打款时间" value="paid"></el-option>
+            </el-select>
+            <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" style="width:240px;"></el-date-picker>
+            <el-select v-model="filterStatus" size="small" style="width:120px;">
+              <el-option label="全部状态" value=""></el-option>
+              <el-option label="待打款" value="pending"></el-option>
+              <el-option label="已打款" value="paid"></el-option>
+              <el-option label="打款失败" value="failed"></el-option>
+            </el-select>
+          </div>
+        </div>
+
+        <div v-for="(item, idx) in filteredWithdrawals" :key="idx" class="withdrawal-card">
+          <div class="withdrawal-header">
+            <div class="withdrawal-user">
+              <div class="withdrawal-avatar">{{ item.promoterName.charAt(0) }}</div>
+              <div class="withdrawal-user-info">
+                <div class="withdrawal-user-name">{{ item.promoterName }}</div>
+                <div class="withdrawal-user-meta">申请时间：{{ item.applyTime }}<span v-if="item.status === 'paid'" style="margin-left:8px;">打款时间：{{ item.paidTime }}</span></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div class="withdrawal-amount">¥{{ item.amount }}</div>
+              <div class="withdrawal-status" :class="'status-' + item.status">{{ statusText(item.status) }}</div>
+            </div>
+          </div>
+          <div class="withdrawal-detail">
+            <div class="withdrawal-info">
+              <span>共 {{ item.commissionCount }} 笔佣金</span>
+              <span v-if="item.note" style="margin-left:12px;color:#8c8c8c;">备注：{{ item.note }}</span>
+            </div>
+            <div class="withdrawal-actions">
+              <el-button size="small" type="primary" text @click="showDetail(item)">详情</el-button>
+              <el-button v-if="item.status === 'pending'" size="small" type="primary" @click="approveWithdrawal(item)">打款</el-button>
+              <el-button v-if="item.status === 'pending'" size="small" type="danger" text @click="rejectWithdrawal(item)">拒绝</el-button>
+            </div>
+          </div>
+        </div>
+        <div v-if="filteredWithdrawals.length === 0" style="text-align:center;padding:60px;color:#bfbfbf;font-size:14px;">暂无提现申请数据</div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <el-pagination layout="total, prev, pager, next" :total="withdrawalList.length" :page-size="10"></el-pagination>
+      </div>
+
+      <div v-if="detailVisible" class="detail-modal" @click.self="detailVisible = false">
+        <div class="detail-content">
+          <div class="detail-title">提现申请详情</div>
+          <div class="detail-row"><span class="detail-label">推广人</span><span class="detail-value">{{ currentDetail.promoterName }}</span></div>
+          <div class="detail-row"><span class="detail-label">申请时间</span><span class="detail-value">{{ currentDetail.applyTime }}</span></div>
+          <div class="detail-row"><span class="detail-label">开户银行</span><span class="detail-value">{{ currentDetail.bankName }} {{ currentDetail.bankBranch }}</span></div>
+          <div class="detail-row"><span class="detail-label">银行卡号</span><span class="detail-value">{{ currentDetail.bankCard }}</span></div>
+          <div class="detail-row"><span class="detail-label">提现金额</span><span class="detail-value" style="color:#f5222d;font-weight:700;">¥{{ currentDetail.amount }}</span></div>
+          <div class="detail-row"><span class="detail-label">佣金笔数</span><span class="detail-value">{{ currentDetail.commissionCount }} 笔</span></div>
+          <div class="detail-row"><span class="detail-label">申请状态</span><span class="detail-value">{{ statusText(currentDetail.status) }}</span></div>
+          <div v-if="currentDetail.status === 'paid'" class="detail-row"><span class="detail-label">打款时间</span><span class="detail-value">{{ currentDetail.paidTime }}</span></div>
+          <div v-if="currentDetail.status === 'failed'" class="detail-row"><span class="detail-label">失败原因</span><span class="detail-value" style="color:#ff4d4f;">{{ currentDetail.failReason }}</span></div>
+
+          <div style="margin-top:20px;">
+            <div style="font-weight:600;margin-bottom:12px;">佣金明细</div>
+            <div v-for="(comm, idx) in currentDetail.commissions" :key="idx" class="commission-item">
+              <span>{{ comm.personName }} | {{ comm.orderId }} | {{ comm.node }}</span>
+              <span class="commission-item-amount">¥{{ comm.amount }}</span>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:20px;">
+            <button class="btn-default" @click="detailVisible = false">关闭</button>
+            <button v-if="currentDetail.status === 'pending'" class="btn-primary" style="margin-left:12px;" @click="approveWithdrawal(currentDetail)">确认打款</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+    const app = createApp({
+      setup() {
+        const stats = ref({ pendingAmount: '8,650.00', pendingCount: 5, todayPaid: '3,200.00', monthTotal: '45,680.00', totalPaid: '156,890.00' });
+        const dateRange = ref([]);
+        const dateType = ref('apply');
+        const filterStatus = ref('');
+        const detailVisible = ref(false);
+        const currentDetail = ref({});
+
+        const withdrawalList = ref([
+          { id: 1, promoterName: '李秀英', applyTime: '2026-04-20 09:15', bankName: '中国工商银行', bankBranch: '上海浦东支行', bankCard: '6222 **** **** 5678', bankInfo: '工商银行 上海浦东支行', amount: '2,180.00', commissionCount: 5, status: 'pending', commissions: [ { personName: '陈美华', orderId: 'ORD-20260418-001', node: '上户', amount: '75.00' }, { personName: '赵小芳', orderId: 'ORD-20260419-002', node: '上户', amount: '60.00' }, { personName: '李明', orderId: 'ORD-20260415-003', node: '上户', amount: '75.00' }, { personName: '周丽华', orderId: 'ORD-20260412-004', node: '上户', amount: '50.00' }, { personName: '孙丽', orderId: 'ORD-20260408-005', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 2, promoterName: '张丽华', applyTime: '2026-04-20 10:30', bankName: '中国建设银行', bankBranch: '上海徐汇支行', bankCard: '6222 **** **** 9012', bankInfo: '建设银行 上海徐汇支行', amount: '1,850.00', commissionCount: 4, status: 'pending', commissions: [ { personName: '刘大伟', orderId: 'ORD-20260416-006', node: '上户', amount: '94.50' }, { personName: '王小红', orderId: 'ORD-20260414-007', node: '上户', amount: '81.00' }, { personName: '张三', orderId: 'ORD-20260410-008', node: '上户', amount: '50.00' }, { personName: '李四', orderId: 'ORD-20260405-009', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 3, promoterName: '王小芳', applyTime: '2026-04-20 11:45', bankName: '中国农业银行', bankBranch: '上海静安支行', bankCard: '6222 **** **** 3456', bankInfo: '农业银行 上海静安支行', amount: '1,420.00', commissionCount: 3, status: 'pending', commissions: [ { personName: '陈大明', orderId: 'ORD-20260417-010', node: '上户', amount: '75.00' }, { personName: '刘小红', orderId: 'ORD-20260415-011', node: '上户', amount: '60.00' }, { personName: '王五', orderId: 'ORD-20260412-012', node: '上户', amount: '50.00' } ], note: '' },
+          { id: 4, promoterName: '陈大明', applyTime: '2026-04-20 14:20', bankName: '招商银行', bankBranch: '上海虹口支行', bankCard: '6222 **** **** 7890', bankInfo: '招商银行 上海虹口支行', amount: '1,650.00', commissionCount: 3, status: 'pending', commissions: [ { personName: '赵小丽', orderId: 'ORD-20260418-013', node: '上户', amount: '94.50' }, { personName: '钱伟', orderId: 'ORD-20260416-014', node: '上户', amount: '81.00' }, { personName: '孙倩', orderId: 'ORD-20260410-015', node: '上户', amount: '50.00' } ], note: '' },
+          { id: 5, promoterName: '刘小红', applyTime: '2026-04-20 15:00', bankName: '交通银行', bankBranch: '上海杨浦支行', bankCard: '6222 **** **** 1234', bankInfo: '交通银行 上海杨浦支行', amount: '1,550.00', commissionCount: 3, status: 'pending', commissions: [ { personName: '周莉', orderId: 'ORD-20260419-016', node: '上户', amount: '75.00' }, { personName: '吴涛', orderId: 'ORD-20260414-017', node: '上户', amount: '60.00' }, { personName: '郑强', orderId: 'ORD-20260408-018', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 6, promoterName: '张三', applyTime: '2026-04-20 08:30', bankName: '中国银行', bankBranch: '上海黄浦支行', bankCard: '6222 **** **** 5678', bankInfo: '中国银行 上海黄浦支行', amount: '1,850.00', commissionCount: 4, status: 'paid', paidTime: '2026-04-20 09:00', commissions: [ { personName: '孙丽', orderId: 'ORD-20260418-019', node: '上户', amount: '94.50' }, { personName: '李明', orderId: 'ORD-20260416-020', node: '上户', amount: '81.00' }, { personName: '王华', orderId: 'ORD-20260412-021', node: '上户', amount: '50.00' }, { personName: '赵刚', orderId: 'ORD-20260405-022', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 7, promoterName: '李四', applyTime: '2026-04-20 08:00', bankName: '中国工商银行', bankBranch: '上海长宁支行', bankCard: '6222 **** **** 9012', bankInfo: '工商银行 上海长宁支行', amount: '1,350.00', commissionCount: 3, status: 'paid', paidTime: '2026-04-20 08:30', commissions: [ { personName: '陈美', orderId: 'ORD-20260417-023', node: '上户', amount: '75.00' }, { personName: '刘伟', orderId: 'ORD-20260415-024', node: '上户', amount: '60.00' }, { personName: '王秀', orderId: 'ORD-20260410-025', node: '上户', amount: '50.00' } ], note: '' },
+          { id: 8, promoterName: '王五', applyTime: '2026-04-19 16:30', bankName: '中国建设银行', bankBranch: '上海普陀支行', bankCard: '6222 **** **** 3456', bankInfo: '建设银行 上海普陀支行', amount: '2,180.00', commissionCount: 5, status: 'paid', paidTime: '2026-04-19 17:00', commissions: [ { personName: '张丽', orderId: 'ORD-20260418-026', node: '上户', amount: '75.00' }, { personName: '李娜', orderId: 'ORD-20260417-027', node: '上户', amount: '60.00' }, { personName: '王芳', orderId: 'ORD-20260415-028', node: '上户', amount: '75.00' }, { personName: '赵敏', orderId: 'ORD-20260412-029', node: '上户', amount: '50.00' }, { personName: '孙丽', orderId: 'ORD-20260408-030', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 9, promoterName: '赵六', applyTime: '2026-04-18 14:00', bankName: '中国农业银行', bankBranch: '上海闸北支行', bankCard: '6222 **** **** 7890', bankInfo: '农业银行 上海闸北支行', amount: '1,680.00', commissionCount: 4, status: 'paid', paidTime: '2026-04-18 16:00', commissions: [ { personName: '周明', orderId: 'ORD-20260416-031', node: '上户', amount: '94.50' }, { personName: '吴静', orderId: 'ORD-20260414-032', node: '上户', amount: '81.00' }, { personName: '郑强', orderId: 'ORD-20260410-033', node: '上户', amount: '50.00' }, { personName: '王涛', orderId: 'ORD-20260405-034', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 10, promoterName: '孙七', applyTime: '2026-04-15 10:00', bankName: '招商银行', bankBranch: '上海徐汇支行', bankCard: '6222 **** **** 1234', bankInfo: '招商银行 上海徐汇支行', amount: '2,450.00', commissionCount: 6, status: 'paid', paidTime: '2026-04-15 11:00', commissions: [ { personName: '陈华', orderId: 'ORD-20260414-035', node: '上户', amount: '75.00' }, { personName: '刘丽', orderId: 'ORD-20260412-036', node: '上户', amount: '60.00' }, { personName: '王磊', orderId: 'ORD-20260410-037', node: '上户', amount: '75.00' }, { personName: '赵雪', orderId: 'ORD-20260408-038', node: '上户', amount: '50.00' }, { personName: '孙鹏', orderId: 'ORD-20260405-039', node: '上户', amount: '36.00' }, { personName: '周莉', orderId: 'ORD-20260401-040', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 11, promoterName: '周八', applyTime: '2026-04-10 09:30', bankName: '交通银行', bankBranch: '上海静安支行', bankCard: '6222 **** **** 5678', bankInfo: '交通银行 上海静安支行', amount: '3,200.00', commissionCount: 8, status: 'paid', paidTime: '2026-04-10 10:30', commissions: [ { personName: '吴强', orderId: 'ORD-20260408-041', node: '上户', amount: '94.50' }, { personName: '郑敏', orderId: 'ORD-20260406-042', node: '上户', amount: '81.00' }, { personName: '王欢', orderId: 'ORD-20260405-043', node: '上户', amount: '75.00' }, { personName: '李静', orderId: 'ORD-20260404-044', node: '上户', amount: '60.00' }, { personName: '张伟', orderId: 'ORD-20260403-045', node: '上户', amount: '75.00' }, { personName: '刘洋', orderId: 'ORD-20260402-046', node: '上户', amount: '50.00' }, { personName: '陈霞', orderId: 'ORD-20260401-047', node: '上户', amount: '36.00' }, { personName: '王涛', orderId: 'ORD-20260328-048', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 12, promoterName: '吴九', applyTime: '2026-04-05 14:00', bankName: '中国银行', bankBranch: '上海虹口支行', bankCard: '6222 **** **** 9012', bankInfo: '中国银行 上海虹口支行', amount: '1,980.00', commissionCount: 5, status: 'paid', paidTime: '2026-04-05 15:00', commissions: [ { personName: '赵琳', orderId: 'ORD-20260404-049', node: '上户', amount: '75.00' }, { personName: '钱洁', orderId: 'ORD-20260402-050', node: '上户', amount: '60.00' }, { personName: '孙浩', orderId: 'ORD-20260401-051', node: '上户', amount: '75.00' }, { personName: '周莉', orderId: 'ORD-20260328-052', node: '上户', amount: '50.00' }, { personName: '吴涛', orderId: 'ORD-20260325-053', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 13, promoterName: '郑十', applyTime: '2026-03-28 10:00', bankName: '中国工商银行', bankBranch: '上海宝山支行', bankCard: '6222 **** **** 3456', bankInfo: '工商银行 上海宝山支行', amount: '4,520.00', commissionCount: 10, status: 'paid', paidTime: '2026-03-28 11:00', commissions: [ { personName: '王鹏', orderId: 'ORD-20260325-054', node: '上户', amount: '94.50' }, { personName: '李梅', orderId: 'ORD-20260322-055', node: '上户', amount: '81.00' }, { personName: '张军', orderId: 'ORD-20260320-056', node: '上户', amount: '75.00' }, { personName: '刘芳', orderId: 'ORD-20260318-057', node: '上户', amount: '60.00' }, { personName: '赵娟', orderId: 'ORD-20260315-058', node: '上户', amount: '75.00' }, { personName: '钱伟', orderId: 'ORD-20260312-059', node: '上户', amount: '50.00' }, { personName: '孙莉', orderId: 'ORD-20260310-060', node: '上户', amount: '36.00' }, { personName: '周明', orderId: 'ORD-20260308-061', node: '上户', amount: '36.00' }, { personName: '吴静', orderId: 'ORD-20260305-062', node: '上户', amount: '36.00' }, { personName: '郑强', orderId: 'ORD-20260301-063', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 14, promoterName: '钱十一', applyTime: '2026-03-20 09:00', bankName: '中国建设银行', bankBranch: '上海闵行支行', bankCard: '6222 **** **** 7890', bankInfo: '建设银行 上海闵行支行', amount: '3,850.00', commissionCount: 8, status: 'paid', paidTime: '2026-03-20 10:00', commissions: [ { personName: '王秀英', orderId: 'ORD-20260318-064', node: '上户', amount: '94.50' }, { personName: '李志强', orderId: 'ORD-20260315-065', node: '上户', amount: '81.00' }, { personName: '张丽华', orderId: 'ORD-20260312-066', node: '上户', amount: '75.00' }, { personName: '刘建华', orderId: 'ORD-20260310-067', node: '上户', amount: '60.00' }, { personName: '赵美玲', orderId: 'ORD-20260308-068', node: '上户', amount: '75.00' }, { personName: '钱伟明', orderId: 'ORD-20260305-069', node: '上户', amount: '50.00' }, { personName: '孙桂花', orderId: 'ORD-20260303-070', node: '上户', amount: '36.00' }, { personName: '周大力', orderId: 'ORD-20260301-071', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 15, promoterName: '孙十二', applyTime: '2026-02-25 11:00', bankName: '中国农业银行', bankBranch: '上海金山支行', bankCard: '6222 **** **** 1234', bankInfo: '农业银行 上海金山支行', amount: '5,680.00', commissionCount: 12, status: 'paid', paidTime: '2026-02-25 12:00', commissions: [ { personName: '陈小红', orderId: 'ORD-20260222-072', node: '上户', amount: '94.50' }, { personName: '刘小明', orderId: 'ORD-20260220-073', node: '上户', amount: '81.00' }, { personName: '王大伟', orderId: 'ORD-20260218-074', node: '上户', amount: '75.00' }, { personName: '赵丽娟', orderId: 'ORD-20260215-075', node: '上户', amount: '60.00' }, { personName: '钱建国', orderId: 'ORD-20260212-076', node: '上户', amount: '75.00' }, { personName: '孙秀兰', orderId: 'ORD-20260210-077', node: '上户', amount: '50.00' }, { personName: '周和平', orderId: 'ORD-20260208-078', node: '上户', amount: '36.00' }, { personName: '吴志强', orderId: 'ORD-20260205-079', node: '上户', amount: '36.00' }, { personName: '郑美丽', orderId: 'ORD-20260203-080', node: '上户', amount: '36.00' }, { personName: '王建军', orderId: 'ORD-20260201-081', node: '上户', amount: '36.00' }, { personName: '李秀英', orderId: 'ORD-20260128-082', node: '上户', amount: '36.00' }, { personName: '张伟', orderId: 'ORD-20260125-083', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 16, promoterName: '周十三', applyTime: '2026-01-30 10:00', bankName: '招商银行', bankBranch: '上海青浦支行', bankCard: '6222 **** **** 5678', bankInfo: '招商银行 上海青浦支行', amount: '6,250.00', commissionCount: 15, status: 'paid', paidTime: '2026-01-30 11:00', commissions: [ { personName: '刘芳', orderId: 'ORD-20260128-084', node: '上户', amount: '94.50' }, { personName: '赵刚', orderId: 'ORD-20260125-085', node: '上户', amount: '81.00' }, { personName: '钱敏', orderId: 'ORD-20260122-086', node: '上户', amount: '75.00' }, { personName: '孙强', orderId: 'ORD-20260120-087', node: '上户', amount: '60.00' }, { personName: '周莉', orderId: 'ORD-20260118-088', node: '上户', amount: '75.00' }, { personName: '吴涛', orderId: 'ORD-20260115-089', node: '上户', amount: '50.00' }, { personName: '郑静', orderId: 'ORD-20260112-090', node: '上户', amount: '36.00' }, { personName: '王磊', orderId: 'ORD-20260110-091', node: '上户', amount: '36.00' }, { personName: '李娜', orderId: 'ORD-20260108-092', node: '上户', amount: '36.00' }, { personName: '张勇', orderId: 'ORD-20260105-093', node: '上户', amount: '36.00' }, { personName: '刘霞', orderId: 'ORD-20260103-094', node: '上户', amount: '36.00' }, { personName: '赵峰', orderId: 'ORD-20260101-095', node: '上户', amount: '36.00' }, { personName: '钱洁', orderId: 'ORD-20251228-096', node: '上户', amount: '36.00' }, { personName: '孙浩', orderId: 'ORD-20251225-097', node: '上户', amount: '36.00' }, { personName: '周莉', orderId: 'ORD-20251222-098', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 17, promoterName: '吴十四', applyTime: '2025-12-20 09:00', bankName: '交通银行', bankBranch: '上海崇明支行', bankCard: '6222 **** **** 9012', bankInfo: '交通银行 上海崇明支行', amount: '8,320.00', commissionCount: 18, status: 'paid', paidTime: '2025-12-20 10:00', commissions: [ { personName: '陈建国', orderId: 'ORD-20251218-099', node: '上户', amount: '94.50' }, { personName: '刘秀英', orderId: 'ORD-20251215-100', node: '上户', amount: '81.00' }, { personName: '王志强', orderId: 'ORD-20251212-101', node: '上户', amount: '75.00' }, { personName: '赵美玲', orderId: 'ORD-20251210-102', node: '上户', amount: '60.00' }, { personName: '钱伟明', orderId: 'ORD-20251208-103', node: '上户', amount: '75.00' }, { personName: '孙桂花', orderId: 'ORD-20251205-104', node: '上户', amount: '50.00' }, { personName: '周大力', orderId: 'ORD-20251203-105', node: '上户', amount: '36.00' }, { personName: '吴美丽', orderId: 'ORD-20251201-106', node: '上户', amount: '36.00' }, { personName: '郑英雄', orderId: 'ORD-20251128-107', node: '上户', amount: '36.00' }, { personName: '王秀英', orderId: 'ORD-20251125-108', node: '上户', amount: '36.00' }, { personName: '李建国', orderId: 'ORD-20251122-109', node: '上户', amount: '36.00' }, { personName: '张丽华', orderId: 'ORD-20251120-110', node: '上户', amount: '36.00' }, { personName: '刘建华', orderId: 'ORD-20251118-111', node: '上户', amount: '36.00' }, { personName: '赵美娟', orderId: 'ORD-20251115-112', node: '上户', amount: '36.00' }, { personName: '钱伟', orderId: 'ORD-20251112-113', node: '上户', amount: '36.00' }, { personName: '孙莉', orderId: 'ORD-20251110-114', node: '上户', amount: '36.00' }, { personName: '周明', orderId: 'ORD-20251108-115', node: '上户', amount: '36.00' }, { personName: '吴静', orderId: 'ORD-20251105-116', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 18, promoterName: '郑十五', applyTime: '2025-11-15 10:00', bankName: '中国银行', bankBranch: '上海奉贤支行', bankCard: '6222 **** **** 3456', bankInfo: '中国银行 上海奉贤支行', amount: '7,850.00', commissionCount: 16, status: 'paid', paidTime: '2025-11-15 11:00', commissions: [ { personName: '王鹏飞', orderId: 'ORD-20251112-117', node: '上户', amount: '94.50' }, { personName: '李秀英', orderId: 'ORD-20251110-118', node: '上户', amount: '81.00' }, { personName: '张伟明', orderId: 'ORD-20251108-119', node: '上户', amount: '75.00' }, { personName: '刘丽娟', orderId: 'ORD-20251105-120', node: '上户', amount: '60.00' }, { personName: '赵志强', orderId: 'ORD-20251103-121', node: '上户', amount: '75.00' }, { personName: '钱秀兰', orderId: 'ORD-20251101-122', node: '上户', amount: '50.00' }, { personName: '孙英雄', orderId: 'ORD-20251028-123', node: '上户', amount: '36.00' }, { personName: '周建设', orderId: 'ORD-20251025-124', node: '上户', amount: '36.00' }, { personName: '吴秀英', orderId: 'ORD-20251022-125', node: '上户', amount: '36.00' }, { personName: '郑大伟', orderId: 'ORD-20251020-126', node: '上户', amount: '36.00' }, { personName: '王丽华', orderId: 'ORD-20251018-127', node: '上户', amount: '36.00' }, { personName: '李建华', orderId: 'ORD-20251015-128', node: '上户', amount: '36.00' }, { personName: '张美玲', orderId: 'ORD-20251012-129', node: '上户', amount: '36.00' }, { personName: '刘伟', orderId: 'ORD-20251010-130', node: '上户', amount: '36.00' }, { personName: '赵莉', orderId: 'ORD-20251008-131', node: '上户', amount: '36.00' }, { personName: '钱强', orderId: 'ORD-20251005-132', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 19, promoterName: '王十六', applyTime: '2025-10-20 14:00', bankName: '中国工商银行', bankBranch: '上海松江支行', bankCard: '6222 **** **** 7890', bankInfo: '工商银行 上海松江支行', amount: '9,120.00', commissionCount: 20, status: 'paid', paidTime: '2025-10-20 15:00', commissions: [ { personName: '陈丽华', orderId: 'ORD-20251018-133', node: '上户', amount: '94.50' }, { personName: '刘建国', orderId: 'ORD-20251015-134', node: '上户', amount: '81.00' }, { personName: '王秀英', orderId: 'ORD-20251012-135', node: '上户', amount: '75.00' }, { personName: '赵志强', orderId: 'ORD-20251010-136', node: '上户', amount: '60.00' }, { personName: '钱美玲', orderId: 'ORD-20251008-137', node: '上户', amount: '75.00' }, { personName: '孙伟明', orderId: 'ORD-20251005-138', node: '上户', amount: '50.00' }, { personName: '周秀兰', orderId: 'ORD-20251003-139', node: '上户', amount: '36.00' }, { personName: '吴英雄', orderId: 'ORD-20251001-140', node: '上户', amount: '36.00' }, { personName: '郑丽娟', orderId: 'ORD-20250928-141', node: '上户', amount: '36.00' }, { personName: '王建国', orderId: 'ORD-20250925-142', node: '上户', amount: '36.00' }, { personName: '李秀英', orderId: 'ORD-20250922-143', node: '上户', amount: '36.00' }, { personName: '张伟', orderId: 'ORD-20250920-144', node: '上户', amount: '36.00' }, { personName: '刘丽', orderId: 'ORD-20250918-145', node: '上户', amount: '36.00' }, { personName: '赵强', orderId: 'ORD-20250915-146', node: '上户', amount: '36.00' }, { personName: '钱莉', orderId: 'ORD-20250912-147', node: '上户', amount: '36.00' }, { personName: '孙霞', orderId: 'ORD-20250910-148', node: '上户', amount: '36.00' }, { personName: '周伟', orderId: 'ORD-20250908-149', node: '上户', amount: '36.00' }, { personName: '吴静', orderId: 'ORD-20250905-150', node: '上户', amount: '36.00' }, { personName: '郑芳', orderId: 'ORD-20250903-151', node: '上户', amount: '36.00' }, { personName: '王磊', orderId: 'ORD-20250901-152', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 20, promoterName: '李十七', applyTime: '2025-09-25 09:00', bankName: '中国建设银行', bankBranch: '上海嘉定支行', bankCard: '6222 **** **** 1234', bankInfo: '建设银行 上海嘉定支行', amount: '8,680.00', commissionCount: 18, status: 'paid', paidTime: '2025-09-25 10:00', commissions: [ { personName: '张秀英', orderId: 'ORD-20250922-153', node: '上户', amount: '94.50' }, { personName: '李建国', orderId: 'ORD-20250920-154', node: '上户', amount: '81.00' }, { personName: '王丽华', orderId: 'ORD-20250918-155', node: '上户', amount: '75.00' }, { personName: '刘志强', orderId: 'ORD-20250915-156', node: '上户', amount: '60.00' }, { personName: '赵美娟', orderId: 'ORD-20250912-157', node: '上户', amount: '75.00' }, { personName: '钱伟明', orderId: 'ORD-20250910-158', node: '上户', amount: '50.00' }, { personName: '孙桂花', orderId: 'ORD-20250908-159', node: '上户', amount: '36.00' }, { personName: '周大力', orderId: 'ORD-20250905-160', node: '上户', amount: '36.00' }, { personName: '吴美丽', orderId: 'ORD-20250903-161', node: '上户', amount: '36.00' }, { personName: '郑英雄', orderId: 'ORD-20250901-162', node: '上户', amount: '36.00' }, { personName: '王秀英', orderId: 'ORD-20250828-163', node: '上户', amount: '36.00' }, { personName: '李建国', orderId: 'ORD-20250825-164', node: '上户', amount: '36.00' }, { personName: '张丽华', orderId: 'ORD-20250822-165', node: '上户', amount: '36.00' }, { personName: '刘建华', orderId: 'ORD-20250820-166', node: '上户', amount: '36.00' }, { personName: '赵美娟', orderId: 'ORD-20250818-167', node: '上户', amount: '36.00' }, { personName: '钱伟', orderId: 'ORD-20250815-168', node: '上户', amount: '36.00' }, { personName: '孙莉', orderId: 'ORD-20250812-169', node: '上户', amount: '36.00' }, { personName: '周明', orderId: 'ORD-20250810-170', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 21, promoterName: '张十八', applyTime: '2025-08-30 10:00', bankName: '中国农业银行', bankBranch: '上海青浦支行', bankCard: '6222 **** **** 5678', bankInfo: '农业银行 上海青浦支行', amount: '7,420.00', commissionCount: 15, status: 'paid', paidTime: '2025-08-30 11:00', commissions: [ { personName: '陈丽', orderId: 'ORD-20250828-171', node: '上户', amount: '94.50' }, { personName: '刘伟', orderId: 'ORD-20250825-172', node: '上户', amount: '81.00' }, { personName: '王芳', orderId: 'ORD-20250822-173', node: '上户', amount: '75.00' }, { personName: '赵娟', orderId: 'ORD-20250820-174', node: '上户', amount: '60.00' }, { personName: '钱强', orderId: 'ORD-20250818-175', node: '上户', amount: '75.00' }, { personName: '孙莉', orderId: 'ORD-20250815-176', node: '上户', amount: '50.00' }, { personName: '周霞', orderId: 'ORD-20250812-177', node: '上户', amount: '36.00' }, { personName: '吴伟', orderId: 'ORD-20250810-178', node: '上户', amount: '36.00' }, { personName: '郑静', orderId: 'ORD-20250808-179', node: '上户', amount: '36.00' }, { personName: '王磊', orderId: 'ORD-20250805-180', node: '上户', amount: '36.00' }, { personName: '李娜', orderId: 'ORD-20250803-181', node: '上户', amount: '36.00' }, { personName: '张勇', orderId: 'ORD-20250801-182', node: '上户', amount: '36.00' }, { personName: '刘霞', orderId: 'ORD-20250728-183', node: '上户', amount: '36.00' }, { personName: '赵峰', orderId: 'ORD-20250725-184', node: '上户', amount: '36.00' }, { personName: '钱洁', orderId: 'ORD-20250722-185', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 22, promoterName: '刘十九', applyTime: '2025-07-20 09:00', bankName: '招商银行', bankBranch: '上海浦东支行', bankCard: '6222 **** **** 9012', bankInfo: '招商银行 上海浦东支行', amount: '6,580.00', commissionCount: 14, status: 'paid', paidTime: '2025-07-20 10:00', commissions: [ { personName: '陈建国', orderId: 'ORD-20250718-186', node: '上户', amount: '94.50' }, { personName: '刘秀英', orderId: 'ORD-20250715-187', node: '上户', amount: '81.00' }, { personName: '王志强', orderId: 'ORD-20250712-188', node: '上户', amount: '75.00' }, { personName: '赵美玲', orderId: 'ORD-20250710-189', node: '上户', amount: '60.00' }, { personName: '钱伟明', orderId: 'ORD-20250708-190', node: '上户', amount: '75.00' }, { personName: '孙桂花', orderId: 'ORD-20250705-191', node: '上户', amount: '50.00' }, { personName: '周大力', orderId: 'ORD-20250703-192', node: '上户', amount: '36.00' }, { personName: '吴美丽', orderId: 'ORD-20250701-193', node: '上户', amount: '36.00' }, { personName: '郑英雄', orderId: 'ORD-20250628-194', node: '上户', amount: '36.00' }, { personName: '王秀英', orderId: 'ORD-20250625-195', node: '上户', amount: '36.00' }, { personName: '李建国', orderId: 'ORD-20250622-196', node: '上户', amount: '36.00' }, { personName: '张丽华', orderId: 'ORD-20250620-197', node: '上户', amount: '36.00' }, { personName: '刘建华', orderId: 'ORD-20250618-198', node: '上户', amount: '36.00' }, { personName: '赵美娟', orderId: 'ORD-20250615-199', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 23, promoterName: '赵二十', applyTime: '2025-06-15 14:00', bankName: '交通银行', bankBranch: '上海闸北支行', bankCard: '6222 **** **** 3456', bankInfo: '交通银行 上海闸北支行', amount: '5,920.00', commissionCount: 12, status: 'paid', paidTime: '2025-06-15 15:00', commissions: [ { personName: '王鹏飞', orderId: 'ORD-20250612-200', node: '上户', amount: '94.50' }, { personName: '李秀英', orderId: 'ORD-20250610-201', node: '上户', amount: '81.00' }, { personName: '张伟明', orderId: 'ORD-20250608-202', node: '上户', amount: '75.00' }, { personName: '刘丽娟', orderId: 'ORD-20250605-203', node: '上户', amount: '60.00' }, { personName: '赵志强', orderId: 'ORD-20250603-204', node: '上户', amount: '75.00' }, { personName: '钱秀兰', orderId: 'ORD-20250601-205', node: '上户', amount: '50.00' }, { personName: '孙英雄', orderId: 'ORD-20250528-206', node: '上户', amount: '36.00' }, { personName: '周建设', orderId: 'ORD-20250525-207', node: '上户', amount: '36.00' }, { personName: '吴秀英', orderId: 'ORD-20250522-208', node: '上户', amount: '36.00' }, { personName: '郑大伟', orderId: 'ORD-20250520-209', node: '上户', amount: '36.00' }, { personName: '王丽华', orderId: 'ORD-20250518-210', node: '上户', amount: '36.00' }, { personName: '李建华', orderId: 'ORD-20250515-211', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 24, promoterName: '孙二十一', applyTime: '2025-05-25 10:00', bankName: '中国银行', bankBranch: '上海静安支行', bankCard: '6222 **** **** 7890', bankInfo: '中国银行 上海静安支行', amount: '8,240.00', commissionCount: 17, status: 'paid', paidTime: '2025-05-25 11:00', commissions: [ { personName: '陈丽华', orderId: 'ORD-20250522-212', node: '上户', amount: '94.50' }, { personName: '刘建国', orderId: 'ORD-20250520-213', node: '上户', amount: '81.00' }, { personName: '王秀英', orderId: 'ORD-20250518-214', node: '上户', amount: '75.00' }, { personName: '赵志强', orderId: 'ORD-20250515-215', node: '上户', amount: '60.00' }, { personName: '钱美玲', orderId: 'ORD-20250512-216', node: '上户', amount: '75.00' }, { personName: '孙伟明', orderId: 'ORD-20250510-217', node: '上户', amount: '50.00' }, { personName: '周秀兰', orderId: 'ORD-20250508-218', node: '上户', amount: '36.00' }, { personName: '吴英雄', orderId: 'ORD-20250505-219', node: '上户', amount: '36.00' }, { personName: '郑丽娟', orderId: 'ORD-20250503-220', node: '上户', amount: '36.00' }, { personName: '王建国', orderId: 'ORD-20250501-221', node: '上户', amount: '36.00' }, { personName: '李秀英', orderId: 'ORD-20250428-222', node: '上户', amount: '36.00' }, { personName: '张伟', orderId: 'ORD-20250425-223', node: '上户', amount: '36.00' }, { personName: '刘丽', orderId: 'ORD-20250422-224', node: '上户', amount: '36.00' }, { personName: '赵强', orderId: 'ORD-20250420-225', node: '上户', amount: '36.00' }, { personName: '钱莉', orderId: 'ORD-20250418-226', node: '上户', amount: '36.00' }, { personName: '孙霞', orderId: 'ORD-20250415-227', node: '上户', amount: '36.00' }, { personName: '周伟', orderId: 'ORD-20250412-228', node: '上户', amount: '36.00' } ], note: '' },
+          { id: 25, promoterName: '周二十二', applyTime: '2025-04-20 09:00', bankName: '中国工商银行', bankBranch: '上海虹口支行', bankCard: '6222 **** **** 1234', bankInfo: '工商银行 上海虹口支行', amount: '6,850.00', commissionCount: 14, status: 'paid', paidTime: '2025-04-20 10:00', commissions: [ { personName: '张秀英', orderId: 'ORD-20250418-229', node: '上户', amount: '94.50' }, { personName: '李建国', orderId: 'ORD-20250415-230', node: '上户', amount: '81.00' }, { personName: '王丽华', orderId: 'ORD-20250412-231', node: '上户', amount: '75.00' }, { personName: '刘志强', orderId: 'ORD-20250410-232', node: '上户', amount: '60.00' }, { personName: '赵美娟', orderId: 'ORD-20250408-233', node: '上户', amount: '75.00' }, { personName: '钱伟明', orderId: 'ORD-20250405-234', node: '上户', amount: '50.00' }, { personName: '孙桂花', orderId: 'ORD-20250403-235', node: '上户', amount: '36.00' }, { personName: '周大力', orderId: 'ORD-20250401-236', node: '上户', amount: '36.00' }, { personName: '吴美丽', orderId: 'ORD-20250328-237', node: '上户', amount: '36.00' }, { personName: '郑英雄', orderId: 'ORD-20250325-238', node: '上户', amount: '36.00' }, { personName: '王秀英', orderId: 'ORD-20250322-239', node: '上户', amount: '36.00' }, { personName: '李建国', orderId: 'ORD-20250320-240', node: '上户', amount: '36.00' }, { personName: '张丽华', orderId: 'ORD-20250318-241', node: '上户', amount: '36.00' }, { personName: '刘建华', orderId: 'ORD-20250315-242', node: '上户', amount: '36.00' } ], note: '' }
+        ]);
+
+        const filteredWithdrawals = computed(() => {
+          let result = withdrawalList.value;
+          if (filterStatus.value) {
+            result = result.filter(w => w.status === filterStatus.value);
+          }
+          if (dateRange.value && dateRange.value.length === 2) {
+            const [start, end] = dateRange.value;
+            const startStr = start.toLocaleDateString('zh-CN').replace(/\//g, '-');
+            const endStr = end.toLocaleDateString('zh-CN').replace(/\//g, '-');
+            result = result.filter(w => {
+              const dateField = dateType.value === 'paid' ? w.paidTime : w.applyTime;
+              if (!dateField) return false;
+              return dateField >= startStr && dateField <= endStr;
+            });
+          }
+          return result;
+        });
+
+        const statusText = (s) => ({ pending: '待打款', paid: '已打款', failed: '打款失败' }[s] || s);
+        const showDetail = (item) => { currentDetail.value = item; detailVisible.value = true; };
+        const approveWithdrawal = (item) => {
+          item.status = 'paid';
+          item.paidTime = new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-');
+          detailVisible.value = false;
+          ElementPlus.ElMessage.success(`已成功向 ${item.promoterName} 打款 ¥${item.amount}`);
+        };
+        const rejectWithdrawal = (item) => {
+          item.status = 'failed';
+          item.failReason = '管理员拒绝打款';
+          ElementPlus.ElMessage.error(`已拒绝 ${item.promoterName} 的提现申请`);
+        };
+        const batchApprove = () => {
+          const pendingList = withdrawalList.value.filter(w => w.status === 'pending');
+          if (!pendingList.length) {
+            ElementPlus.ElMessage.warning('没有待打款的申请');
+            return;
+          }
+          const totalAmount = pendingList.reduce((sum, w) => sum + parseFloat(w.amount.replace(/,/g, '')), 0);
+          pendingList.forEach(w => {
+            w.status = 'paid';
+            w.paidTime = new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-');
+          });
+          ElementPlus.ElMessage.success(`已成功打款 ${pendingList.length} 笔，共计 ¥${totalAmount.toFixed(2)}`);
+        };
+
+        return { stats, dateRange, dateType, filterStatus, detailVisible, currentDetail, withdrawalList, filteredWithdrawals, statusText, showDetail, approveWithdrawal, rejectWithdrawal, batchApprove };
+      }
+    });
+    app.use(ElementPlus);
+    app.mount('#app');
+    SharedMenu.initPageLayout('settlement', { title: '佣金结算管理', breadcrumb: '<a href="/招募与培训/首页看板/dashboard.html">首页</a> / <a href="/招募与培训/推广管理/channel-enhanced.html">渠道管理</a> / 佣金结算' });
+  </script>
+</body>
+</html>
