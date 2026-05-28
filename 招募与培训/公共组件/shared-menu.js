@@ -14,44 +14,44 @@ const MENU_CONFIG = {
       title: '推广管理',
       icon: 'el-icon-s-promotion',
       items: [
-        { id: 'channel', name: '渠道管理', icon: 'el-icon-connection', url: '/招募与培训/推广管理/channel-enhanced.html' },
-        { id: 'promoter', name: '推广人管理', icon: 'el-icon-user', url: '/招募与培训/推广管理/promoter-manage.html' },
-        { id: 'commission-rule', name: '佣金规则', icon: 'el-icon-coin', url: '/招募与培训/推广管理/commission-rule.html' },
-        { id: 'commission-detail', name: '佣金明细', icon: 'el-icon-document', url: '/招募与培训/推广管理/commission-detail.html' },
-        { id: 'settlement', name: '佣金结算', icon: 'el-icon-wallet', url: '/招募与培训/推广管理/settlement.html' }
+        { id: 'channel', name: '渠道管理', icon: 'el-icon-connection', url: '../推广管理/channel-enhanced.html' },
+        { id: 'promoter', name: '推广人管理', icon: 'el-icon-user', url: '../推广管理/promoter-manage.html' },
+        { id: 'commission-rule', name: '佣金规则', icon: 'el-icon-coin', url: '../推广管理/commission-rule.html' },
+        { id: 'commission-detail', name: '佣金明细', icon: 'el-icon-document', url: '../推广管理/commission-detail.html' },
+        { id: 'settlement', name: '佣金结算', icon: 'el-icon-wallet', url: '../推广管理/settlement.html' }
       ]
     },
     {
       title: '招募管理',
       icon: 'el-icon-s-custom',
       items: [
-        { id: 'recruiter', name: '招生老师', icon: 'el-icon-s-custom', url: '/招募与培训/招募管理/recruiter.html' },
-        { id: 'lead-public', name: '所有线索', icon: 'el-icon-share', url: '/招募与培训/招募管理/lead-public.html' },
-        { id: 'lead-my', name: '我的线索', icon: 'el-icon-user', url: '/招募与培训/招募管理/lead-my.html' },
-        { id: 'interview', name: '邀约到店', icon: 'el-icon-chat-dot-square', url: '/招募与培训/招募管理/interview.html' },
-        { id: 'contract', name: '签约入册', icon: 'el-icon-document-checked', url: '/招募与培训/招募管理/contract.html' },
-        { id: 'deposit', name: '押金台账', icon: 'el-icon-wallet', url: '/招募与培训/招募管理/deposit.html' }
+        { id: 'recruiter', name: '招生老师', icon: 'el-icon-s-custom', url: '../招募管理/recruiter.html' },
+        { id: 'lead-public', name: '所有线索', icon: 'el-icon-share', url: '../招募管理/lead-public.html' },
+        { id: 'lead-my', name: '我的线索', icon: 'el-icon-user', url: '../招募管理/lead-my.html' },
+        { id: 'interview', name: '邀约到店', icon: 'el-icon-chat-dot-square', url: '../招募管理/interview.html' },
+        { id: 'contract', name: '签约入册', icon: 'el-icon-document-checked', url: '../招募管理/contract.html' },
+        { id: 'deposit', name: '押金台账', icon: 'el-icon-wallet', url: '../招募管理/deposit.html' }
       ]
     },
     {
       title: '人员档案',
       icon: 'el-icon-s-order',
       items: [
-        { id: 'staff', name: '人员档案', icon: 'el-icon-folder', url: '/招募与培训/人员档案/staff.html' },
-        { id: 'tags', name: '标签管理', icon: 'el-icon-price-tag', url: '/招募与培训/人员档案/tags.html' }
+        { id: 'staff', name: '人员档案', icon: 'el-icon-folder', url: '../人员档案/staff.html' },
+        { id: 'tags', name: '标签管理', icon: 'el-icon-price-tag', url: '../人员档案/tags.html' }
       ]
     },
     {
       title: '培训考核',
       icon: 'el-icon-s-claim',
       items: [
-        { id: 'position', name: '岗位管理', icon: 'el-icon-suitcase', url: '/招募与培训/培训考核/position.html' },
-        { id: 'course-template', name: '课程管理', icon: 'el-icon-s-management', url: '/招募与培训/培训考核/course-template.html' },
-        { id: 'course-fee', name: '课程费用', icon: 'el-icon-money', url: '/招募与培训/培训考核/course-fee.html' },
-        { id: 'exam-paper', name: '考卷管理', icon: 'el-icon-document', url: '/招募与培训/培训考核/exam-paper.html' },
-        { id: 'training-class', name: '班级管理', icon: 'el-icon-reading', url: '/招募与培训/培训考核/training-class.html' },
-        { id: 'exam-results', name: '考核结果', icon: 'el-icon-trophy', url: '/招募与培训/培训考核/exam-results.html' },
-        { id: 'handover', name: '运营交接', icon: 'el-icon-s-promotion', url: '/招募与培训/培训考核/handover.html' }
+        { id: 'position', name: '岗位管理', icon: 'el-icon-suitcase', url: '../培训考核/position.html' },
+        { id: 'course-template', name: '课程管理', icon: 'el-icon-s-management', url: '../培训考核/course-template.html' },
+        { id: 'course-fee', name: '课程费用', icon: 'el-icon-money', url: '../培训考核/course-fee.html' },
+        { id: 'exam-paper', name: '考卷管理', icon: 'el-icon-document', url: '../培训考核/exam-paper.html' },
+        { id: 'training-class', name: '班级管理', icon: 'el-icon-reading', url: '../培训考核/training-class.html' },
+        { id: 'exam-results', name: '考核结果', icon: 'el-icon-trophy', url: '../培训考核/exam-results.html' },
+        { id: 'handover', name: '运营交接', icon: 'el-icon-s-promotion', url: '../培训考核/handover.html' }
       ]
     }
     
