@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金结算 - 氧阁ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .approval-table th { background: #fafafa; }
+    .approval-table .el-table__cell { padding: 8px 0 !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('commission', {
+      title: '佣金结算',
+      breadcrumb: '佣金结算'
+    });
+
+    createApp({
+      template: `
+        <div>
+          <!-- 列表卡片 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">佣金结算列表</span>
+              <div>
+                <el-button type="success" size="small" :disabled="selectedRows.length === 0" @click="handleBatchApply">
+                  <i class="el-icon-s-order"></i> 批量申请 ({{ selectedRows.length }})
+                </el-button>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- 搜索栏 -->
+              <div class="search-bar">
+                <el-input v-model="searchForm.referrerName" placeholder="推荐人姓名" clearable></el-input>
+                <el-input v-model="searchForm.customerName" placeholder="客户姓名" clearable></el-input>
+                <el-input v-model="searchForm.orderNo" placeholder="订单编号" clearable></el-input>
+                <el-select v-model="searchForm.referrerType" placeholder="介绍类型" clearable>
+                  <el-option label="月嫂介绍" value="月嫂介绍"></el-option>
+                  <el-option label="客户介绍" value="客户介绍"></el-option>
+                </el-select>
+                <el-select v-model="searchForm.approvalStatus" placeholder="审批状态" clearable>
+                  <el-option label="未申请" value="未申请"></el-option>
+                  <el-option label="审批中" value="审批中"></el-option>
+                  <el-option label="已通过" value="已通过"></el-option>
+                  <el-option label="已驳回" value="已驳回"></el-option>
+                </el-select>
+                <el-select v-model="searchForm.paymentStatus" placeholder="打款状态" clearable>
+                  <el-option label="未打款" value="未打款"></el-option>
+                  <el-option label="待打款" value="待打款"></el-option>
+                  <el-option label="已打款" value="已打款"></el-option>
+                </el-select>
+                <el-button type="primary" @click="handleSearch">
+                  <i class="el-icon-search"></i> 搜索
+                </el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </div>
+
+              <!-- 数据表格 -->
+              <el-table 
+                :data="filteredData" 
+                style="width: 100%" 
+                height="100%"
+                v-loading="loading"
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column type="selection" :selectable="isSelectable" min-width="55"></el-table-column>
+                <el-table-column prop="referrerName" label="推荐人" min-width="100"></el-table-column>
+                <el-table-column prop="referrerType" label="介绍类型" width="100">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="row.referrerType === '月嫂介绍' ? 'warning' : 'success'">{{ row.referrerType }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderNo" label="订单编号" min-width="130">
+                  <template #default="{ row }">
+                    <span v-if="row.orderNo" style="font-family: monospace; font-size: 13px;">{{ row.orderNo }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="customerName" label="客户名称" min-width="120"></el-table-column>
+                <el-table-column prop="signDate" label="客户签约时间" min-width="120">
+                  <template #default="{ row }">
+                    <span v-if="row.signDate">{{ row.signDate }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="contractAmount" label="签约金额" min-width="120">
+                  <template #default="{ row }">
+                    <span v-if="row.contractAmount">¥{{ row.contractAmount.toLocaleString() }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="serviceDays" label="套餐天数" min-width="90" align="center">
+                  <template #default="{ row }">
+                    <span>{{ row.serviceDays }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="packageType" label="套餐类型" width="100">
+                  <template #default="{ row }">
+                    <el-tag v-if="row.packageType !== '-'" size="small" :type="row.packageType === '特价套餐' ? 'warning' : 'success'">{{ row.packageType }}</el-tag>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="ruleHit" label="命中规则" min-width="130">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="ruleTagType(row.ruleHit)">{{ row.ruleHit }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="commissionAmount" label="佣金金额" min-width="120">
+                  <template #default="{ row }">
+                    <span style="color: #f5222d; font-weight: 600;">¥{{ row.commissionAmount.toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="approvalStatus" label="审批状态" width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="approvalTagType(row.approvalStatus)">{{ row.approvalStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="paymentStatus" label="打款状态" width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="paymentTagType(row.paymentStatus)">{{ row.paymentStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200" fixed="right">
+                  <template #default="{ row }">
+                    <el-button type="primary" size="small" @click="handleRowAction(row)">{{ getActionLabel(row) }}</el-button>
+                    <el-button v-if="row.approvalStatus !== '未申请'" type="primary" size="small" plain @click="handleShowProgress(row)">审批进展</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 审批进展对话框 -->
+          <el-dialog v-model="progressVisible" title="审批进展" width="600px">
+            <div v-if="progressRow">
+              <div style="margin-bottom: 16px;">
+                <el-tag size="small" :type="approvalTagType(progressRow.approvalStatus)">{{ progressRow.approvalStatus }}</el-tag>
+              </div>
+              <el-steps :active="progressActive" finish-status="success" direction="vertical">
+                <el-step v-for="(node, idx) in FLOW_NODES" :key="node.id" :title="node.name">
+                  <template #description>
+                    <div v-if="getNodeRecord(node.id)" style="margin-top: 4px; margin-bottom: 8px;">
+                      <div style="font-size: 13px; color: #595959;">
+                        审核人：{{ getNodeRecord(node.id).approver }}
+                        <el-tag size="small" :type="getNodeRecord(node.id).status === '通过' ? 'success' : (getNodeRecord(node.id).status === '不通过' ? 'danger' : 'info')" style="margin-left: 8px;">{{ getNodeRecord(node.id).status }}</el-tag>
+                      </div>
+                      <div style="font-size: 12px; color: #8c8c8c; margin-top: 2px;">{{ getNodeRecord(node.id).time }}</div>
+                      <div v-if="getNodeRecord(node.id).comment" style="font-size: 12px; color: #595959; margin-top: 2px;">意见：{{ getNodeRecord(node.id).comment }}</div>
+                    </div>
+                    <div v-else-if="idx < progressActive" style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">待审批</div>
+                  </template>
+                </el-step>
+              </el-steps>
+            </div>
+            <template #footer>
+              <el-button @click="progressVisible = false">关闭</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 批量申请对话框 -->
+          <el-dialog v-model="batchDialogVisible" title="批量申请佣金" width="600px">
+            <el-alert type="info" :closable="false" class="mb-2">
+              系统将自动聚合同一推荐人的佣金为一张申请单，并预填银行信息。
+            </el-alert>
+            <el-table :data="batchSummary" size="small" style="width: 100%">
+              <el-table-column prop="referrerName" label="推荐人" min-width="100"></el-table-column>
+              <el-table-column prop="count" label="笔数" min-width="70" align="center"></el-table-column>
+              <el-table-column prop="totalAmount" label="合计税前佣金" min-width="140">
+                <template #default="{ row }">
+                  <span style="color: #f5222d; font-weight: 600;">¥{{ row.totalAmount.toLocaleString() }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="bankInfo" label="银行信息"></el-table-column>
+            </el-table>
+            <template #footer>
+              <el-button @click="batchDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmBatchApply">确认批量申请</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 详情对话框 -->
+          <el-dialog v-model="detailVisible" :title="detailTitle" width="750px">
+            <div v-if="currentRow">
+              <!-- 基本信息 -->
+              <div class="detail-grid mb-2">
+                <div class="detail-item">
+                  <span class="detail-label">审批状态</span>
+                  <el-tag size="small" :type="approvalTagType(currentRow.approvalStatus)">{{ currentRow.approvalStatus }}</el-tag>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">打款状态</span>
+                  <el-tag size="small" :type="paymentTagType(currentRow.paymentStatus)">{{ currentRow.paymentStatus }}</el-tag>
+                </div>
+                <div class="detail-item" v-if="currentRow.applyTime">
+                  <span class="detail-label">申请时间</span>
+                  <span class="detail-value">{{ currentRow.applyTime }}</span>
+                </div>
+                <div class="detail-item" v-if="currentRow.applicant">
+                  <span class="detail-label">申请人</span>
+                  <span class="detail-value">{{ currentRow.applicant }}</span>
+                </div>
+                <div class="detail-item" v-if="currentRow.payTime">
+                  <span class="detail-label">打款时间</span>
+                  <span class="detail-value">{{ currentRow.payTime }}</span>
+                </div>
+                <div class="detail-item" v-if="currentRow.voucherNo">
+                  <span class="detail-label">凭证号</span>
+                  <span class="detail-value">{{ currentRow.voucherNo }}</span>
+                </div>
+              </div>
+
+              <!-- 推荐人信息卡片 -->
+              <el-card shadow="never" class="mb-2" style="background: #fafafa;">
+                <div style="display: flex; justify-content: space-between;">
+                  <div>
+                    <div style="font-weight: 600; margin-bottom: 8px;">推荐人：{{ currentRow.referrerName }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">手机号：{{ currentRow.referrerPhone || '-' }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">身份证：{{ currentRow.referrerIdCard || '-' }}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 13px; color: #8c8c8c;">开户行：{{ currentRow.bankName || '-' }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">支行：{{ currentRow.branchName || '-' }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">账号：{{ currentRow.accountNo || '-' }}</div>
+                    <div style="font-size: 13px; color: #8c8c8c;">户名：{{ currentRow.accountName || '-' }}</div>
+                  </div>
+                </div>
+              </el-card>
+
+              <!-- 佣金明细 -->
+              <el-divider content-position="left">佣金明细</el-divider>
+              <div class="detail-grid mb-2">
+                <div class="detail-item">
+                  <span class="detail-label">客户名称</span>
+                  <span class="detail-value">{{ currentRow.customerName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">合同金额</span>
+                  <span class="detail-value">¥{{ currentRow.contractAmount?.toLocaleString() || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">套餐天数</span>
+                  <span class="detail-value">{{ currentRow.serviceDays || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">命中规则</span>
+                  <span class="detail-value">{{ currentRow.ruleHit }}</span>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 12px; padding-right: 16px;">
+                <span style="font-size: 14px; color: #8c8c8c;">合计税前佣金：</span>
+                <span style="font-size: 20px; font-weight: 700; color: #f5222d; margin-left: 8px;">¥{{ currentRow.commissionAmount.toLocaleString() }}</span>
+              </div>
+
+              <!-- 打款信息（仅已打款） -->
+              <template v-if="currentRow.paymentStatus === '已打款'">
+                <el-divider content-position="left">打款信息</el-divider>
+                <div class="detail-grid mb-2">
+                  <div class="detail-item">
+                    <span class="detail-label">税前金额</span>
+                    <span class="detail-value">¥{{ currentRow.commissionAmount.toLocaleString() }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">代扣个税</span>
+                    <span class="detail-value">¥{{ currentRow.taxAmount?.toLocaleString() || '0' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">税后实发</span>
+                    <span class="detail-value" style="color: #f5222d; font-weight: 600;">¥{{ currentRow.actualAmount?.toLocaleString() || currentRow.commissionAmount.toLocaleString() }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">凭证号</span>
+                    <span class="detail-value">{{ currentRow.voucherNo || '-' }}</span>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 审批记录表格 -->
+              <el-divider content-position="left">审批记录</el-divider>
+              <el-table 
+                :data="currentRow.approvalRecords || []" 
+                size="small" 
+                border 
+                class="approval-table"
+                style="width: 100%"
+              >
+                <el-table-column prop="approver" label="审核人" min-width="90"></el-table-column>
+                <el-table-column prop="time" label="审核日期" min-width="140"></el-table-column>
+                <el-table-column prop="comment" label="审核意见" min-width="100">
+                  <template #default="{ row }">
+                    <span v-if="row.comment">{{ row.comment }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="status" label="审核状态" width="80">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="row.status === '通过' ? 'success' : (row.status === '不通过' ? 'danger' : 'info')">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="nextNode" label="下一节点" min-width="110">
+                  <template #default="{ row }">
+                    <span v-if="row.nextNode">{{ row.nextNode }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="nextApprover" label="下一节点审批人" min-width="110">
+                  <template #default="{ row }">
+                    <span v-if="row.nextApprover">{{ row.nextApprover }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <template #footer>
+              <el-button @click="detailVisible = false">关闭</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 节点审批操作对话框 -->
+          <el-dialog v-model="approveDialogVisible" :title="' ' + (currentNode?.name || '')" width="500px">
+            <div style="margin-bottom: 16px;">
+              <span style="color: #8c8c8c; font-size: 13px;">当前审批人：{{ currentNodeApprovers[0] || '-' }}</span>
+            </div>
+            <el-form>
+              <el-form-item label="备注">
+                <el-input v-model="approveForm.comment" type="textarea" rows="4" placeholder="请输入审核备注"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <div style="display: flex; gap: 12px;">
+                <el-button type="danger" style="flex: 1;" @click="doReject">拒绝</el-button>
+                <el-button type="primary" style="flex: 1;" @click="doPass">通过</el-button>
+              </div>
+            </template>
+          </el-dialog>
+
+          <!-- 打款对话框 -->
+          <el-dialog v-model="payDialogVisible" title="打款" width="500px">
+            <div v-if="currentPayRow">
+              <el-alert type="warning" :closable="false" class="mb-2">
+                请确认已完成网银/柜台转账，再点击"确认已打款"。
+              </el-alert>
+              <div class="detail-grid mb-2">
+                <div class="detail-item">
+                  <span class="detail-label">推荐人</span>
+                  <span class="detail-value">{{ currentPayRow.referrerName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">收款银行</span>
+                  <span class="detail-value">{{ currentPayRow.bankName || '-' }} {{ currentPayRow.branchName || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">收款账号</span>
+                  <span class="detail-value">{{ currentPayRow.accountNo || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">户名</span>
+                  <span class="detail-value">{{ currentPayRow.accountName || '-' }}</span>
+                </div>
+              </div>
+              <el-divider></el-divider>
+              <el-form label-width="100px">
+                <el-form-item label="税前金额">
+                  <span style="font-weight: 600;">¥{{ currentPayRow.commissionAmount.toLocaleString() }}</span>
+                </el-form-item>
+                <el-form-item label="代扣个税">
+                  <el-input-number v-model="payForm.taxAmount" :min="0" :precision="2" style="width: 150px;" @change="calcActual"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c; font-size: 13px;">单笔≤800元免个税</span>
+                </el-form-item>
+                <el-form-item label="税后实发">
+                  <span style="font-size: 20px; font-weight: 700; color: #f5222d;">¥{{ payForm.actualAmount.toLocaleString() }}</span>
+                </el-form-item>
+                <el-form-item label="凭证号">
+                  <el-input v-model="payForm.voucherNo" placeholder="网银流水号或柜台凭证号"></el-input>
+                </el-form-item>
+                <el-form-item label="打款备注">
+                  <el-input v-model="payForm.remark" type="textarea" rows="2" placeholder="选填"></el-input>
+                </el-form-item>
+              </el-form>
+            </div>
+            <template #footer>
+              <el-button @click="payDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmPay">确认已打款</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+
+      setup() {
+        let requestIdCounter = 10;
+
+        // ==================== 审批流节点配置 ====================
+        const FLOW_NODES = [
+          { id: 'submit', name: '提交', approvers: ['提交人'] },
+          { id: 'dept_leader', name: '发起人部门负责人', approvers: ['张三'] },
+          { id: 'sales_leader', name: '销售负责人', approvers: ['植亚来'] },
+          { id: 'quality_officer', name: '运营负责人', approvers: ['梁艳红'] },
+          { id: 'accountant', name: '会计审核', approvers: ['何才连'] },
+          { id: 'finance_leader', name: '财务负责人审核', approvers: ['尹俊'] },
+          { id: 'general_manager', name: '总经理审核', approvers: ['卓大龙'] }
+        ];
+
+        // 获取某记录的当前审批节点
+        const getCurrentNode = (record) => {
+          if (record.approvalStatus === '未申请') return null;
+          if (record.approvalStatus === '已通过') return null;
+          if (record.approvalStatus === '已驳回') return null;
+          // 审批中：找最后一个审批记录的 nextNode
+          const records = record.approvalRecords || [];
+          if (!records.length) return FLOW_NODES[1]; // 默认第一个审批节点
+          const last = records[records.length - 1];
+          if (last.status === '不通过') return null;
+          const nextIdx = FLOW_NODES.findIndex(n => n.name === last.nextNode);
+          if (nextIdx === -1) return null;
+          return FLOW_NODES[nextIdx];
+        };
+
+        // ==================== 搜索 ====================
+        const searchForm = ref({
+          referrerName: '',
+          customerName: '',
+          orderNo: '',
+          referrerType: '',
+          approvalStatus: '',
+          paymentStatus: ''
+        });
+
+        const loading = ref(false);
+        const selectedRows = ref([]);
+        const batchDialogVisible = ref(false);
+        const batchSummary = ref([]);
+
+        // ==================== 统一数据表 ====================
+        const tableData = ref([
+          // ---------- 未申请 ----------
+          { id: 1, signDate: '2025-08-08', referrerType: '客户介绍', orderNo: 'DD00001000', requestNo: '', referrerName: '植晓青', customerName: '梁妙晨', contractAmount: 14535, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
+          { id: 2, signDate: '2025-09-10', referrerType: '客户介绍', orderNo: 'DD00001001', requestNo: '', referrerName: '植晓青', customerName: '梁小芳', contractAmount: 16800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 504, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
+          { id: 3, signDate: '2025-06-22', referrerType: '月嫂介绍', orderNo: 'DD00001002', requestNo: '', referrerName: '刘淑娟', customerName: '李萍明', contractAmount: 25800, serviceDays: 42, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 2580, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
+          { id: 4, signDate: '2025-06-26', referrerType: '月嫂介绍', orderNo: 'DD00001003', requestNo: '', referrerName: '刘淑娟', customerName: '梅玲黄', contractAmount: 19800, serviceDays: 26, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 1980, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
+          { id: 6, signDate: '2025-08-20', referrerType: '客户介绍', orderNo: 'DD00001004', requestNo: '', referrerName: '王瑾', customerName: '张女士', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '136****8843', referrerIdCard: '440682********0664', bankName: '中国建设银行', branchName: '佛山禅城支行', accountNo: '6217003110001122334', accountName: '王瑾', approvalRecords: [] },
+          { id: 8, signDate: '2025-06-23', referrerType: '客户介绍', orderNo: 'DD00001005', requestNo: '', referrerName: '郑菲菲', customerName: '蓝海婉', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 684, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
+          { id: 9, signDate: '2025-07-15', referrerType: '客户介绍', orderNo: 'DD00001006', requestNo: '', referrerName: '郑菲菲', customerName: '李先生', contractAmount: 9980, serviceDays: 26, packageType: '特价套餐', ruleHit: '特价套餐固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
+          { id: 11, signDate: '2025-08-01', referrerType: '客户介绍', orderNo: 'DD00001007', requestNo: '', referrerName: '陈莲莲', customerName: '王先生', contractAmount: 12800, serviceDays: 10, packageType: '常规套餐', ruleHit: '短天数固定100元', commissionAmount: 100, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '123****5612', referrerIdCard: '440682********0666', bankName: '中国工商银行', branchName: '广州天河支行', accountNo: '6222023602045123456', accountName: '陈莲莲', approvalRecords: [] },
+          { id: 12, signDate: '2025-07-25', referrerType: '客户介绍', orderNo: 'DD00001008', requestNo: '', referrerName: '莫迪施', customerName: '赵女士', contractAmount: 19800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '135****7645', referrerIdCard: '440682********0667', bankName: '招商银行', branchName: '佛山南海支行', accountNo: '6214832011223344', accountName: '莫迪施', approvalRecords: [] },
+
+          // ---------- 审批中（在销售负责人节点）----------
+          { id: 104, signDate: '2025-12-01', referrerType: '月嫂介绍', orderNo: 'DD00001009', requestNo: 'FY20251209001', referrerName: '刘倩', customerName: '周女士', contractAmount: 82500, serviceDays: 42, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 8250, approvalStatus: '审批中', paymentStatus: '未打款', applicant: '刘倩', applyTime: '2025-12-09 17:01:16', referrerPhone: '139****5678', referrerIdCard: '440683********1234', bankName: '中国工商银行', branchName: '佛山禅城支行', accountNo: '6222023602045678901', accountName: '刘倩', approvalRecords: [
+            { nodeId: 'submit', nodeName: '提交', approver: '刘倩（佛山市场部）', time: '2025/12/9 17:01:16', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
+            { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2025/12/10 09:30:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' }
+          ]},
+
+          // ---------- 已通过（待打款）----------
+          { id: 101, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001010', requestNo: 'FY20260423001', referrerName: '贺琼', customerName: '吴丽芳', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 684, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
+            { nodeId: 'submit', nodeName: '提交', approver: '贺琼', time: '2026/4/23 17:42:37', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
+            { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/4/24 08:15:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
+            { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/4/24 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
+            { nodeId: 'quality_officer', nodeName: '运营负责人', approver: '梁艳红', time: '2026/4/24 11:30:00', status: '通过', comment: '同意', nextNode: '会计审核', nextApprover: '何才连' },
+            { nodeId: 'accountant', nodeName: '会计审核', approver: '何才连', time: '2026/4/24 14:00:00', status: '通过', comment: '核对无误', nextNode: '财务负责人审核', nextApprover: '尹俊' },
+            { nodeId: 'finance_leader', nodeName: '财务负责人审核', approver: '尹俊', time: '2026/4/24 16:00:00', status: '通过', comment: '同意付款', nextNode: '总经理审核', nextApprover: '卓大龙' },
+            { nodeId: 'general_manager', nodeName: '总经理审核', approver: '卓大龙', time: '2026/4/25 09:00:00', status: '通过', comment: '同意', nextNode: '-', nextApprover: '-' }
+          ]},
+          { id: 105, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001011', requestNo: 'FY20260423001', referrerName: '贺琼', customerName: '孙先生', contractAmount: 25800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 774, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
+            { nodeId: 'submit', nodeName: '提交', approver: '贺琼', time: '2026/4/23 17:42:37', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
+            { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/4/24 08:15:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
+            { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/4/24 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
+            { nodeId: 'quality_officer', nodeName: '运营负责人', approver: '梁艳红', time: '2026/4/24 11:30:00', status: '通过', comment: '同意', nextNode: '会计审核', nextApprover: '何才连' },
+            { nodeId: 'accountant', nodeName: '会计审核', approver: '何才连', time: '2026/4/24 14:00:00', status: '通过', comment: '核对无误', nextNode: '财务负责人审核', nextApprover: '尹俊' },
+            { nodeId: 'finance_leader', nodeName: '财务负责人审核', approver: '尹俊', time: '2026/4/24 16:00:00', status: '通过', comment: '同意付款', nextNode: '总经理审核', nextApprover: '卓大龙' },
+            { nodeId: 'general_manager', nodeName: '总经理审核', approver: '卓大龙', time: '2026/4/25 09:00:00', status: '通过', comment: '同意', nextNode: '-', nextApprover: '-' }
+          ]},
+
+          // ---------- 已驳回（在销售负责人节点被驳回）----------
+          { id: 102, signDate: '2025-10-13', referrerType: '客户介绍', orderNo: 'DD00001012', requestNo: 'FY20251013001', referrerName: '胡晓棋', customerName: '谭泽萱', contractAmount: 16800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '已驳回', paymentStatus: '未打款', applicant: '胡晓棋', applyTime: '2025-10-13 18:44:27', referrerPhone: '137****9999', referrerIdCard: '440685********9012', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008001122334', accountName: '胡晓棋', approvalRecords: [
+            { nodeId: 'submit', nodeName: '提交', approver: '胡晓棋', time: '2025/10/13 18:44:27', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
+            { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2025/10/14 09:00:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
+            { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2025/10/14 10:30:00', status: '不通过', comment: '支行信息不详细', nextNode: '-', nextApprover: '-' }
+          ]},
+
+          // ---------- 已打款 ----------
+          { id: 103, signDate: '2026-02-04', referrerType: '客户介绍', orderNo: 'DD00001013', requestNo: 'FY20260204001', referrerName: '钱慧', customerName: '郑女士', contractAmount: 180000, serviceDays: 42, packageType: '常规套餐', ruleHit: '第5单 4%', commissionAmount: 7200, approvalStatus: '已通过', paymentStatus: '已打款', applicant: '钱慧', applyTime: '2026-02-04 18:32:48', referrerPhone: '135****7777', referrerIdCard: '440686********3456', bankName: '招商银行', branchName: '广州天河支行', accountNo: '6214832001122334', accountName: '钱慧', taxAmount: 1280, actualAmount: 5920, voucherNo: 'BX20260206001', payTime: '2026-02-06 15:45:10', payer: '出纳小李', approvalRecords: [
+            { nodeId: 'submit', nodeName: '提交', approver: '钱慧', time: '2026/2/4 18:32:48', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
+            { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/2/5 09:00:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
+            { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/2/5 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
+            { nodeId: 'quality_officer', nodeName: '运营负责人', approver: '梁艳红', time: '2026/2/5 11:00:00', status: '通过', comment: '同意', nextNode: '会计审核', nextApprover: '何才连' },
+            { nodeId: 'accountant', nodeName: '会计审核', approver: '何才连', time: '2026/2/5 14:00:00', status: '通过', comment: '核对无误', nextNode: '财务负责人审核', nextApprover: '尹俊' },
+            { nodeId: 'finance_leader', nodeName: '财务负责人审核', approver: '尹俊', time: '2026/2/5 16:00:00', status: '通过', comment: '同意', nextNode: '总经理审核', nextApprover: '卓大龙' },
+            { nodeId: 'general_manager', nodeName: '总经理审核', approver: '卓大龙', time: '2026/2/6 09:00:00', status: '通过', comment: '同意', nextNode: '-', nextApprover: '-' }
+          ]}
+        ]);
+
+        const filteredData = computed(() => {
+          let result = [...tableData.value];
+          if (searchForm.value.referrerName) result = result.filter(item => item.referrerName.includes(searchForm.value.referrerName));
+          if (searchForm.value.customerName) result = result.filter(item => item.customerName.includes(searchForm.value.customerName));
+          if (searchForm.value.orderNo) result = result.filter(item => item.orderNo && item.orderNo.includes(searchForm.value.orderNo));
+          if (searchForm.value.referrerType) result = result.filter(item => item.referrerType === searchForm.value.referrerType);
+          if (searchForm.value.approvalStatus) result = result.filter(item => item.approvalStatus === searchForm.value.approvalStatus);
+          if (searchForm.value.paymentStatus) result = result.filter(item => item.paymentStatus === searchForm.value.paymentStatus);
+          const order = { '未申请': 0, '审批中': 1, '已通过': 2, '已驳回': 3, '已打款': 4 };
+          return result.sort((a, b) => {
+            const diff = (order[a.approvalStatus] ?? 99) - (order[b.approvalStatus] ?? 99);
+            if (diff !== 0) return diff;
+            return (order[a.paymentStatus] ?? 99) - (order[b.paymentStatus] ?? 99);
+          });
+        });
+
+        const isSelectable = (row) => row.approvalStatus === '未申请';
+
+        const ruleTagType = (rule) => {
+          const map = { '第1单固定200元': 'success', '第2单 3%': 'primary', '第3单 3%': 'primary', '第4单 4%': 'primary', '第5单 4%': 'primary', '第6单 5%': 'primary', '特价套餐固定200元': 'warning', '短天数固定100元': 'info', '月嫂推荐 10%': 'warning', '未签约': 'info', '11月渠道汇总': 'primary', '1月渠道结算': 'primary', '其他奖励': 'info' };
+          return map[rule] || 'info';
+        };
+
+        const approvalTagType = (status) => {
+          const map = { '未申请': 'info', '审批中': 'primary', '已通过': 'success', '已驳回': 'danger' };
+          return map[status] || 'info';
+        };
+
+        const paymentTagType = (status) => {
+          const map = { '未打款': 'info', '待打款': 'warning', '已打款': 'success' };
+          return map[status] || 'info';
+        };
+
+        const handleSearch = () => {
+          loading.value = true;
+          setTimeout(() => { loading.value = false; }, 300);
+        };
+        const handleReset = () => {
+          searchForm.value = { referrerName: '', customerName: '', orderNo: '', referrerType: '', approvalStatus: '', paymentStatus: '' };
+        };
+
+        const handleSelectionChange = (rows) => {
+          selectedRows.value = rows;
+        };
+
+        // 生成分组标识
+        const genRequestNo = () => {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, '0');
+          const d = String(now.getDate()).padStart(2, '0');
+          const seq = String(requestIdCounter++).padStart(3, '0');
+          return `FY${y}${m}${d}${seq}`;
+        };
+
+        // 从待结算记录创建申请单
+        const createRequestFromRows = (rows) => {
+          const now = new Date().toLocaleString();
+          const group = {};
+          rows.forEach(row => {
+            if (!group[row.referrerName]) {
+              group[row.referrerName] = {
+                requestNo: genRequestNo(),
+                applicant: '黄敏仪',
+                applyTime: now,
+                referrerPhone: row.referrerPhone,
+                referrerIdCard: row.referrerIdCard,
+                bankName: row.bankName,
+                branchName: row.branchName,
+                accountNo: row.accountNo,
+                accountName: row.accountName,
+                approvalRecords: [
+                  { nodeId: 'submit', nodeName: '提交', approver: '黄敏仪（销售部北滘）', time: now, status: '提交', comment: '提交申请', nextNode: FLOW_NODES[1].name, nextApprover: FLOW_NODES[1].approvers[0] }
+                ]
+              };
+            }
+          });
+
+          rows.forEach(row => {
+            const g = group[row.referrerName];
+            row.requestNo = g.requestNo;
+            row.approvalStatus = '审批中';
+            row.paymentStatus = '未打款';
+            row.applicant = g.applicant;
+            row.applyTime = g.applyTime;
+            row.approvalRecords = [...g.approvalRecords];
+          });
+
+          selectedRows.value = [];
+        };
+
+        const getActionLabel = (row) => {
+          if (row.approvalStatus === '未申请') return '申请';
+          if (row.approvalStatus === '审批中') return '审批';
+          if (row.approvalStatus === '已通过' && row.paymentStatus === '待打款') return '打款';
+          return '查看';
+        };
+
+        const handleRowAction = (row) => {
+          if (row.approvalStatus === '未申请') return handleApply(row);
+          if (row.approvalStatus === '审批中') return handleApprove(row);
+          if (row.approvalStatus === '已通过' && row.paymentStatus === '待打款') return handlePay(row);
+          return handleView(row);
+        };
+
+        const handleApply = (row) => {
+          ElementPlus.ElMessageBox.confirm(
+            `为推荐人 "${row.referrerName}" 申请佣金 ¥${row.commissionAmount}？`,
+            '确认申请',
+            { type: 'info' }
+          ).then(() => {
+            createRequestFromRows([row]);
+            ElementPlus.ElMessage.success('已生成佣金申请单，等待财务审批');
+          });
+        };
+
+        const handleBatchApply = () => {
+          const group = {};
+          selectedRows.value.forEach(row => {
+            if (!group[row.referrerName]) {
+              group[row.referrerName] = { referrerName: row.referrerName, count: 0, totalAmount: 0, bankInfo: row.bankName + ' ' + row.branchName };
+            }
+            group[row.referrerName].count += 1;
+            group[row.referrerName].totalAmount += row.commissionAmount;
+          });
+          batchSummary.value = Object.values(group);
+          batchDialogVisible.value = true;
+        };
+
+        const confirmBatchApply = () => {
+          createRequestFromRows(selectedRows.value);
+          batchDialogVisible.value = false;
+          ElementPlus.ElMessage.success('批量申请已提交');
+        };
+
+        // ==================== 审批（多节点）====================
+        const detailVisible = ref(false);
+        const detailTitle = ref('申请单详情');
+        const currentRow = ref(null);
+
+        // 节点审批对话框
+        const approveDialogVisible = ref(false);
+        const currentNode = ref(null);
+        const currentNodeApprovers = ref([]);
+        const approveForm = ref({
+          approver: '',
+          result: '通过',
+          comment: ''
+        });
+
+        const handleView = (row) => {
+          currentRow.value = row;
+          detailTitle.value = '申请单详情';
+          detailVisible.value = true;
+        };
+
+        const handleApprove = (row) => {
+          currentRow.value = row;
+          const node = getCurrentNode(row);
+          if (!node) {
+            ElementPlus.ElMessage.warning('当前无待审批节点');
+            return;
+          }
+          currentNode.value = node;
+          currentNodeApprovers.value = node.approvers;
+          approveForm.value = { comment: '' };
+          approveDialogVisible.value = true;
+        };
+
+        const submitApproval = (isPass) => {
+          if (!isPass && !approveForm.value.comment) {
+            ElementPlus.ElMessage.warning('请填写驳回备注');
+            return;
+          }
+
+          const node = currentNode.value;
+          const requestNo = currentRow.value.requestNo;
+          const approverName = currentNodeApprovers.value[0] || '审批人';
+          const now = new Date().toLocaleString();
+
+          const nodeIdx = FLOW_NODES.findIndex(n => n.id === node.id);
+          const isLastNode = nodeIdx === FLOW_NODES.length - 1;
+
+          let nextNodeName = '-';
+          let nextApproverName = '-';
+          if (isPass && !isLastNode) {
+            const next = FLOW_NODES[nodeIdx + 1];
+            nextNodeName = next.name;
+            nextApproverName = next.approvers[0];
+          }
+
+          const statusText = isPass ? '通过' : '不通过';
+
+          tableData.value.filter(r => r.requestNo === requestNo).forEach(r => {
+            r.approvalRecords.push({
+              nodeId: node.id,
+              nodeName: node.name,
+              approver: approverName,
+              time: now,
+              status: statusText,
+              comment: approveForm.value.comment,
+              nextNode: nextNodeName,
+              nextApprover: nextApproverName
+            });
+
+            if (!isPass) {
+              r.approvalStatus = '已驳回';
+              r.paymentStatus = '未打款';
+            } else if (isLastNode) {
+              r.approvalStatus = '已通过';
+              r.paymentStatus = '待打款';
+            }
+          });
+
+          approveDialogVisible.value = false;
+
+          if (isPass && isLastNode) {
+            ElementPlus.ElMessage.success('审批完成，已流转至出纳打款');
+          } else if (isPass) {
+            ElementPlus.ElMessage.success(`已通过，流转至下一节点：${nextNodeName}`);
+          } else {
+            ElementPlus.ElMessage.success('已驳回');
+          }
+        };
+
+        const doPass = () => submitApproval(true);
+        const doReject = () => submitApproval(false);
+
+        // ==================== 打款 ====================
+        const payDialogVisible = ref(false);
+        const currentPayRow = ref(null);
+        const payForm = ref({
+          taxAmount: 0,
+          actualAmount: 0,
+          voucherNo: '',
+          remark: ''
+        });
+
+        const getProgress = (row) => {
+          if (!row.approvalRecords || !row.approvalRecords.length) return 0;
+          const total = FLOW_NODES.length - 1; // 去掉提交节点
+          const passed = row.approvalRecords.filter(r => r.status === '通过').length;
+          return Math.min(100, Math.round((passed / total) * 100));
+        };
+
+        const getCurrentNodeName = (row) => {
+          const node = getCurrentNode(row);
+          return node ? node.name : '-';
+        };
+
+        const getRejectNode = (row) => {
+          if (!row.approvalRecords) return '';
+          const reject = [...row.approvalRecords].reverse().find(r => r.status === '不通过');
+          return reject ? reject.nodeName : '';
+        };
+
+        // ==================== 审批进展弹窗 ====================
+        const progressVisible = ref(false);
+        const progressRow = ref(null);
+        const progressActive = ref(0);
+
+        const handleShowProgress = (row) => {
+          progressRow.value = row;
+          // 计算已完成到第几步
+          if (!row.approvalRecords || !row.approvalRecords.length) {
+            progressActive.value = 0;
+          } else {
+            const last = row.approvalRecords[row.approvalRecords.length - 1];
+            const idx = FLOW_NODES.findIndex(n => n.id === last.nodeId);
+            if (last.status === '不通过') {
+              progressActive.value = idx + 1; // 显示到当前驳回节点
+            } else if (last.status === '通过') {
+              progressActive.value = idx + 1;
+            } else {
+              progressActive.value = idx;
+            }
+          }
+          progressVisible.value = true;
+        };
+
+        const getNodeRecord = (nodeId) => {
+          if (!progressRow.value || !progressRow.value.approvalRecords) return null;
+          return progressRow.value.approvalRecords.find(r => r.nodeId === nodeId) || null;
+        };
+
+        const handlePay = (row) => {
+          currentPayRow.value = row;
+          const defaultTax = row.commissionAmount <= 800 ? 0 : Number((row.commissionAmount * 0.2).toFixed(2));
+          payForm.value = {
+            taxAmount: row.taxAmount ?? defaultTax,
+            actualAmount: row.actualAmount ?? (row.commissionAmount - defaultTax),
+            voucherNo: row.voucherNo || '',
+            remark: ''
+          };
+          payDialogVisible.value = true;
+        };
+
+        const calcActual = () => {
+          if (currentPayRow.value) {
+            payForm.value.actualAmount = Number((currentPayRow.value.commissionAmount - payForm.value.taxAmount).toFixed(2));
+          }
+        };
+
+        const confirmPay = () => {
+          if (!payForm.value.voucherNo) {
+            ElementPlus.ElMessage.warning('请输入凭证号');
+            return;
+          }
+          if (currentPayRow.value) {
+            const requestNo = currentPayRow.value.requestNo;
+            tableData.value.filter(r => r.requestNo === requestNo && r.approvalStatus === '已通过' && r.paymentStatus === '待打款').forEach(r => {
+              r.paymentStatus = '已打款';
+              r.taxAmount = payForm.value.taxAmount;
+              r.actualAmount = payForm.value.actualAmount;
+              r.voucherNo = payForm.value.voucherNo;
+              r.payTime = new Date().toLocaleString();
+              r.payer = '出纳小李';
+              r.approvalRecords.push({
+                nodeId: 'cashier', nodeName: '出纳打款', approver: '出纳小李', time: r.payTime, status: '通过', comment: '已打款', nextNode: '-', nextApprover: '-'
+              });
+            });
+          }
+          payDialogVisible.value = false;
+          ElementPlus.ElMessage.success('打款确认成功，已通知推荐人');
+        };
+
+        return {
+          searchForm, loading, selectedRows, batchDialogVisible, batchSummary,
+          filteredData, isSelectable, ruleTagType, approvalTagType, paymentTagType, getProgress, getCurrentNodeName, getRejectNode,
+          handleSearch, handleReset, handleSelectionChange,
+          handleApply, handleBatchApply, confirmBatchApply,
+          detailVisible, detailTitle, currentRow,
+          handleView, handleApprove, handleRowAction, getActionLabel,
+          approveDialogVisible, currentNode, currentNodeApprovers, approveForm,
+          doPass, doReject,
+          progressVisible, progressRow, progressActive, FLOW_NODES, getNodeRecord, handleShowProgress,
+          payDialogVisible, currentPayRow, payForm,
+          handlePay, calcActual, confirmPay
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>转介绍订单 - 氧阁ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('referral-lead', {
+      title: '转介绍订单',
+      breadcrumb: '<a href="referrer-list.html">转介绍管理</a> / 转介绍订单'
+    });
+
+    createApp({
+      template: `
+        <div>
+          <!-- 内容卡片 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">转介绍订单列表</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                <i class="el-icon-plus"></i> 登记客户
+              </el-button>
+            </div>
+            <div class="card-body">
+              <!-- 搜索栏 -->
+              <div class="search-bar">
+                <el-input v-model="searchForm.customerName" placeholder="客户姓名" clearable></el-input>
+                <el-input v-model="searchForm.phone" placeholder="客户手机号" clearable></el-input>
+                <el-select v-model="searchForm.referrerName" placeholder="推荐人" clearable filterable>
+                  <el-option v-for="r in referrerOptions" :key="r.id" :label="r.name" :value="r.name"></el-option>
+                </el-select>
+                <el-select v-model="searchForm.leadType" placeholder="介绍类型" clearable>
+                  <el-option label="客户介绍" value="客户介绍"></el-option>
+                  <el-option label="月子转介绍" value="月子转介绍"></el-option>
+                </el-select>
+                <el-select v-model="searchForm.status" placeholder="客户状态" clearable>
+                  <el-option label="已签约" value="已签约"></el-option>
+                  <el-option label="未签约" value="未签约"></el-option>
+                </el-select>
+                <el-select v-model="searchForm.assignee" placeholder="归属销售" clearable>
+                  <el-option label="贺琼" value="贺琼"></el-option>
+                  <el-option label="彭维" value="彭维"></el-option>
+                  <el-option label="刘晓庆" value="刘晓庆"></el-option>
+                  <el-option label="潘丽媚" value="潘丽媚"></el-option>
+                </el-select>
+                <el-button type="primary" @click="handleSearch">
+                  <i class="el-icon-search"></i> 搜索
+                </el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </div>
+
+              <!-- 数据表格 -->
+              <el-table :data="filteredData" style="width: 100%" height="100%" v-loading="loading">
+                <el-table-column prop="createTime" label="订单创建时间" width="150"></el-table-column>
+                <el-table-column prop="orderNo" label="订单编号" width="180"></el-table-column>
+                <el-table-column prop="customerName" label="客户名称" width="100"></el-table-column>
+                <el-table-column prop="phone" label="手机号" width="110"></el-table-column>
+                <el-table-column prop="status" label="客户状态" width="80">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="statusTagType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="packageName" label="签约套餐" width="130"></el-table-column>
+                <el-table-column prop="serviceDays" label="签约天数" width="80" align="center">
+                  <template #default="{ row }">
+                    <span v-if="row.status === '已签约'">{{ row.serviceDays }} 天</span>
+                    <span v-else style="color: #bfbfbf;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="contractAmount" label="签约套餐金额" width="110">
+                  <template #default="{ row }">
+                    <span v-if="row.status === '已签约'">¥{{ row.contractAmount.toLocaleString() }}</span>
+                    <span v-else style="color: #bfbfbf;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="signDate" label="签约日期" width="100">
+                  <template #default="{ row }">
+                    <span v-if="row.status === '已签约'">{{ row.signDate }}</span>
+                    <span v-else style="color: #bfbfbf;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="assignee" label="归属销售" width="80"></el-table-column>
+                <el-table-column prop="referrerName" label="推荐人" width="80"></el-table-column>
+                <el-table-column prop="leadType" label="介绍类型" width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="typeTagType(row.leadType)">{{ row.leadType }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <!-- 分页 -->
+              <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                <el-pagination
+                  v-model:current-page="pageInfo.current"
+                  v-model:page-size="pageInfo.size"
+                  :total="pageInfo.total"
+                  :page-sizes="[10, 20, 50]"
+                  layout="total, sizes, prev, pager, next"
+                ></el-pagination>
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑客户对话框 -->
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑客户' : '登记客户'" width="600px">
+            <el-form :model="form" label-width="100px">
+              <el-form-item label="客户姓名">
+                <el-input v-model="form.customerName" placeholder="请输入客户姓名"></el-input>
+              </el-form-item>
+              <el-form-item label="客户手机号">
+                <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
+              </el-form-item>
+              <el-form-item label="推荐人">
+                <el-select v-model="form.referrerName" placeholder="请选择推荐人" style="width: 100%;" filterable>
+                  <el-option v-for="r in referrerOptions" :key="r.id" :label="r.name + ' (' + r.phone + ')'" :value="r.name"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="介绍类型">
+                <el-select v-model="form.leadType" placeholder="请选择" style="width: 100%;">
+                  <el-option label="客户介绍" value="客户介绍"></el-option>
+                  <el-option label="月子转介绍" value="月子转介绍"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="意向分店">
+                <el-select v-model="form.shop" placeholder="请选择" style="width: 100%;">
+                  <el-option label="氧阁集团" value="氧阁集团"></el-option>
+                  <el-option label="佛山市场部" value="佛山市场部"></el-option>
+                  <el-option label="广州销售分部" value="广州销售分部"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="归属销售">
+                <el-select v-model="form.assignee" placeholder="请选择" style="width: 100%;">
+                  <el-option label="贺琼" value="贺琼"></el-option>
+                  <el-option label="彭维" value="彭维"></el-option>
+                  <el-option label="刘晓庆" value="刘晓庆"></el-option>
+                  <el-option label="潘丽媚" value="潘丽媚"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="客户状态">
+                <el-select v-model="form.status" placeholder="请选择" style="width: 100%;">
+                  <el-option label="已签约" value="已签约"></el-option>
+                  <el-option label="未签约" value="未签约"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="合同金额" v-if="form.status === '已签约'">
+                <el-input-number v-model="form.contractAmount" :min="0" :precision="2" style="width: 100%;"></el-input-number>
+              </el-form-item>
+              <el-form-item label="套餐天数" v-if="form.status === '已签约'">
+                <el-input-number v-model="form.serviceDays" :min="1" style="width: 100%;"></el-input-number>
+              </el-form-item>
+              <el-form-item label="签约日期">
+                <el-date-picker v-model="form.signDate" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
+              </el-form-item>
+              <el-form-item label="备注">
+                <el-input v-model="form.remark" type="textarea" rows="2" placeholder="选填"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveData">保存</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 申请佣金确认对话框 -->
+          <el-dialog v-model="applyDialogVisible" title="申请转介绍佣金" width="500px">
+            <div v-if="applyRow">
+              <el-alert type="info" :closable="false" class="mb-2">
+                系统将自动根据佣金规则计算金额，确认后进入财务审批流程。
+              </el-alert>
+              <div class="detail-grid mb-2">
+                <div class="detail-item">
+                  <span class="detail-label">客户名称</span>
+                  <span class="detail-value">{{ applyRow.customerName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">推荐人</span>
+                  <span class="detail-value">{{ applyRow.referrerName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">签约套餐金额</span>
+                  <span class="detail-value">¥{{ applyRow.contractAmount?.toLocaleString() }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">套餐天数</span>
+                  <span class="detail-value">{{ applyRow.serviceDays }} 天</span>
+                </div>
+              </div>
+              <el-divider></el-divider>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #8c8c8c;">预计税前佣金：</span>
+                <span style="font-size: 20px; font-weight: 700; color: #f5222d;">¥{{ calculatePreview(applyRow) }}</span>
+              </div>
+            </div>
+            <template #footer>
+              <el-button @click="applyDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmApply">确认申请</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // 统计数据
+        const stats = ref({
+          totalLeads: 342,
+          newThisMonth: 28,
+          signed: 128,
+          signedAmount: 3680000,
+          conversionRate: 37.4,
+          pendingCommission: 45600,
+          pendingCount: 23
+        });
+
+        // 搜索表单
+        const searchForm = ref({
+          customerName: '',
+          phone: '',
+          referrerName: '',
+          leadType: '',
+          status: '',
+          assignee: ''
+        });
+
+        // 弹窗状态
+        const dialogVisible = ref(false);
+        const applyDialogVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+        const applyRow = ref(null);
+        const loading = ref(false);
+
+        // 表单数据
+        const form = ref({
+          customerName: '',
+          phone: '',
+          referrerName: '',
+          leadType: '客户介绍',
+          shop: '氧阁集团',
+          assignee: '',
+          status: '未签约',
+          contractAmount: null,
+          serviceDays: null,
+          signDate: new Date(),
+          remark: ''
+        });
+
+        // 分页
+        const pageInfo = ref({ current: 1, size: 10, total: 0 });
+
+        // 推荐人选项（用于下拉选择）
+        const referrerOptions = ref([
+          { id: 1, name: '植晓青', phone: '138****1234' },
+          { id: 2, name: '陈莲莲', phone: '123565612' },
+          { id: 3, name: '王瑾', phone: '13610888843' },
+          { id: 4, name: '刘淑娟', phone: '18588828817' },
+          { id: 5, name: '董桂花', phone: '19958720079' }
+        ]);
+
+        // Mock 数据
+        const tableData = ref([
+          { id: 1, orderNo: 'YGOD2603060857154330723', createTime: '2025-06-20 14:30:00', customerName: '李萍明', phone: '13600054827', referrerName: '刘淑娟', leadType: '客户介绍', status: '已签约', packageName: 'Y3月子基础服务', contractAmount: 25800, serviceDays: 42, assignee: '彭维', signDate: '2025-06-22', commissionApplyStatus: '未申请' },
+          { id: 2, orderNo: 'YGOD2603060857154330724', createTime: '2025-07-20 09:15:00', customerName: '程day', phone: '138****5678', referrerName: '王瑾', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-07-23', commissionApplyStatus: null },
+          { id: 3, orderNo: 'YGOD2603060857154330725', createTime: '2025-06-24 16:45:00', customerName: '梅玲黄', phone: '139****9012', referrerName: '刘淑娟', leadType: '客户介绍', status: '已签约', packageName: 'Y2月子助手', contractAmount: 19800, serviceDays: 26, assignee: '彭维', signDate: '2025-06-26', commissionApplyStatus: '未申请' },
+          { id: 4, orderNo: 'YGOD2603060857154330726', createTime: '2025-08-05 11:20:00', customerName: '梁妙晨', phone: '188****7721', referrerName: '植晓青', leadType: '客户介绍', status: '已签约', packageName: 'S6体质调理', contractAmount: 14535, serviceDays: 26, assignee: '贺琼', signDate: '2025-08-08', commissionApplyStatus: '审批中' },
+          { id: 5, orderNo: 'YGOD2603060857154330727', createTime: '2025-06-15 08:00:00', customerName: '8月宝妈', phone: '150****3456', referrerName: '董桂花', leadType: '月子转介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-06-18', commissionApplyStatus: null },
+          { id: 6, orderNo: 'YGOD2603060857154330728', createTime: '2025-07-14 13:10:00', customerName: '侯美丽', phone: '151****7890', referrerName: '莫迪施', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-07-17', commissionApplyStatus: null },
+          { id: 7, orderNo: 'YGOD2603060857154330729', createTime: '2025-08-04 10:30:00', customerName: '马儿HK', phone: '152****2345', referrerName: '黎灿荣', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-08-07', commissionApplyStatus: null },
+          { id: 8, orderNo: 'YGOD2603060857154330730', createTime: '2025-08-22 15:00:00', customerName: 'Kerry', phone: '153****6789', referrerName: '方艳红', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-08-25', commissionApplyStatus: null },
+          { id: 9, orderNo: 'YGOD2603060857154330731', createTime: '2026-03-26 09:00:00', customerName: 'ChokYin', phone: '154****0123', referrerName: '叶秀梅', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2026-03-29', commissionApplyStatus: null },
+          { id: 10, orderNo: 'YGOD2603060857154330732', createTime: '2025-06-20 16:00:00', customerName: '蓝海婉', phone: '155****4567', referrerName: '郑菲菲', leadType: '客户介绍', status: '已签约', packageName: '88位限量版', contractAmount: 22800, serviceDays: 42, assignee: '刘晓庆', signDate: '2025-06-23', commissionApplyStatus: '待打款' },
+          { id: 11, orderNo: 'YGOD2603060857154330733', createTime: '2025-06-11 11:30:00', customerName: '李梦玲', phone: '156****8901', referrerName: '胡美华', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '潘丽媚', signDate: '2025-06-14', commissionApplyStatus: null },
+          { id: 12, orderNo: 'YGOD2603060857154330734', createTime: '2025-09-07 14:00:00', customerName: '植晓青(复购)', phone: '138****1234', referrerName: '植晓青', leadType: '客户介绍', status: '已签约', packageName: '颐安月子好帮手', contractAmount: 16800, serviceDays: 26, assignee: '贺琼', signDate: '2025-09-10', commissionApplyStatus: '已打款' }
+        ]);
+
+        pageInfo.value.total = tableData.value.length;
+
+        // 过滤
+        const filteredData = computed(() => {
+          let result = tableData.value;
+          if (searchForm.value.customerName) result = result.filter(item => item.customerName.includes(searchForm.value.customerName));
+          if (searchForm.value.phone) result = result.filter(item => item.phone.includes(searchForm.value.phone));
+          if (searchForm.value.referrerName) result = result.filter(item => item.referrerName === searchForm.value.referrerName);
+          if (searchForm.value.leadType) result = result.filter(item => item.leadType === searchForm.value.leadType);
+          if (searchForm.value.status) result = result.filter(item => item.status === searchForm.value.status);
+          if (searchForm.value.assignee) result = result.filter(item => item.assignee === searchForm.value.assignee);
+          return result;
+        });
+
+        // 标签类型
+        const typeTagType = (type) => {
+          const map = { '客户介绍': 'success', '月子转介绍': 'warning' };
+          return map[type] || 'info';
+        };
+        const statusTagType = (status) => {
+          const map = { '已签约': 'success', '未签约': 'info' };
+          return map[status] || 'info';
+        };
+        const commissionApplyTagType = (status) => {
+          const map = { '未申请': 'warning', '审批中': 'primary', '待打款': 'info', '已打款': 'success' };
+          return map[status] || 'info';
+        };
+
+        // 搜索
+        const handleSearch = () => {
+          loading.value = true;
+          setTimeout(() => { loading.value = false; }, 300);
+        };
+        const handleReset = () => {
+          searchForm.value = { customerName: '', phone: '', referrerName: '', leadType: '', status: '', assignee: '' };
+        };
+
+        // 新增
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.value = { customerName: '', phone: '', referrerName: '', leadType: '客户介绍', shop: '氧阁集团', assignee: '', status: '未签约', contractAmount: null, serviceDays: null, signDate: new Date(), remark: '' };
+          dialogVisible.value = true;
+        };
+
+        // 编辑
+        const handleEdit = (row) => {
+          isEdit.value = true;
+          editingId.value = row.id;
+          form.value = { ...row, signDate: new Date(row.signDate) };
+          dialogVisible.value = true;
+        };
+
+        // 保存
+        const saveData = () => {
+          if (!form.value.customerName || !form.value.phone) {
+            ElementPlus.ElMessage.warning('请填写客户姓名和手机号');
+            return;
+          }
+          if (isEdit.value) {
+            const index = tableData.value.findIndex(item => item.id === editingId.value);
+            if (index > -1) {
+              const updated = { ...tableData.value[index], ...form.value };
+              // 如果状态变为已签约且无佣金申请状态，设为未申请
+              if (updated.status === '已签约' && !updated.commissionApplyStatus) {
+                updated.commissionApplyStatus = '未申请';
+              }
+              tableData.value[index] = updated;
+            }
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            const newId = Math.max(...tableData.value.map(item => item.id), 0) + 1;
+            const newRow = { id: newId, orderNo: 'YGOD' + Date.now(), ...form.value, signDate: form.value.signDate.toISOString().split('T')[0] };
+            if (newRow.status === '已签约') newRow.commissionApplyStatus = '未申请';
+            tableData.value.push(newRow);
+            pageInfo.value.total += 1;
+            ElementPlus.ElMessage.success('登记成功');
+          }
+          dialogVisible.value = false;
+        };
+
+        // 删除
+        const handleDelete = (row) => {
+          ElementPlus.ElMessageBox.confirm(`确定删除客户 "${row.customerName}" 的登记记录吗？`, '提示', { type: 'warning' })
+            .then(() => {
+              const index = tableData.value.findIndex(item => item.id === row.id);
+              if (index > -1) {
+                tableData.value.splice(index, 1);
+                pageInfo.value.total -= 1;
+              }
+              ElementPlus.ElMessage.success('删除成功');
+            });
+        };
+
+        // 申请佣金
+        const handleApplyCommission = (row) => {
+          applyRow.value = row;
+          applyDialogVisible.value = true;
+        };
+
+        // 佣金预览计算（简化版，实际应调用规则引擎）
+        const calculatePreview = (row) => {
+          if (!row || !row.contractAmount || !row.serviceDays) return '0.00';
+          const days = row.serviceDays;
+          if (days < 7) return '0.00';
+          if (days >= 7 && days < 13) return '100.00';
+          // 模拟第1单200元（实际应根据推荐人累计单数计算）
+          return '200.00';
+        };
+
+        // 确认申请
+        const confirmApply = () => {
+          if (applyRow.value) {
+            const index = tableData.value.findIndex(item => item.id === applyRow.value.id);
+            if (index > -1) {
+              tableData.value[index].commissionApplyStatus = '审批中';
+            }
+            ElementPlus.ElMessage.success('佣金申请已提交，等待财务审批');
+          }
+          applyDialogVisible.value = false;
+        };
+
+        return {
+          stats, searchForm, dialogVisible, applyDialogVisible, isEdit, editingId,
+          applyRow, loading, form, pageInfo, tableData, filteredData, referrerOptions,
+          typeTagType, statusTagType, commissionApplyTagType,
+          handleSearch, handleReset, handleAdd, handleEdit, saveData, handleDelete,
+          handleApplyCommission, calculatePreview, confirmApply
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

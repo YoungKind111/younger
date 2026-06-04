@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佣金规则配置 - 氧阁ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // Element Plus 消息方法快捷引用
+    const { ElMessage } = ElementPlus;
+
+    SharedMenu.initPageLayout('rule-config', {
+      title: '佣金规则配置',
+      breadcrumb: '<a href="referrer-list.html">系统配置</a> / 佣金规则配置'
+    });
+
+    createApp({
+      template: `
+        <div>
+          <!-- 参数配置 -->
+          <div class="content-card mb-2">
+            <div class="card-header">
+              <span class="card-title">规则参数配置</span>
+              <el-button type="primary" size="small" @click="handleSave">
+                保存配置
+              </el-button>
+            </div>
+            <div class="card-body">
+              <el-form ref="configFormRef" :model="configForm" :rules="configRules" label-width="180px" style="max-width: 800px;">
+                <el-divider content-position="left">天数门槛规则</el-divider>
+                <el-form-item label="无佣金天数门槛" prop="minDaysNoCommission">
+                  <el-input-number v-model="configForm.minDaysNoCommission" :min="1" :max="30"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">天（低于此天数不计单无佣金）</span>
+                </el-form-item>
+                <el-form-item label="短天数区间" prop="shortDaysEnd">
+                  <el-input-number v-model="configForm.shortDaysStart" :min="1" :max="30"></el-input-number>
+                  <span style="margin: 0 8px;">至</span>
+                  <el-input-number v-model="configForm.shortDaysEnd" :min="1" :max="30"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">天</span>
+                </el-form-item>
+                <el-form-item label="短天数固定佣金" prop="shortDaysAmount">
+                  <el-input-number v-model="configForm.shortDaysAmount" :min="0" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">元/单</span>
+                </el-form-item>
+
+                <el-divider content-position="left">特价套餐规则</el-divider>
+                <el-form-item label="特价套餐价格标准" prop="specialPrice">
+                  <el-input-number v-model="configForm.specialPrice" :min="0" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">元</span>
+                </el-form-item>
+                <el-form-item label="特价套餐天数标准" prop="specialDays">
+                  <el-input-number v-model="configForm.specialDays" :min="1"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">天起（达到此天数的特价套餐计固定佣金）</span>
+                </el-form-item>
+                <el-form-item label="特价套餐固定佣金" prop="specialCommission">
+                  <el-input-number v-model="configForm.specialCommission" :min="0" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">元/单</span>
+                </el-form-item>
+
+                <el-divider content-position="left">常规套餐阶梯规则</el-divider>
+                <el-form-item label="第1单佣金">
+                  <el-input-number v-model="configForm.step1Amount" :min="0" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">元（固定）</span>
+                </el-form-item>
+                <el-form-item label="第2~3单比例">
+                  <el-input-number v-model="configForm.step2to3Rate" :min="0" :max="100" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%（成交金额×比例）</span>
+                </el-form-item>
+                <el-form-item label="第4~5单比例">
+                  <el-input-number v-model="configForm.step4to5Rate" :min="0" :max="100" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%</span>
+                </el-form-item>
+                <el-form-item label="第6单及以上比例">
+                  <el-input-number v-model="configForm.step6PlusRate" :min="0" :max="100" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%</span>
+                </el-form-item>
+
+                <el-divider content-position="left">月嫂推荐规则</el-divider>
+                <el-form-item label="月嫂佣金比例" prop="nurseRate">
+                  <el-input-number v-model="configForm.nurseRate" :min="0" :max="100" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%（成交金额×比例，不区分阶梯和套餐类型）</span>
+                </el-form-item>
+              </el-form>
+            </div>
+          </div>
+
+          <!-- 规则测试工具 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">规则测试工具</span>
+            </div>
+            <div class="card-body">
+              <el-row :gutter="24">
+                <el-col :span="10">
+                  <el-form :model="testForm" label-width="120px">
+                    <el-form-item label="模拟累计单数">
+                      <el-input-number v-model="testForm.cumulativeCount" :min="0" :max="20" style="width: 150px;"></el-input-number>
+                      <span style="margin-left: 8px; color: #8c8c8c;">单（不含本单）</span>
+                    </el-form-item>
+                    <el-form-item label="推荐人身份">
+                      <el-radio-group v-model="testForm.referrerType">
+                        <el-radio-button label="客户">客户</el-radio-button>
+                        <el-radio-button label="月嫂">月嫂</el-radio-button>
+                      </el-radio-group>
+                    </el-form-item>
+                    <el-form-item label="套餐类型">
+                      <el-radio-group v-model="testForm.packageType">
+                        <el-radio-button label="常规套餐">常规套餐</el-radio-button>
+                        <el-radio-button label="特价套餐">特价套餐</el-radio-button>
+                      </el-radio-group>
+                    </el-form-item>
+                    <el-form-item label="套餐天数">
+                      <el-input-number v-model="testForm.serviceDays" :min="1" :max="365" style="width: 150px;"></el-input-number>
+                      <span style="margin-left: 8px; color: #8c8c8c;">天</span>
+                    </el-form-item>
+                    <el-form-item label="月嫂成交金额">
+                      <el-input-number v-model="testForm.contractAmount" :min="0" :precision="2" style="width: 200px;"></el-input-number>
+                      <span style="margin-left: 8px; color: #8c8c8c;">元</span>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button type="primary" @click="runTest">
+                        运行测试
+                      </el-button>
+                    </el-form-item>
+                  </el-form>
+                </el-col>
+                <el-col :span="14">
+                  <el-card shadow="never" style="background: #f6ffed; border: 1px solid #b7eb8f;" v-if="testResult">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                      <span style="font-weight: 600; color: #262626;">计算结果</span>
+                      <el-tag :type="testResult.isValid ? 'success' : 'danger'">{{ testResult.isValid ? '有效单' : '无效单' }}</el-tag>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;" v-if="testResult.isValid">
+                      <div>
+                        <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 4px;">命中规则</div>
+                        <div style="font-size: 14px; color: #262626; font-weight: 500;">{{ testResult.ruleHit }}</div>
+                      </div>
+                      <div>
+                        <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 4px;">累计后单数</div>
+                        <div style="font-size: 14px; color: #262626; font-weight: 500;">第 {{ testResult.newCumulative }} 单</div>
+                      </div>
+                    </div>
+                    <el-divider v-if="testResult.isValid"></el-divider>
+                    <div style="display: flex; justify-content: space-between; align-items: center;" v-if="testResult.isValid">
+                      <span style="font-size: 14px; color: #8c8c8c;">税前佣金金额：</span>
+                      <span style="font-size: 28px; font-weight: 700; color: #f5222d;">¥{{ testResult.commission.toLocaleString() }}</span>
+                    </div>
+                    <div style="text-align: center; color: #8c8c8c; padding: 20px;" v-else>
+                      {{ testResult.ruleHit }}
+                    </div>
+                  </el-card>
+                  <el-card shadow="never" style="background: #fafafa;" v-else>
+                    <div style="text-align: center; color: #bfbfbf; padding: 40px;">
+                      <span style="font-size: 32px; margin-bottom: 12px; display: block;">🧮</span>
+                      填写左侧参数并点击"运行测试"查看计算结果
+                    </div>
+                  </el-card>
+                </el-col>
+              </el-row>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        // 配置表单
+        const configForm = ref({
+          minDaysNoCommission: 7,
+          shortDaysStart: 7,
+          shortDaysEnd: 12,
+          shortDaysAmount: 100,
+          specialPrice: 9980,
+          specialDays: 13,
+          specialCommission: 200,
+          step1Amount: 200,
+          step2to3Rate: 3,
+          step4to5Rate: 4,
+          step6PlusRate: 5,
+          nurseRate: 10
+        });
+
+        // 表单引用
+        const configFormRef = ref(null);
+
+        // 自定义校验器
+        const validateShortDaysEnd = (rule, value, callback) => {
+          if (value < configForm.value.shortDaysStart) {
+            callback(new Error('短天数区间结束值不能小于开始值'));
+          } else if (value >= configForm.value.specialDays) {
+            callback(new Error('短天数区间结束值必须小于特价套餐天数标准'));
+          } else {
+            callback();
+          }
+        };
+
+        const validateSpecialDays = (rule, value, callback) => {
+          if (value <= configForm.value.shortDaysEnd) {
+            callback(new Error('特价套餐天数标准必须大于短天数区间结束值'));
+          } else {
+            callback();
+          }
+        };
+
+        // 配置表单校验规则
+        const configRules = {
+          minDaysNoCommission: [
+            { required: true, message: '请填写无佣金天数门槛', trigger: 'change' },
+            { type: 'number', min: 1, max: 30, message: '范围 1~30 天', trigger: 'change' }
+          ],
+          shortDaysEnd: [
+            { required: true, message: '请填写短天数区间结束值', trigger: 'change' },
+            { validator: validateShortDaysEnd, trigger: 'change' }
+          ],
+          shortDaysAmount: [
+            { required: true, message: '请填写短天数固定佣金', trigger: 'change' }
+          ],
+          specialPrice: [
+            { required: true, message: '请填写特价套餐价格标准', trigger: 'change' }
+          ],
+          specialDays: [
+            { required: true, message: '请填写特价套餐天数标准', trigger: 'change' },
+            { validator: validateSpecialDays, trigger: 'change' }
+          ],
+          specialCommission: [
+            { required: true, message: '请填写特价套餐固定佣金', trigger: 'change' }
+          ],
+          nurseRate: [
+            { required: true, message: '请填写月嫂佣金比例', trigger: 'change' },
+            { type: 'number', min: 0, max: 100, message: '比例范围 0~100%', trigger: 'change' }
+          ]
+        };
+
+        // 测试表单
+        const testForm = ref({
+          cumulativeCount: 0,
+          referrerType: '客户',
+          packageType: '常规套餐',
+          serviceDays: 26,
+          contractAmount: 19800
+        });
+
+        const testResult = ref(null);
+
+        const handleSave = () => {
+          configFormRef.value.validate((valid) => {
+            if (valid) {
+              ElMessage.success('规则配置已保存');
+            } else {
+              ElMessage.error('请检查表单填写是否正确');
+              return false;
+            }
+          });
+        };
+
+        const runTest = () => {
+          const days = testForm.value.serviceDays;
+          const amount = testForm.value.contractAmount;
+          const cumulative = testForm.value.cumulativeCount;
+          const isSpecial = testForm.value.packageType === '特价套餐';
+          const isNurse = testForm.value.referrerType === '月嫂';
+
+          // 规则1：不足门槛天数（客户和月嫂均受限制）
+          if (days < configForm.value.minDaysNoCommission) {
+            testResult.value = {
+              isValid: false,
+              ruleHit: `天数不足${configForm.value.minDaysNoCommission}天，不计单无佣金`,
+              commission: 0,
+              newCumulative: cumulative
+            };
+            return;
+          }
+
+          // 月嫂推荐：满足天数门槛后，统一按成交金额比例计算
+          if (isNurse) {
+            const commission = Number((amount * configForm.value.nurseRate / 100).toFixed(2));
+            testResult.value = {
+              isValid: true,
+              ruleHit: `月嫂推荐 ${configForm.value.nurseRate}%`,
+              commission: commission,
+              newCumulative: cumulative + 1
+            };
+            return;
+          }
+
+          // 客户推荐：按现有规则计算
+
+          // 规则2：短天数区间
+          if (days >= configForm.value.shortDaysStart && days <= configForm.value.shortDaysEnd) {
+            testResult.value = {
+              isValid: true,
+              ruleHit: `短天数固定${configForm.value.shortDaysAmount}元`,
+              commission: configForm.value.shortDaysAmount,
+              newCumulative: cumulative + 1
+            };
+            return;
+          }
+
+          // 规则3：特价套餐且满足天数标准
+          if (isSpecial && days >= configForm.value.specialDays) {
+            testResult.value = {
+              isValid: true,
+              ruleHit: `特价套餐固定${configForm.value.specialCommission}元`,
+              commission: configForm.value.specialCommission,
+              newCumulative: cumulative + 1
+            };
+            return;
+          }
+
+          // 规则4：常规套餐（含未达specialDays天数的特价套餐）按阶梯计算
+          const newCumulative = cumulative + 1;
+          let commission = 0;
+          let ruleHit = '';
+          if (newCumulative === 1) {
+            commission = configForm.value.step1Amount;
+            ruleHit = `第1单固定${configForm.value.step1Amount}元`;
+          } else if (newCumulative <= 3) {
+            commission = Number((amount * configForm.value.step2to3Rate / 100).toFixed(2));
+            ruleHit = `第${newCumulative}单 ${configForm.value.step2to3Rate}%`;
+          } else if (newCumulative <= 5) {
+            commission = Number((amount * configForm.value.step4to5Rate / 100).toFixed(2));
+            ruleHit = `第${newCumulative}单 ${configForm.value.step4to5Rate}%`;
+          } else {
+            commission = Number((amount * configForm.value.step6PlusRate / 100).toFixed(2));
+            ruleHit = `第${newCumulative}单 ${configForm.value.step6PlusRate}%`;
+          }
+          testResult.value = {
+            isValid: true,
+            ruleHit: ruleHit,
+            commission: commission,
+            newCumulative: newCumulative
+          };
+        };
+
+        return {
+          configForm, configFormRef, configRules,
+          testForm, testResult,
+          handleSave, runTest
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

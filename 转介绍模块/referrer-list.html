@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推荐人档案 - 氧阁ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .page-compact .card-header { padding: 8px 16px; }
+    .page-compact .card-body { padding: 12px; }
+    .page-compact .search-bar { padding: 8px; margin-bottom: 8px; gap: 8px; }
+    .page-compact .search-bar .el-input,
+    .page-compact .search-bar .el-select { width: 160px; }
+    .page-compact .search-bar .el-button { padding: 0 12px; height: 28px; }
+    .page-compact .search-bar .el-input__wrapper,
+    .page-compact .search-bar .el-select .el-input__wrapper { padding: 0 8px; min-height: 28px; }
+    .page-compact .el-table { font-size: 13px; }
+    .page-compact .el-table .cell { padding: 2px 8px !important; line-height: 1.4; }
+    .page-compact .el-table th.el-table__cell { padding: 4px 0 !important; background: #fafafa; }
+    .page-compact .el-table td.el-table__cell { padding: 2px 0 !important; }
+    .page-compact .el-table .el-tag { height: 22px; padding: 0 6px; font-size: 12px; }
+    .page-compact .el-table .el-button { padding: 0; height: auto; font-size: 13px; }
+    .page-compact .pagination-wrap { margin-top: 8px; }
+    .page-compact .el-pagination { font-size: 12px; }
+    .page-compact .el-pagination .el-select .el-input { width: 90px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    // 步骤1：先初始化布局（在 Vue 创建之前！）
+    SharedMenu.initPageLayout('referrer-list', {
+      title: '推荐人档案',
+      breadcrumb: '<a href="referrer-list.html">转介绍管理</a> / 推荐人档案'
+    });
+
+    // 步骤2：创建 Vue 应用
+    createApp({
+      template: `
+        <div class="page-compact">
+          <!-- 搜索栏 + 表格 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">推荐人列表</span>
+            </div>
+            <div class="card-body">
+              <!-- 搜索栏 -->
+              <div class="search-bar">
+                <el-input v-model="searchForm.name" placeholder="推荐人姓名" clearable></el-input>
+                <el-input v-model="searchForm.phone" placeholder="手机号" clearable></el-input>
+                <el-select v-model="searchForm.type" placeholder="推荐人类型" clearable>
+                  <el-option label="老客户" value="老客户"></el-option>
+                  <el-option label="月嫂" value="月嫂"></el-option>
+                </el-select>
+                <el-button type="primary" @click="handleSearch">
+                  <i class="el-icon-search"></i> 搜索
+                </el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </div>
+
+              <!-- 数据表格 -->
+              <el-table :data="filteredData" style="width: 100%" height="100%" v-loading="loading" size="small">
+                <el-table-column prop="id" label="ID" width="50" align="center"></el-table-column>
+                <el-table-column prop="name" label="姓名" width="80"></el-table-column>
+                <el-table-column prop="phone" label="手机号" width="110"></el-table-column>
+                <el-table-column prop="type" label="类型" width="80">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="typeTagType(row.type)">{{ row.type }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="totalReferrals" label="累计推荐" width="70" align="center"></el-table-column>
+                <el-table-column prop="successfulReferrals" label="成功签约" width="70" align="center"></el-table-column>
+                <el-table-column prop="totalCommission" label="累计佣金" width="70">
+                  <template #default="{ row }">
+                    ¥{{ row.totalCommission.toLocaleString() }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100">
+                  <template #default="{ row }">
+                    <el-button type="text" size="small" @click="handleView(row)">查看</el-button>
+                    <el-button type="text" size="small" @click="handleEdit(row)">编辑</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <!-- 分页 -->
+              <div class="pagination-wrap" style="display: flex; justify-content: flex-end;">
+                <el-pagination
+                  v-model:current-page="pageInfo.current"
+                  v-model:page-size="pageInfo.size"
+                  :total="pageInfo.total"
+                  :page-sizes="[10, 20, 50]"
+                  layout="total, sizes, prev, pager, next"
+                ></el-pagination>
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑推荐人对话框 -->
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑推荐人' : '新增推荐人'" width="600px">
+            <el-form :model="form" label-width="100px">
+              <el-divider content-position="left">基本信息</el-divider>
+              <el-form-item label="姓名">
+                <el-input v-model="form.name" placeholder="请输入推荐人姓名" :disabled="isEdit"></el-input>
+              </el-form-item>
+              <el-form-item label="手机号">
+                <el-input v-model="form.phone" placeholder="请输入手机号" :disabled="isEdit"></el-input>
+              </el-form-item>
+              <el-alert v-if="isEdit" type="info" :closable="false" style="margin-bottom: 18px; margin-left: 100px; width: auto;">
+                <template #title>
+                  <span style="font-size: 13px;">姓名和手机号只能在客户管理或月嫂档案界面编辑</span>
+                </template>
+              </el-alert>
+              <el-form-item label="身份证号">
+                <el-input v-model="form.idCard" placeholder="请输入身份证号（代扣税需要）"></el-input>
+              </el-form-item>
+              <el-form-item label="推荐人类型">
+                <el-select v-model="form.type" placeholder="请选择" style="width: 100%;">
+                  <el-option label="老客户" value="老客户"></el-option>
+                  <el-option label="月嫂" value="月嫂"></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-divider content-position="left">银行账户</el-divider>
+              <el-form-item label="开户行">
+                <el-input v-model="form.bankName" placeholder="如：中国农业银行"></el-input>
+              </el-form-item>
+              <el-form-item label="支行">
+                <el-input v-model="form.branchName" placeholder="请输入完整支行名称"></el-input>
+              </el-form-item>
+              <el-form-item label="收款账号">
+                <el-input v-model="form.accountNo" placeholder="请输入银行账号"></el-input>
+              </el-form-item>
+              <el-form-item label="户名">
+                <el-input v-model="form.accountName" placeholder="请输入银行卡户名"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveData">保存</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 查看详情对话框 -->
+          <el-dialog v-model="detailVisible" title="推荐人详情" width="700px">
+            <div v-if="currentRow">
+              <div class="detail-grid mb-3">
+                <div class="detail-item">
+                  <span class="detail-label">姓名</span>
+                  <span class="detail-value">{{ currentRow.name }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">手机号</span>
+                  <span class="detail-value">{{ currentRow.phone }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">推荐人类型</span>
+                  <span class="detail-value">{{ currentRow.type }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">累计推荐</span>
+                  <span class="detail-value">{{ currentRow.totalReferrals }} 人</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">成功签约</span>
+                  <span class="detail-value">{{ currentRow.successfulReferrals }} 单</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">累计佣金</span>
+                  <span class="detail-value" style="color: #1890ff;">¥{{ detailTotalCommission.toLocaleString() }}</span>
+                </div>
+              </div>
+
+              <el-divider content-position="left">银行账户信息</el-divider>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">开户行</span>
+                  <span class="detail-value">{{ currentRow.bankName || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">支行</span>
+                  <span class="detail-value">{{ currentRow.branchName || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">收款账号</span>
+                  <span class="detail-value">{{ currentRow.accountNo || '-' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">户名</span>
+                  <span class="detail-value">{{ currentRow.accountName || '-' }}</span>
+                </div>
+              </div>
+
+              <el-divider content-position="left">成功签约客户（{{ currentReferralCustomers.length }}单）</el-divider>
+              <el-table :data="currentReferralCustomers" size="small" style="width: 100%" max-height="320">
+                <el-table-column prop="signDate" label="签约日期" min-width="110"></el-table-column>
+                <el-table-column prop="customerName" label="客户姓名" min-width="100"></el-table-column>
+                <el-table-column prop="phone" label="手机号" min-width="120"></el-table-column>
+                <el-table-column prop="packageName" label="签署套餐" min-width="120"></el-table-column>
+                <el-table-column prop="contractAmount" label="签约套餐金额" min-width="110">
+                  <template #default="{ row }">
+                    ¥{{ row.contractAmount.toLocaleString() }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="serviceDays" label="天数" width="80" align="center"></el-table-column>
+                <el-table-column prop="commissionAmount" label="佣金" min-width="100">
+                  <template #default="{ row }">
+                    <span style="color: #f5222d; font-weight: 600;">¥{{ row.commissionAmount.toLocaleString() }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="approvalStatus" label="审批状态" min-width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="approvalTagType(row.approvalStatus)">{{ row.approvalStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="paymentStatus" label="打款状态" min-width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="paymentTagType(row.paymentStatus)">{{ row.paymentStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // 统计数据
+        const stats = ref({
+          total: 156,
+          newThisMonth: 12,
+          totalReferrals: 423,
+          conversionRate: 38.5,
+          totalCommission: 186500,
+          pendingCommission: 32400,
+          activeReferrers: 156
+        });
+
+        // 搜索表单
+        const searchForm = ref({
+          name: '',
+          phone: '',
+          type: ''
+        });
+
+        // 弹窗状态
+        const dialogVisible = ref(false);
+        const detailVisible = ref(false);
+        const isEdit = ref(false);
+        const editingId = ref(null);
+        const currentRow = ref(null);
+        const loading = ref(false);
+
+        // 表单数据（必须使用 ref）
+        const form = ref({
+          name: '',
+          phone: '',
+          idCard: '',
+          type: '老客户',
+          bankName: '',
+          branchName: '',
+          accountNo: '',
+          accountName: ''
+        });
+
+        // 分页
+        const pageInfo = ref({
+          current: 1,
+          size: 10,
+          total: 0
+        });
+
+        // Mock 数据
+        const tableData = ref([
+          { id: 1, name: '植晓青', phone: '138****1234', type: '老客户', shop: '氧阁集团', totalReferrals: 5, successfulReferrals: 3, totalCommission: 8600, pendingCommission: 200, bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青' },
+          { id: 2, name: '陈莲莲', phone: '123565612', type: '老客户', shop: '氧阁集团', totalReferrals: 2, successfulReferrals: 1, totalCommission: 200, pendingCommission: 0, bankName: '中国工商银行', branchName: '广州天河支行', accountNo: '6222023602045123456', accountName: '陈莲莲' },
+          { id: 3, name: '王瑾', phone: '13610888843', type: '老客户', shop: '佛山市场部', totalReferrals: 8, successfulReferrals: 5, totalCommission: 15200, pendingCommission: 800, bankName: '中国建设银行', branchName: '佛山禅城支行', accountNo: '6217003110001122334', accountName: '王瑾' },
+          { id: 4, name: '刘淑娟', phone: '18588828817', type: '月嫂', shop: '氧阁集团', totalReferrals: 12, successfulReferrals: 7, totalCommission: 28400, pendingCommission: 1200, bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟' },
+          { id: 5, name: '董桂花', phone: '19958720079', type: '老客户', shop: '广州销售分部', totalReferrals: 1, successfulReferrals: 0, totalCommission: 0, pendingCommission: 0, bankName: '招商银行', branchName: '广州番禺支行', accountNo: '6214832009876543', accountName: '董桂花' },
+          { id: 6, name: '方艳红', phone: '13760643742', type: '老客户', shop: '佛山市场部', totalReferrals: 4, successfulReferrals: 2, totalCommission: 5600, pendingCommission: 400, bankName: '中国农业银行', branchName: '佛山三水支行', accountNo: '6228480089012345678', accountName: '方艳红' },
+          { id: 7, name: '郑菲菲', phone: '18922340111', type: '老客户', shop: '氧阁集团', totalReferrals: 25, successfulReferrals: 18, totalCommission: 68000, pendingCommission: 5600, bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲' },
+          { id: 8, name: '胡美华', phone: '13889929616', type: '老客户', shop: '佛山市场部', totalReferrals: 2, successfulReferrals: 1, totalCommission: 300, pendingCommission: 0, bankName: '中国建设银行', branchName: '佛山高明支行', accountNo: '6217003322005544332', accountName: '胡美华' },
+          { id: 9, name: '张园', phone: '18666274107', type: '月嫂', shop: '广州销售分部', totalReferrals: 6, successfulReferrals: 4, totalCommission: 12800, pendingCommission: 600, bankName: '中国银行', branchName: '广州白云支行', accountNo: '6216663007001122334', accountName: '张园' },
+          { id: 10, name: '莫迪施', phone: '13570257645', type: '老客户', shop: '氧阁集团', totalReferrals: 3, successfulReferrals: 2, totalCommission: 1800, pendingCommission: 200, bankName: '招商银行', branchName: '佛山南海支行', accountNo: '6214832011223344', accountName: '莫迪施' }
+        ]);
+
+        pageInfo.value.total = tableData.value.length;
+
+        // 推荐人关联的签约客户 Mock 数据
+        const referralCustomers = ref([
+          { id: 101, referrerId: 1, customerName: '梁妙晨', phone: '188****7721', packageName: '月嫂26天', contractAmount: 14535, serviceDays: 26, signDate: '2025-08-08', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 102, referrerId: 1, customerName: '梁小芳', phone: '139****5678', packageName: '月嫂26天', contractAmount: 16800, serviceDays: 26, signDate: '2025-09-10', commissionAmount: 504, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 103, referrerId: 1, customerName: '陈大伟', phone: '137****9012', packageName: '月嫂42天', contractAmount: 25800, serviceDays: 42, signDate: '2025-10-15', commissionAmount: 774, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 201, referrerId: 2, customerName: '王小花', phone: '150****3456', packageName: '月嫂26天', contractAmount: 12800, serviceDays: 26, signDate: '2025-07-20', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 301, referrerId: 3, customerName: '李明', phone: '151****7890', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-06-15', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 302, referrerId: 3, customerName: '张阿姨', phone: '152****2345', packageName: '月嫂42天', contractAmount: 22800, serviceDays: 42, signDate: '2025-08-01', commissionAmount: 684, approvalStatus: '审批通过', paymentStatus: '未打款' },
+          { id: 303, referrerId: 3, customerName: '刘先生', phone: '153****6789', packageName: '月嫂26天', contractAmount: 14535, serviceDays: 26, signDate: '2025-09-05', commissionAmount: 436.05, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 304, referrerId: 3, customerName: '赵女士', phone: '154****0123', packageName: '月嫂26天', contractAmount: 16800, serviceDays: 26, signDate: '2025-09-20', commissionAmount: 504, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 305, referrerId: 3, customerName: '孙先生', phone: '155****4567', packageName: '月嫂42天', contractAmount: 25800, serviceDays: 42, signDate: '2025-10-10', commissionAmount: 774, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 401, referrerId: 4, customerName: '李萍明', phone: '13600054827', packageName: '月嫂42天', contractAmount: 25800, serviceDays: 42, signDate: '2025-06-22', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 402, referrerId: 4, customerName: '梅玲黄', phone: '139****9012', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-06-26', commissionAmount: 594, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 403, referrerId: 4, customerName: '周小姐', phone: '156****8901', packageName: '月嫂42天', contractAmount: 22800, serviceDays: 42, signDate: '2025-07-15', commissionAmount: 684, approvalStatus: '审批通过', paymentStatus: '未打款' },
+          { id: 404, referrerId: 4, customerName: '吴先生', phone: '157****2345', packageName: '月嫂26天', contractAmount: 14535, serviceDays: 26, signDate: '2025-08-20', commissionAmount: 436.05, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 405, referrerId: 4, customerName: '郑女士', phone: '158****6789', packageName: '月嫂26天', contractAmount: 16800, serviceDays: 26, signDate: '2025-09-01', commissionAmount: 504, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 406, referrerId: 4, customerName: '钱先生', phone: '159****0123', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-09-18', commissionAmount: 594, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 407, referrerId: 4, customerName: '冯女士', phone: '130****4567', packageName: '月嫂42天', contractAmount: 25800, serviceDays: 42, signDate: '2025-10-05', commissionAmount: 774, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 601, referrerId: 6, customerName: '黄先生', phone: '131****7890', packageName: '月嫂26天', contractAmount: 12800, serviceDays: 26, signDate: '2025-07-10', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 602, referrerId: 6, customerName: '林女士', phone: '132****2345', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-08-25', commissionAmount: 594, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 701, referrerId: 7, customerName: '蓝海婉', phone: '155****4567', packageName: '月嫂42天', contractAmount: 22800, serviceDays: 42, signDate: '2025-06-23', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 702, referrerId: 7, customerName: '杨先生', phone: '133****6789', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-07-08', commissionAmount: 594, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 801, referrerId: 8, customerName: '李梦玲', phone: '156****8901', packageName: '特价月嫂9980/26天', contractAmount: 9980, serviceDays: 26, signDate: '2025-06-14', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 901, referrerId: 9, customerName: '马儿HK', phone: '152****2345', packageName: '月嫂26天', contractAmount: 16800, serviceDays: 26, signDate: '2025-08-07', commissionAmount: 200, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 902, referrerId: 9, customerName: 'Kerry', phone: '153****6789', packageName: '月嫂42天', contractAmount: 22800, serviceDays: 42, signDate: '2025-08-25', commissionAmount: 684, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 903, referrerId: 9, customerName: 'ChokYin', phone: '154****0123', packageName: '月嫂26天', contractAmount: 14535, serviceDays: 26, signDate: '2026-03-29', commissionAmount: 436.05, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 904, referrerId: 9, customerName: '何女士', phone: '134****4567', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-09-15', commissionAmount: 594, approvalStatus: '待审核', paymentStatus: '未打款' },
+          { id: 1001, referrerId: 10, customerName: '侯美丽', phone: '151****7890', packageName: '月嫂10天', contractAmount: 12800, serviceDays: 10, signDate: '2025-07-17', commissionAmount: 100, approvalStatus: '审批通过', paymentStatus: '已打款' },
+          { id: 1002, referrerId: 10, customerName: '赵女士', phone: '135****7025', packageName: '月嫂26天', contractAmount: 19800, serviceDays: 26, signDate: '2025-07-25', commissionAmount: 200, approvalStatus: '待审核', paymentStatus: '未打款' }
+        ]);
+
+        // 当前推荐人的签约客户
+        const currentReferralCustomers = computed(() => {
+          if (!currentRow.value) return [];
+          return referralCustomers.value.filter(item => item.referrerId === currentRow.value.id);
+        });
+
+        // 从签约客户数据同步推荐人统计（确保列表和详情数字一致）
+        const syncReferrerStats = () => {
+          tableData.value.forEach(r => {
+            const customers = referralCustomers.value.filter(c => c.referrerId === r.id);
+            r.totalReferrals = customers.length;
+            r.successfulReferrals = customers.length;
+            r.totalCommission = Number(customers.reduce((sum, c) => sum + c.commissionAmount, 0).toFixed(2));
+            r.pendingCommission = Number(customers.filter(c => c.paymentStatus === '未打款').reduce((sum, c) => sum + c.commissionAmount, 0).toFixed(2));
+          });
+          // 同步顶部统计卡片
+          stats.value.totalCommission = tableData.value.reduce((sum, r) => sum + r.totalCommission, 0);
+          stats.value.pendingCommission = tableData.value.reduce((sum, r) => sum + r.pendingCommission, 0);
+          stats.value.totalReferrals = tableData.value.reduce((sum, r) => sum + r.totalReferrals, 0);
+        };
+        syncReferrerStats();
+
+        // 过滤后的数据（按ID从大到小排序）
+        const filteredData = computed(() => {
+          let result = [...tableData.value];
+          if (searchForm.value.name) {
+            result = result.filter(item => item.name.includes(searchForm.value.name));
+          }
+          if (searchForm.value.phone) {
+            result = result.filter(item => item.phone.includes(searchForm.value.phone));
+          }
+          if (searchForm.value.type) {
+            result = result.filter(item => item.type === searchForm.value.type);
+          }
+          return result.sort((a, b) => b.id - a.id);
+        });
+
+        // 标签类型映射
+        const typeTagType = (type) => {
+          const map = { '老客户': 'success', '月嫂': 'warning' };
+          return map[type] || 'info';
+        };
+        const approvalTagType = (status) => {
+          const map = { '待审核': 'warning', '审批通过': 'success', '审批不通过': 'danger' };
+          return map[status] || 'info';
+        };
+        const paymentTagType = (status) => {
+          const map = { '未打款': 'info', '已打款': 'success' };
+          return map[status] || 'info';
+        };
+
+        // 详情页动态计算的佣金统计
+        const detailTotalCommission = computed(() => {
+          return currentReferralCustomers.value.reduce((sum, item) => sum + item.commissionAmount, 0);
+        });
+        const detailPendingCommission = computed(() => {
+          return currentReferralCustomers.value
+            .filter(item => item.paymentStatus === '未打款')
+            .reduce((sum, item) => sum + item.commissionAmount, 0);
+        });
+
+        // 搜索
+        const handleSearch = () => {
+          loading.value = true;
+          setTimeout(() => { loading.value = false; }, 300);
+        };
+
+        // 重置
+        const handleReset = () => {
+          searchForm.value = { name: '', phone: '', type: '' };
+        };
+
+        // 新增
+        const handleAdd = () => {
+          isEdit.value = false;
+          editingId.value = null;
+          form.value = { name: '', phone: '', idCard: '', type: '老客户', bankName: '', branchName: '', accountNo: '', accountName: '' };
+          dialogVisible.value = true;
+        };
+
+        // 编辑
+        const handleEdit = (row) => {
+          isEdit.value = true;
+          editingId.value = row.id;
+          form.value = { ...row };
+          dialogVisible.value = true;
+        };
+
+        // 查看
+        const handleView = (row) => {
+          currentRow.value = row;
+          detailVisible.value = true;
+        };
+
+        // 保存
+        const saveData = () => {
+          if (!form.value.name || !form.value.phone) {
+            ElementPlus.ElMessage.warning('请填写姓名和手机号');
+            return;
+          }
+          if (isEdit.value) {
+            const index = tableData.value.findIndex(item => item.id === editingId.value);
+            if (index > -1) {
+              tableData.value[index] = { ...tableData.value[index], ...form.value };
+            }
+            ElementPlus.ElMessage.success('更新成功');
+          } else {
+            const newId = Math.max(...tableData.value.map(item => item.id), 0) + 1;
+            tableData.value.push({ id: newId, totalReferrals: 0, successfulReferrals: 0, totalCommission: 0, pendingCommission: 0, ...form.value });
+            pageInfo.value.total += 1;
+            ElementPlus.ElMessage.success('添加成功');
+          }
+          dialogVisible.value = false;
+        };
+
+        // 删除
+        const handleDelete = (row) => {
+          ElementPlus.ElMessageBox.confirm(
+            `确定删除推荐人 "${row.name}" 吗？删除后将无法恢复。`,
+            '提示',
+            { type: 'warning' }
+          ).then(() => {
+            const index = tableData.value.findIndex(item => item.id === row.id);
+            if (index > -1) {
+              tableData.value.splice(index, 1);
+              pageInfo.value.total -= 1;
+            }
+            ElementPlus.ElMessage.success('删除成功');
+          });
+        };
+
+        return {
+          stats, searchForm, dialogVisible, detailVisible, isEdit, editingId,
+          currentRow, loading, form, pageInfo, tableData, filteredData,
+          currentReferralCustomers, detailTotalCommission, detailPendingCommission,
+          typeTagType, approvalTagType, paymentTagType,
+          handleSearch, handleReset, handleAdd, handleEdit, handleView, saveData, handleDelete
+        };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
