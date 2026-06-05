@@ -43,7 +43,8 @@
                 </el-select>
                 <el-select v-model="searchForm.leadType" placeholder="介绍类型" clearable>
                   <el-option label="客户介绍" value="客户介绍"></el-option>
-                  <el-option label="月子转介绍" value="月子转介绍"></el-option>
+                  <el-option label="月嫂介绍" value="月嫂介绍"></el-option>
+                  <el-option label="员工介绍" value="员工介绍"></el-option>
                 </el-select>
                 <el-select v-model="searchForm.status" placeholder="客户状态" clearable>
                   <el-option label="已签约" value="已签约"></el-option>
@@ -130,7 +131,8 @@
               <el-form-item label="介绍类型">
                 <el-select v-model="form.leadType" placeholder="请选择" style="width: 100%;">
                   <el-option label="客户介绍" value="客户介绍"></el-option>
-                  <el-option label="月子转介绍" value="月子转介绍"></el-option>
+                  <el-option label="月嫂介绍" value="月嫂介绍"></el-option>
+                  <el-option label="员工介绍" value="员工介绍"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="意向分店">
@@ -273,7 +275,7 @@
           { id: 2, orderNo: 'YGOD2603060857154330724', createTime: '2025-07-20 09:15:00', customerName: '程day', phone: '138****5678', referrerName: '王瑾', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-07-23', commissionApplyStatus: null },
           { id: 3, orderNo: 'YGOD2603060857154330725', createTime: '2025-06-24 16:45:00', customerName: '梅玲黄', phone: '139****9012', referrerName: '刘淑娟', leadType: '客户介绍', status: '已签约', packageName: 'Y2月子助手', contractAmount: 19800, serviceDays: 26, assignee: '彭维', signDate: '2025-06-26', commissionApplyStatus: '未申请' },
           { id: 4, orderNo: 'YGOD2603060857154330726', createTime: '2025-08-05 11:20:00', customerName: '梁妙晨', phone: '188****7721', referrerName: '植晓青', leadType: '客户介绍', status: '已签约', packageName: 'S6体质调理', contractAmount: 14535, serviceDays: 26, assignee: '贺琼', signDate: '2025-08-08', commissionApplyStatus: '审批中' },
-          { id: 5, orderNo: 'YGOD2603060857154330727', createTime: '2025-06-15 08:00:00', customerName: '8月宝妈', phone: '150****3456', referrerName: '董桂花', leadType: '月子转介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-06-18', commissionApplyStatus: null },
+          { id: 5, orderNo: 'YGOD2603060857154330727', createTime: '2025-06-15 08:00:00', customerName: '8月宝妈', phone: '150****3456', referrerName: '董桂花', leadType: '月嫂介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-06-18', commissionApplyStatus: null },
           { id: 6, orderNo: 'YGOD2603060857154330728', createTime: '2025-07-14 13:10:00', customerName: '侯美丽', phone: '151****7890', referrerName: '莫迪施', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-07-17', commissionApplyStatus: null },
           { id: 7, orderNo: 'YGOD2603060857154330729', createTime: '2025-08-04 10:30:00', customerName: '马儿HK', phone: '152****2345', referrerName: '黎灿荣', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-08-07', commissionApplyStatus: null },
           { id: 8, orderNo: 'YGOD2603060857154330730', createTime: '2025-08-22 15:00:00', customerName: 'Kerry', phone: '153****6789', referrerName: '方艳红', leadType: '客户介绍', status: '未签约', packageName: '-', contractAmount: null, serviceDays: null, assignee: '彭维', signDate: '2025-08-25', commissionApplyStatus: null },
@@ -299,7 +301,7 @@
 
         // 标签类型
         const typeTagType = (type) => {
-          const map = { '客户介绍': 'success', '月子转介绍': 'warning' };
+          const map = { '客户介绍': 'success', '月嫂介绍': 'warning', '员工介绍': 'primary' };
           return map[type] || 'info';
         };
         const statusTagType = (status) => {

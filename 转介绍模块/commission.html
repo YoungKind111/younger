@@ -33,21 +33,21 @@
           <div class="content-card">
             <div class="card-header">
               <span class="card-title">佣金结算列表</span>
-              <div>
-                <el-button type="success" size="small" :disabled="selectedRows.length === 0" @click="handleBatchApply">
-                  <i class="el-icon-s-order"></i> 批量申请 ({{ selectedRows.length }})
-                </el-button>
-              </div>
             </div>
             <div class="card-body">
+              <el-alert type="info" :closable="false" style="margin-bottom: 12px;">
+                本列表仅展示<strong>已签约</strong>的转介绍订单
+              </el-alert>
               <!-- 搜索栏 -->
               <div class="search-bar">
                 <el-input v-model="searchForm.referrerName" placeholder="推荐人姓名" clearable></el-input>
+                <el-input v-model="searchForm.initiatorName" placeholder="申请人" clearable></el-input>
                 <el-input v-model="searchForm.customerName" placeholder="客户姓名" clearable></el-input>
                 <el-input v-model="searchForm.orderNo" placeholder="订单编号" clearable></el-input>
                 <el-select v-model="searchForm.referrerType" placeholder="介绍类型" clearable>
                   <el-option label="月嫂介绍" value="月嫂介绍"></el-option>
                   <el-option label="客户介绍" value="客户介绍"></el-option>
+                  <el-option label="员工介绍" value="员工介绍"></el-option>
                 </el-select>
                 <el-select v-model="searchForm.approvalStatus" placeholder="审批状态" clearable>
                   <el-option label="未申请" value="未申请"></el-option>
@@ -60,10 +60,14 @@
                   <el-option label="待打款" value="待打款"></el-option>
                   <el-option label="已打款" value="已打款"></el-option>
                 </el-select>
-                <el-button type="primary" @click="handleSearch">
-                  <i class="el-icon-search"></i> 搜索
-                </el-button>
+                <el-button type="primary" @click="handleSearch">搜索</el-button>
                 <el-button @click="handleReset">重置</el-button>
+                <el-button type="warning" plain @click="handleUpdateCollectionStatus">
+                  更新收款状态
+                </el-button>
+                <el-checkbox v-model="onlyMyReview" style="margin-left: 8px;">
+                  只看我待审
+                </el-checkbox>
               </div>
 
               <!-- 数据表格 -->
@@ -72,122 +76,182 @@
                 style="width: 100%" 
                 height="100%"
                 v-loading="loading"
-                @selection-change="handleSelectionChange"
               >
-                <el-table-column type="selection" :selectable="isSelectable" min-width="55"></el-table-column>
-                <el-table-column prop="referrerName" label="推荐人" min-width="100"></el-table-column>
-                <el-table-column prop="referrerType" label="介绍类型" width="100">
-                  <template #default="{ row }">
-                    <el-tag size="small" :type="row.referrerType === '月嫂介绍' ? 'warning' : 'success'">{{ row.referrerType }}</el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="orderNo" label="订单编号" min-width="130">
-                  <template #default="{ row }">
-                    <span v-if="row.orderNo" style="font-family: monospace; font-size: 13px;">{{ row.orderNo }}</span>
-                    <span v-else style="color: #8c8c8c;">-</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="customerName" label="客户名称" min-width="120"></el-table-column>
-                <el-table-column prop="signDate" label="客户签约时间" min-width="120">
+                <el-table-column prop="signDate" label="客户签约时间" width="100">
                   <template #default="{ row }">
                     <span v-if="row.signDate">{{ row.signDate }}</span>
                     <span v-else style="color: #8c8c8c;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="contractAmount" label="签约金额" min-width="120">
+                <el-table-column prop="customerName" label="客户名称" width="90"></el-table-column>
+                <el-table-column prop="contractAmount" label="签约套餐金额" width="100">
                   <template #default="{ row }">
                     <span v-if="row.contractAmount">¥{{ row.contractAmount.toLocaleString() }}</span>
                     <span v-else style="color: #8c8c8c;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="serviceDays" label="套餐天数" min-width="90" align="center">
+                <el-table-column prop="serviceDays" label="签约天数" width="70" align="center">
                   <template #default="{ row }">
                     <span>{{ row.serviceDays }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="packageType" label="套餐类型" width="100">
+                <el-table-column prop="signedPackage" label="签约套餐" width="130">
+                  <template #default="{ row }">
+                    <span v-if="row.signedPackage">{{ row.signedPackage }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="packageType" label="套餐类型" width="80">
                   <template #default="{ row }">
                     <el-tag v-if="row.packageType !== '-'" size="small" :type="row.packageType === '特价套餐' ? 'warning' : 'success'">{{ row.packageType }}</el-tag>
                     <span v-else style="color: #8c8c8c;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="ruleHit" label="命中规则" min-width="130">
+                <el-table-column prop="ruleHit" label="命中规则" width="110">
                   <template #default="{ row }">
                     <el-tag size="small" :type="ruleTagType(row.ruleHit)">{{ row.ruleHit }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="commissionAmount" label="佣金金额" min-width="120">
+                <el-table-column prop="commissionAmount" label="佣金金额" width="90">
                   <template #default="{ row }">
                     <span style="color: #f5222d; font-weight: 600;">¥{{ row.commissionAmount.toLocaleString() }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="approvalStatus" label="审批状态" width="90">
+                <el-table-column prop="orderNo" label="订单编号" width="120">
+                  <template #default="{ row }">
+                    <span v-if="row.orderNo" style="font-family: monospace; font-size: 13px;">{{ row.orderNo }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderSales" label="订单归属销售" width="100">
+                  <template #default="{ row }">
+                    <span v-if="row.orderSales">{{ row.orderSales }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="referrerName" label="推荐人" width="80"></el-table-column>
+                <el-table-column prop="referrerType" label="介绍类型" width="80">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="row.referrerType === '月嫂介绍' ? 'warning' : (row.referrerType === '员工介绍' ? 'primary' : 'success')">{{ row.referrerType }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="collectionStatus" label="收款状态" width="90">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="row.collectionStatus === '收齐全款' ? 'success' : (row.collectionStatus === '收齐定金' ? 'warning' : 'info')">{{ row.collectionStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="initiatorName" label="申请人" width="80">
+                  <template #default="{ row }">
+                    <span v-if="row.approvalStatus !== '未申请' && row.initiatorName">{{ row.initiatorName }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="initiatorDept" label="申请人部门" width="100">
+                  <template #default="{ row }">
+                    <span v-if="row.approvalStatus !== '未申请' && row.initiatorDept">{{ row.initiatorDept }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="applyTime" label="申请时间" width="150">
+                  <template #default="{ row }">
+                    <span v-if="row.applyTime">{{ row.applyTime }}</span>
+                    <span v-else style="color: #8c8c8c;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="approvalStatus" label="审批状态" width="70">
                   <template #default="{ row }">
                     <el-tag size="small" :type="approvalTagType(row.approvalStatus)">{{ row.approvalStatus }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="paymentStatus" label="打款状态" width="90">
+                <el-table-column prop="paymentStatus" label="打款状态" width="70">
                   <template #default="{ row }">
                     <el-tag size="small" :type="paymentTagType(row.paymentStatus)">{{ row.paymentStatus }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="200" fixed="right">
+                <el-table-column label="操作" width="220" fixed="right">
                   <template #default="{ row }">
-                    <el-button type="primary" size="small" @click="handleRowAction(row)">{{ getActionLabel(row) }}</el-button>
-                    <el-button v-if="row.approvalStatus !== '未申请'" type="primary" size="small" plain @click="handleShowProgress(row)">审批进展</el-button>
+                    <!-- 查看：所有记录都有 -->
+                    <el-button type="primary" size="small" plain @click="handleView(row)">查看</el-button>
+                    <!-- 未申请状态 -->
+                    <template v-if="row.approvalStatus === '未申请'">
+                      <el-tooltip :content="getApplyBlockReason(row)" placement="top" :disabled="canApply(row)">
+                        <el-button :type="canApply(row) ? 'primary' : 'info'" :disabled="!canApply(row)" size="small" @click="handleRowAction(row)">{{ getActionLabel(row) }}</el-button>
+                      </el-tooltip>
+                    </template>
+                    <!-- 审批中状态 -->
+                    <template v-if="row.approvalStatus === '审批中'">
+                      <el-button type="primary" size="small" @click="handleApprove(row)">审批</el-button>
+                    </template>
+                    <!-- 已通过且待打款 -->
+                    <template v-if="row.approvalStatus === '已通过' && row.paymentStatus === '待打款'">
+                      <el-button type="primary" size="small" @click="handlePay(row)">打款</el-button>
+                    </template>
+                    <!-- 已驳回状态 -->
+                    <template v-if="row.approvalStatus === '已驳回'">
+                      <el-button type="warning" size="small" @click="handleApply(row)">重新申请</el-button>
+                    </template>
                   </template>
                 </el-table-column>
               </el-table>
             </div>
           </div>
 
-          <!-- 审批进展对话框 -->
-          <el-dialog v-model="progressVisible" title="审批进展" width="600px">
-            <div v-if="progressRow">
-              <div style="margin-bottom: 16px;">
-                <el-tag size="small" :type="approvalTagType(progressRow.approvalStatus)">{{ progressRow.approvalStatus }}</el-tag>
-              </div>
-              <el-steps :active="progressActive" finish-status="success" direction="vertical">
-                <el-step v-for="(node, idx) in FLOW_NODES" :key="node.id" :title="node.name">
-                  <template #description>
-                    <div v-if="getNodeRecord(node.id)" style="margin-top: 4px; margin-bottom: 8px;">
-                      <div style="font-size: 13px; color: #595959;">
-                        审核人：{{ getNodeRecord(node.id).approver }}
-                        <el-tag size="small" :type="getNodeRecord(node.id).status === '通过' ? 'success' : (getNodeRecord(node.id).status === '不通过' ? 'danger' : 'info')" style="margin-left: 8px;">{{ getNodeRecord(node.id).status }}</el-tag>
-                      </div>
-                      <div style="font-size: 12px; color: #8c8c8c; margin-top: 2px;">{{ getNodeRecord(node.id).time }}</div>
-                      <div v-if="getNodeRecord(node.id).comment" style="font-size: 12px; color: #595959; margin-top: 2px;">意见：{{ getNodeRecord(node.id).comment }}</div>
-                    </div>
-                    <div v-else-if="idx < progressActive" style="font-size: 13px; color: #8c8c8c; margin-top: 4px;">待审批</div>
-                  </template>
-                </el-step>
-              </el-steps>
-            </div>
+          <!-- 单条申请对话框 -->
+          <el-dialog v-model="applyDialogVisible" title="佣金申请" width="600px">
+            <el-form v-if="currentApplyRow" label-width="100px">
+              <!-- 推荐人银行卡信息（只读） -->
+              <el-divider content-position="left">推荐人银行信息</el-divider>
+              <el-form-item label="推荐人">
+                <span style="font-weight: 600;">{{ currentApplyRow.referrerName }}</span>
+              </el-form-item>
+              <el-form-item label="开户行">
+                <span>{{ currentApplyRow.bankName || '-' }}</span>
+              </el-form-item>
+              <el-form-item label="支行">
+                <span>{{ currentApplyRow.branchName || '-' }}</span>
+              </el-form-item>
+              <el-form-item label="账号">
+                <span style="font-family: monospace;">{{ currentApplyRow.accountNo || '-' }}</span>
+              </el-form-item>
+              <el-form-item label="户名">
+                <span>{{ currentApplyRow.accountName || '-' }}</span>
+              </el-form-item>
+
+              <!-- 佣金信息 -->
+              <el-divider content-position="left">佣金信息</el-divider>
+              <el-form-item label="税前佣金">
+                <el-input-number v-model="applyForm.commissionAmount" :min="0" :precision="2" style="width: 180px;"></el-input-number>
+                <span style="margin-left: 8px; color: #8c8c8c; font-size: 13px;">原计算金额 ¥{{ currentApplyRow.commissionAmount?.toLocaleString() }}</span>
+              </el-form-item>
+
+              <!-- 申请信息 -->
+              <el-divider content-position="left">申请信息</el-divider>
+              <el-form-item label="申请事由" prop="reason">
+                <el-input v-model="applyForm.reason" type="textarea" :rows="3" placeholder="请输入申请事由"></el-input>
+              </el-form-item>
+              <el-form-item label="附件">
+                <div tabindex="0" @paste="handlePasteUpload" style="outline: none;">
+                  <el-upload
+                    v-model:file-list="applyForm.attachments"
+                    action="#"
+                    :auto-upload="false"
+                    :multiple="true"
+                  >
+                    <el-button type="primary">选择文件</el-button>
+                    <template #tip>
+                      <div class="el-upload__tip">支持 Ctrl+V 粘贴上传，或点击选择文件</div>
+                    </template>
+                  </el-upload>
+                </div>
+              </el-form-item>
+            </el-form>
             <template #footer>
-              <el-button @click="progressVisible = false">关闭</el-button>
+              <el-button @click="applyDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmApply">确认申请</el-button>
             </template>
           </el-dialog>
 
-          <!-- 批量申请对话框 -->
-          <el-dialog v-model="batchDialogVisible" title="批量申请佣金" width="600px">
-            <el-alert type="info" :closable="false" class="mb-2">
-              系统将自动聚合同一推荐人的佣金为一张申请单，并预填银行信息。
-            </el-alert>
-            <el-table :data="batchSummary" size="small" style="width: 100%">
-              <el-table-column prop="referrerName" label="推荐人" min-width="100"></el-table-column>
-              <el-table-column prop="count" label="笔数" min-width="70" align="center"></el-table-column>
-              <el-table-column prop="totalAmount" label="合计税前佣金" min-width="140">
-                <template #default="{ row }">
-                  <span style="color: #f5222d; font-weight: 600;">¥{{ row.totalAmount.toLocaleString() }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="bankInfo" label="银行信息"></el-table-column>
-            </el-table>
-            <template #footer>
-              <el-button @click="batchDialogVisible = false">取消</el-button>
-              <el-button type="primary" @click="confirmBatchApply">确认批量申请</el-button>
-            </template>
-          </el-dialog>
+
 
           <!-- 详情对话框 -->
           <el-dialog v-model="detailVisible" :title="detailTitle" width="750px">
@@ -332,6 +396,19 @@
             <div style="margin-bottom: 16px;">
               <span style="color: #8c8c8c; font-size: 13px;">当前审批人：{{ currentNodeApprovers[0] || '-' }}</span>
             </div>
+            <!-- 申请信息展示 -->
+            <el-card shadow="never" style="background: #f6ffed; border: 1px solid #b7eb8f; margin-bottom: 16px;" v-if="currentRow">
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 4px;">申请事由</div>
+                <div style="font-size: 14px; color: #262626;">{{ currentRow.applyReason || '-' }}</div>
+              </div>
+              <div v-if="currentRow.applyAttachments && currentRow.applyAttachments.length">
+                <div style="font-size: 13px; color: #8c8c8c; margin-bottom: 4px;">附件</div>
+                <div>
+                  <el-tag v-for="(file, idx) in currentRow.applyAttachments" :key="idx" size="small" style="margin-right: 8px; margin-bottom: 4px;">{{ file }}</el-tag>
+                </div>
+              </div>
+            </el-card>
             <el-form>
               <el-form-item label="备注">
                 <el-input v-model="approveForm.comment" type="textarea" rows="4" placeholder="请输入审核备注"></el-input>
@@ -429,6 +506,7 @@
         // ==================== 搜索 ====================
         const searchForm = ref({
           referrerName: '',
+          initiatorName: '',
           customerName: '',
           orderNo: '',
           referrerType: '',
@@ -437,31 +515,36 @@
         });
 
         const loading = ref(false);
-        const selectedRows = ref([]);
-        const batchDialogVisible = ref(false);
-        const batchSummary = ref([]);
+
+        // 当前登录用户（模拟）
+        const currentUser = ref({ name: '植亚来' });
+
+        // 只看我待审
+        const onlyMyReview = ref(false);
 
         // ==================== 统一数据表 ====================
         const tableData = ref([
           // ---------- 未申请 ----------
-          { id: 1, signDate: '2025-08-08', referrerType: '客户介绍', orderNo: 'DD00001000', requestNo: '', referrerName: '植晓青', customerName: '梁妙晨', contractAmount: 14535, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
-          { id: 2, signDate: '2025-09-10', referrerType: '客户介绍', orderNo: 'DD00001001', requestNo: '', referrerName: '植晓青', customerName: '梁小芳', contractAmount: 16800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 504, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
-          { id: 3, signDate: '2025-06-22', referrerType: '月嫂介绍', orderNo: 'DD00001002', requestNo: '', referrerName: '刘淑娟', customerName: '李萍明', contractAmount: 25800, serviceDays: 42, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 2580, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
-          { id: 4, signDate: '2025-06-26', referrerType: '月嫂介绍', orderNo: 'DD00001003', requestNo: '', referrerName: '刘淑娟', customerName: '梅玲黄', contractAmount: 19800, serviceDays: 26, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 1980, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
-          { id: 6, signDate: '2025-08-20', referrerType: '客户介绍', orderNo: 'DD00001004', requestNo: '', referrerName: '王瑾', customerName: '张女士', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '136****8843', referrerIdCard: '440682********0664', bankName: '中国建设银行', branchName: '佛山禅城支行', accountNo: '6217003110001122334', accountName: '王瑾', approvalRecords: [] },
-          { id: 8, signDate: '2025-06-23', referrerType: '客户介绍', orderNo: 'DD00001005', requestNo: '', referrerName: '郑菲菲', customerName: '蓝海婉', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 684, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
-          { id: 9, signDate: '2025-07-15', referrerType: '客户介绍', orderNo: 'DD00001006', requestNo: '', referrerName: '郑菲菲', customerName: '李先生', contractAmount: 9980, serviceDays: 26, packageType: '特价套餐', ruleHit: '特价套餐固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
-          { id: 11, signDate: '2025-08-01', referrerType: '客户介绍', orderNo: 'DD00001007', requestNo: '', referrerName: '陈莲莲', customerName: '王先生', contractAmount: 12800, serviceDays: 10, packageType: '常规套餐', ruleHit: '短天数固定100元', commissionAmount: 100, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '123****5612', referrerIdCard: '440682********0666', bankName: '中国工商银行', branchName: '广州天河支行', accountNo: '6222023602045123456', accountName: '陈莲莲', approvalRecords: [] },
-          { id: 12, signDate: '2025-07-25', referrerType: '客户介绍', orderNo: 'DD00001008', requestNo: '', referrerName: '莫迪施', customerName: '赵女士', contractAmount: 19800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '135****7645', referrerIdCard: '440682********0667', bankName: '招商银行', branchName: '佛山南海支行', accountNo: '6214832011223344', accountName: '莫迪施', approvalRecords: [] },
+          { id: 1, signDate: '2025-08-08', referrerType: '客户介绍', orderNo: 'DD00001000', orderSales: '黄敏仪', requestNo: '', referrerName: '植晓青', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '梁妙晨', contractAmount: 14535, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y3月子基础服务', packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
+          { id: 2, signDate: '2025-09-10', referrerType: '客户介绍', orderNo: 'DD00001001', orderSales: '黄敏仪', requestNo: '', referrerName: '植晓青', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '梁小芳', contractAmount: 16800, signStatus: '已签约', collectionStatus: '未收款', serviceDays: 26, signedPackage: 'Y4月子好帮手', packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 504, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '138****1234', referrerIdCard: '440682********0662', bankName: '中国农业银行', branchName: '佛山南海支行', accountNo: '6228481464588874310', accountName: '植晓青', approvalRecords: [] },
+          { id: 3, signDate: '2025-06-22', referrerType: '月嫂介绍', orderNo: 'DD00001002', orderSales: '张三', requestNo: '', referrerName: '刘淑娟', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '李萍明', contractAmount: 25800, signStatus: '已签约', collectionStatus: '收齐全款', serviceDays: 42, signedPackage: 'Y5月子品质服务', packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 2580, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
+          { id: 4, signDate: '2025-06-26', referrerType: '月嫂介绍', orderNo: 'DD00001003', orderSales: '张三', requestNo: '', referrerName: '刘淑娟', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '梅玲黄', contractAmount: 19800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y3月子基础服务', packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 1980, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '185****8817', referrerIdCard: '440682********0663', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008000098765', accountName: '刘淑娟', approvalRecords: [] },
+          { id: 6, signDate: '2025-08-20', referrerType: '客户介绍', orderNo: 'DD00001004', orderSales: '李四', requestNo: '', referrerName: '王瑾', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '张女士', contractAmount: 22800, signStatus: '已签约', collectionStatus: '未收款', serviceDays: 42, signedPackage: 'Y2月子助手', packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '136****8843', referrerIdCard: '440682********0664', bankName: '中国建设银行', branchName: '佛山禅城支行', accountNo: '6217003110001122334', accountName: '王瑾', approvalRecords: [] },
+          { id: 8, signDate: '2025-06-23', referrerType: '客户介绍', orderNo: 'DD00001005', orderSales: '王五', requestNo: '', referrerName: '郑菲菲', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '蓝海婉', contractAmount: 22800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 42, signedPackage: 'Y4月子好帮手', packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 684, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
+          { id: 9, signDate: '2025-07-15', referrerType: '客户介绍', orderNo: 'DD00001006', orderSales: '王五', requestNo: '', referrerName: '郑菲菲', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '李先生', contractAmount: 9980, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y2月子助手', packageType: '特价套餐', ruleHit: '特价套餐固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '189****0111', referrerIdCard: '440682********0665', bankName: '中国工商银行', branchName: '广州越秀支行', accountNo: '6222083602009988776', accountName: '郑菲菲', approvalRecords: [] },
+          { id: 11, signDate: '2025-08-01', referrerType: '客户介绍', orderNo: 'DD00001007', orderSales: '赵六', requestNo: '', referrerName: '陈莲莲', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '王先生', contractAmount: 12800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 10, signedPackage: 'Y3月子基础服务', packageType: '常规套餐', ruleHit: '短天数固定100元', commissionAmount: 100, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '123****5612', referrerIdCard: '440682********0666', bankName: '中国工商银行', branchName: '广州天河支行', accountNo: '6222023602045123456', accountName: '陈莲莲', approvalRecords: [] },
+          { id: 12, signDate: '2025-07-25', referrerType: '客户介绍', orderNo: 'DD00001008', orderSales: '赵六', requestNo: '', referrerName: '莫迪施', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '赵女士', contractAmount: 19800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y5月子品质服务', packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '135****7645', referrerIdCard: '440682********0667', bankName: '招商银行', branchName: '佛山南海支行', accountNo: '6214832011223344', accountName: '莫迪施', approvalRecords: [] },
+          { id: 13, signDate: '2025-08-12', referrerType: '员工介绍', orderNo: 'DD00001014', orderSales: '钱七', requestNo: '', referrerName: '李志强', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '陈女士', contractAmount: 16800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y4月子好帮手', packageType: '常规套餐', ruleHit: '员工介绍 固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '139****5678', referrerIdCard: '440682********0668', bankName: '中国工商银行', branchName: '佛山禅城支行', accountNo: '6222083602012345678', accountName: '李志强', approvalRecords: [] },
+          { id: 14, signDate: '2025-09-05', referrerType: '员工介绍', orderNo: 'DD00001015', orderSales: '钱七', requestNo: '', referrerName: '李志强', initiatorName: '黄敏仪', initiatorDept: '销售部北滘', customerName: '刘先生', contractAmount: 25800, signStatus: '已签约', collectionStatus: '未收款', serviceDays: 42, signedPackage: 'Y5月子品质服务', packageType: '常规套餐', ruleHit: '员工介绍 固定200元', commissionAmount: 200, approvalStatus: '未申请', paymentStatus: '未打款', referrerPhone: '139****5678', referrerIdCard: '440682********0668', bankName: '中国工商银行', branchName: '佛山禅城支行', accountNo: '6222083602012345678', accountName: '李志强', approvalRecords: [] },
 
           // ---------- 审批中（在销售负责人节点）----------
-          { id: 104, signDate: '2025-12-01', referrerType: '月嫂介绍', orderNo: 'DD00001009', requestNo: 'FY20251209001', referrerName: '刘倩', customerName: '周女士', contractAmount: 82500, serviceDays: 42, packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 8250, approvalStatus: '审批中', paymentStatus: '未打款', applicant: '刘倩', applyTime: '2025-12-09 17:01:16', referrerPhone: '139****5678', referrerIdCard: '440683********1234', bankName: '中国工商银行', branchName: '佛山禅城支行', accountNo: '6222023602045678901', accountName: '刘倩', approvalRecords: [
+          { id: 104, signDate: '2025-12-01', referrerType: '月嫂介绍', orderNo: 'DD00001009', orderSales: '张三', requestNo: 'FY20251209001', referrerName: '刘倩', initiatorName: '刘倩', initiatorDept: '佛山市场部', customerName: '周女士', contractAmount: 82500, signStatus: '已签约', collectionStatus: '收齐全款', serviceDays: 42, signedPackage: 'Y5月子品质服务', packageType: '常规套餐', ruleHit: '月嫂推荐 10%', commissionAmount: 8250, approvalStatus: '审批中', paymentStatus: '未打款', applicant: '刘倩', applyTime: '2025-12-09 17:01:16', applyReason: '客户周女士已全款签约42天月子服务，月嫂刘倩完成推荐并上户，申请发放推荐佣金。', applyAttachments: ['合同扫描件.pdf', '收款确认单.png'], referrerPhone: '139****5678', referrerIdCard: '440683********1234', bankName: '中国工商银行', branchName: '佛山禅城支行', accountNo: '6222023602045678901', accountName: '刘倩', approvalRecords: [
             { nodeId: 'submit', nodeName: '提交', approver: '刘倩（佛山市场部）', time: '2025/12/9 17:01:16', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
             { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2025/12/10 09:30:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' }
           ]},
 
           // ---------- 已通过（待打款）----------
-          { id: 101, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001010', requestNo: 'FY20260423001', referrerName: '贺琼', customerName: '吴丽芳', contractAmount: 22800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 684, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
+          { id: 101, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001010', orderSales: '李四', requestNo: 'FY20260423001', referrerName: '贺琼', initiatorName: '贺琼', initiatorDept: '销售部桂城', customerName: '吴丽芳', contractAmount: 22800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 42, signedPackage: 'Y4月子好帮手', packageType: '常规套餐', ruleHit: '第2单 3%', commissionAmount: 684, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', applyReason: '客户吴丽芳已签约42天月子服务并支付定金，推荐人贺琼为老客户，符合第2单3%佣金规则，申请发放。', applyAttachments: ['定金收据.jpg'], referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
             { nodeId: 'submit', nodeName: '提交', approver: '贺琼', time: '2026/4/23 17:42:37', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
             { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/4/24 08:15:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
             { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/4/24 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
@@ -470,7 +553,7 @@
             { nodeId: 'finance_leader', nodeName: '财务负责人审核', approver: '尹俊', time: '2026/4/24 16:00:00', status: '通过', comment: '同意付款', nextNode: '总经理审核', nextApprover: '卓大龙' },
             { nodeId: 'general_manager', nodeName: '总经理审核', approver: '卓大龙', time: '2026/4/25 09:00:00', status: '通过', comment: '同意', nextNode: '-', nextApprover: '-' }
           ]},
-          { id: 105, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001011', requestNo: 'FY20260423001', referrerName: '贺琼', customerName: '孙先生', contractAmount: 25800, serviceDays: 42, packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 774, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
+          { id: 105, signDate: '2026-04-23', referrerType: '客户介绍', orderNo: 'DD00001011', orderSales: '李四', requestNo: 'FY20260423001', referrerName: '贺琼', initiatorName: '贺琼', initiatorDept: '销售部桂城', customerName: '孙先生', contractAmount: 25800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 42, signedPackage: 'Y3月子基础服务', packageType: '常规套餐', ruleHit: '第3单 3%', commissionAmount: 774, approvalStatus: '已通过', paymentStatus: '待打款', applicant: '贺琼', applyTime: '2026-04-23 17:42:37', applyReason: '客户孙先生签约42天月子服务，推荐人贺琼累计推荐第3单，按规则申请3%佣金。', applyAttachments: ['签约合同.pdf', '定金转账截图.png'], referrerPhone: '136****8888', referrerIdCard: '440684********5678', bankName: '中国建设银行', branchName: '佛山南海支行', accountNo: '6217003110009988776', accountName: '贺琼', approvalRecords: [
             { nodeId: 'submit', nodeName: '提交', approver: '贺琼', time: '2026/4/23 17:42:37', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
             { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/4/24 08:15:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
             { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/4/24 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
@@ -481,14 +564,14 @@
           ]},
 
           // ---------- 已驳回（在销售负责人节点被驳回）----------
-          { id: 102, signDate: '2025-10-13', referrerType: '客户介绍', orderNo: 'DD00001012', requestNo: 'FY20251013001', referrerName: '胡晓棋', customerName: '谭泽萱', contractAmount: 16800, serviceDays: 26, packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '已驳回', paymentStatus: '未打款', applicant: '胡晓棋', applyTime: '2025-10-13 18:44:27', referrerPhone: '137****9999', referrerIdCard: '440685********9012', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008001122334', accountName: '胡晓棋', approvalRecords: [
+          { id: 102, signDate: '2025-10-13', referrerType: '客户介绍', orderNo: 'DD00001012', orderSales: '王五', requestNo: 'FY20251013001', referrerName: '胡晓棋', initiatorName: '胡晓棋', initiatorDept: '销售部大良', customerName: '谭泽萱', contractAmount: 16800, signStatus: '已签约', collectionStatus: '收齐定金', serviceDays: 26, signedPackage: 'Y2月子助手', packageType: '常规套餐', ruleHit: '第1单固定200元', commissionAmount: 200, approvalStatus: '已驳回', paymentStatus: '未打款', applicant: '胡晓棋', applyTime: '2025-10-13 18:44:27', applyReason: '客户谭泽萱已签约26天月子助手套餐并支付定金，申请固定200元推荐佣金。', applyAttachments: ['定金收据.jpg'], referrerPhone: '137****9999', referrerIdCard: '440685********9012', bankName: '中国银行', branchName: '佛山顺德支行', accountNo: '6216617008001122334', accountName: '胡晓棋', approvalRecords: [
             { nodeId: 'submit', nodeName: '提交', approver: '胡晓棋', time: '2025/10/13 18:44:27', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
             { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2025/10/14 09:00:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
             { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2025/10/14 10:30:00', status: '不通过', comment: '支行信息不详细', nextNode: '-', nextApprover: '-' }
           ]},
 
           // ---------- 已打款 ----------
-          { id: 103, signDate: '2026-02-04', referrerType: '客户介绍', orderNo: 'DD00001013', requestNo: 'FY20260204001', referrerName: '钱慧', customerName: '郑女士', contractAmount: 180000, serviceDays: 42, packageType: '常规套餐', ruleHit: '第5单 4%', commissionAmount: 7200, approvalStatus: '已通过', paymentStatus: '已打款', applicant: '钱慧', applyTime: '2026-02-04 18:32:48', referrerPhone: '135****7777', referrerIdCard: '440686********3456', bankName: '招商银行', branchName: '广州天河支行', accountNo: '6214832001122334', accountName: '钱慧', taxAmount: 1280, actualAmount: 5920, voucherNo: 'BX20260206001', payTime: '2026-02-06 15:45:10', payer: '出纳小李', approvalRecords: [
+          { id: 103, signDate: '2026-02-04', referrerType: '客户介绍', orderNo: 'DD00001013', orderSales: '赵六', requestNo: 'FY20260204001', referrerName: '钱慧', initiatorName: '钱慧', initiatorDept: '销售部禅城', customerName: '郑女士', contractAmount: 180000, signStatus: '已签约', collectionStatus: '收齐全款', serviceDays: 42, signedPackage: 'Y5月子品质服务', packageType: '常规套餐', ruleHit: '第5单 4%', commissionAmount: 7200, approvalStatus: '已通过', paymentStatus: '已打款', applicant: '钱慧', applyTime: '2026-02-04 18:32:48', applyReason: 'VIP客户郑女士全款签约42天高端月子服务，推荐人钱慧为累计第5单，按4%规则申请大额佣金，已走完全部审批流程。', applyAttachments: ['合同扫描件.pdf', '全款到账截图.png', '推荐人身份证复印件.jpg'], referrerPhone: '135****7777', referrerIdCard: '440686********3456', bankName: '招商银行', branchName: '广州天河支行', accountNo: '6214832001122334', accountName: '钱慧', taxAmount: 1280, actualAmount: 5920, voucherNo: 'BX20260206001', payTime: '2026-02-06 15:45:10', payer: '出纳小李', approvalRecords: [
             { nodeId: 'submit', nodeName: '提交', approver: '钱慧', time: '2026/2/4 18:32:48', status: '提交', comment: '提交申请', nextNode: '发起人部门负责人', nextApprover: '张三' },
             { nodeId: 'dept_leader', nodeName: '发起人部门负责人', approver: '张三', time: '2026/2/5 09:00:00', status: '通过', comment: '同意', nextNode: '销售负责人', nextApprover: '植亚来' },
             { nodeId: 'sales_leader', nodeName: '销售负责人', approver: '植亚来', time: '2026/2/5 10:00:00', status: '通过', comment: '同意', nextNode: '运营负责人', nextApprover: '梁艳红' },
@@ -502,11 +585,19 @@
         const filteredData = computed(() => {
           let result = [...tableData.value];
           if (searchForm.value.referrerName) result = result.filter(item => item.referrerName.includes(searchForm.value.referrerName));
+          if (searchForm.value.initiatorName) result = result.filter(item => item.initiatorName && item.initiatorName.includes(searchForm.value.initiatorName));
           if (searchForm.value.customerName) result = result.filter(item => item.customerName.includes(searchForm.value.customerName));
           if (searchForm.value.orderNo) result = result.filter(item => item.orderNo && item.orderNo.includes(searchForm.value.orderNo));
           if (searchForm.value.referrerType) result = result.filter(item => item.referrerType === searchForm.value.referrerType);
           if (searchForm.value.approvalStatus) result = result.filter(item => item.approvalStatus === searchForm.value.approvalStatus);
           if (searchForm.value.paymentStatus) result = result.filter(item => item.paymentStatus === searchForm.value.paymentStatus);
+          if (onlyMyReview.value) {
+            result = result.filter(item => {
+              if (item.approvalStatus !== '审批中') return false;
+              const node = getCurrentNode(item);
+              return node && node.approvers.includes(currentUser.value.name);
+            });
+          }
           const order = { '未申请': 0, '审批中': 1, '已通过': 2, '已驳回': 3, '已打款': 4 };
           return result.sort((a, b) => {
             const diff = (order[a.approvalStatus] ?? 99) - (order[b.approvalStatus] ?? 99);
@@ -515,10 +606,8 @@
           });
         });
 
-        const isSelectable = (row) => row.approvalStatus === '未申请';
-
         const ruleTagType = (rule) => {
-          const map = { '第1单固定200元': 'success', '第2单 3%': 'primary', '第3单 3%': 'primary', '第4单 4%': 'primary', '第5单 4%': 'primary', '第6单 5%': 'primary', '特价套餐固定200元': 'warning', '短天数固定100元': 'info', '月嫂推荐 10%': 'warning', '未签约': 'info', '11月渠道汇总': 'primary', '1月渠道结算': 'primary', '其他奖励': 'info' };
+          const map = { '第1单固定200元': 'success', '第2单 3%': 'primary', '第3单 3%': 'primary', '第4单 4%': 'primary', '第5单 4%': 'primary', '第6单 5%': 'primary', '特价套餐固定200元': 'warning', '短天数固定100元': 'info', '月嫂推荐 10%': 'warning', '员工介绍 固定200元': 'primary', '未签约': 'info', '11月渠道汇总': 'primary', '1月渠道结算': 'primary', '其他奖励': 'info' };
           return map[rule] || 'info';
         };
 
@@ -536,12 +625,33 @@
           loading.value = true;
           setTimeout(() => { loading.value = false; }, 300);
         };
-        const handleReset = () => {
-          searchForm.value = { referrerName: '', customerName: '', orderNo: '', referrerType: '', approvalStatus: '', paymentStatus: '' };
+
+        const handleUpdateCollectionStatus = () => {
+          let updatedCount = 0;
+          tableData.value.forEach(row => {
+            if (row.approvalStatus !== '未申请') return;
+            if (canApply(row)) return;
+            if (row.referrerType === '月嫂介绍') {
+              if (row.collectionStatus !== '收齐全款') {
+                row.collectionStatus = '收齐全款';
+                updatedCount++;
+              }
+            } else {
+              if (row.collectionStatus !== '收齐定金' && row.collectionStatus !== '收齐全款') {
+                row.collectionStatus = '收齐定金';
+                updatedCount++;
+              }
+            }
+          });
+          if (updatedCount > 0) {
+            ElementPlus.ElMessage.success('已更新 ' + updatedCount + ' 条订单的收款状态，满足条件的订单已变为可申请');
+          } else {
+            ElementPlus.ElMessage.info('暂无可更新的订单');
+          }
         };
 
-        const handleSelectionChange = (rows) => {
-          selectedRows.value = rows;
+        const handleReset = () => {
+          searchForm.value = { referrerName: '', initiatorName: '', customerName: '', orderNo: '', referrerType: '', approvalStatus: '', paymentStatus: '' };
         };
 
         // 生成分组标识
@@ -583,55 +693,96 @@
             row.approvalStatus = '审批中';
             row.paymentStatus = '未打款';
             row.applicant = g.applicant;
+            row.initiatorName = g.applicant;
+            row.initiatorDept = '销售部北滘';
             row.applyTime = g.applyTime;
             row.approvalRecords = [...g.approvalRecords];
           });
+        };
 
-          selectedRows.value = [];
+        // 判断是否满足申请条件
+        const canApply = (row) => {
+          if (row.approvalStatus !== '未申请') return false;
+          if (row.signStatus !== '已签约') return false;
+          if (row.referrerType === '月嫂介绍') {
+            return row.collectionStatus === '收齐全款';
+          }
+          // 客户介绍、员工介绍：收齐定金或全款均可
+          return row.collectionStatus === '收齐定金' || row.collectionStatus === '收齐全款';
+        };
+
+        const getApplyBlockReason = (row) => {
+          if (row.approvalStatus !== '未申请') return '';
+          if (row.signStatus !== '已签约') return '未签约，不可申请';
+          if (row.referrerType === '月嫂介绍') {
+            return '月嫂推荐需收齐全款后才可申请';
+          }
+          return '需收齐定金（全款的20%）后才可申请';
         };
 
         const getActionLabel = (row) => {
-          if (row.approvalStatus === '未申请') return '申请';
+          if (row.approvalStatus === '未申请') return canApply(row) ? '申请' : '不可申请';
           if (row.approvalStatus === '审批中') return '审批';
           if (row.approvalStatus === '已通过' && row.paymentStatus === '待打款') return '打款';
           return '查看';
         };
 
         const handleRowAction = (row) => {
-          if (row.approvalStatus === '未申请') return handleApply(row);
+          if (row.approvalStatus === '未申请') {
+            if (!canApply(row)) {
+              ElementPlus.ElMessage.warning(getApplyBlockReason(row));
+              return;
+            }
+            return handleApply(row);
+          }
           if (row.approvalStatus === '审批中') return handleApprove(row);
           if (row.approvalStatus === '已通过' && row.paymentStatus === '待打款') return handlePay(row);
           return handleView(row);
         };
 
+        const applyDialogVisible = ref(false);
+        const currentApplyRow = ref(null);
+        const applyForm = ref({
+          reason: '',
+          commissionAmount: 0,
+          attachments: []
+        });
+
         const handleApply = (row) => {
-          ElementPlus.ElMessageBox.confirm(
-            `为推荐人 "${row.referrerName}" 申请佣金 ¥${row.commissionAmount}？`,
-            '确认申请',
-            { type: 'info' }
-          ).then(() => {
-            createRequestFromRows([row]);
-            ElementPlus.ElMessage.success('已生成佣金申请单，等待财务审批');
-          });
+          currentApplyRow.value = row;
+          applyForm.value = { reason: '', commissionAmount: row.commissionAmount, attachments: [] };
+          applyDialogVisible.value = true;
         };
 
-        const handleBatchApply = () => {
-          const group = {};
-          selectedRows.value.forEach(row => {
-            if (!group[row.referrerName]) {
-              group[row.referrerName] = { referrerName: row.referrerName, count: 0, totalAmount: 0, bankInfo: row.bankName + ' ' + row.branchName };
+        const handlePasteUpload = (e) => {
+          e.preventDefault();
+          const files = e.clipboardData?.files;
+          if (files && files.length) {
+            for (const file of files) {
+              applyForm.value.attachments.push({
+                name: file.name,
+                uid: Date.now() + Math.random(),
+                size: file.size,
+                raw: file,
+                status: 'ready'
+              });
             }
-            group[row.referrerName].count += 1;
-            group[row.referrerName].totalAmount += row.commissionAmount;
-          });
-          batchSummary.value = Object.values(group);
-          batchDialogVisible.value = true;
+          }
         };
 
-        const confirmBatchApply = () => {
-          createRequestFromRows(selectedRows.value);
-          batchDialogVisible.value = false;
-          ElementPlus.ElMessage.success('批量申请已提交');
+        const confirmApply = () => {
+          if (!applyForm.value.reason.trim()) {
+            ElementPlus.ElMessage.warning('请填写申请事由');
+            return;
+          }
+          if (currentApplyRow.value) {
+            currentApplyRow.value.commissionAmount = applyForm.value.commissionAmount;
+            currentApplyRow.value.applyReason = applyForm.value.reason;
+            currentApplyRow.value.applyAttachments = applyForm.value.attachments.map(f => f.name);
+            createRequestFromRows([currentApplyRow.value]);
+          }
+          applyDialogVisible.value = false;
+          ElementPlus.ElMessage.success('已生成佣金申请单，等待财务审批');
         };
 
         // ==================== 审批（多节点）====================
@@ -737,53 +888,6 @@
           remark: ''
         });
 
-        const getProgress = (row) => {
-          if (!row.approvalRecords || !row.approvalRecords.length) return 0;
-          const total = FLOW_NODES.length - 1; // 去掉提交节点
-          const passed = row.approvalRecords.filter(r => r.status === '通过').length;
-          return Math.min(100, Math.round((passed / total) * 100));
-        };
-
-        const getCurrentNodeName = (row) => {
-          const node = getCurrentNode(row);
-          return node ? node.name : '-';
-        };
-
-        const getRejectNode = (row) => {
-          if (!row.approvalRecords) return '';
-          const reject = [...row.approvalRecords].reverse().find(r => r.status === '不通过');
-          return reject ? reject.nodeName : '';
-        };
-
-        // ==================== 审批进展弹窗 ====================
-        const progressVisible = ref(false);
-        const progressRow = ref(null);
-        const progressActive = ref(0);
-
-        const handleShowProgress = (row) => {
-          progressRow.value = row;
-          // 计算已完成到第几步
-          if (!row.approvalRecords || !row.approvalRecords.length) {
-            progressActive.value = 0;
-          } else {
-            const last = row.approvalRecords[row.approvalRecords.length - 1];
-            const idx = FLOW_NODES.findIndex(n => n.id === last.nodeId);
-            if (last.status === '不通过') {
-              progressActive.value = idx + 1; // 显示到当前驳回节点
-            } else if (last.status === '通过') {
-              progressActive.value = idx + 1;
-            } else {
-              progressActive.value = idx;
-            }
-          }
-          progressVisible.value = true;
-        };
-
-        const getNodeRecord = (nodeId) => {
-          if (!progressRow.value || !progressRow.value.approvalRecords) return null;
-          return progressRow.value.approvalRecords.find(r => r.nodeId === nodeId) || null;
-        };
-
         const handlePay = (row) => {
           currentPayRow.value = row;
           const defaultTax = row.commissionAmount <= 800 ? 0 : Number((row.commissionAmount * 0.2).toFixed(2));
@@ -826,15 +930,16 @@
         };
 
         return {
-          searchForm, loading, selectedRows, batchDialogVisible, batchSummary,
-          filteredData, isSelectable, ruleTagType, approvalTagType, paymentTagType, getProgress, getCurrentNodeName, getRejectNode,
-          handleSearch, handleReset, handleSelectionChange,
-          handleApply, handleBatchApply, confirmBatchApply,
+          searchForm, loading, onlyMyReview, currentUser,
+          filteredData, ruleTagType, approvalTagType, paymentTagType,
+          handleSearch, handleReset, handleUpdateCollectionStatus,
+          canApply, getApplyBlockReason,
+          applyDialogVisible, currentApplyRow, applyForm,
+          handleApply, handlePasteUpload, confirmApply,
           detailVisible, detailTitle, currentRow,
           handleView, handleApprove, handleRowAction, getActionLabel,
           approveDialogVisible, currentNode, currentNodeApprovers, approveForm,
           doPass, doReject,
-          progressVisible, progressRow, progressActive, FLOW_NODES, getNodeRecord, handleShowProgress,
           payDialogVisible, currentPayRow, payForm,
           handlePay, calcActual, confirmPay
         };

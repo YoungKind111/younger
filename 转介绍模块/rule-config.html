@@ -55,13 +55,15 @@
                 </el-form-item>
 
                 <el-divider content-position="left">特价套餐规则</el-divider>
-                <el-form-item label="特价套餐价格标准" prop="specialPrice">
-                  <el-input-number v-model="configForm.specialPrice" :min="0" :precision="2"></el-input-number>
-                  <span style="margin-left: 8px; color: #8c8c8c;">元</span>
-                </el-form-item>
-                <el-form-item label="特价套餐天数标准" prop="specialDays">
-                  <el-input-number v-model="configForm.specialDays" :min="1"></el-input-number>
-                  <span style="margin-left: 8px; color: #8c8c8c;">天起（达到此天数的特价套餐计固定佣金）</span>
+                <el-form-item label="特价套餐清单">
+                  <el-table :data="configForm.specialPackages" size="small" border style="width: 100%; max-width: 500px;">
+                    <el-table-column prop="name" label="套餐名称" min-width="160"></el-table-column>
+                    <el-table-column prop="days" label="天数" width="80" align="center"></el-table-column>
+                    <el-table-column prop="amount" label="金额" width="110" align="right">
+                      <template #default="{ row }">¥{{ row.amount.toLocaleString() }}</template>
+                    </el-table-column>
+                  </el-table>
+                  <span style="margin-left: 8px; color: #8c8c8c;">（套餐名称+天数+金额同时匹配即为特价套餐）</span>
                 </el-form-item>
                 <el-form-item label="特价套餐固定佣金" prop="specialCommission">
                   <el-input-number v-model="configForm.specialCommission" :min="0" :precision="2"></el-input-number>
@@ -75,7 +77,7 @@
                 </el-form-item>
                 <el-form-item label="第2~3单比例">
                   <el-input-number v-model="configForm.step2to3Rate" :min="0" :max="100" :precision="2"></el-input-number>
-                  <span style="margin-left: 8px; color: #8c8c8c;">%（成交金额×比例）</span>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%（签署套餐金额×比例）</span>
                 </el-form-item>
                 <el-form-item label="第4~5单比例">
                   <el-input-number v-model="configForm.step4to5Rate" :min="0" :max="100" :precision="2"></el-input-number>
@@ -86,10 +88,28 @@
                   <span style="margin-left: 8px; color: #8c8c8c;">%</span>
                 </el-form-item>
 
+                <el-divider content-position="left">员工推荐规则</el-divider>
+                <el-form-item label="员工佣金固定金额" prop="employeeCommission">
+                  <el-input-number v-model="configForm.employeeCommission" :min="0" :precision="2"></el-input-number>
+                  <span style="margin-left: 8px; color: #8c8c8c;">元/单（不区分阶梯和套餐类型）</span>
+                </el-form-item>
+
                 <el-divider content-position="left">月嫂推荐规则</el-divider>
                 <el-form-item label="月嫂佣金比例" prop="nurseRate">
                   <el-input-number v-model="configForm.nurseRate" :min="0" :max="100" :precision="2"></el-input-number>
-                  <span style="margin-left: 8px; color: #8c8c8c;">%（成交金额×比例，不区分阶梯和套餐类型）</span>
+                  <span style="margin-left: 8px; color: #8c8c8c;">%（签署套餐金额×比例，不区分阶梯和套餐类型）</span>
+                </el-form-item>
+
+                <el-divider content-position="left">申请前提条件</el-divider>
+                <el-form-item>
+                  <el-alert type="info" :closable="false" style="width: 100%; max-width: 560px;">
+                    <div style="margin-bottom: 8px; color: #595959;">申请时需同时满足：</div>
+                    <div style="line-height: 2;">
+                      <div><strong>月嫂推荐：</strong>已签约 + 收齐全款</div>
+                      <div><strong>员工推荐：</strong>已签约 + 收齐定金（全款的 20%）</div>
+                      <div><strong>客户推荐：</strong>已签约 + 收齐定金（全款的 20%）</div>
+                    </div>
+                  </el-alert>
                 </el-form-item>
               </el-form>
             </div>
@@ -111,20 +131,18 @@
                     <el-form-item label="推荐人身份">
                       <el-radio-group v-model="testForm.referrerType">
                         <el-radio-button label="客户">客户</el-radio-button>
+                        <el-radio-button label="员工">员工</el-radio-button>
                         <el-radio-button label="月嫂">月嫂</el-radio-button>
                       </el-radio-group>
                     </el-form-item>
-                    <el-form-item label="套餐类型">
-                      <el-radio-group v-model="testForm.packageType">
-                        <el-radio-button label="常规套餐">常规套餐</el-radio-button>
-                        <el-radio-button label="特价套餐">特价套餐</el-radio-button>
-                      </el-radio-group>
+                    <el-form-item label="套餐名称">
+                      <el-input v-model="testForm.packageName" placeholder="请输入套餐名称" style="width: 200px;"></el-input>
                     </el-form-item>
                     <el-form-item label="套餐天数">
                       <el-input-number v-model="testForm.serviceDays" :min="1" :max="365" style="width: 150px;"></el-input-number>
                       <span style="margin-left: 8px; color: #8c8c8c;">天</span>
                     </el-form-item>
-                    <el-form-item label="月嫂成交金额">
+                    <el-form-item label="月嫂签署套餐金额">
                       <el-input-number v-model="testForm.contractAmount" :min="0" :precision="2" style="width: 200px;"></el-input-number>
                       <span style="margin-left: 8px; color: #8c8c8c;">元</span>
                     </el-form-item>
@@ -179,13 +197,16 @@
           shortDaysStart: 7,
           shortDaysEnd: 12,
           shortDaysAmount: 100,
-          specialPrice: 9980,
-          specialDays: 13,
+          specialPackages: [
+            { name: 'Y3月子助手', days: 26, amount: 7980 },
+            { name: 'Y3月子基础服务', days: 26, amount: 9980 }
+          ],
           specialCommission: 200,
           step1Amount: 200,
           step2to3Rate: 3,
           step4to5Rate: 4,
           step6PlusRate: 5,
+          employeeCommission: 200,
           nurseRate: 10
         });
 
@@ -196,16 +217,6 @@
         const validateShortDaysEnd = (rule, value, callback) => {
           if (value < configForm.value.shortDaysStart) {
             callback(new Error('短天数区间结束值不能小于开始值'));
-          } else if (value >= configForm.value.specialDays) {
-            callback(new Error('短天数区间结束值必须小于特价套餐天数标准'));
-          } else {
-            callback();
-          }
-        };
-
-        const validateSpecialDays = (rule, value, callback) => {
-          if (value <= configForm.value.shortDaysEnd) {
-            callback(new Error('特价套餐天数标准必须大于短天数区间结束值'));
           } else {
             callback();
           }
@@ -224,13 +235,7 @@
           shortDaysAmount: [
             { required: true, message: '请填写短天数固定佣金', trigger: 'change' }
           ],
-          specialPrice: [
-            { required: true, message: '请填写特价套餐价格标准', trigger: 'change' }
-          ],
-          specialDays: [
-            { required: true, message: '请填写特价套餐天数标准', trigger: 'change' },
-            { validator: validateSpecialDays, trigger: 'change' }
-          ],
+
           specialCommission: [
             { required: true, message: '请填写特价套餐固定佣金', trigger: 'change' }
           ],
@@ -244,7 +249,7 @@
         const testForm = ref({
           cumulativeCount: 0,
           referrerType: '客户',
-          packageType: '常规套餐',
+          packageName: '',
           serviceDays: 26,
           contractAmount: 19800
         });
@@ -266,8 +271,13 @@
           const days = testForm.value.serviceDays;
           const amount = testForm.value.contractAmount;
           const cumulative = testForm.value.cumulativeCount;
-          const isSpecial = testForm.value.packageType === '特价套餐';
           const isNurse = testForm.value.referrerType === '月嫂';
+          const isEmployee = testForm.value.referrerType === '员工';
+          // 特价套餐判定：套餐名称+天数+金额同时匹配清单中的某一项
+          const matchedSpecial = configForm.value.specialPackages.find(
+            p => p.name === testForm.value.packageName && p.days === days && p.amount === amount
+          );
+          const isSpecial = !!matchedSpecial;
 
           // 规则1：不足门槛天数（客户和月嫂均受限制）
           if (days < configForm.value.minDaysNoCommission) {
@@ -280,7 +290,19 @@
             return;
           }
 
-          // 月嫂推荐：满足天数门槛后，统一按成交金额比例计算
+          // 员工推荐：满足天数门槛后，统一按固定金额计算
+          if (isEmployee) {
+            const commission = configForm.value.employeeCommission;
+            testResult.value = {
+              isValid: true,
+              ruleHit: `员工介绍 固定${configForm.value.employeeCommission}元`,
+              commission: commission,
+              newCumulative: cumulative + 1
+            };
+            return;
+          }
+
+          // 月嫂推荐：满足天数门槛后，统一按签署套餐金额比例计算
           if (isNurse) {
             const commission = Number((amount * configForm.value.nurseRate / 100).toFixed(2));
             testResult.value = {
@@ -305,8 +327,8 @@
             return;
           }
 
-          // 规则3：特价套餐且满足天数标准
-          if (isSpecial && days >= configForm.value.specialDays) {
+          // 规则3：特价套餐（名称+天数+金额同时匹配）
+          if (isSpecial) {
             testResult.value = {
               isValid: true,
               ruleHit: `特价套餐固定${configForm.value.specialCommission}元`,
@@ -316,7 +338,7 @@
             return;
           }
 
-          // 规则4：常规套餐（含未达specialDays天数的特价套餐）按阶梯计算
+          // 规则4：常规套餐（未命中特价套餐清单的）按阶梯计算
           const newCumulative = cumulative + 1;
           let commission = 0;
           let ruleHit = '';
