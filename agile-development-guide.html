@@ -1,0 +1,604 @@
+<!DOCTYPE html><html><head>
+      <title>agile-development-guide</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css">
+      
+      
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-details{margin:0;padding:0;border:none}.markdown-preview .md-toc summary.md-toc-link-wrapper{cursor:pointer;list-style-position:outside}.markdown-preview .md-toc summary.md-toc-link-wrapper::marker{font-size:.85em}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='0']{margin-left:12px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='1']{margin-left:28px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='2']{margin-left:44px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='3']{margin-left:60px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='4']{margin-left:76px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='5']{margin-left:80px}.markdown-preview a.tag,.markdown-preview a.tag:active,.markdown-preview a.tag:link,.markdown-preview a.tag:visited,.markdown-preview span.tag:not(.token){display:inline-block;background-color:var(--vscode-badge-background,rgba(127,127,127,.18));color:var(--vscode-badge-foreground,currentColor);border-radius:2em;font-size:.85em;font-weight:500;padding:.05em .55em;line-height:1.5;white-space:nowrap;text-decoration:none;text-shadow:none;box-shadow:none;transition:background-color .12s ease,opacity .12s ease}.markdown-preview a.tag{cursor:pointer}.markdown-preview a.tag:focus,.markdown-preview a.tag:hover{background-color:var(--vscode-badge-background,rgba(127,127,127,.32));color:var(--vscode-badge-foreground,currentColor);opacity:.85;text-decoration:none;outline:0}.markdown-preview .wikilink-embed-content{border-left:3px solid var(--vscode-textBlockQuote-border,rgba(128,128,128,.3));background:var(--vscode-textBlockQuote-background,rgba(128,128,128,.05));margin:.5em 0;padding:.5em .75em;border-radius:0 3px 3px 0}.markdown-preview .wikilink-embed-content.wikilink-embed-error{border-left-color:var(--vscode-errorForeground,#cf222e);color:var(--vscode-errorForeground,#cf222e);font-style:italic;opacity:.8}.markdown-preview .wikilink-embed-content h1:first-child,.markdown-preview .wikilink-embed-content h2:first-child,.markdown-preview .wikilink-embed-content h3:first-child,.markdown-preview .wikilink-embed-content h4:first-child,.markdown-preview .wikilink-embed-content h5:first-child,.markdown-preview .wikilink-embed-content h6:first-child{margin-top:.25em}.markdown-preview .wikilink-embed-content .wikilink-embed-content{margin:.25em 0;padding:.25em .5em}.markdown-preview .block-id{display:none}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));border:4px solid var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));background-clip:content-box}.scrollbar-style::-webkit-scrollbar-thumb:hover{background-color:var(--vscode-scrollbarSlider-hoverBackground,rgba(120,120,120,.66))}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));border:4px solid var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb:hover{background-color:var(--vscode-scrollbarSlider-hoverBackground,rgba(120,120,120,.66))}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-details{margin:0;padding:0;border:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='0']{padding-left:0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='1']{padding-left:16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='2']{padding-left:32px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='3']{padding-left:48px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='4']{padding-left:64px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='5']{padding-left:80px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. -->
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script>
+    </head>
+    <body for="html-export">
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="氧阁产研团队-敏捷协作指南轻量版">氧阁产研团队-敏捷协作指南（轻量版） </h1>
+<blockquote>
+<p>适用场景：分布式团队、沟通成本高、不使用 Scrum/Kanban 完整框架、站会为偶尔召开的同步会议。</p>
+<p>使用工具：<strong>研发项目管理（<a href="https://portal.supagent.cn/app/spms%EF%BC%89">https://portal.supagent.cn/app/spms）</a></strong> —— 默认启用 Issues + 需求池；<strong>Sprint 迭代模块是否启用，由开发团队根据实际情况决定</strong>。</p>
+</blockquote>
+<h2 id="目录">目录 </h2>
+<ul>
+<li><a href="#%E6%B0%A7%E9%98%81%E4%BA%A7%E7%A0%94%E5%9B%A2%E9%98%9F-%E6%95%8F%E6%8D%B7%E5%8D%8F%E4%BD%9C%E6%8C%87%E5%8D%97%E8%BD%BB%E9%87%8F%E7%89%88">氧阁产研团队-敏捷协作指南（轻量版）</a>
+<ul>
+<li><a href="#%E7%9B%AE%E5%BD%95">目录</a></li>
+<li><a href="#%E4%B8%80%E9%9C%80%E6%B1%82-vs-issue%E4%B8%A4%E6%9D%A1%E5%BD%95%E5%85%A5%E9%80%9A%E9%81%93">一、需求 vs Issue：两条录入通道</a>
+<ul>
+<li><a href="#issue-%E7%9A%84%E4%B8%89%E7%A7%8D%E7%B1%BB%E5%9E%8B">Issue 的三种类型</a></li>
+<li><a href="#issue-%E7%8A%B6%E6%80%81%E6%B5%81%E8%BD%AC">Issue 状态流转</a></li>
+<li><a href="#%E9%9C%80%E6%B1%82%E7%8A%B6%E6%80%81%E6%B5%81%E8%BD%AC">需求状态流转</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%A4%BA%E4%BE%8B">二、模板与示例</a>
+<ul>
+<li><a href="#issue-%E6%A0%87%E9%A2%98%E6%A0%BC%E5%BC%8F">Issue 标题格式</a></li>
+<li><a href="#issue-%E6%8F%8F%E8%BF%B0%E6%A8%A1%E6%9D%BF">Issue 描述模板</a></li>
+<li><a href="#%E5%86%99-issue-%E7%9A%84%E5%9B%9B%E6%9D%A1%E5%8E%9F%E5%88%99">写 Issue 的四条原则</a></li>
+<li><a href="#%E9%9C%80%E6%B1%82%E6%8F%8F%E8%BF%B0%E6%A8%A1%E6%9D%BF">需求描述模板</a></li>
+<li><a href="#%E9%9C%80%E6%B1%82%E8%AF%84%E5%AE%A1%E7%9C%8B%E4%BB%80%E4%B9%88">需求评审看什么</a></li>
+<li><a href="#%E9%9C%80%E6%B1%82%E5%A6%82%E4%BD%95%E6%8B%86%E6%88%90-issue">需求如何拆成 Issue</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89%E6%88%91%E4%BB%AC%E5%9B%A2%E9%98%9F%E7%9A%84%E8%BD%BB%E9%87%8F%E5%8D%8F%E4%BD%9C%E6%96%B9%E5%BC%8F">三、我们团队的轻量协作方式</a>
+<ul>
+<li><a href="#%E6%A0%B8%E5%BF%83%E4%B9%A0%E6%83%AF-1%E4%BB%BB%E5%8A%A1%E5%8F%AF%E8%A7%81">核心习惯 1：任务可见</a></li>
+<li><a href="#%E6%A0%B8%E5%BF%83%E4%B9%A0%E6%83%AF-2%E9%98%BB%E5%A1%9E%E4%B8%8D%E9%9A%94%E5%A4%9C">核心习惯 2：阻塞不隔夜</a></li>
+<li><a href="#%E6%A0%B8%E5%BF%83%E4%B9%A0%E6%83%AF-3%E5%AE%9A%E6%9C%9F%E5%AF%B9%E9%BD%90">核心习惯 3：定期对齐</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B%E6%97%A5%E5%B8%B8%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B">四、日常工作流程</a></li>
+<li><a href="#%E4%BA%94%E4%B8%8A%E7%BA%BF%E4%B8%8E%E9%AA%8C%E6%94%B6%E4%BA%A7%E5%93%81%E7%BB%8F%E7%90%86%E8%B7%9F%E8%BF%9B%E5%88%B0%E6%96%B9%E6%A1%88%E8%90%BD%E5%9C%B0%E4%B8%BA%E6%AD%A2">五、上线与验收：产品经理跟进到方案落地为止</a>
+<ul>
+<li><a href="#%E5%8A%9F%E8%83%BD%E5%BC%80%E5%8F%91%E5%AE%8C%E6%88%90%E5%90%8E%E7%9A%84%E6%B5%81%E7%A8%8B">功能开发完成后的流程</a></li>
+<li><a href="#%E4%BA%A7%E5%93%81%E7%BB%8F%E7%90%86%E7%9A%84%E8%B7%9F%E8%BF%9B%E8%81%8C%E8%B4%A3">产品经理的跟进职责</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%AD%E8%A7%92%E8%89%B2%E8%81%8C%E8%B4%A3%E9%80%9F%E6%9F%A5%E8%A1%A8">六、角色职责速查表</a></li>
+<li><a href="#%E4%B8%83%E5%90%8C%E6%AD%A5%E4%BC%9A-sop-%E4%B8%8E%E5%BC%82%E5%B8%B8%E5%9C%BA%E6%99%AF">七、同步会 SOP 与异常场景</a>
+<ul>
+<li><a href="#%E4%BC%9A%E8%AE%AE-sop">会议 SOP</a></li>
+<li><a href="#%E5%BC%82%E5%B8%B8%E5%9C%BA%E6%99%AF%E5%A4%84%E7%90%86">异常场景处理</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%AB%E6%97%B6%E6%95%88%E7%BA%A6%E5%AE%9A%E8%BD%BB%E9%87%8F-sla">八、时效约定（轻量 SLA）</a></li>
+<li><a href="#%E4%B9%9D%E5%88%86%E5%B8%83%E5%BC%8F%E5%9B%A2%E9%98%9F%E7%9A%84%E5%85%B3%E9%94%AE%E5%8E%9F%E5%88%99">九、分布式团队的关键原则</a></li>
+<li><a href="#%E5%8D%81%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93">十、一句话总结</a></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="一-需求-vs-issue两条录入通道">一、需求 vs Issue：两条录入通道 </h2>
+<p>我们的工具里有两个入口，按事情的大小和来源区分：</p>
+<table>
+<thead>
+<tr>
+<th>入口</th>
+<th>录什么</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>需求池</strong></td>
+<td><strong>新功能、复杂些的优化</strong></td>
+<td>接入微信支付、重构登录体系</td>
+</tr>
+<tr>
+<td><strong>全部 Issues</strong></td>
+<td><strong>上线后发现的 bug、小优化</strong></td>
+<td>验证码无法刷新、按钮文案调整</td>
+</tr>
+</tbody>
+</table>
+<p>判断标准一句话：</p>
+<blockquote>
+<p><strong>要规划、要排期、改动较大的 → 建需求；上线后冒出来的问题或小改动 → 直接建 Issue。</strong></p>
+</blockquote>
+<h3 id="issue-的三种类型">Issue 的三种类型 </h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>编号前缀</th>
+<th>用途</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>工单</strong></td>
+<td>TKT</td>
+<td>小优化、一般任务</td>
+<td>登录页文案微调</td>
+</tr>
+<tr>
+<td><strong>缺陷</strong></td>
+<td>BUG</td>
+<td>上线后发现的系统缺陷</td>
+<td>登录时验证码无法刷新</td>
+</tr>
+<tr>
+<td><strong>备忘</strong></td>
+<td>—</td>
+<td>待办提醒、临时记录</td>
+<td>记得关注某接口报错率</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>新功能、复杂优化不要直接建成工单——先进需求池，经过规划后再拆解执行。</p>
+</blockquote>
+<h3 id="issue-状态流转">Issue 状态流转 </h3>
+<p>工具里 Issue 的完整状态：</p>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>待办池 → 待处理 → 进行中 → 评审中 → 已完成
+                                 → 已取消
+</code></pre><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>在我们流程里的含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>待办池</strong></td>
+<td>先记下来，还没确定要不要做 / 什么时候做</td>
+</tr>
+<tr>
+<td><strong>待处理</strong></td>
+<td>确定要做，等待认领或排期</td>
+</tr>
+<tr>
+<td><strong>进行中</strong></td>
+<td>有人正在处理</td>
+</tr>
+<tr>
+<td><strong>评审中</strong></td>
+<td>处理完成，等待验证 / Review</td>
+</tr>
+<tr>
+<td><strong>已完成</strong></td>
+<td>验证通过，闭环</td>
+</tr>
+<tr>
+<td><strong>已取消</strong></td>
+<td>确认不做了</td>
+</tr>
+</tbody>
+</table>
+<p>使用约定：</p>
+<ul>
+<li>开工前从“待处理”认领，状态改为“进行中”</li>
+<li>完成后改“评审中”，由验证人确认后勾“已完成”</li>
+<li>卡住时保持当前状态，在描述或评论里写明阻塞点</li>
+</ul>
+<h3 id="需求状态流转">需求状态流转 </h3>
+<p>工具里需求的完整状态：</p>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>草稿 → 评审中 → 已批准 → 开发中 → 已交付
+                              → 已拒绝
+</code></pre><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>在我们流程里的含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>草稿</strong></td>
+<td>产品经理还在梳理，未提交评审</td>
+</tr>
+<tr>
+<td><strong>评审中</strong></td>
+<td>已提交，等待团队评审</td>
+</tr>
+<tr>
+<td><strong>已批准</strong></td>
+<td>评审通过，等待排期开发</td>
+</tr>
+<tr>
+<td><strong>开发中</strong></td>
+<td>正在开发实施</td>
+</tr>
+<tr>
+<td><strong>已交付</strong></td>
+<td>上线且产品经理验收通过，方案落地</td>
+</tr>
+<tr>
+<td><strong>已拒绝</strong></td>
+<td>评审不通过或确认不做</td>
+</tr>
+</tbody>
+</table>
+<p>使用约定：</p>
+<ul>
+<li>需求按<strong>功能性 / 非功能性</strong>分类</li>
+<li><strong>产品经理负责推动状态前进</strong>，尤其是“开发中 → 已交付”，必须亲自验收后才改</li>
+<li>Issue 可通过“关联需求”字段挂到需求下，方便追溯（如某需求上线后的 bug）</li>
+</ul>
+<hr>
+<h2 id="二-模板与示例">二、模板与示例 </h2>
+<h3 id="issue-标题格式">Issue 标题格式 </h3>
+<p>统一用 <strong><code>[模块] 动作 + 对象</code></strong>：</p>
+<table>
+<thead>
+<tr>
+<th>❌ 坏标题</th>
+<th>✅ 好标题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YK测试</td>
+<td>[登录] 修复验证码无法刷新</td>
+</tr>
+<tr>
+<td>测试任务</td>
+<td>[支付] 微信回调失败时增加重试</td>
+</tr>
+<tr>
+<td>任务02</td>
+<td>[首页] 调整按钮文案为“立即开通”</td>
+</tr>
+</tbody>
+</table>
+<p>好标题的标准：<strong>不看描述也知道动的是哪个模块、要做什么。</strong></p>
+<h3 id="issue-描述模板">Issue 描述模板 </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>【背景】问题/优化来自哪里（线上反馈、内部发现、用户投诉）
+【现象 / 目标】现在什么样 → 期望什么样
+【验收标准】
+1. ……
+2. ……
+【其他】截图、日志、复现步骤、关联需求（FR-x）
+</code></pre><p>小工单可以简化，但<strong>验收标准不能省</strong>。</p>
+<h3 id="写-issue-的四条原则">写 Issue 的四条原则 </h3>
+<ol>
+<li><strong>标题清晰</strong>：按上面的格式命名。</li>
+<li><strong>可验收</strong>：描述里写清楚“做到什么程度算完成”。</li>
+<li><strong>粒度适中</strong>：太大的拆成多个工单，太小的合并。</li>
+<li><strong>及时更新状态</strong>：避免列表信息过期。</li>
+</ol>
+<h3 id="需求描述模板">需求描述模板 </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>【背景】为什么做（用户/业务痛点，有什么数据或反馈支撑）
+【目标】做到什么程度
+【验收标准】
+1. ……
+2. ……
+【范围】本期做什么 / 明确不做什么
+【依赖】设计稿、接口、第三方配合事项
+</code></pre><h3 id="需求评审看什么">需求评审看什么 </h3>
+<ul>
+<li>背景和目标是否说清楚</li>
+<li>验收标准是否可验证</li>
+<li>技术可行性和大致工作量</li>
+<li>优先级是否合适</li>
+</ul>
+<h3 id="需求如何拆成-issue">需求如何拆成 Issue </h3>
+<ul>
+<li>需求（FR-x）批准后，拆成若干工单/任务执行。</li>
+<li>拆出的 Issue 通过「<strong>关联需求</strong>」字段挂到 FR-x 下，需求页的进度（如 0/3）自动反映完成情况。</li>
+<li>拆分粒度：<strong>单个 Issue 尽量 1～3 天能完成</strong>，超过就继续拆。</li>
+<li>拆解由产品经理和开发在评审通过后、开工前共同完成。</li>
+</ul>
+<hr>
+<h2 id="三-我们团队的轻量协作方式">三、我们团队的轻量协作方式 </h2>
+<p>我们不套用 Scrum 或 Kanban 的完整框架，而是围绕三个核心习惯运转：</p>
+<h3 id="核心习惯-1任务可见">核心习惯 1：任务可见 </h3>
+<p>所有工作都录入工具的 <strong>全部 Issues</strong> 里，包括：</p>
+<ul>
+<li>谁在做什么（负责人）</li>
+<li>当前状态</li>
+<li>截止时间</li>
+<li>阻塞点</li>
+</ul>
+<blockquote>
+<p>注意：工具里的“迭代 Sprint”和“产品待办”模块<strong>是否启用由开发团队决定</strong>——团队规模扩大或需要更强的节奏感时可以开启，开启前先评估是否增加流程负担。<strong>新功能、复杂优化</strong>放需求池，排期规划后执行；<strong>上线后的 bug、小优化</strong>直接建 Issue。</p>
+</blockquote>
+<h3 id="核心习惯-2阻塞不隔夜">核心习惯 2：阻塞不隔夜 </h3>
+<p>谁遇到阻塞，当天在群里@相关人说明：</p>
+<ul>
+<li>阻塞在哪里（贴上 Issue 编号，如 TKT-3）</li>
+<li>需要谁帮忙</li>
+<li>期望什么时候解决</li>
+</ul>
+<h3 id="核心习惯-3定期对齐">核心习惯 3：定期对齐 </h3>
+<p>站会不是每天开，而是每隔几天开一次<strong>同步实时会议</strong>（synchronous）。具体开法见<a href="#%E4%B8%83%E5%90%8C%E6%AD%A5%E4%BC%9A-sop-%E4%B8%8E%E5%BC%82%E5%B8%B8%E5%9C%BA%E6%99%AF">第七章</a>。</p>
+<hr>
+<h2 id="四-日常工作流程">四、日常工作流程 </h2>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>事情来了
+  │
+  ├── 新功能 / 复杂优化 ──→ 建到「需求池」，排期规划后拆解执行
+  │
+  └── 上线后的 bug / 小优化 ──→ 直接建 Issue
+                                 （缺陷 BUG / 工单 TKT，填负责人 + 截止时间 + 验收标准）
+  │
+  ▼
+每个人异步推进
+有阻塞当天在群里说（附 Issue 编号）
+  │
+  ▼
+每隔几天开一次同步会
+对着「全部 Issues」的待处理列表过一遍
+只处理阻塞和协作点
+  │
+  ▼
+完成时勾到「已完成」
+必要时简单同步结果
+</code></pre><hr>
+<h2 id="五-上线与验收产品经理跟进到方案落地为止">五、上线与验收：产品经理跟进到方案落地为止 </h2>
+<p><strong>开发完成 ≠ 需求完成。</strong> 一个需求只有真正上线、按预期运转，才算闭环。产品经理要<strong>从需求提出一路跟进到方案落地实施为止</strong>，不是提完需求就结束。</p>
+<h3 id="功能开发完成后的流程">功能开发完成后的流程 </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>开发完成（需求状态：开发中）
+  │
+  ▼
+提测（开发自测 → 测试验证）
+  │
+  ▼
+上线发布
+  │
+  ▼
+产品经理验收：功能是否按预期落地
+  │
+  ▼
+上线后观察效果
+  ├── 发现问题 / 小优化 ──→ 建 Issue（BUG / TKT，关联需求）
+  └── 符合预期 ──→ 需求勾「已交付」，闭环
+</code></pre><h3 id="产品经理的跟进职责">产品经理的跟进职责 </h3>
+<ol>
+<li><strong>需求阶段</strong>：在需求池里写清楚背景和验收标准。</li>
+<li><strong>开发阶段</strong>：跟进进度，及时解答需求疑问，参与同步会澄清目标。</li>
+<li><strong>测试/上线阶段</strong>：确认提测、上线的安排，协调相关方配合。</li>
+<li><strong>验收阶段</strong>：功能上线后亲自验证——方案是否按预期落地、交互和流程是否符合设计要求。</li>
+<li><strong>闭环阶段</strong>：上线后观察一段时间，发现 bug 或小优化及时建 Issue 跟进；确认稳定后需求才算真正完成。</li>
+</ol>
+<blockquote>
+<p>一句话：<strong>产品经理对“方案有没有真正落地”负责，而不只是“需求有没有提”。</strong></p>
+</blockquote>
+<hr>
+<h2 id="六-角色职责速查表">六、角色职责速查表 </h2>
+<p>每个环节谁负责什么，一张表查清楚：</p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>产品经理</th>
+<th>开发</th>
+<th>测试 / 验证人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>需求提出</strong></td>
+<td>建需求（草稿），写清背景、目标、验收标准</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>需求评审</strong></td>
+<td>发起评审，讲清目标和优先级</td>
+<td>评估技术可行性、工作量、风险</td>
+<td>评估测试点、验收边界</td>
+</tr>
+<tr>
+<td><strong>需求开发</strong></td>
+<td>答疑、跟进进度</td>
+<td>认领并开发，及时更新状态</td>
+<td>提前准备测试点</td>
+</tr>
+<tr>
+<td><strong>提测上线</strong></td>
+<td>确认上线安排、协调相关方</td>
+<td>自测通过后提测</td>
+<td>测试验证，反馈问题</td>
+</tr>
+<tr>
+<td><strong>上线验收</strong></td>
+<td><strong>亲自验收，确认后勾「已交付」</strong></td>
+<td>配合修复验收发现的问题</td>
+<td>协助复验</td>
+</tr>
+<tr>
+<td><strong>Issue 创建</strong></td>
+<td>上线后问题 / 小优化建 Issue</td>
+<td>发现问题也可直接建 Issue</td>
+<td>测试中发现问题建 Issue</td>
+</tr>
+<tr>
+<td><strong>Issue 处理</strong></td>
+<td>跟进高优先级 Issue 的闭环</td>
+<td>认领：待处理 → 进行中 → 评审中</td>
+<td>验证通过后勾「已完成」</td>
+</tr>
+<tr>
+<td><strong>同步会</strong></td>
+<td>澄清目标、协调跨方阻塞</td>
+<td>更新状态、暴露阻塞</td>
+<td>同步验证进展</td>
+</tr>
+<tr>
+<td><strong>阻塞响应</strong></td>
+<td>被@后当天响应</td>
+<td>被@后当天响应</td>
+<td>被@后当天响应</td>
+</tr>
+</tbody>
+</table>
+<p>使用约定：</p>
+<ul>
+<li><strong>谁认领谁更新状态</strong>，状态长时间不动的 Issue 会在同步会上被过问到。</li>
+<li><strong>「评审中 → 已完成」由验证人确认</strong>，不是开发自己勾完。</li>
+<li><strong>需求的「开发中 → 已交付」由产品经理确认</strong>，参照第五章验收职责。</li>
+<li>不在表里的角色（如设计、运营）按需被@参与，无固定职责。</li>
+</ul>
+<hr>
+<h2 id="七-同步会-sop-与异常场景">七、同步会 SOP 与异常场景 </h2>
+<h3 id="会议-sop">会议 SOP </h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>约定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>频率</strong></td>
+<td>每隔几天一次（一周 2～3 次），固定时间</td>
+</tr>
+<tr>
+<td><strong>时长</strong></td>
+<td>不超过 30 分钟</td>
+</tr>
+<tr>
+<td><strong>主持人</strong></td>
+<td>固定一人或轮流，负责控场、记录结论</td>
+</tr>
+<tr>
+<td><strong>会前</strong></td>
+<td>各自更新 Issue 状态；进度复杂的在 Issue 评论里写清：已完成部分、剩余部分、当前阻塞</td>
+</tr>
+<tr>
+<td><strong>会中</strong></td>
+<td>对着「全部 Issues」的待处理/进行中列表过，只聊三件事：①谁卡住了、需要什么帮助 ②接下来 1～2 天哪些事需要协作 ③有没有人对目标理解不一致</td>
+</tr>
+<tr>
+<td><strong>会后</strong></td>
+<td>结论和分工写回相关 Issue 评论或群里，@到人</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>会议不做“昨天做了什么”的轮流汇报——状态在工具里，开会只看工具。</p>
+</blockquote>
+<h3 id="异常场景处理">异常场景处理 </h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>处理约定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>线上紧急 bug</strong></td>
+<td>直接建 BUG 标高优先级，群里@负责人当天处理，不等同步会</td>
+</tr>
+<tr>
+<td><strong>需求做到一半范围变了</strong></td>
+<td>产品经理在需求评论里说明变化、更新验收标准，相关人确认后继续</td>
+</tr>
+<tr>
+<td><strong>待处理超一周没人动</strong></td>
+<td>同步会上过问：认领、降级回待办池、或取消</td>
+</tr>
+<tr>
+<td><strong>阻塞超一天未解决</strong></td>
+<td>升级给产品经理/负责人协调资源</td>
+</tr>
+<tr>
+<td><strong>时间凑不齐开不了会</strong></td>
+<td>改异步：各自在群里按三问更新（完成了什么/计划什么/有无阻塞），阻塞单独@人</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="八-时效约定轻量-sla">八、时效约定（轻量 SLA） </h2>
+<table>
+<thead>
+<tr>
+<th>事项</th>
+<th>约定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>线上 BUG 响应</td>
+<td>当天响应，先确认影响和临时方案</td>
+</tr>
+<tr>
+<td>一般 Issue 认领</td>
+<td>「待处理」停留不超过一周</td>
+</tr>
+<tr>
+<td>阻塞响应</td>
+<td>被@后当天响应</td>
+</tr>
+<tr>
+<td>需求评审</td>
+<td>提交评审后 3 个工作日内给结论</td>
+</tr>
+<tr>
+<td>上线验收</td>
+<td>上线后 3 个工作日内产品经理完成验收</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>以上是建议值，团队可按实际情况在同步会上调整；调整后的版本更新到本章。</p>
+</blockquote>
+<hr>
+<h2 id="九-分布式团队的关键原则">九、分布式团队的关键原则 </h2>
+<ol>
+<li>
+<p><strong>异步优先</strong></p>
+<ul>
+<li>能用 Issue 评论、文档说清楚的事，就不开实时会议。</li>
+</ul>
+</li>
+<li>
+<p><strong>必要的文档不能省</strong></p>
+<ul>
+<li>需求说明、技术决策、新人上手文档、问题处理手册，都要写下来（可放在需求池或共享文档中）。</li>
+</ul>
+</li>
+<li>
+<p><strong>自动化是协作的基础</strong></p>
+<ul>
+<li>CI/CD、自动化测试要做好。分布式团队没法随时问“你本地能跑吗”，主干必须随时可构建。</li>
+</ul>
+</li>
+<li>
+<p><strong>保留同步窗口</strong></p>
+<ul>
+<li>如果跨时区，每天保留一个有交集的时间段（如 2 小时），只处理必须讨论的事。</li>
+</ul>
+</li>
+<li>
+<p><strong>不要为了开会而开会</strong></p>
+<ul>
+<li>同步会议成本高，只用来解决“文字说不清楚”的事。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="十-一句话总结">十、一句话总结 </h2>
+<blockquote>
+<p>对我们团队来说，敏捷不是 Scrum 或 Kanban，而是：<strong>任务看得见（全部 Issues）、阻塞不隔夜（当天@人）、偶尔对齐方向（同步会）、优先异步沟通。</strong></p>
+</blockquote>
+
+      </div>
+      
+      
+    
+    
+    
+    
+    
+    
+  
+    </body></html>
