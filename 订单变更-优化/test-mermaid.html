@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>mermaid br 测试</title></head>
+<body>
+  <h3>A: securityLevel loose，实体转义的 br</h3>
+  <div class="mermaid" id="a">flowchart TD
+  A[套餐变更生效&lt;br/&gt;生成/通过关联退款审批单] --&gt; B[退款成功]
+</div>
+  <h3>B: securityLevel loose + flowchart.htmlLabels 显式 true</h3>
+  <div class="mermaid" id="b">flowchart TD
+  A[变更单关闭&lt;br/&gt;关联退款审批单全部驳回] --&gt; C[结束]
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: '.mermaid' }).catch(function(e){ document.body.insertAdjacentHTML('beforeend','<pre style="color:red">'+ (e.message||e) +'</pre>'); });
+  </script>
+</body>
+</html>
