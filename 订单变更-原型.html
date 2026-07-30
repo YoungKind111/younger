@@ -31,7 +31,9 @@
   .small{font-size:12px;margin-top:6px}
   .radio-list label{display:flex;align-items:center;gap:8px;padding:7px 2px;cursor:pointer;font-size:14px}
   /* 双栏 / 三栏布局 */
-  .grid-top{display:grid;grid-template-columns:340px 1fr;gap:18px;margin-bottom:16px}
+  .grid-top{display:grid;grid-template-columns:380px 1fr;gap:18px;margin-bottom:16px}
+  .grid-top > .orig-card{margin-bottom:0}
+  #reasonList{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
   .grid-2{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;margin-bottom:16px}
   .grid-top > .section,.grid-2 > .section{margin-bottom:0}
   .panel{background:#fff;border:1px solid #e3e1ec;border-radius:8px;padding:14px 18px}
@@ -41,11 +43,11 @@
   }
   input[type=radio],input[type=checkbox]{accent-color:#8b30e6;width:15px;height:15px;cursor:pointer}
   input[type=radio]:disabled,input[type=checkbox]:disabled{cursor:not-allowed}
-  input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:9px 12px;border:1px solid #d8d6e2;border-radius:6px;background:#fff;font-size:14px;color:#26262e;outline:none}
+  input[type=text],input[type=number],input[type=date],input[type=datetime-local],select,textarea{width:100%;padding:9px 12px;border:1px solid #d8d6e2;border-radius:6px;background:#fff;font-size:14px;color:#26262e;outline:none}
   input:focus,select:focus,textarea:focus{border-color:#8b30e6;box-shadow:0 0 0 2px rgba(139,48,230,.12)}
   textarea{min-height:76px;resize:vertical}
   .invalid{border-color:#e5484d!important}
-  .field-err{color:#e5484d;font-size:12px;margin-top:4px}
+  .field-err{color:#e5484d;font-size:12px;position:absolute;top:100%;left:0;width:180px;white-space:normal;background:#fff;z-index:2}
   /* 变更事项：左导航 + 右面板 */
   .items-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
   .items-nav{display:flex;flex-direction:column;gap:8px}
@@ -65,10 +67,10 @@
   .switch input:checked + .slider{background:#8b30e6}
   .switch input:checked + .slider:before{transform:translateX(14px)}
   .switch input:disabled + .slider{opacity:.5;cursor:not-allowed}
-  .items-panels{background:#fff;border:1px solid #e3e1ec;border-radius:8px;padding:18px;min-height:300px}
+  .items-panels{background:#fff;border:1px solid #e3e1ec;border-radius:8px;padding:14px 16px;min-height:260px}
   .panel-head{font-weight:600;margin-bottom:4px}
-  .panel-hint{font-size:12px;color:#9a9aa5;margin-bottom:14px}
-  .items-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;color:#9a9aa5;font-size:13px;text-align:center;line-height:2}
+  .panel-hint{font-size:12px;color:#9a9aa5;margin-bottom:10px}
+  .items-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;color:#9a9aa5;font-size:13px;text-align:center;line-height:2}
   .items-empty[hidden]{display:none}
   @media (max-width:960px){ .items-layout{grid-template-columns:1fr} }
   .sub-title{font-weight:600;margin-bottom:12px;color:#3d3d4d}
@@ -77,13 +79,17 @@
   .badge-warn{background:#fff4e5;color:#c2730a;border:1px solid #ffd9a8}
   /* 表格 */
   .table-scroll{overflow-x:auto}
-  .grid{width:100%;border-collapse:collapse;min-width:620px;background:#fff}
-  .grid th{font-size:12px;color:#8f8f9a;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid #eeeaf5;white-space:nowrap}
-  .grid td{padding:9px 10px;border-bottom:1px solid #f2f0f8;white-space:nowrap;vertical-align:top}
+  .grid{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  .grid th{font-size:12px;color:#8f8f9a;font-weight:500;text-align:left;padding:7px 6px;border-bottom:1px solid #eeeaf5;white-space:nowrap}
+  .grid td{padding:7px 6px;border-bottom:1px solid #f2f0f8;white-space:nowrap;vertical-align:top;position:relative}
   .grid tr:last-child td{border-bottom:none}
   .row-disabled td{opacity:.5;background:#fafafc}
   .row-blocked td{opacity:.55;background:#fafafc}
-  .rf-amt{width:110px}
+  .rf-amt{width:92px}
+  #refundTable .badge{display:block;width:max-content;margin-top:3px}
+  .cv-foot{text-align:right;margin-top:6px}
+  .cv-submit{padding:9px 24px;border:none;border-radius:6px;background:#8b30e6;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+  .cv-submit:hover{background:#7a26cc}
   .row-foot{text-align:right;padding:10px 4px 0;font-size:13px}
   /* 套餐汇总 */
   .sum-box{background:#fdf0f6;border-radius:8px;padding:12px 16px;margin-top:14px}
@@ -96,18 +102,27 @@
   .file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .file-del{color:#9a9aa5;cursor:pointer;font-size:16px;flex-shrink:0;padding:0 2px;line-height:1}
   .file-del:hover{color:#e5484d}
+  /* 客户声音 */
+  .cv-block{border:1px solid #eeeaf5;border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#fbfbfd}
+  .cv-title{font-weight:600;margin-bottom:12px;padding-left:8px;border-left:3px solid #8b30e6}
+  .cv-title-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .cv-title-row .cv-title{margin-bottom:0}
+  .cv-collapse{margin-left:auto;color:#8b30e6;cursor:pointer;font-size:12px}
+  .cv-tools{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .ai-btn{border:1px solid #8b30e6;color:#8b30e6;background:#fff;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer}
+  .ai-btn:hover{background:#f3e8fd}
+  .cv-tools .dim{font-size:12px;margin-left:auto}
+  .cv-cat{border:1px solid #e9e6f2;border-radius:8px;background:#fff;padding:12px 14px;margin-bottom:10px}
+  .cv-cat-head{font-weight:600;font-size:13px;margin-bottom:10px;display:flex;justify-content:space-between}
+  .cv-clear{color:#8b30e6;font-size:12px;cursor:pointer;font-weight:400}
+  .cv-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .cv-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   /* 错误汇总 */
   .err-box{background:#fef0f0;border:1px solid #f6c6c8;border-radius:8px;color:#c92a2a;padding:12px 16px;margin-bottom:16px;font-size:13px}
   .err-box ul{margin:6px 0 0 18px}
   /* 提交按钮 */
   .submit{width:100%;padding:13px;border:none;border-radius:8px;background:#8b30e6;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
   .submit:hover{background:#7a26cc}
-  /* 演示控制面板 */
-  .demo-panel{position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid #e3e1ec;border-radius:10px;padding:14px 16px;box-shadow:0 6px 24px rgba(60,40,120,.14);font-size:12px;max-width:270px;z-index:50}
-  .demo-title{font-weight:700;margin-bottom:8px;color:#8b30e6}
-  .demo-row{margin-bottom:8px;line-height:2}
-  .demo-note{color:#8f8f9a;margin-bottom:10px;line-height:1.6}
-  .demo-panel button{width:100%;padding:6px;border:1px solid #d8d6e2;background:#f8f7fb;border-radius:6px;cursor:pointer}
   /* toast */
   .toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);background:#26262e;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
   .toast.show{opacity:.94;transform:translateX(-50%) translateY(0)}
@@ -137,41 +152,29 @@
     </div>
 
     <div class="grid-top">
-      <!-- 左栏：变更原因 -->
+      <!-- 左栏：原订单信息 -->
+      <div class="orig-card">
+        <div class="orig-title">原订单信息</div>
+        <div class="orig-row"><span>套餐名称</span><b>S5 S5个性化护理</b></div>
+        <div class="orig-row"><span>合同服务金额</span><b class="money">¥35,310.00</b></div>
+        <div class="orig-row"><span>已收到金额</span><b class="money">¥9,180.00</b></div>
+        <div class="orig-row"><span>待支付金额</span><b class="money">¥26,130.00</b></div>
+        <div class="orig-row"><span>服务天数</span><b>60天</b></div>
+      </div>
+
+      <!-- 右栏：变更原因（双列） -->
       <div class="section panel">
         <div class="label">变更原因<i class="req">*</i></div>
         <div class="radio-list" id="reasonList">
           <label><input type="radio" name="reason" value="套餐升级"> 套餐升级</label>
-          <label><input type="radio" name="reason" value="套餐降级"> 套餐降级 <span class="dim">含只照顾宝妈</span></label>
+          <label><input type="radio" name="reason" value="套餐降级"> 套餐降级</label>
+          <label><input type="radio" name="reason" value="只照顾宝妈"> 服务内容变更 <span class="dim">例如只照顾宝妈</span></label>
           <label><input type="radio" name="reason" value="续单 · 增加服务天数"> 续单 · 增加服务天数</label>
           <label><input type="radio" name="reason" value="提前结束服务 · 退单"> 提前结束服务 · 退单</label>
           <label><input type="radio" name="reason" value="节假日费用调整"> 节假日费用调整</label>
           <label><input type="radio" name="reason" value="赠送 · 补偿"> 赠送 · 补偿 <span class="dim">天数/费用减免</span></label>
           <label><input type="radio" name="reason" value="录入 · 签约信息错误"> 录入 · 签约信息错误</label>
-          <label><input type="radio" name="reason" value="流水转移"> 流水转移</label>
           <label><input type="radio" name="reason" value="其他"> 其他</label>
-        </div>
-      </div>
-
-      <!-- 右栏：原订单信息 + 责任归因 -->
-      <div>
-        <div class="orig-card">
-          <div class="orig-title">原订单信息</div>
-          <div class="orig-row"><span>套餐名称</span><b>S5 S5个性化护理</b></div>
-          <div class="orig-row"><span>合同服务金额</span><b class="money">¥35,310.00</b></div>
-          <div class="orig-row"><span>已收到金额</span><b class="money">¥9,180.00</b></div>
-          <div class="orig-row"><span>待支付金额</span><b class="money">¥26,130.00</b></div>
-          <div class="orig-row"><span>服务天数</span><b>60天</b></div>
-        </div>
-        <div class="section panel">
-          <div class="label">责任归因<i class="req">*</i><span class="label-hint">决定违约金与补偿处理口径</span></div>
-          <div class="radio-list" id="attributionList">
-            <label><input type="radio" name="attr" value="月嫂服务问题"> 月嫂服务问题 <span class="dim">默认勾「产生客诉」，违约金视协商</span></label>
-            <label><input type="radio" name="attr" value="月嫂个人原因"> 月嫂个人原因 <span class="dim">生病/家事/飞单 · 不扣违约金</span></label>
-            <label><input type="radio" name="attr" value="公司原因"> 公司原因 <span class="dim">撞档/匹配失败/销售承诺 · 不扣违约金</span></label>
-            <label><input type="radio" name="attr" value="客户原因"> 客户原因 <span class="dim">家庭计划/不付尾款 · 可扣10%违约金</span></label>
-            <label><input type="radio" name="attr" value="健康原因"> 宝宝·宝妈健康原因 <span class="dim">早产/住院 · 协商减免</span></label>
-          </div>
         </div>
       </div>
     </div>
@@ -183,10 +186,18 @@
       <div class="items-layout">
         <!-- 左：事项导航 -->
         <div class="items-nav">
+          <div class="nav-item" data-name="Package">
+            <label class="switch"><input type="checkbox" id="ckPackage"><span class="slider"></span></label>
+            <div class="nav-text">
+              <div class="nav-title">变更套餐</div>
+              <div class="nav-status" id="statusPackage"></div>
+            </div>
+            <span class="nav-dot" id="dotPackage" hidden></span>
+          </div>
           <div class="nav-item" data-name="Refund">
             <label class="switch"><input type="checkbox" id="ckRefund"><span class="slider"></span></label>
             <div class="nav-text">
-              <div class="nav-title">涉及退款 <span class="badge badge-warn" id="refundLockBadge" hidden>提前结束必选</span></div>
+              <div class="nav-title">发起退款 <span class="badge badge-warn" id="refundLockBadge" hidden>提前结束必选</span></div>
               <div class="nav-status" id="statusRefund">未选择支付单</div>
             </div>
             <span class="nav-dot" id="dotRefund" hidden></span>
@@ -194,26 +205,10 @@
           <div class="nav-item" data-name="Complaint">
             <label class="switch"><input type="checkbox" id="ckComplaint"><span class="slider"></span></label>
             <div class="nav-text">
-              <div class="nav-title">产生客诉</div>
+              <div class="nav-title">客户声音</div>
               <div class="nav-status" id="statusComplaint">未填写</div>
             </div>
             <span class="nav-dot" id="dotComplaint" hidden></span>
-          </div>
-          <div class="nav-item" data-name="Package">
-            <label class="switch"><input type="checkbox" id="ckPackage"><span class="slider"></span></label>
-            <div class="nav-text">
-              <div class="nav-title">变更订单套餐 <span class="badge badge-warn" id="salaryBadge" hidden>需先完成工资生成</span></div>
-              <div class="nav-status" id="statusPackage"></div>
-            </div>
-            <span class="nav-dot" id="dotPackage" hidden></span>
-          </div>
-          <div class="nav-item" data-name="Transfer">
-            <label class="switch"><input type="checkbox" id="ckTransfer"><span class="slider"></span></label>
-            <div class="nav-text">
-              <div class="nav-title">转移流水到其他订单</div>
-              <div class="nav-status" id="statusTransfer">未选择流水</div>
-            </div>
-            <span class="nav-dot" id="dotTransfer" hidden></span>
           </div>
         </div>
 
@@ -221,65 +216,9 @@
         <div class="items-panels">
           <div class="items-empty" id="itemsEmpty"></div>
 
-          <div class="panel-body" id="panelRefund" hidden>
-            <div class="panel-head">涉及退款</div>
-            <div class="panel-hint">选择支付单（支持部分退），审批通过后每张单生成一张「审核通过」的退款审批单，待出纳打款；上户后的收款不可退款</div>
-            <div class="table-scroll">
-              <table class="grid" id="refundTable">
-                <thead>
-                  <tr><th></th><th>支付单号</th><th>收款时间</th><th>方式</th><th>收款金额</th><th>已退</th><th>可退金额</th><th>本次退款金额</th></tr>
-                </thead>
-                <tbody>
-                  <tr data-id="PAY20260520001" data-refundable="5000">
-                    <td><input type="checkbox" class="rf-check"></td>
-                    <td>PAY20260520001 <span class="badge badge-gray rf-badge" style="display:none"></span></td>
-                    <td>2026-05-20 10:23</td><td>微信</td>
-                    <td class="money">¥5,000.00</td><td class="money">¥0.00</td><td class="money">¥5,000.00</td>
-                    <td><input type="number" class="rf-amt" value="5000" step="0.01" disabled><div class="field-err"></div></td>
-                  </tr>
-                  <tr data-id="PAY20260605002" data-refundable="3000">
-                    <td><input type="checkbox" class="rf-check"></td>
-                    <td>PAY20260605002 <span class="badge badge-gray rf-badge" style="display:none"></span></td>
-                    <td>2026-06-05 15:40</td><td>支付宝</td>
-                    <td class="money">¥4,180.00</td><td class="money">¥1,180.00</td><td class="money">¥3,000.00</td>
-                    <td><input type="number" class="rf-amt" value="3000" step="0.01" disabled><div class="field-err"></div></td>
-                  </tr>
-                  <tr data-id="PAY20260710003" data-refundable="0" class="row-disabled">
-                    <td><input type="checkbox" class="rf-check" disabled></td>
-                    <td>PAY20260710003 <span class="badge badge-gray">上户后收款 · 不可退款</span></td>
-                    <td>2026-07-10 09:15</td><td>银行转账</td>
-                    <td class="money">¥8,000.00</td><td class="money">¥0.00</td><td class="money">—</td>
-                    <td><input type="number" class="rf-amt" value="0" disabled></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="row-foot">退款合计：<b class="money" id="refundTotal">¥0.00</b></div>
-          </div>
-
-          <div class="panel-body" id="panelComplaint" hidden>
-            <div class="panel-head">产生客诉</div>
-            <div class="panel-hint">提交即生成「客户声音」，不等待变更审批</div>
-            <div class="label">选择月嫂<i class="req">*</i><span class="label-hint">单选</span></div>
-            <div class="radio-list" id="ayiList">
-              <label><input type="radio" name="ayi" value="王秀英"> 王秀英 <span class="dim">工号 M-012 · 服务中</span></label>
-              <label><input type="radio" name="ayi" value="李桂芳"> 李桂芳 <span class="dim">工号 M-034 · 已下户</span></label>
-              <label><input type="radio" name="ayi" value="张丽华"> 张丽华 <span class="dim">工号 M-057 · 已下户</span></label>
-            </div>
-            <div class="label" style="margin-top:10px">客诉类型<i class="req">*</i></div>
-            <select id="complaintType">
-              <option value="">请选择客诉类型</option>
-              <option>服务态度</option><option>专业能力不足</option><option>卫生习惯</option>
-              <option>迟到早退·时间观念</option><option>沟通不畅</option><option>私自离岗·擅自外出</option>
-              <option>财物问题（损坏·丢失）</option><option>费用争议</option><option>其他</option>
-            </select>
-            <div class="label" style="margin-top:10px">客诉内容<i class="req">*</i></div>
-            <textarea id="complaintContent" placeholder="请描述客诉详情"></textarea>
-          </div>
-
           <div class="panel-body" id="panelPackage" hidden>
             <div class="panel-head">变更订单套餐</div>
-            <div class="panel-hint">前置条件：前一个月嫂的工资已生成完成，未完成时左侧开关禁用</div>
+            <div class="panel-hint">修改套餐、服务天数、服务地址、合同金额与节假日费用，总服务金额自动联动（无前置限制）</div>
             <div class="label">选择套餐<i class="req">*</i></div>
             <select id="pkgPlan">
               <option>S5 S5个性化护理</option>
@@ -301,41 +240,129 @@
             </div>
           </div>
 
-          <div class="panel-body" id="panelTransfer" hidden>
-            <div class="panel-head">转移流水到其他订单</div>
-            <div class="panel-hint">仅限同一客户名下订单（不限状态）· 不限制上户后收款 · 与「涉及退款」选择的流水互斥</div>
-            <div class="label">目标订单<i class="req">*</i></div>
-            <select id="targetOrder">
-              <option value="">请选择目标订单</option>
-              <option value="YGOD2604181033220180111">YGOD2604181033220180111 · S3标准护理 · 服务中</option>
-              <option value="YGOD2602200915450170056">YGOD2602200915450170056 · S5个性化护理 · 已完成</option>
-              <option value="YGOD2512151402080160033">YGOD2512151402080160033 · 产康套餐 · 待开始</option>
-            </select>
-            <div class="dim small">仅显示同一客户（阮婷娼）名下的其他订单，不限订单状态</div>
-            <div class="label" style="margin-top:12px">选择流水<i class="req">*</i></div>
+          <div class="panel-body" id="panelRefund" hidden>
+            <div class="panel-head">发起退款</div>
+            <div class="panel-hint">订单变更审批通过后每张支付单生成一张「审核通过」的退款审批单，待出纳打款；退款审批中的支付单不可重复发起</div>
             <div class="table-scroll">
-              <table class="grid" id="transferTable">
-                <thead><tr><th></th><th>流水号 / 支付单号</th><th>收款时间</th><th>方式</th><th>金额</th></tr></thead>
+              <table class="grid" id="refundTable">
+                <thead>
+                  <tr><th></th><th>支付单号</th><th>收款时间</th><th>方式</th><th>收款金额</th><th>已退</th><th>可退金额</th><th>本次退款金额</th></tr>
+                </thead>
                 <tbody>
-                  <tr data-id="PAY20260520001">
-                    <td><input type="checkbox" class="tf-check"></td>
-                    <td>PAY20260520001 <span class="badge badge-gray tf-badge" style="display:none"></span></td>
-                    <td>2026-05-20 10:23</td><td>微信</td><td class="money">¥5,000.00</td>
+                  <tr data-id="PAY20260520001" data-refundable="5000">
+                    <td><input type="checkbox" class="rf-check"></td>
+                    <td>PAY20260520001</td>
+                    <td>2026-05-20 10:23</td><td>动态支付码</td>
+                    <td class="money">¥5,000.00</td><td class="money">¥0.00</td><td class="money">¥5,000.00</td>
+                    <td><input type="number" class="rf-amt" value="5000" step="0.01" disabled><div class="field-err"></div></td>
                   </tr>
-                  <tr data-id="PAY20260605002">
-                    <td><input type="checkbox" class="tf-check"></td>
-                    <td>PAY20260605002 <span class="badge badge-gray tf-badge" style="display:none"></span></td>
-                    <td>2026-06-05 15:40</td><td>支付宝</td><td class="money">¥4,180.00</td>
+                  <tr data-id="PAY20260605002" data-refundable="3000">
+                    <td><input type="checkbox" class="rf-check"></td>
+                    <td>PAY20260605002</td>
+                    <td>2026-06-05 15:40</td><td>动态支付码</td>
+                    <td class="money">¥4,180.00</td><td class="money">¥1,180.00</td><td class="money">¥3,000.00</td>
+                    <td><input type="number" class="rf-amt" value="3000" step="0.01" disabled><div class="field-err"></div></td>
                   </tr>
-                  <tr data-id="PAY20260710003">
-                    <td><input type="checkbox" class="tf-check"></td>
-                    <td>PAY20260710003 <span class="badge badge-gray tf-badge" style="display:none"></span></td>
-                    <td>2026-07-10 09:15</td><td>银行转账</td><td class="money">¥8,000.00</td>
+                  <tr data-id="PAY20260710003" data-refundable="8000">
+                    <td><input type="checkbox" class="rf-check"></td>
+                    <td>PAY20260710003</td>
+                    <td>2026-07-10 09:15</td><td>银行转账</td>
+                    <td class="money">¥8,000.00</td><td class="money">¥0.00</td><td class="money">¥8,000.00</td>
+                    <td><input type="number" class="rf-amt" value="8000" step="0.01" disabled><div class="field-err"></div></td>
+                  </tr>
+                  <tr data-id="PAY20260720004" data-refundable="0" class="row-disabled">
+                    <td><input type="checkbox" class="rf-check" disabled></td>
+                    <td>PAY20260720004 <span class="badge badge-gray">退款审批中 · 不可重复发起</span></td>
+                    <td>2026-07-20 14:05</td><td>动态支付码</td>
+                    <td class="money">¥2,000.00</td><td class="money">¥0.00</td><td class="money">—</td>
+                    <td><input type="number" class="rf-amt" value="0" disabled></td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <div class="dim small">不限制上户后收款，全部流水可选；已在「涉及退款」中选中的流水不可重复选择</div>
+            <div class="label" style="margin-top:12px">退款原因描述<i class="req">*</i></div>
+            <textarea id="refundReason" placeholder="包括费用计算细节（将同步至退款审批单，供管理员/出纳/财务查看）" style="min-height:64px"></textarea>
+            <div class="row-foot">退款合计：<b class="money" id="refundTotal">¥0.00</b></div>
+          </div>
+
+          <div class="panel-body" id="panelComplaint" hidden>
+            <div class="panel-head">客户声音</div>
+            <div class="panel-hint">录入客户声音的快捷入口，与本次订单变更无直接关系；提交即生成，不等待变更审批</div>
+
+            <!-- 问题信息 -->
+            <div class="cv-block">
+              <div class="cv-title">问题信息</div>
+              <div class="cv-grid2">
+                <div>
+                  <div class="label">发生时间<i class="req">*</i></div>
+                  <input type="datetime-local" id="cvOccurTime">
+                </div>
+                <div>
+                  <div class="label">对应月嫂<i class="req">*</i></div>
+                  <select id="cvAyi">
+                    <option value="">请选择对应月嫂</option>
+                    <option value="王秀英">王秀英</option>
+                    <option value="李桂芳">李桂芳</option>
+                    <option value="张丽华">张丽华</option>
+                  </select>
+                </div>
+              </div>
+              <div class="label" style="margin-top:10px">问题来源<i class="req">*</i></div>
+              <select id="cvSource">
+                <option value="">请选择问题来源</option>
+                <option>回访反馈</option>
+                <option>顾问反馈</option>
+                <option>客户反馈</option>
+                <option>400反馈</option>
+                <option>平台反馈</option>
+                <option>媒介反馈</option>
+                <option>内部反馈</option>
+              </select>
+              <div class="label" style="margin-top:10px">问题详情<i class="req">*</i></div>
+              <textarea id="cvDetail" maxlength="1500" placeholder="请详细描述问题" style="min-height:88px"></textarea>
+              <div class="cv-tools">
+                <button type="button" class="ai-btn" id="btnAiExtract">AI提炼重点</button>
+                <button type="button" class="ai-btn" id="btnAiClassify">AI自动归类</button>
+                <span class="dim" id="cvCounter">0/1500 字</span>
+              </div>
+              <div class="label" style="margin-top:10px">问题重点现象</div>
+              <input type="text" id="cvPhenomenon" placeholder="请输入问题重点现象">
+            </div>
+
+            <!-- 归类 -->
+            <div class="cv-block">
+              <div class="cv-title-row">
+                <div class="cv-title">归类</div>
+                <span class="dim" style="font-size:12px" id="cvClassStatus">未填写</span>
+                <span class="cv-collapse" id="cvCollapse">收起</span>
+              </div>
+              <div id="cvClassBody">
+                <div class="cv-cat">
+                  <div class="cv-cat-head">一类 <span class="cv-clear" data-cat="1">清除</span></div>
+                  <div class="cv-grid3">
+                    <div><div class="label">一类标签1<i class="req">*</i></div><select id="cvL1t1"></select></div>
+                    <div><div class="label">一类标签2<i class="req">*</i></div><select id="cvL1t2"></select></div>
+                    <div><div class="label">一类责任部门<i class="req">*</i></div><select id="cvL1d"></select></div>
+                  </div>
+                </div>
+                <div class="cv-cat">
+                  <div class="cv-cat-head">二类 <span class="cv-clear" data-cat="2">清除</span></div>
+                  <div class="cv-grid3">
+                    <div><div class="label">二类标签1</div><select id="cvL2t1"></select></div>
+                    <div><div class="label">二类标签2</div><select id="cvL2t2"></select></div>
+                    <div><div class="label">二类责任部门</div><select id="cvL2d"></select></div>
+                  </div>
+                </div>
+                <div class="cv-cat">
+                  <div class="cv-cat-head">三类 <span class="cv-clear" data-cat="3">清除</span></div>
+                  <div class="cv-grid3">
+                    <div><div class="label">三类标签1</div><select id="cvL3t1"></select></div>
+                    <div><div class="label">三类标签2</div><select id="cvL3t2"></select></div>
+                    <div><div class="label">三类责任部门</div><select id="cvL3d"></select></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -368,17 +395,6 @@
   </div>
 </div>
 
-<!-- 演示控制面板 -->
-<div class="demo-panel">
-  <div class="demo-title">原型演示控制</div>
-  <div class="demo-row">月嫂工资状态：
-    <label><input type="radio" name="salary" value="done" checked> 已生成</label>
-    <label><input type="radio" name="salary" value="undone"> 未生成</label>
-  </div>
-  <div class="demo-note">PAY20260710003 为「上户后收款」→ 退款列表置灰；转移列表不限。<br>演示数据，金额不必与订单卡片勾稽。</div>
-  <button id="btnReset">重置表单</button>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <!-- 提交成功弹层 -->
@@ -394,9 +410,10 @@
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const fmt = n => '¥' + Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- 变更事项：左侧导航 + 右侧表单面板 ---------- */
-const ITEM_NAMES = {Refund:'涉及退款', Complaint:'产生客诉', Package:'变更订单套餐', Transfer:'转移流水到其他订单'};
+const ITEM_NAMES = {Package:'变更订单套餐', Refund:'涉及退款', Complaint:'客户声音'};
 const ITEMS = Object.keys(ITEM_NAMES);
 let activePanelName = null;
 
@@ -409,10 +426,8 @@ function clearRefund(){
     a.disabled = true; a.classList.remove('invalid');
     const e = a.closest('td').querySelector('.field-err'); if(e) e.textContent='';
   });
+  $('#refundReason').value = '';
   updateRefundTotal();
-}
-function clearTransfer(){
-  $$('#transferTable .tf-check').forEach(c => { if(!c.disabled) c.checked = false; });
 }
 
 function activate(name){
@@ -426,7 +441,7 @@ function updateEmptyState(){
   if(!anyEnabled){
     ITEMS.forEach(n => panelOf(n).hidden = true);
     empty.hidden = false;
-    empty.innerHTML = '请在左侧启用至少一项变更事项<br><span style="font-size:12px">退款 / 客诉 / 套餐 / 转移流水，可多项同时启用</span>';
+    empty.innerHTML = '请在左侧启用至少一项变更事项<br><span style="font-size:12px">退款 / 客户声音 / 套餐，可多项同时启用</span>';
     return;
   }
   if(!activePanelName || !ckOf(activePanelName).checked){
@@ -441,18 +456,15 @@ function updateEmptyState(){
 }
 function onItemToggled(name){
   const ck = ckOf(name);
-  if(!ck.checked){
-    if(name === 'Refund') clearRefund();
-    if(name === 'Transfer') clearTransfer();
-  }
-  syncMutex(); refreshStatuses(); updateEmptyState();
+  if(!ck.checked && name === 'Refund') clearRefund();
+  refreshStatuses(); updateEmptyState();
 }
 $$('.nav-item').forEach(nav => {
   const name = nav.dataset.name;
   const ck = ckOf(name);
   nav.addEventListener('click', e => {
     if(e.target.closest('.switch')) return;   // 开关本身交给 change 事件
-    if(ck.disabled){ toast(`「${ITEM_NAMES[name]}」不可用：需先完成月嫂工资生成`); return; }
+    if(ck.disabled && !ck.checked){ toast(`「${ITEM_NAMES[name]}」当前不可用`); return; }
     if(!ck.checked){ ck.checked = true; onItemToggled(name); }
     activate(name);
   });
@@ -470,13 +482,9 @@ function refreshStatuses(){
     if(ck.checked){ rCount++; const v = parseFloat(tr.querySelector('.rf-amt').value); if(!isNaN(v)) rSum += v; }
   });
   $('#statusRefund').textContent = rCount ? `已选 ${rCount} 单 · 合计 ${fmt(rSum)}` : '未选择支付单';
-  const ayi = document.querySelector('input[name="ayi"]:checked');
-  const type = $('#complaintType').value;
-  $('#statusComplaint').textContent = (ayi || type) ? [ayi && ayi.value, type].filter(Boolean).join(' · ') : '未填写';
+  const src = $('#cvSource').value, l1 = $('#cvL1t1').value;
+  $('#statusComplaint').textContent = (src || l1) ? [src, l1].filter(Boolean).join(' · ') : '未填写';
   $('#statusPackage').textContent = `${$('#pkgPlan').value} · ${$('#pkgDays').value || 0}天 · ${$('#sumTotal').textContent}`;
-  const tCount = $$('#transferTable .tf-check:checked').length;
-  const target = $('#targetOrder').value;
-  $('#statusTransfer').textContent = (tCount || target) ? `${tCount} 笔流水${target ? ' → 尾号' + target.slice(-4) : ''}` : '未选择流水';
   ITEMS.forEach(n => document.querySelector(`.nav-item[data-name="${n}"]`).classList.toggle('enabled', ckOf(n).checked));
 }
 
@@ -490,7 +498,7 @@ $('#refundTable tbody').addEventListener('change', e => {
     amt.classList.remove('invalid');
     tr.querySelector('.field-err').textContent = '';
   }
-  updateRefundTotal(); syncMutex();
+  updateRefundTotal(); refreshStatuses();
 });
 $('#refundTable tbody').addEventListener('input', e => {
   if(!e.target.classList.contains('rf-amt')) return;
@@ -516,56 +524,20 @@ function updateRefundTotal(){
   $('#refundTotal').textContent = fmt(sum);
 }
 
-/* ---------- 退款 / 转移 互斥 ---------- */
-$('#transferTable tbody').addEventListener('change', e => {
-  if(e.target.classList.contains('tf-check')) syncMutex();
-});
-function syncMutex(){
-  const rOn = $('#ckRefund').checked, tOn = $('#ckTransfer').checked;
-  const refundIds = new Set($$('#refundTable .rf-check:checked').map(c => c.closest('tr').dataset.id));
-  const transferIds = new Set($$('#transferTable .tf-check:checked').map(c => c.closest('tr').dataset.id));
-
-  // 转移行：已被退款选中的 → 置灰
-  $$('#transferTable tbody tr').forEach(tr => {
-    const blocked = rOn && refundIds.has(tr.dataset.id);
-    const ck = tr.querySelector('.tf-check');
-    ck.disabled = blocked;
-    tr.classList.toggle('row-blocked', blocked);
-    setBadge(tr.querySelector('.tf-badge'), blocked ? '已在退款中选择' : '');
-  });
-  // 退款行：已被转移选中的 → 置灰（上户后行保持原禁用）
-  $$('#refundTable tbody tr').forEach(tr => {
-    const baseDisabled = tr.classList.contains('row-disabled');
-    const blocked = tOn && transferIds.has(tr.dataset.id);
-    const ck = tr.querySelector('.rf-check');
-    ck.disabled = baseDisabled || blocked;
-    if(!baseDisabled){
-      tr.classList.toggle('row-blocked', blocked);
-      setBadge(tr.querySelector('.rf-badge'), blocked ? '已在转移中选择' : '');
-    }
-  });
-  refreshStatuses();
-}
-function setBadge(el, text){
-  if(!el) return;
-  el.textContent = text;
-  el.style.display = text ? '' : 'none';
-}
-
-/* ---------- 变更原因联动：按映射自动勾选变更事项 ---------- */
+/* ---------- 变更原因联动：按映射自动启用变更事项 ---------- */
 const REASON_ITEM_MAP = {
   '套餐升级': 'ckPackage',
   '套餐降级': 'ckPackage',
+  '只照顾宝妈': 'ckPackage',
   '续单 · 增加服务天数': 'ckPackage',
   '节假日费用调整': 'ckPackage',
   '赠送 · 补偿': 'ckPackage',
-  '录入 · 签约信息错误': 'ckPackage',
-  '流水转移': 'ckTransfer'
+  '录入 · 签约信息错误': 'ckPackage'
 };
 function autoCheckItem(ckId, label){
   const ck = $('#'+ckId);
   const name = ckId.slice(2);   // ckRefund → Refund
-  if(ck.disabled){ toast(`「${label}」当前不可用（月嫂工资未生成），请手动处理`); return; }
+  if(ck.disabled){ toast(`「${label}」当前不可用`); return; }
   if(!ck.checked){
     ck.checked = true;
     onItemToggled(name);
@@ -588,35 +560,12 @@ $('#reasonList').addEventListener('change', e => {
     activate('Refund');
     toast('提前结束服务必涉及退款，已自动启用并锁定「涉及退款」');
   } else {
-    // 其他原因：解除退款锁定（保留勾选状态），并按映射自动勾选对应事项
+    // 其他原因：解除退款锁定（保留勾选状态），并按映射自动启用对应事项
     ck.disabled = false;
     lockBadge.hidden = true;
-    const mapped = REASON_ITEM_MAP[v];
-    if(mapped) autoCheckItem(mapped, mapped === 'ckPackage' ? '变更订单套餐' : '转移流水到其他订单');
-  }
-  // 录入错误 → 责任归因默认「公司原因」
-  if(v === '录入 · 签约信息错误'){
-    const r = document.querySelector('input[name="attr"][value="公司原因"]');
-    if(r && !r.checked){ r.checked = true; r.dispatchEvent(new Event('change')); }
+    if(REASON_ITEM_MAP[v]) autoCheckItem(REASON_ITEM_MAP[v], '变更订单套餐');
   }
 });
-
-/* ---------- 责任归因联动：月嫂服务问题 → 默认勾客诉 ---------- */
-$('#attributionList').addEventListener('change', e => {
-  if(e.target.name !== 'attr') return;
-  if(e.target.value === '月嫂服务问题') autoCheckItem('ckComplaint', '产生客诉');
-});
-
-/* ---------- 演示：月嫂工资状态 → 套餐开关禁用 ---------- */
-$$('input[name="salary"]').forEach(r => r.addEventListener('change', () => {
-  const done = document.querySelector('input[name="salary"]:checked').value === 'done';
-  const ck = $('#ckPackage');
-  document.querySelector('.nav-item[data-name="Package"]').classList.toggle('disabled', !done);
-  $('#salaryBadge').hidden = done;
-  ck.disabled = !done;
-  if(!done && ck.checked){ ck.checked = false; onItemToggled('Package'); }
-  toast(done ? '月嫂工资已生成：套餐变更可用' : '月嫂工资未生成：套餐变更已禁用');
-}));
 
 /* ---------- 套餐金额汇总 ---------- */
 function updatePkg(){
@@ -675,6 +624,55 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+/* ---------- 客户声音 ---------- */
+const CV_TAG1 = ['服务质量','服务态度','专业能力','卫生安全','费用争议','合同履约','其他'];
+const CV_TAG2 = ['月嫂护理','月子餐','沟通响应','销售承诺','匹配调度','卫生清洁','其他'];
+const CV_DEPT = ['护理部','销售部','客服部','匹配部','财务部','其他'];
+function fillSelect(id, options){
+  document.getElementById(id).innerHTML = '<option value="">请选择</option>' + options.map(o => `<option>${o}</option>`).join('');
+}
+['cvL1t1','cvL2t1','cvL3t1'].forEach(id => fillSelect(id, CV_TAG1));
+['cvL1t2','cvL2t2','cvL3t2'].forEach(id => fillSelect(id, CV_TAG2));
+['cvL1d','cvL2d','cvL3d'].forEach(id => fillSelect(id, CV_DEPT));
+
+// 字数统计
+$('#cvDetail').addEventListener('input', () => {
+  $('#cvCounter').textContent = `${$('#cvDetail').value.length}/1500 字`;
+});
+// AI 提炼重点（模拟：取首句填入重点现象）
+$('#btnAiExtract').addEventListener('click', () => {
+  const t = $('#cvDetail').value.trim();
+  if(!t){ toast('请先填写问题详情'); return; }
+  $('#cvPhenomenon').value = t.split(/[。！？!?\n]/)[0].slice(0, 50);
+  toast('已提炼问题重点现象（模拟）');
+});
+// AI 自动归类（模拟）
+$('#btnAiClassify').addEventListener('click', () => {
+  const t = $('#cvDetail').value.trim();
+  if(!t){ toast('请先填写问题详情'); return; }
+  $('#cvL1t1').value = '服务质量';
+  $('#cvL1t2').value = '月嫂护理';
+  $('#cvL1d').value  = '护理部';
+  updateClassStatus(); refreshStatuses();
+  toast('已自动归类（模拟）');
+});
+// 归类 收起/展开
+$('#cvCollapse').addEventListener('click', () => {
+  const body = $('#cvClassBody');
+  body.hidden = !body.hidden;
+  $('#cvCollapse').textContent = body.hidden ? '展开' : '收起';
+});
+// 归类 清除 / 填写状态
+$$('.cv-clear').forEach(el => el.addEventListener('click', () => {
+  ['t1','t2','d'].forEach(k => { document.getElementById(`cvL${el.dataset.cat}${k}`).value = ''; });
+  updateClassStatus(); refreshStatuses();
+}));
+function updateClassStatus(){
+  const filled = $('#cvL1t1').value || $('#cvL1t2').value || $('#cvL1d').value;
+  $('#cvClassStatus').textContent = filled ? '已填写' : '未填写';
+}
+$$('#cvClassBody select').forEach(s => s.addEventListener('change', () => { updateClassStatus(); refreshStatuses(); }));
+
 /* ---------- 提交校验 ---------- */
 function showErrs(errs){
   const b = $('#errBox');
@@ -686,12 +684,10 @@ $('#btnSubmit').addEventListener('click', () => {
   const errs = [];
   const reason = document.querySelector('input[name="reason"]:checked');
   if(!reason) errs.push('请选择变更原因');
-  const attr = document.querySelector('input[name="attr"]:checked');
-  if(!attr) errs.push('请选择责任归因');
 
   const rOn = $('#ckRefund').checked, cOn = $('#ckComplaint').checked,
-        pOn = $('#ckPackage').checked, tOn = $('#ckTransfer').checked;
-  if(!rOn && !cOn && !pOn && !tOn) errs.push('请至少启用一项变更事项');
+        pOn = $('#ckPackage').checked;
+  if(!rOn && !cOn && !pOn) errs.push('请至少启用一项变更事项');
   const errItems = new Set();
 
   // 退款
@@ -708,40 +704,27 @@ $('#btnSubmit').addEventListener('click', () => {
     });
     if(checkedCount === 0) errs.push('涉及退款：请至少选择一张支付单');
     if(invalidCount > 0)  errs.push('涉及退款：存在不合法的退款金额（需大于 0 且不超过可退金额）');
-    if(checkedCount === 0 || invalidCount > 0) errItems.add('Refund');
+    if(!$('#refundReason').value.trim()) errs.push('涉及退款：请填写退款原因描述');
+    if(checkedCount === 0 || invalidCount > 0 || !$('#refundReason').value.trim()) errItems.add('Refund');
   }
 
-  // 客诉
-  let ayi = null;
+  // 客户声音
   if(cOn){
-    ayi = document.querySelector('input[name="ayi"]:checked');
-    if(!ayi) errs.push('产生客诉：请选择月嫂');
-    if(!$('#complaintType').value) errs.push('产生客诉：请选择客诉类型');
-    if(!$('#complaintContent').value.trim()) errs.push('产生客诉：请填写客诉内容');
-    if(!ayi || !$('#complaintType').value || !$('#complaintContent').value.trim()) errItems.add('Complaint');
+    if(!$('#cvSource').value) errs.push('客户声音：请选择问题来源');
+    if(!$('#cvOccurTime').value) errs.push('客户声音：请选择发生时间');
+    if(!$('#cvAyi').value) errs.push('客户声音：请选择对应月嫂');
+    if(!$('#cvDetail').value.trim()) errs.push('客户声音：请填写问题详情');
+    if(!$('#cvL1t1').value || !$('#cvL1t2').value || !$('#cvL1d').value) errs.push('客户声音：请完善一类归类（标签1/标签2/责任部门）');
+    if(!$('#cvSource').value || !$('#cvOccurTime').value || !$('#cvAyi').value || !$('#cvDetail').value.trim() ||
+       !$('#cvL1t1').value || !$('#cvL1t2').value || !$('#cvL1d').value) errItems.add('Complaint');
   }
 
   // 套餐
   if(pOn){
-    if($('#ckPackage').disabled){ errs.push('变更套餐：月嫂工资未生成完成，不可变更'); }
-    else {
-      if(!$('#pkgDays').value)   errs.push('变更套餐：请填写服务天数');
-      if(!$('#pkgAddr').value.trim()) errs.push('变更套餐：请填写服务地址');
-      if(!$('#pkgAmount').value) errs.push('变更套餐：请填写合同服务金额');
-    }
-    if($('#ckPackage').disabled || !$('#pkgDays').value || !$('#pkgAddr').value.trim() || !$('#pkgAmount').value) errItems.add('Package');
-  }
-
-  // 转移
-  let transferRows = [];
-  if(tOn){
-    if(!$('#targetOrder').value) errs.push('转移流水：请选择目标订单');
-    transferRows = $$('#transferTable .tf-check:checked').map(c => c.closest('tr').dataset.id);
-    if(transferRows.length === 0) errs.push('转移流水：请至少选择一笔流水');
-    // 兜底：与退款交集校验（交互层已置灰互斥）
-    const overlap = transferRows.filter(id => refundRows.some(r => r.id === id));
-    if(overlap.length) errs.push('同一笔流水不能同时被「退款」和「转移」选中：' + overlap.join('、'));
-    if(!$('#targetOrder').value || transferRows.length === 0 || overlap.length) errItems.add('Transfer');
+    if(!$('#pkgDays').value)   errs.push('变更套餐：请填写服务天数');
+    if(!$('#pkgAddr').value.trim()) errs.push('变更套餐：请填写服务地址');
+    if(!$('#pkgAmount').value) errs.push('变更套餐：请填写合同服务金额');
+    if(!$('#pkgDays').value || !$('#pkgAddr').value.trim() || !$('#pkgAmount').value) errItems.add('Package');
   }
 
   if(!$('#startDate').value) errs.push('请选择变更开始时间');
@@ -762,16 +745,14 @@ $('#btnSubmit').addEventListener('click', () => {
   const parts = [];
   if(cOn) parts.push(
     `<div class="res-row ok">✅ 客户声音 ×1 —— <b>已生成</b>（提交即生成）
-       <div class="res-sub">月嫂：${ayi.value} · 类型：${$('#complaintType').value}</div></div>`);
+       <div class="res-sub">来源：${$('#cvSource').value} · 月嫂：${$('#cvAyi').value} · 一类归类：${$('#cvL1t1').value}/${$('#cvL1t2').value}/${$('#cvL1d').value}</div></div>`);
   if(rOn) parts.push(
     `<div class="res-row wait">🕐 退款审批单 ×${refundRows.length} —— 审批通过后生成（状态：审核通过 → 待出纳打款，每张支付单一单）
-       ${refundRows.map(r => `<div class="res-sub">REF-${r.id} · ${fmt(r.amt)}</div>`).join('')}</div>`);
+       ${refundRows.map(r => `<div class="res-sub">REF-${r.id} · ${fmt(r.amt)}</div>`).join('')}
+       <div class="res-sub">退款原因：${esc($('#refundReason').value.trim())}</div></div>`);
   if(pOn) parts.push(
     `<div class="res-row wait">🕐 套餐变更 —— 审批通过后生效
        <div class="res-sub">${$('#pkgPlan').value} · ${$('#pkgDays').value}天 · 总服务金额 ${$('#sumTotal').textContent}</div></div>`);
-  if(tOn) parts.push(
-    `<div class="res-row wait">🕐 流水转移 ×${transferRows.length} —— 审批通过后转移至 ${$('#targetOrder').value}
-       ${transferRows.map(id => `<div class="res-sub">${id}</div>`).join('')}</div>`);
 
   $('#resultBody').innerHTML = '<div class="res-legend">✅ 提交即执行　🕐 审批通过后执行</div>' + parts.join('');
   $('#overlay').hidden = false;
@@ -779,10 +760,9 @@ $('#btnSubmit').addEventListener('click', () => {
 $('#btnCloseOverlay').addEventListener('click', () => $('#overlay').hidden = true);
 
 /* ---------- 其他 ---------- */
-$('#btnReset').addEventListener('click', () => location.reload());
 $('#btnClose').addEventListener('click', () => toast('原型演示：关闭动作省略'));
 // 面板内容变化 → 刷新状态摘要 & 清除当前面板红点
-['panelComplaint','panelPackage','panelTransfer'].forEach(id => {
+['panelComplaint','panelPackage'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', refreshStatuses);
   el.addEventListener('change', refreshStatuses);
@@ -792,7 +772,6 @@ document.querySelector('.items-panels').addEventListener('input', () => {
 });
 refreshStatuses();
 updateEmptyState();
-syncMutex();
 </script>
 </body>
 </html>
