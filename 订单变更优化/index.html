@@ -22,6 +22,18 @@
 <body>
   <div id="app"></div>
   <script>
+    // 清除 Docsify 在 localStorage/sessionStorage 里的缓存，避免更新后仍显示旧 markdown
+    (function () {
+      ['localStorage', 'sessionStorage'].forEach(function (store) {
+        var s = window[store];
+        if (!s) return;
+        for (var i = s.length - 1; i >= 0; i--) {
+          var key = s.key(i);
+          if (key && key.indexOf('docsify') !== -1) s.removeItem(key);
+        }
+      });
+    })();
+
     window.$docsify = {
       name: '订单变更优化 · 文档中心',
       loadSidebar: true,
