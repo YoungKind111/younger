@@ -160,6 +160,8 @@
         <div class="orig-row"><span>已收到金额</span><b class="money">¥9,180.00</b></div>
         <div class="orig-row"><span>待支付金额</span><b class="money">¥26,130.00</b></div>
         <div class="orig-row"><span>服务天数</span><b>60天</b></div>
+        <div class="orig-row"><span>补偿天数</span><b>0天</b></div>
+        <div class="orig-row"><span>补偿金额</span><b class="money">¥0.00</b></div>
       </div>
 
       <!-- 右栏：变更原因（双列） -->
@@ -218,7 +220,7 @@
 
           <div class="panel-body" id="panelPackage" hidden>
             <div class="panel-head">变更订单套餐</div>
-            <div class="panel-hint">修改套餐、服务天数、服务地址、合同金额与节假日费用，总服务金额自动联动（无前置限制）</div>
+            <div class="panel-hint">修改套餐、服务天数、服务地址、合同金额与节假日费用，总服务金额自动联动（无前置限制）；补偿天数 / 补偿金额仅能通过订单变更赋值</div>
             <div class="label">选择套餐<i class="req">*</i></div>
             <select id="pkgPlan">
               <option>S5 S5个性化护理</option>
@@ -234,6 +236,10 @@
             <input type="number" id="pkgAmount" value="35310" step="0.01">
             <div class="label" style="margin-top:10px">节假日费用<i class="req">*</i></div>
             <input type="number" id="pkgHoliday" value="300" step="0.01">
+            <div class="label" style="margin-top:10px">补偿天数<span class="label-hint">仅通过订单变更赋值，无补偿填 0</span></div>
+            <input type="number" id="pkgCompDays" value="0" min="0">
+            <div class="label" style="margin-top:10px">补偿金额<span class="label-hint">仅通过订单变更赋值，无补偿填 0</span></div>
+            <input type="number" id="pkgCompAmount" value="0" min="0" step="0.01">
             <div class="sum-box">
               <div class="sum-row"><span>节假日费用</span><b class="money" id="sumHoliday">¥300.00</b></div>
               <div class="sum-row"><span>总服务金额</span><b class="money big" id="sumTotal">¥35,610.00</b></div>
@@ -494,7 +500,9 @@ function refreshStatuses(){
   $('#statusRefund').textContent = rCount ? `已选 ${rCount} 单 · 合计 ${fmt(rSum)}` : '未选择支付单';
   const src = $('#cvSource').value, l1 = $('#cvL1t1').value;
   $('#statusComplaint').textContent = (src || l1) ? [src, l1].filter(Boolean).join(' · ') : '未填写';
-  $('#statusPackage').textContent = `${$('#pkgPlan').value} · ${$('#pkgDays').value || 0}天 · ${$('#sumTotal').textContent}`;
+  const compD = parseInt($('#pkgCompDays').value) || 0, compA = parseFloat($('#pkgCompAmount').value) || 0;
+  const compTxt = (compD || compA) ? ` · 补偿${compD ? compD + '天' : ''}${compD && compA ? '+' : ''}${compA ? fmt(compA) : ''}` : '';
+  $('#statusPackage').textContent = `${$('#pkgPlan').value} · ${$('#pkgDays').value || 0}天 · ${$('#sumTotal').textContent}${compTxt}`;
   ITEMS.forEach(n => document.querySelector(`.nav-item[data-name="${n}"]`).classList.toggle('enabled', ckOf(n).checked));
 }
 
@@ -543,6 +551,13 @@ function updatePkg(){
 }
 $('#pkgAmount').addEventListener('input', updatePkg);
 $('#pkgHoliday').addEventListener('input', updatePkg);
+
+/* ---------- 补偿字段：仅订单变更可赋值，不允许负数 ---------- */
+['pkgCompDays','pkgCompAmount'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    e.target.classList.toggle('invalid', e.target.value !== '' && parseFloat(e.target.value) < 0);
+  });
+});
 
 /* ---------- 附件上传（演示） ---------- */
 const up = $('#uploadBox'), fi = $('#fileInput');
@@ -692,7 +707,11 @@ $('#btnSubmit').addEventListener('click', () => {
     if(!$('#pkgDays').value)   errs.push('变更套餐：请填写服务天数');
     if(!$('#pkgAddr').value.trim()) errs.push('变更套餐：请填写服务地址');
     if(!$('#pkgAmount').value) errs.push('变更套餐：请填写合同服务金额');
-    if(!$('#pkgDays').value || !$('#pkgAddr').value.trim() || !$('#pkgAmount').value) errItems.add('Package');
+    const compDaysBad = $('#pkgCompDays').value !== '' && parseFloat($('#pkgCompDays').value) < 0;
+    const compAmtBad  = $('#pkgCompAmount').value !== '' && parseFloat($('#pkgCompAmount').value) < 0;
+    if(compDaysBad) errs.push('变更套餐：补偿天数不能为负数');
+    if(compAmtBad)  errs.push('变更套餐：补偿金额不能为负数');
+    if(!$('#pkgDays').value || !$('#pkgAddr').value.trim() || !$('#pkgAmount').value || compDaysBad || compAmtBad) errItems.add('Package');
   }
 
   if(!$('#startDate').value) errs.push('请选择变更开始时间');
@@ -718,9 +737,13 @@ $('#btnSubmit').addEventListener('click', () => {
     `<div class="res-row wait">🕐 退款审批单 ×${refundRows.length} —— 审批通过后生成（状态：审核通过 → 待出纳打款，每张支付单一单）
        ${refundRows.map(r => `<div class="res-sub">REF-${r.id} · ${fmt(r.amt)}</div>`).join('')}
        <div class="res-sub">退款原因：${esc($('#refundReasonSelect').value)} · 退款备注：${esc($('#refundReason').value.trim())}</div></div>`);
-  if(pOn) parts.push(
-    `<div class="res-row wait">🕐 套餐变更 —— 审批通过后生效
-       <div class="res-sub">${$('#pkgPlan').value} · ${$('#pkgDays').value}天 · 总服务金额 ${$('#sumTotal').textContent}</div></div>`);
+  if(pOn){
+    const cd = parseInt($('#pkgCompDays').value) || 0, ca = parseFloat($('#pkgCompAmount').value) || 0;
+    parts.push(
+      `<div class="res-row wait">🕐 套餐变更 —— 审批通过后生效
+         <div class="res-sub">${$('#pkgPlan').value} · ${$('#pkgDays').value}天 · 总服务金额 ${$('#sumTotal').textContent}</div>
+         ${(cd || ca) ? `<div class="res-sub">补偿：${cd}天 · ${fmt(ca)}（仅订单变更可赋值）</div>` : ''}</div>`);
+  }
 
   $('#resultBody').innerHTML = '<div class="res-legend">✅ 提交即执行　🕐 审批通过后执行</div>' + parts.join('');
   $('#overlay').hidden = false;

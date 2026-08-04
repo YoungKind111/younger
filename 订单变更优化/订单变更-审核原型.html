@@ -324,6 +324,42 @@ const DATA = [
     auditLog:[
       {time:'07-29 10:49', person:'黄景蝶（橙子）', action:'提交', status:'提交审核', next:'已通过'}
     ]
+  },
+  {
+    id:'R05',
+    submitTime:'2026-07-30 10:15',
+    customer:{name:'陈静怡',phone:'13902288901'},
+    beforeDays:26, afterDays:26,
+    beforePlanAmount:15300, afterPlanAmount:15300,
+    beforeHoliday:0, afterHoliday:0,
+    changeAmount:0,
+    changeType:'服务中变更',
+    reason:'赠送 · 补偿',
+    remark:'月嫂突发感冒临时换人，补偿客户2天服务并减免500元',
+    refundAmount:0,
+    status:'审核中',
+    submitter:'李美红（桃子）',
+    orderInfo:{
+      orderNo:'YGOD26070510223344550012',
+      workNo:'YGCR2607301031592020112',
+      contractNo:'YGOC2607050400418200112',
+      phone:'13902288901'
+    },
+    changeDetails:{
+      serviceLevelBefore:'S5 S5个性化护理',
+      serviceLevelAfter:'S5 S5个性化护理',
+      daysBefore:26, daysAfter:26,
+      planAmountBefore:15300, planAmountAfter:15300,
+      holidayBefore:0, holidayAfter:0,
+      addressBefore:'广州市海珠区琶洲',
+      addressAfter:'广州市海珠区琶洲',
+      compDaysBefore:0, compDaysAfter:2,
+      compAmountBefore:0, compAmountAfter:500
+    },
+    refunds:[],
+    auditLog:[
+      {time:'07-30 10:15', person:'李美红（桃子）', action:'提交', status:'提交审核', next:'待运营负责人审核'}
+    ]
   }
 ];
 
@@ -433,6 +469,14 @@ function renderDetail(d){
             <div class="change-item">
               <span class="change-label">节假日费</span>
               ${renderChangeVal(c.holidayBefore, c.holidayAfter, 'money')}
+            </div>
+            <div class="change-item">
+              <span class="change-label">补偿天数</span>
+              ${renderChangeVal((c.compDaysBefore ?? 0)+'天', (c.compDaysAfter ?? 0)+'天')}
+            </div>
+            <div class="change-item">
+              <span class="change-label">补偿金额</span>
+              ${renderChangeVal(c.compAmountBefore ?? 0, c.compAmountAfter ?? 0, 'money')}
             </div>
             <div class="change-item">
               <span class="change-label">服务地址</span>
