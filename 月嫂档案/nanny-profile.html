@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月嫂档案 · 李秀珍（YG-1023）</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    /* ============ 页面级样式：月嫂档案单页 ============ */
+    .src-note { font-size: 12px; color: #909399; font-weight: normal; }
+    .pane-note { font-size: 12px; color: #909399; margin-bottom: 14px; }
+    .sub-title { font-size: 14px; font-weight: 600; margin: 4px 0 12px; padding-left: 8px; border-left: 3px solid #409eff; }
+    .sub-gap { margin-top: 20px; }
+    .flaw-detail { padding: 10px 48px 10px 12px; background: #fafafa; }
+    .el-table .row-highlight td { background: #fdf6ec !important; }
+
+    /* ① 档案头概览卡 */
+    .ph-wrap { display: flex; gap: 24px; flex-wrap: wrap; }
+    .ph-left { width: 200px; flex-shrink: 0; text-align: center; border-right: 1px solid #f0f0f0; padding-right: 20px; }
+    .ph-avatar { width: 88px; height: 88px; border-radius: 50%; background: #ecf5ff; color: #409eff; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+    .ph-name { font-size: 20px; font-weight: 600; color: #1f2d3d; }
+    .ph-id { font-size: 12px; color: #909399; margin-top: 2px; }
+    .ph-sub { font-size: 12px; color: #606266; margin-top: 8px; line-height: 1.9; }
+    .ph-video { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .ph-mid { flex: 1; min-width: 400px; }
+    .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 20px; }
+    .st-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1f2d3d; }
+    .st-label { color: #909399; flex-shrink: 0; width: 72px; }
+    .st-col { display: flex; flex-direction: column; gap: 12px; }
+    .st-group { font-size: 12px; font-weight: 600; color: #909399; }
+    .warn-text { color: #e6a23c; font-weight: 600; }
+    .ph-photo { width: 96px; height: 72px; border-radius: 8px; border: 1px dashed #c0c4cc; background: #f8f9fb; color: #909399; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 12px; gap: 3px; }
+    .ph-chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+    .alert-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 14px; padding: 8px 14px; background: #fdf6ec; border: 1px solid #faecd8; border-radius: 6px; font-size: 13px; }
+    .as-item { display: inline-flex; align-items: center; gap: 5px; color: #b88230; }
+    .photo-wall { display: flex; flex-wrap: wrap; gap: 8px; }
+    .photo-item { position: relative; width: 88px; height: 66px; }
+    .photo-thumb { width: 88px; height: 66px; border-radius: 6px; border: 1px solid #ebeef5; cursor: pointer; }
+    .photo-cover { position: absolute; left: 0; top: 0; background: #409eff; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 6px 0 6px 0; }
+    .level-badge { display: inline-block; background: linear-gradient(135deg, #b88230, #d4a017); color: #fff; font-weight: 700; border-radius: 6px; padding: 2px 12px; font-size: 14px; }
+    .ph-right { width: 320px; flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
+    .metric { background: #f8f9fb; border-radius: 6px; padding: 12px 6px; text-align: center; }
+    .metric-v { font-size: 18px; font-weight: 600; color: #1f2d3d; }
+    .metric-l { font-size: 12px; color: #909399; margin-top: 4px; }
+
+    /* 汇总 chips */
+    .kv-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip { background: #f8f9fb; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px 14px; font-size: 13px; color: #606266; }
+    .chip b { color: #1f2d3d; font-size: 15px; margin-left: 6px; }
+    .chip-link { cursor: pointer; }
+    .chip-link:hover { border-color: #409eff; }
+
+    @media (max-width: 768px) {
+      .ph-left { width: 100%; border-right: none; border-bottom: 1px solid #f0f0f0; padding: 0 0 16px; }
+      .ph-mid { min-width: 0; }
+      .status-grid { grid-template-columns: 1fr; }
+      .ph-right { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- CDN（锁定版本，顺序固定） -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    // 步骤1：先初始化布局（同步调用，脚本在 body 末尾）
+    SharedMenu.initPageLayout('nanny-profile', {
+      title: '月嫂档案',
+      breadcrumb: '月嫂运营 / 月嫂档案 / 李秀珍（YG-1023） · 演示数据'
+    });
+
+    // 步骤2：通过 createVueApp 创建页面应用（自动注册 ElementPlus、中文包、图标）
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <!-- ① 档案头概览卡（跨 Sheet 汇总，常驻顶部，打开即见） -->
+          <div class="content-card mb-2">
+            <div class="card-header">
+              <span class="card-title">① 档案头概览</span>
+              <span class="src-note">跨 Sheet 汇总展示 · 字段清单区块① · 档案更新 2026-08-23</span>
+            </div>
+            <div class="card-body">
+              <div class="ph-wrap">
+                <div class="ph-left">
+                  <div class="ph-photo"><el-icon :size="24"><Picture /></el-icon><span>头图</span></div>
+                  <div class="ph-name">李秀珍</div>
+                  <div class="ph-id">YG-1023</div>
+                  <div class="ph-sub">42 岁 · 湖南邵阳<br>现居 广东深圳 · 龙岗</div>
+                  <div class="ph-video">
+                    <el-tag type="success" effect="dark" size="small" style="cursor:pointer" @click="noop('在线播放形象视频')"><el-icon style="margin-right:4px"><VideoPlay /></el-icon>形象视频 · 已上传 · 点击播放</el-tag>
+                  </div>
+                  <div class="ph-chips">
+                    <el-tag size="small" effect="plain">龙岗</el-tag>
+                    <el-tag size="small" effect="plain">宝安</el-tag>
+                    <el-tag size="small" effect="plain">南山</el-tag>
+                    <el-tag size="small" effect="plain" type="info">住家 24h</el-tag>
+                  </div>
+                </div>
+                <div class="ph-mid">
+                  <div class="status-grid">
+                    <div class="st-col">
+                      <div class="st-group">身份</div>
+                      <div class="st-item"><span class="st-label">类别</span><el-tag size="small" type="primary" effect="plain">签约月嫂</el-tag></div>
+                      <div class="st-item"><span class="st-label">当前定级</span><span class="level-badge">Y5</span></div>
+                      <div class="st-item"><span class="st-label">等级来源</span><span>逐级晋升（2025-03 由 Y4）</span></div>
+                      <div class="st-item"><span class="st-label">月嫂老师</span><span>周芸（2024-03 绑定）</span></div>
+                      <div class="st-item"><span class="st-label">培训老师</span><span>刘敏（2024-03 绑定）</span></div>
+                    </div>
+                    <div class="st-col">
+                      <div class="st-group">状态</div>
+                      <div class="st-item"><span class="st-label">工作状态</span><el-tag :type="personState.type">{{ personState.text }}</el-tag></div>
+                      <div class="st-item"><span class="st-label">当前意愿</span><el-tag :type="willingness.type">{{ willingness.text }}</el-tag><span class="warn-text" style="font-size:12px;margin-left:4px">至 2026-08-28（剩 4 天）</span></div>
+                      <div class="st-item"><span class="st-label">档期状态</span><el-tag type="primary">定档</el-tag></div>
+                      <div class="st-item"><span class="st-label">档期段日期</span><span>2026-09-05 ~ 2026-10-01（26 天）</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ph-right">
+                  <div class="metric"><div class="metric-v">18 单</div><div class="metric-l">累计接单</div></div>
+                  <div class="metric"><div class="metric-v">4.8</div><div class="metric-l">评分均值</div></div>
+                  <div class="metric"><div class="metric-v">1 起</div><div class="metric-l">客诉（已闭环）</div></div>
+                  <div class="metric"><div class="metric-v">0 单</div><div class="metric-l">退单</div></div>
+                  <div class="metric"><div class="metric-v" :style="{ color: credit < 80 ? '#f56c6c' : '#1f2d3d' }">86 分</div><div class="metric-l">意愿可信度</div></div>
+                  <div class="metric"><div class="metric-v">12/14</div><div class="metric-l">近30天推送响应</div></div>
+                </div>
+              </div>
+              <div class="alert-strip" v-if="alertStrip.length">
+                <span class="as-item" v-for="a in alertStrip" :key="a.text">
+                  <el-icon><WarningFilled /></el-icon>
+                  <el-link type="warning" :underline="false" @click="jumpStrip(a)">{{ a.text }}</el-link>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ②~⑩ 分区 Tab（编号与字段清单区块一一对应；?tab= 可指定默认激活） -->
+          <div class="content-card">
+            <div class="card-body" style="padding-top:10px">
+              <el-tabs v-model="activeTab">
+                <!-- ② 基础信息（Sheet 1） -->
+                <el-tab-pane label="② 基础信息" name="base">
+                  <div class="pane-note">来源：Sheet 1 基础信息 · 字段清单区块②</div>
+                  <div class="sub-title">身份基础</div>
+                  <el-descriptions :column="4" border size="small">
+                    <el-descriptions-item label="姓名">李秀珍</el-descriptions-item>
+                    <el-descriptions-item label="类别"><el-tag size="small" type="primary" effect="plain">签约月嫂</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="年龄">42 岁</el-descriptions-item>
+                    <el-descriptions-item label="籍贯">湖南邵阳</el-descriptions-item>
+                    <el-descriptions-item label="民族">汉族</el-descriptions-item>
+                    <el-descriptions-item label="出生日期">1984-11-06</el-descriptions-item>
+                    <el-descriptions-item label="属相">鼠</el-descriptions-item>
+                    <el-descriptions-item label="星座">天蝎座</el-descriptions-item>
+                    <el-descriptions-item label="生育状况">已育（2 子）</el-descriptions-item>
+                    <el-descriptions-item label="MBTI 测评">ISFJ</el-descriptions-item>
+                    <el-descriptions-item label="联系方式">138****6621</el-descriptions-item>
+                    <el-descriptions-item label="现居地">广东深圳 · 龙岗</el-descriptions-item>
+                    <el-descriptions-item label="学历">初中</el-descriptions-item>
+                    <el-descriptions-item label="婚姻状况">已婚</el-descriptions-item>
+                    <el-descriptions-item label="入职时间">2024-03-12</el-descriptions-item>
+                    <el-descriptions-item label="身份证">4403**********2118（照片已存）</el-descriptions-item>
+                    <el-descriptions-item label="紧急联系人">李建军（丈夫）· 138****3305</el-descriptions-item>
+                    <el-descriptions-item label="月嫂老师">周芸（2024-03-12 绑定）</el-descriptions-item>
+                    <el-descriptions-item label="培训老师">刘敏（2024-03-15 绑定）</el-descriptions-item>
+                    <el-descriptions-item label="离册时间 / 原因">—<el-button size="small" style="margin-left:10px" @click="noop('标记离册')">标记离册</el-button></el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">体检报告（五项 · 每项单独有效期）</div>
+                  <el-descriptions :column="5" border size="small">
+                    <el-descriptions-item label="乙肝">至 2026-10-15</el-descriptions-item>
+                    <el-descriptions-item label="艾滋">至 2026-10-15</el-descriptions-item>
+                    <el-descriptions-item label="梅毒">至 2026-11-30</el-descriptions-item>
+                    <el-descriptions-item label="白带">至 2026-09-05<el-tag type="warning" size="small" style="margin-left:6px">12 天后到期</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="胸透">至 2027-03-01</el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">资质证件（照片）</div>
+                  <el-descriptions :column="5" border size="small">
+                    <el-descriptions-item v-for="c in certs" :key="c.name" :label="c.name">
+                      <el-link v-if="c.photo" type="primary">查看照片</el-link>
+                      <span v-else style="color:#909399">未上传</span>
+                    </el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">形象视频</div>
+                  <el-descriptions :column="3" border size="small">
+                    <el-descriptions-item label="形象视频">已上传（2026-07-02）<el-link type="primary" style="margin-left:6px" @click="noop('在线播放形象视频')"><el-icon style="margin-right:2px"><VideoPlay /></el-icon>在线播放</el-link></el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">形象照片（12 张 · 点击放大预览 · 第 1 张为头图）</div>
+                  <div class="photo-wall">
+                    <div v-for="(p, i) in photos" :key="i" class="photo-item">
+                      <el-image :src="p" :preview-src-list="photos" :initial-index="i" fit="cover" class="photo-thumb" :preview-teleported="true"></el-image>
+                      <span v-if="i === 0" class="photo-cover">头图</span>
+                    </div>
+                  </div>
+
+                  <div class="sub-title sub-gap">个人介绍</div>
+                  <div style="font-size:13px;line-height:1.9;color:#606266;background:#f8f9fb;border-radius:6px;padding:12px 16px">我叫李秀珍，湖南邵阳人，做月嫂 5 年、家政 8 年，护理过 18 个宝宝（含早产儿 3 例、双胞胎 2 对）。之前是儿科护士，擅长早产儿护理、月子餐和催乳通乳，持有母婴护理证、育婴师证、催乳证。我习惯用护理日志记录宝宝每天的喂养、睡眠和便便情况，让宝妈随时看得见、更安心。普通话和粤语都能沟通，可住家 24 小时服务。</div>
+
+                  <div class="sub-title sub-gap">银行与收款</div>
+                  <el-descriptions :column="4" border size="small">
+                    <el-descriptions-item label="收款人姓名">李建军（丈夫）</el-descriptions-item>
+                    <el-descriptions-item label="收款人身份证">4303**********2219（照片已存）</el-descriptions-item>
+                    <el-descriptions-item label="收款人号码">138****3305</el-descriptions-item>
+                    <el-descriptions-item label="银行卡号">6217 **** **** 4532</el-descriptions-item>
+                    <el-descriptions-item label="开户行">招商银行深圳龙岗支行</el-descriptions-item>
+                    <el-descriptions-item label="是否代收薪酬">是</el-descriptions-item>
+                    <el-descriptions-item label="授权证明"><el-link type="primary">查看照片</el-link></el-descriptions-item>
+                    <el-descriptions-item label="工资钱包">
+                      <el-tag :type="wallet.type" size="small">{{ wallet.status }}</el-tag>
+                      <span style="font-size:12px;color:#909399;margin-left:6px">{{ wallet.time }}</span>
+                      <el-button size="small" style="margin-left:10px" @click="noop(wallet.status === '已开通' ? '修改工资钱包' : '开通工资钱包')">{{ wallet.status === '已开通' ? '修改' : '开通钱包' }}</el-button>
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </el-tab-pane>
+
+                <!-- ③ 来源 · 培训 · 考核定级（Sheet 2 + 3 + 4） -->
+                <el-tab-pane label="③ 来源与培训" name="produce">
+                  <div class="pane-note">来源：Sheet 2 来源招聘履历 + Sheet 3 培训履历 + Sheet 4 考核定级履历 · 字段清单区块③</div>
+                  <div class="sub-title">来源与招聘</div>
+                  <el-descriptions :column="3" border size="small">
+                    <el-descriptions-item label="渠道来源">转介绍（老月嫂引荐）</el-descriptions-item>
+                    <el-descriptions-item label="引荐人ID">YG-0887（王香梅）</el-descriptions-item>
+                    <el-descriptions-item label="招聘负责人">文玉</el-descriptions-item>
+                    <el-descriptions-item label="入职状态">在职</el-descriptions-item>
+                    <el-descriptions-item label="备注">直招入行，8 年家政经验（其中月嫂 5 年）</el-descriptions-item>
+                    <el-descriptions-item label="背景调查">无犯罪记录证明 ✓ · 征信无异常 ✓ · 前雇主评价良好（2024-03 核验）</el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">培训履历（一行一期）</div>
+                  <el-table :data="trainings" size="small" border style="width:100%">
+                    <el-table-column prop="batch" label="培训批次" width="110"></el-table-column>
+                    <el-table-column prop="period" label="培训时间" width="180"></el-table-column>
+                    <el-table-column prop="course" label="课程名称" min-width="150"></el-table-column>
+                    <el-table-column prop="attend" label="出勤天数" width="90"></el-table-column>
+                    <el-table-column prop="theory" label="理论成绩" width="80"></el-table-column>
+                    <el-table-column prop="practice" label="实操成绩" width="80"></el-table-column>
+                    <el-table-column prop="retake" label="补考次数" width="80"></el-table-column>
+                    <el-table-column prop="finish" label="结业时间" width="110"></el-table-column>
+                    <el-table-column prop="teacher" label="授课老师" width="90"></el-table-column>
+                    <el-table-column label="评定结果" width="90">
+                      <template #default="{ row }">
+                        <el-tag :type="row.resultType" size="small">{{ row.result }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="cert" label="培训合格证" width="90"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">考核定级履历（一行一次）</div>
+                  <el-table :data="exams" size="small" border style="width:100%">
+                    <el-table-column prop="time" label="考核时间" width="120"></el-table-column>
+                    <el-table-column prop="theory" label="理论分" width="80"></el-table-column>
+                    <el-table-column prop="practice" label="实操分" width="80"></el-table-column>
+                    <el-table-column label="最终定级" width="150">
+                      <template #default="{ row }">
+                        <span class="level-badge" style="font-size:12px;padding:1px 8px">{{ row.level }}</span>
+                        <span style="font-size:12px;color:#909399;margin-left:6px">{{ row.levelNote }}</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="teacher" label="考核老师" width="100"></el-table-column>
+                    <el-table-column prop="once" label="是否一次通过" width="110"></el-table-column>
+                    <el-table-column prop="comment" label="考核评定结果" min-width="180"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">定级变更时间轴</div>
+                  <el-timeline style="padding-left:6px;margin-top:6px">
+                    <el-timeline-item timestamp="2024-03-30 · 直招考核" placement="top" type="primary">
+                      定级 <b>Y4</b>（理论 90 / 实操 89，一次通过）
+                    </el-timeline-item>
+                    <el-timeline-item timestamp="2025-03-15 · 逐级晋升考核" placement="top" type="success">
+                      晋升 <b>Y5</b>（理论 93 / 实操 91，一次通过）
+                    </el-timeline-item>
+                  </el-timeline>
+
+                  <div class="sub-title sub-gap">技能达标（Sheet 26 技能考核标准 · 69 项 · 本级别 Y5 应达对照）</div>
+
+                  <template v-if="skillAlerts.length">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#b88230">异常 {{ skillAlerts.length }} 项（低于应达 / 未达标）</div>
+                    <el-table :data="skillAlerts" size="small" border style="width:100%;margin-bottom:14px">
+                      <el-table-column prop="item" label="服务项目" min-width="180"></el-table-column>
+                      <el-table-column prop="cert" label="关联标签" width="135"></el-table-column>
+                      <el-table-column label="当前评定" width="100">
+                        <template #default="{ row }"><el-tag size="small" :type="row.curType" effect="plain">{{ row.cur }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column prop="target" label="Y5 应达" width="90"></el-table-column>
+                      <el-table-column label="状态" width="90">
+                        <template #default="{ row }"><el-tag :type="row.stType" size="small">{{ row.st }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column label="关联 / 处理" min-width="200">
+                        <template #default="{ row }">
+                          <el-link v-if="row.flawId" type="primary" @click="jumpFlaw(row.flawId)">瑕疵 {{ row.flawId }}</el-link>
+                          <span v-else>{{ row.note }}</span>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </template>
+
+                  <div style="font-size:13px;font-weight:600;margin:4px 0 8px">四组概览</div>
+                  <el-table :data="skillGroupStats" size="small" border style="width:100%;margin-bottom:8px">
+                    <el-table-column prop="cat" label="服务域" min-width="150"></el-table-column>
+                    <el-table-column prop="total" label="项数" width="80"></el-table-column>
+                    <el-table-column prop="pass" label="达标" width="80"></el-table-column>
+                    <el-table-column label="异常明细" min-width="320">
+                      <template #default="{ row }">
+                        <template v-if="row.bad.length">
+                          <span v-for="b in row.bad" :key="b.no" style="margin-right:12px;white-space:nowrap"><el-tag :type="b.stType" size="small">{{ b.st }}</el-tag> {{ b.item }}</span>
+                        </template>
+                        <span v-else style="color:#909399">—</span>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+
+                  <div style="margin-top:8px">
+                    <el-link type="primary" style="font-weight:normal" @click="skillDialog = true">查看全部 69 项</el-link>
+                  </div>
+                  <div style="font-size:12px;color:#909399;margin-top:8px">基础准入见「准入双阶段评定」；行为素养类标签见 ⑧ 能力画像</div>
+
+                  <el-dialog v-model="skillDialog" title="技能达标 · 全部 69 项（Sheet 26 技能考核标准 · 本级别 Y5 应达对照）" width="90%" top="4vh">
+                    <div v-for="g in skillGroups" :key="g.cat" style="margin-bottom:16px">
+                      <div style="font-size:13px;font-weight:600;margin-bottom:6px">{{ g.cat }}（{{ g.total }} 项 · 达标 {{ g.lit }}）</div>
+                      <el-table :data="g.items" size="small" border style="width:100%">
+                        <el-table-column prop="no" label="序号" width="60"></el-table-column>
+                        <el-table-column prop="item" label="服务项目" min-width="190"></el-table-column>
+                        <el-table-column prop="cert" label="关联标签" width="130"></el-table-column>
+                        <el-table-column prop="start" label="起评等级" width="95"></el-table-column>
+                        <el-table-column label="当前评定" width="95">
+                          <template #default="scope"><el-tag size="small" :type="scope.row.curType" effect="plain">{{ scope.row.cur }}</el-tag></template>
+                        </el-table-column>
+                        <el-table-column prop="target" label="Y5 应达" width="85"></el-table-column>
+                        <el-table-column label="状态" width="85">
+                          <template #default="scope"><el-tag :type="scope.row.stType" size="small">{{ scope.row.st }}</el-tag></template>
+                        </el-table-column>
+                      </el-table>
+                    </div>
+                  </el-dialog>
+
+                  <div class="sub-title sub-gap">准入双阶段评定（字典 Sheet 25）</div>
+                  <div class="kv-chips">
+                    <span class="chip">无争议项<b>全部合格</b>（演示摘录 6 项）</span>
+                    <span class="chip">弹性红线项<b>复核完成 · 修正 3 项</b>（演示摘录 5 项）</span>
+                  </div>
+                  <div style="margin-top:4px">
+                    <el-link type="primary" style="font-weight:normal" @click="verifyDialog = true">查看评定明细（招生判定/初评 → 培训复核）</el-link>
+                  </div>
+
+                  <el-dialog v-model="verifyDialog" title="准入双阶段评定（招生判定/初评 → 培训复核 · 字典 Sheet 25）" width="85%" top="6vh">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:8px">无争议项（招生部直接判定 · 只分合格/不合格）</div>
+                    <el-table :data="verifyFixed" size="small" border style="width:100%">
+                      <el-table-column prop="no" label="标签序号" width="90"></el-table-column>
+                      <el-table-column prop="name" label="标签名称" min-width="200"></el-table-column>
+                      <el-table-column prop="material" label="核验材料" min-width="170"></el-table-column>
+                      <el-table-column label="判定" width="90">
+                        <template #default="{ row }"><el-tag :type="row.resultType" size="small">{{ row.result }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column prop="verifier" label="判定人" width="90"></el-table-column>
+                      <el-table-column prop="time" label="判定时间" width="110"></el-table-column>
+                    </el-table>
+                    <div style="font-size:13px;font-weight:600;margin:16px 0 8px">弹性红线项（招生初评 → 培训复核 · 四档等级 · 差异标修正）</div>
+                    <el-table :data="verifyFlex" size="small" border style="width:100%">
+                      <el-table-column prop="no" label="标签序号" width="80"></el-table-column>
+                      <el-table-column prop="name" label="标签名称" min-width="150"></el-table-column>
+                      <el-table-column label="招生初评" width="90">
+                        <template #default="{ row }"><el-tag size="small" effect="plain" :type="row.initType">{{ row.init }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column label="培训复核" width="90">
+                        <template #default="{ row }"><el-tag size="small" :type="row.reviewType">{{ row.review }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column label="差异" width="70">
+                        <template #default="{ row }"><el-tag v-if="row.init !== row.review" type="danger" size="small" effect="plain">修正</el-tag><span v-else style="color:#909399">—</span></template>
+                      </el-table-column>
+                      <el-table-column prop="reviewer" label="复核人" width="90"></el-table-column>
+                      <el-table-column prop="note" label="修正说明 / 观察方式" min-width="210"></el-table-column>
+                    </el-table>
+                  </el-dialog>
+                </el-tab-pane>
+
+                <!-- ④ 意愿与档期（Sheet 5 + 6 + 7） -->
+                <el-tab-pane label="④ 意愿与档期" name="schedule">
+                  <div class="pane-note">来源：Sheet 5 意愿状态 + Sheet 6 档期状态 + Sheet 7 等单时长 · 字段清单区块④</div>
+                  <div class="sub-title" style="display:flex;justify-content:space-between;align-items:center">意愿状态（想不想接）
+                    <el-button size="small" @click="noop('代改意愿')">代改意愿</el-button>
+                  </div>
+                  <el-descriptions :column="3" border size="small">
+                    <el-descriptions-item label="当前意愿">
+                      <el-tag :type="willingness.type" size="small">{{ willingness.text }}</el-tag>
+                      <span class="warn-text" style="margin-left:8px">有效期至 2026-08-28（剩 4 天）</span>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="意愿变更时间">2026-08-21 14:32</el-descriptions-item>
+                    <el-descriptions-item label="意愿备注">9 月单已定，10 月下旬起可接新单</el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">意愿证据（自标 vs 实际响应）</div>
+                  <el-descriptions :column="3" border size="small">
+                    <el-descriptions-item label="近30天推送响应">12/14 次（85.7%）</el-descriptions-item>
+                    <el-descriptions-item label="意愿可信度分">
+                      <el-tooltip content="推送确认结果 vs 自标意愿逐次比对累计；标「真开放」连续拒单者降分、销售端降权" placement="top">
+                        <b style="color:#b88230;cursor:help">86 分</b>
+                      </el-tooltip>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="推送确认记录"><el-link type="primary" @click="pushDialog = true">近 30 天 · 14 次</el-link></el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">匹配偏好（硬条件）</div>
+                  <el-descriptions :column="3" border size="small">
+                    <el-descriptions-item label="可服务区域">
+                      <el-tag size="small" style="margin-right:6px">龙岗</el-tag>
+                      <el-tag size="small" style="margin-right:6px">宝安</el-tag>
+                      <el-tag size="small" style="margin-right:6px">南山</el-tag>
+                      <el-tag size="small" style="margin-right:6px">东莞</el-tag>
+                      <el-tag size="small" style="margin-right:6px">惠州</el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="服务形式偏好">住家（24 小时）</el-descriptions-item>
+                    <el-descriptions-item label="是否怕宠物"><el-tag size="small">否</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="接单类型">
+                      <el-tag size="small" style="margin-right:6px">月子中心一对一</el-tag>
+                      <el-tag size="small" style="margin-right:6px">月子中心一对多</el-tag>
+                    </el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">档期状态</div>
+                  <div class="kv-chips" style="align-items:center">
+                    <span class="chip">档期状态<el-tag type="primary" size="small" style="margin-left:6px">定档</el-tag></span>
+                    <span class="chip">本次等单开始日<b>2026-08-08</b></span>
+                    <span class="chip">累计等单天数<b style="color:#e6a23c">10 天（08-08 → 08-18 锁档 · 高于均值）</b></span>
+                    <span class="chip">历史平均等单天数<b>6.5 天</b></span>
+                    <span class="chip">连续闲置天数<b style="color:#e6a23c">16 天（08-08 → 今 · 高于阈值 14 天）</b></span>
+                  </div>
+
+                  <div class="sub-title sub-gap" style="display:flex;justify-content:space-between;align-items:center">档期段列表（一个月嫂可多段并存 · 一段一行）
+                    <span>
+                      <el-button size="small" @click="noop('登记请假')">登记请假</el-button>
+                      <el-button size="small" @click="noop('申请长期锁档')">申请长期锁档</el-button>
+                    </span>
+                  </div>
+                  <el-table :data="segments" size="small" border style="width:100%">
+                    <el-table-column label="段状态" width="105">
+                      <template #default="{ row }"><el-tag :type="row.statusType" size="small">{{ row.status }}</el-tag></template>
+                    </el-table-column>
+                    <el-table-column prop="range" label="日期范围" width="210"></el-table-column>
+                    <el-table-column prop="orderId" label="订单ID" width="140"></el-table-column>
+                    <el-table-column prop="edd" label="预产期" width="110"></el-table-column>
+                    <el-table-column prop="actualStart" label="实际上户时间" width="120"></el-table-column>
+                    <el-table-column prop="actualEnd" label="实际下户时间" width="120"></el-table-column>
+                    <el-table-column prop="note" label="备注" min-width="180"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">可售窗口（系统推导 · 今天起扣除已定段与请假覆盖）</div>
+                  <div class="kv-chips">
+                    <span class="chip">08-24 ~ 08-26<b>3 天</b></span>
+                    <span class="chip">08-29 ~ 09-04<b>7 天</b></span>
+                    <span class="chip">10-02 ~ 11-01<b>31 天</b></span>
+                    <span class="chip">11-29 起<b>开放</b></span>
+                  </div>
+
+                  <el-dialog v-model="pushDialog" title="推送确认记录（近 30 天 · 14 次 · 演示摘录 6 次）" width="75%" top="8vh">
+                    <el-table :data="pushRecords" size="small" border style="width:100%">
+                      <el-table-column prop="time" label="推送时间" width="150"></el-table-column>
+                      <el-table-column prop="duration" label="响应时长" width="130"></el-table-column>
+                      <el-table-column label="确认结果" width="140">
+                        <template #default="{ row }"><el-tag :type="row.resultType" size="small">{{ row.result }}</el-tag></template>
+                      </el-table-column>
+                      <el-table-column prop="note" label="备注" min-width="220"></el-table-column>
+                    </el-table>
+                  </el-dialog>
+                </el-tab-pane>
+
+                <!-- ⑤ 匹配过程（Sheet 12 + 13 + 14） -->
+                <el-tab-pane label="⑤ 匹配过程" name="match">
+                  <div class="pane-note">来源：Sheet 12 面试记录 + Sheet 13 见面会记录 + Sheet 14 开档沟通记录 · 字段清单区块⑤</div>
+                  <div class="kv-chips">
+                    <span class="chip">面试通过率<b>75%（9/12）</b></span>
+                    <span class="chip">见面会选中率<b>29%（5/17）</b></span>
+                    <span class="chip">飞单率<b>0%（0/9）</b></span>
+                    <span class="chip">平均响应速度<b>38 分钟</b></span>
+                  </div>
+
+                  <div class="sub-title">面试记录（一行一次 · 近 4 次）</div>
+                  <el-table :data="interviews" size="small" border style="width:100%">
+                    <el-table-column prop="date" label="面试日期" width="100"></el-table-column>
+                    <el-table-column prop="type" label="类型" width="100"></el-table-column>
+                    <el-table-column prop="interviewer" label="面试官" width="80"></el-table-column>
+                    <el-table-column prop="customer" label="客户ID" width="110"></el-table-column>
+                    <el-table-column prop="edd" label="客户预产期" width="100"></el-table-column>
+                    <el-table-column prop="way" label="方式" width="70"></el-table-column>
+                    <el-table-column label="面试结果" width="90">
+                      <template #default="{ row }">
+                        <el-tag :type="row.result === '通过' ? 'success' : 'danger'" size="small" effect="plain">{{ row.result }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="intent" label="客户意向度" width="90"></el-table-column>
+                    <el-table-column prop="chosen" label="是否被相中" min-width="160"></el-table-column>
+                    <el-table-column prop="failReason" label="未通过原因" min-width="170"></el-table-column>
+                    <el-table-column prop="salesNote" label="销售评价" min-width="120"></el-table-column>
+                    <el-table-column prop="note" label="备注" width="90"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">见面会记录（一行一场）</div>
+                  <el-table :data="meetups" size="small" border style="width:100%">
+                    <el-table-column prop="date" label="见面会日期" width="110"></el-table-column>
+                    <el-table-column prop="session" label="场次" width="140"></el-table-column>
+                    <el-table-column prop="attend" label="到场情况" width="100"></el-table-column>
+                    <el-table-column prop="period" label="到场-离场时间" width="140"></el-table-column>
+                    <el-table-column prop="clients" label="见面客户数" width="100"></el-table-column>
+                    <el-table-column prop="chosen" label="被选中次数" width="100"></el-table-column>
+                    <el-table-column prop="rate" label="选中率" width="80"></el-table-column>
+                    <el-table-column prop="feedback" label="客户反馈摘要" min-width="160"></el-table-column>
+                    <el-table-column prop="salesNote" label="销售反馈" min-width="150"></el-table-column>
+                    <el-table-column prop="note" label="备注" width="70"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">开档沟通记录（一行一次）</div>
+                  <el-table :data="commLogs" size="small" border style="width:100%">
+                    <el-table-column prop="date" label="沟通日期" width="100"></el-table-column>
+                    <el-table-column prop="person" label="沟通人" width="80"></el-table-column>
+                    <el-table-column prop="role" label="角色" width="70"></el-table-column>
+                    <el-table-column prop="way" label="方式" width="70"></el-table-column>
+                    <el-table-column prop="purpose" label="目的" width="100"></el-table-column>
+                    <el-table-column prop="real" label="真实开档" width="90"></el-table-column>
+                    <el-table-column prop="availDate" label="可接单日期" width="110"></el-table-column>
+                    <el-table-column prop="reliability" label="靠谱度" width="80"></el-table-column>
+                    <el-table-column prop="speed" label="响应速度" width="90"></el-table-column>
+                    <el-table-column label="是否飞单" width="80">
+                      <template #default="{ row }">
+                        <el-tag type="success" size="small" effect="plain">{{ row.fly }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="flyReason" label="飞单原因" width="90"></el-table-column>
+                    <el-table-column prop="result" label="沟通结果" width="120"></el-table-column>
+                    <el-table-column prop="followup" label="后续跟进" width="110"></el-table-column>
+                    <el-table-column prop="note" label="备注" min-width="170"></el-table-column>
+                  </el-table>
+                  <div style="font-size:12px;color:#909399;margin-top:10px">响应效率与靠谱度汇总（派生）：9 次沟通 0 飞单，靠谱度持续「靠谱」。</div>
+                </el-tab-pane>
+
+                <!-- ⑥ 服务履历与客户评价（Sheet 9 + 10） -->
+                <el-tab-pane label="⑥ 服务与评价" name="service">
+                  <div class="pane-note">来源：Sheet 9 服务履历 + Sheet 10 客户评定 · 字段清单区块⑥</div>
+                  <div class="kv-chips">
+                    <span class="chip">累计接单<b>18 单</b></span>
+                    <span class="chip">评分均值<b>4.8</b></span>
+                    <span class="chip">好评率（≥4 星）<b>94.4%（17/18）</b></span>
+                    <span class="chip chip-link" @click="scrollTo('ratingsAnchor')">客诉<b>1 起 · 已闭环</b></span>
+                    <span class="chip">退单<b>0 单</b></span>
+                    <span class="chip">护理日志质量<b>提交率 91% · 及时率 76%</b></span>
+                  </div>
+
+                  <div class="sub-title">服务履历（一行一单 · 近 5 单）</div>
+                  <el-table :data="services" size="small" border style="width:100%">
+                    <el-table-column prop="id" label="订单ID" width="140"></el-table-column>
+                    <el-table-column label="订单等级" width="90">
+                      <template #default="{ row }"><span class="level-badge" style="font-size:12px;padding:1px 8px">{{ row.orderLevel }}</span></template>
+                    </el-table-column>
+                    <el-table-column prop="pkgDays" label="套餐天数" width="90"></el-table-column>
+                    <el-table-column prop="days" label="实际服务天数" width="105"></el-table-column>
+                    <el-table-column prop="period" label="服务周期" width="185"></el-table-column>
+                    <el-table-column label="客户评分" width="140">
+                      <template #default="{ row }">
+                        <el-rate :model-value="row.score" disabled></el-rate>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="履约类型" width="105">
+                      <template #default="{ row }"><el-tag :type="row.fulfillType" size="small" effect="plain">{{ row.fulfill }}</el-tag></template>
+                    </el-table-column>
+                    <el-table-column label="订单状态" min-width="150">
+                      <template #default="{ row }">
+                        <el-tag :type="row.statusType" size="small">{{ row.status }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="平台保险" width="90">
+                      <template #default="{ row }"><el-tag :type="row.insureType" size="small" effect="plain">{{ row.insure }}</el-tag></template>
+                    </el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap" id="ratingsAnchor">客户评定（一行一单 · 近 3 单）</div>
+                  <el-table :data="ratings" size="small" border style="width:100%">
+                    <el-table-column prop="id" label="评定订单ID" width="140"></el-table-column>
+                    <el-table-column prop="time" label="评定时间" width="110"></el-table-column>
+                    <el-table-column prop="score" label="客户评分" width="90"></el-table-column>
+                    <el-table-column label="客诉标记" width="90">
+                      <template #default="{ row }">
+                        <el-tag :type="row.complaint === '是' ? 'danger' : 'info'" size="small" effect="plain">{{ row.complaint }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="客诉类型" min-width="200">
+                      <template #default="{ row }">
+                        {{ row.complaintType }}
+                        <el-link v-if="row.flawId" type="primary" style="margin-left:6px" @click="jumpFlaw(row.flawId)">已转瑕疵 {{ row.flawId }}</el-link>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="退单标记" width="90">
+                      <template #default="{ row }">
+                        <el-tag type="info" size="small" effect="plain">{{ row.refund }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="refundReason" label="退单原因" min-width="120"></el-table-column>
+                  </el-table>
+
+                  <div class="sub-title sub-gap">评价汇总</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <el-tag v-for="k in keywords" :key="k" effect="plain">{{ k }}</el-tag>
+                  </div>
+                </el-tab-pane>
+
+                <!-- ⑦ 瑕疵与担保（Sheet 21） -->
+                <el-tab-pane label="⑦ 瑕疵担保" name="flaw">
+                  <div class="pane-note">来源：Sheet 21 瑕疵与担保记录 · 字段清单区块⑦</div>
+                  <el-table :data="flaws" size="small" border style="width:100%" :row-class-name="rowHl">
+                    <template #empty>暂无瑕疵记录</template>
+                    <el-table-column type="expand" width="36">
+                      <template #default="{ row }">
+                        <div class="flaw-detail">
+                          <el-descriptions :column="2" border size="small">
+                            <el-descriptions-item label="担保人">{{ row.guarantor }}</el-descriptions-item>
+                            <el-descriptions-item label="担保审核状态">{{ row.audit }}</el-descriptions-item>
+                            <el-descriptions-item label="担保理由" :span="2">{{ row.guaranteeReason }}</el-descriptions-item>
+                            <el-descriptions-item label="客户知情同意">{{ row.consent }}</el-descriptions-item>
+                            <el-descriptions-item label="连带追责记录">{{ row.liability }}</el-descriptions-item>
+                            <el-descriptions-item label="备注" :span="2">{{ row.note }}</el-descriptions-item>
+                          </el-descriptions>
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="id" label="瑕疵记录ID" width="110"></el-table-column>
+                    <el-table-column label="瑕疵级别" width="160">
+                      <template #default="{ row }">
+                        <el-tag :type="row.levelType" size="small">{{ row.level }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="desc" label="瑕疵描述" min-width="220"></el-table-column>
+                    <el-table-column label="关联标签序号" width="110">
+                      <template #default="{ row }">
+                        <el-link type="primary" @click="jumpTags()">{{ row.labelNo }}</el-link>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="发现来源" width="200">
+                      <template #default="{ row }">
+                        {{ row.source }}
+                        <el-link v-if="row.orderId" type="primary" style="margin-left:4px" @click="jumpService()">· {{ row.orderId }}</el-link>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="date" label="发现日期" width="100"></el-table-column>
+                    <el-table-column label="当前状态" width="90">
+                      <template #default="{ row }">
+                        <el-tag :type="row.statusType" size="small" effect="plain">{{ row.status }}</el-tag>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-tab-pane>
+
+                <!-- ⑧ 能力画像（Sheet 11 · 卖点 + 结论；技能异常见 ③、瑕疵事件见 ⑦） -->
+                <el-tab-pane label="⑧ 能力画像" name="tags">
+                  <div class="pane-note">来源：Sheet 11 能力标签 · 字段清单区块⑧</div>
+                  <div class="sub-title">卖点</div>
+                  <el-descriptions :column="1" border size="small">
+                    <el-descriptions-item label="擅长领域">
+                      <el-tag size="small" style="margin-right:6px">早产儿护理</el-tag>
+                      <el-tag size="small" style="margin-right:6px">双胞胎</el-tag>
+                      <el-tag size="small" style="margin-right:6px">催乳通乳</el-tag>
+                      <el-tag size="small" style="margin-right:6px">月子餐</el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="特殊经历">儿科护士 6 年 · 会粤语 · 有驾照可自驾</el-descriptions-item>
+                    <el-descriptions-item label="其他差异化标签">医院陪护经验丰富 · 多胎家庭服务经验</el-descriptions-item>
+                  </el-descriptions>
+
+                  <div class="sub-title sub-gap">能力结论</div>
+                  <div class="kv-chips">
+                    <span class="chip">能力综合评级<b>A（老师评估）</b></span>
+                    <span class="chip">意愿度<b>高（老师评估）</b></span>
+                    <span class="chip">系统证据<b><el-link type="primary" @click="skillDialog = true">达标 66/69</el-link></b> · <b>评分 4.8（18 单）</b> · <b><el-link type="primary" @click="activeTab = 'flaw'">生效中瑕疵 {{ activeFlawCount }} 项</el-link></b></span>
+                  </div>
+                </el-tab-pane>
+
+                <!-- ⑨ 积分（Sheet 16） -->
+                <el-tab-pane label="⑨ 积分" name="points">
+                  <div class="pane-note">来源：Sheet 16 积分记录 · 字段清单区块⑨</div>
+                  <div class="kv-chips">
+                    <span class="chip">当前定级<b>Y5</b></span>
+                    <span class="chip">当前级别积分（升级后清零）<b>320</b></span>
+                    <span class="chip">晋级 Y6 所需<b>480</b></span>
+                    <span class="chip">累计积分（不清零）<b>1,860</b></span>
+                  </div>
+                  <div style="max-width:520px;margin-bottom:16px">
+                    <div style="font-size:12px;color:#909399;margin-bottom:6px">距下一级别（Y6）进度：320 / 480（还差 160 分）</div>
+                    <el-progress :percentage="67" :stroke-width="14"></el-progress>
+                  </div>
+                  <div class="sub-title">积分流水（一行一事）</div>
+                  <el-table :data="points" size="small" border style="width:100%">
+                    <el-table-column prop="date" label="事件日期" width="100"></el-table-column>
+                    <el-table-column prop="type" label="积分类型" width="100"></el-table-column>
+                    <el-table-column prop="event" label="积分事件" width="120"></el-table-column>
+                    <el-table-column prop="desc" label="事件说明" min-width="220"></el-table-column>
+                    <el-table-column label="获得积分" width="90">
+                      <template #default="{ row }">
+                        <span v-if="row.gain" style="color:#529b2e;font-weight:600">{{ row.gain }}</span>
+                        <span v-else style="color:#c0c4cc">—</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="扣除积分" width="90">
+                      <template #default="{ row }">
+                        <span v-if="row.cost" style="color:#f56c6c;font-weight:600">{{ row.cost }}</span>
+                        <span v-else style="color:#c0c4cc">—</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="operator" label="操作人" width="90"></el-table-column>
+                    <el-table-column label="审核状态" width="90">
+                      <template #default="{ row }">
+                        <el-tag type="success" size="small" effect="plain">{{ row.audit }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="note" label="备注" width="160"></el-table-column>
+                  </el-table>
+                </el-tab-pane>
+
+                <!-- ⑩ 变更流水（Sheet 8） -->
+                <el-tab-pane label="⑩ 变更流水" name="log">
+                  <div class="pane-note">来源：Sheet 8 档案变更记录 · 字段清单区块⑩</div>
+                  <el-table :data="stateLogs" size="small" border style="width:100%">
+                    <el-table-column prop="time" label="变更时间" width="150"></el-table-column>
+                    <el-table-column prop="operator" label="操作人" width="130"></el-table-column>
+                    <el-table-column prop="target" label="变更对象" width="100"></el-table-column>
+                    <el-table-column label="变更字段" width="110">
+                      <template #default="{ row }">
+                        <el-link v-if="row.flawId" type="primary" @click="jumpFlaw(row.flawId)">{{ row.field }}</el-link>
+                        <span v-else>{{ row.field }}</span>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="修改前" width="110">
+                      <template #default="{ row }">
+                        <el-tag size="small" effect="plain" type="info">{{ row.before }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="修改后" width="110">
+                      <template #default="{ row }">
+                        <el-tag size="small" :type="row.afterType">{{ row.after }}</el-tag>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="reason" label="修改原因" min-width="240"></el-table-column>
+                  </el-table>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        // ==================== Mock 数据（演示口径：今日 = 2026-08-24） ====================
+
+        // 默认激活 Tab：支持 ?tab=base|produce|schedule|service|match|tags|points|flaw|log
+        const TAB_NAMES = ['base', 'produce', 'schedule', 'match', 'service', 'flaw', 'tags', 'points', 'log'];
+        const urlTab = new URLSearchParams(window.location.search).get('tab');
+        const activeTab = ref(TAB_NAMES.indexOf(urlTab) >= 0 ? urlTab : 'base');
+
+        // 演示状态：?demo=clean（无异常空态）| ?demo=stopped（停单态）
+        const demo = new URLSearchParams(window.location.search).get('demo');
+
+        // 概览卡可演示状态 + ⑦⑨⑩ 锚点互跳
+        const personState = ref({ text: '空闲', type: 'success' });
+        const willingness = ref({ text: '真开放', type: 'success' });
+        const wallet = ref({ status: '未开通', type: 'info', time: '—' });
+        const highlightId = ref('');
+        const jumpFlaw = (id) => { activeTab.value = 'flaw'; highlightId.value = id; };
+        const jumpTags = () => { skillDialog.value = true; };
+        const rowHl = ({ row }) => (row.id === highlightId.value ? 'row-highlight' : '');
+        const scrollTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+        const jumpService = () => { activeTab.value = 'service'; setTimeout(() => scrollTo('ratingsAnchor'), 100); };
+
+        // ① 异常摘要条（瑕疵/体检临期/意愿临期，点击跳转对应区块；意愿临期窗口 5 天）
+        const alertStrip = ref([
+          { text: '瑕疵 4 项生效中', tab: 'flaw' },
+          { text: '白带体检 2026-09-05 到期', tab: 'base' },
+          { text: '意愿 4 天后到期', tab: 'schedule' }
+        ]);
+        const jumpStrip = (a) => { if (a.flawId) jumpFlaw(a.flawId); else activeTab.value = a.tab; };
+        const activeFlawCount = computed(() => flaws.value.filter(f => f.status === '生效中').length);
+        const noop = (t) => { ElementPlus.ElMessage({ message: t + '（演示占位）', grouping: true, type: 'info' }); };
+        const credit = 86;
+
+        // ② 资质证件（身份证 + 9 类技能证，存照片不存编号/有效期；健康证职能由体检报告五项承接）
+        const certs = ref([
+          { name: '身份证', photo: true },
+          { name: '母婴护理师证', photo: true },
+          { name: '催乳师证', photo: true },
+          { name: '产康师证', photo: false },
+          { name: '营养师证', photo: false },
+          { name: '育婴师证', photo: true },
+          { name: '小儿推拿证', photo: true },
+          { name: '早教证', photo: false },
+          { name: '养老证', photo: false },
+          { name: '收纳师证', photo: false }
+        ]);
+
+        // ③ 培训履历（Sheet 3：一行一期）
+        const trainings = ref([
+          { batch: 'PX-2024-03', period: '2024-03-15 ~ 03-27', course: '基础母婴护理班', attend: '12/12 天', theory: 92, practice: 88, retake: 0, finish: '2024-03-28', teacher: '刘敏', result: '优秀', resultType: 'success', cert: '是' },
+          { batch: 'PX-2025-01', period: '2025-01-08 ~ 01-19', course: '早产儿护理专项班', attend: '6/6 天', theory: 95, practice: 93, retake: 0, finish: '2025-01-20', teacher: '刘敏', result: '优秀', resultType: 'success', cert: '是' },
+          { batch: 'PX-2026-08', period: '2026-08-30（已约）', course: '催乳技能复训', attend: '—', theory: '—', practice: '—', retake: '—', finish: '—', teacher: '叶华', result: '待参加', resultType: 'info', cert: '—' }
+        ]);
+
+        // ③ 考核定级履历（Sheet 4）
+        const exams = ref([
+          { time: '2024-03-30', theory: 90, practice: 89, level: 'Y4', levelNote: '直招定级', teacher: '叶华', once: '是', comment: '经验扎实，实操规范' },
+          { time: '2025-03-15', theory: 93, practice: 91, level: 'Y5', levelNote: '逐级晋升', teacher: '叶华', once: '是', comment: '客户口碑与技能双达标' }
+        ]);
+
+        // ④ 档期段列表（Sheet 6：一个月嫂可多段并存，含历史段与请假叠加层；锁档时间与有效期见 ⑩ 变更流水）
+        const segments = ref([
+          { status: '定档', statusType: 'primary', range: '2026-09-05 ~ 2026-10-01（26 天）', orderId: 'YG20260818-03', edd: '2026-09-10', actualStart: '—', actualEnd: '—', note: '当前有效段' },
+          { status: '锁档', statusType: 'warning', range: '2026-11-02 ~ 2026-11-28（26 天）', orderId: 'YG20260823-01', edd: '2026-11-07', actualStart: '—', actualEnd: '—', note: '待签约，逾期自动释放' },
+          { status: '请假（叠加）', statusType: 'danger', range: '2026-08-27 ~ 2026-08-28', orderId: '—', edd: '—', actualStart: '—', actualEnd: '—', note: '家中有事 · 审批已通过' },
+          { status: '请假（叠加）', statusType: 'danger', range: '2026-07-09 ~ 2026-08-07', orderId: '—', edd: '—', actualStart: '—', actualEnd: '—', note: '休假 · 已结束' },
+          { status: '已结束', statusType: 'info', range: '2026-06-12 ~ 2026-07-08（26 天）', orderId: 'YG20260610-02', edd: '—', actualStart: '2026-06-12', actualEnd: '2026-07-08', note: '原上户中段，下户完成后时间回可售池' }
+        ]);
+
+        // ③ 准入双阶段评定-无争议项（字典 Sheet 25：招生部直接判定，只分合格/不合格，演示摘录 6 项）
+        const verifyFixed = ref([
+          { no: 1, name: '年龄条件（28-48 岁）', material: '身份证原件', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' },
+          { no: 2, name: '学历证明（初中及以上）', material: '毕业证书', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' },
+          { no: 6, name: '开放档期（新手 6 个月 ≥4 个）', material: '书面确认记录', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' },
+          { no: 7, name: '定级合规（证书真实有效）', material: '证书编号逐一核验', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' },
+          { no: 11, name: '无传染病', material: '体检报告（1 年内 · 2 甲以上）', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' },
+          { no: 13, name: '体检有效（乙肝/艾滋/梅毒/白带/胸透）', material: '体检报告核验', result: '合格', resultType: 'success', verifier: '文玉', time: '2024-03-10' }
+        ]);
+
+        // ③ 准入双阶段评定-弹性红线项（招生初评 → 培训复核，四档等级；初评≠复核标修正）
+        const verifyFlex = ref([
+          { no: 19, name: '烹饪能力（煮饭核心）', init: '良好', initType: '', review: '优秀', reviewType: 'success', reviewer: '刘敏', note: '实操课评分+口感盲评，修正为优秀' },
+          { no: 23, name: '责任心&爱心', init: '良好', initType: '', review: '优秀', reviewType: 'success', reviewer: '刘敏', note: '作业批改+实操观察，修正为优秀' },
+          { no: 26, name: '抗压能力', init: '及格', initType: 'warning', review: '良好', reviewType: '', reviewer: '刘敏', note: '连续 3 天满课观察，修正为良好' },
+          { no: 28, name: '情商沟通', init: '良好', initType: '', review: '良好', reviewType: '', reviewer: '刘敏', note: '角色扮演+同学互评，维持初评' },
+          { no: 17, name: '无严重打呼噜', init: '合格', initType: 'success', review: '合格', reviewType: 'success', reviewer: '刘敏', note: '岗前培训期间住宿观察，维持初评' }
+        ]);
+        const showVerify = ref(false);
+        const verifyDialog = ref(new URLSearchParams(window.location.search).get('verify') === '1');
+        const pushDialog = ref(new URLSearchParams(window.location.search).get('push') === '1');
+
+        // ④ 推送确认记录（近 30 天，演示摘录 6 次；含 2 次超时未响应以解释 12/14；字段清单 §5 待补字段）
+        const pushRecords = ref([
+          { time: '2026-08-23 10:15', duration: '38 分钟', result: '已确认 · 可接单', resultType: 'success', note: '确认 11 月单（YG20260823-01 锁档来源）' },
+          { time: '2026-08-21 14:30', duration: '2 分钟', result: '已确认 · 可接单', resultType: 'success', note: '随即自标「真开放」（14:32 变更）' },
+          { time: '2026-08-18 09:00', duration: '超时未响应（>24h）', result: '未确认', resultType: 'info', note: '—' },
+          { time: '2026-08-15 16:40', duration: '1 小时 12 分', result: '已确认 · 可接单', resultType: 'success', note: '—' },
+          { time: '2026-08-11 11:05', duration: '超时未响应（>24h）', result: '未确认', resultType: 'info', note: '其后电话确认为「可沟通」' },
+          { time: '2026-08-08 09:20', duration: '26 分钟', result: '已确认 · 可接单', resultType: 'success', note: '—' }
+        ]);
+
+        // ⑥ 服务履历（Sheet 9：订单等级≠月嫂定级时即跨档单；实际天数≠套餐天数须标履约类型；评分为 1-5 星整数）
+        const services = ref([
+          { id: 'YG20260610-02', orderLevel: 'Y5', pkgDays: '26 天', days: '26 天', period: '2026-06-12 ~ 07-08', score: 5, fulfill: '正常', fulfillType: 'success', status: '已完成', statusType: 'success', insure: '已投保', insureType: 'success' },
+          { id: 'YG20260402-05', orderLevel: 'Y5', pkgDays: '42 天', days: '42 天', period: '2026-04-03 ~ 05-15', score: 5, fulfill: '正常', fulfillType: 'success', status: '已完成', statusType: 'success', insure: '已投保', insureType: 'success' },
+          { id: 'YG20260115-01', orderLevel: 'Y4', pkgDays: '26 天', days: '26 天', period: '2026-01-17 ~ 02-12', score: 5, fulfill: '正常', fulfillType: 'success', status: '已完成', statusType: 'success', insure: '已投保', insureType: 'success' },
+          { id: 'YG20251120-03', orderLevel: 'Y5', pkgDays: '26 天', days: '14 天', period: '2025-12-05 ~ 12-18', score: 5, fulfill: '中途顶班', fulfillType: 'primary', status: '已完成', statusType: 'success', insure: '已投保', insureType: 'success' },
+          { id: 'YG20250908-04', orderLevel: 'Y5', pkgDays: '42 天', days: '26 天', period: '2025-09-10 ~ 10-06', score: 4, fulfill: '提前下户', fulfillType: 'warning', status: '已完成 · 客诉 1 起（已闭环）', statusType: 'warning', insure: '已投保', insureType: 'success' }
+        ]);
+
+        // ⑥ 客户评定（Sheet 10）
+        const ratings = ref([
+          { id: 'YG20260610-02', time: '2026-07-09', score: 5, complaint: '否', complaintType: '—', refund: '否', refundReason: '—' },
+          { id: 'YG20260402-05', time: '2026-05-16', score: 5, complaint: '否', complaintType: '—', refund: '否', refundReason: '—' },
+          { id: 'YG20250908-04', time: '2025-10-08', score: 4, complaint: '是', complaintType: '喂养分歧 · 沟通不足（已闭环）', flawId: 'FL-2025-023', refund: '否', refundReason: '—' }
+        ]);
+
+        // ⑥ 好评关键词（简历候选）
+        const keywords = ref(['月子餐好吃 ×12', '夜里省心 ×9', '通乳手法好 ×7', '有耐心 ×6', '早产儿护理专业 ×4']);
+
+        // ⑤ 面试记录（Sheet 12：一行一次；类型/方式/意向度/结果均按字典枚举）
+        const interviews = ref([
+          { date: '2026-08-16', type: '一对一面试', interviewer: '张萌', customer: 'C-20260811', edd: '2026-09-10', way: '线下见面', result: '通过', intent: '5 星', chosen: '是 → 锁档 YG20260818-03', failReason: '—', salesNote: '客户当场拍板', note: '复试轮次' },
+          { date: '2026-08-02', type: '视频面试', interviewer: '张萌', customer: 'C-20260729', edd: '2026-10-02', way: '线上视频', result: '通过', intent: '3 星', chosen: '否', failReason: '客户预算不足（转向 Y4）', salesNote: '沟通顺畅', note: '初试' },
+          { date: '2026-07-19', type: '一对一面试', interviewer: '李倩', customer: 'C-20260712', edd: '2026-08-25', way: '线下见面', result: '不通过', intent: '2 星', chosen: '否', failReason: '技能不符：客户希望粤语更流利', salesNote: '技能达标，语言短板', note: '复试轮次' },
+          { date: '2026-06-28', type: '视频面试', interviewer: '张萌', customer: 'C-20260620', edd: '2026-09-01', way: '线上视频', result: '通过', intent: '4 星', chosen: '否', failReason: '客户放弃（改期未定）', salesNote: '态度积极', note: '初试' }
+        ]);
+
+        // ⑤ 见面会记录（Sheet 13：一行一场；选中率＝被选中次数/见面客户数，自动计算）
+        const meetups = ref([
+          { date: '2026-07-26', session: '2026年7月第4场', attend: '准时到场', period: '14:00 - 16:30', clients: 6, chosen: 2, rate: '33%', feedback: '「稳重、问得细」', salesNote: '形象视频加分', note: '—' },
+          { date: '2026-05-17', session: '2026年5月第2场', attend: '准时到场', period: '09:30 - 11:40', clients: 5, chosen: 1, rate: '20%', feedback: '「月子餐问答专业」', salesNote: '建议突出早产儿经验', note: '—' }
+        ]);
+
+        // ⑤ 开档沟通记录（Sheet 14：一行一次；方式/目的/靠谱度/响应速度/沟通结果均按字典枚举）
+        const commLogs = ref([
+          { date: '2026-08-21', person: '张萌', role: '销售', way: '微信', purpose: '确认接单意愿', real: '是', availDate: '10 月下旬起', reliability: '靠谱', speed: '快（15 分钟）', fly: '否', flyReason: '—', result: '开档确认成功', followup: '无', note: '企微确认 9 月单已定，意愿转「真开放」' },
+          { date: '2026-08-10', person: '红姐', role: '月嫂老师', way: '电话', purpose: '确认接单意愿', real: '是', availDate: '—', reliability: '靠谱', speed: '快（当天）', fly: '否', flyReason: '—', result: '需再次沟通', followup: '8 月下旬复核', note: '家中有事，意愿转「可沟通」' },
+          { date: '2026-07-30', person: '张萌', role: '销售', way: '电话', purpose: '其他', real: '是', availDate: '9 月初', reliability: '靠谱', speed: '快（30 分钟）', fly: '否', flyReason: '—', result: '开档确认成功', followup: '有复试即约', note: '订单跟进：保持 9 月空档' }
+        ]);
+
+        const showDetail = ref(false);
+        const skillDialog = ref(new URLSearchParams(window.location.search).get('skill') === '1');
+
+        // ③ 技能达标（Sheet 26 技能考核标准 69 项骨架：服务项目/关联标签/起评/Y5 应达；当前评定＝该月嫂考核评级，低于应达或触红线计入异常；基础准入见准入双阶段评定，行为素养类见 ⑧ 能力画像）
+        const RANK = ['不及格', '基本达标', '及格', '良好', '优秀', '超优秀'];
+        const skillSpec = [
+          { cat: '宝宝护理', items: [
+            [1, '科学喂养（母乳喂养）', '母乳喂养规范', '基本达标级', '良好'], [2, '科学喂养（人工喂养）', '人工喂养规范', '基本达标级', '良好'], [3, '喂养规范（混合喂养）', '喂养规范', '基本达标级', '良好'], [4, '拍嗝', '拍嗝规范', '及格级', '良好'], [5, '体温、体重测量', '高热处理规范', '优秀级', '优秀'], [6, '抱姿', '抱姿规范', '及格级', '良好'], [7, '包裹', '包裹规范', '及格级', '良好'], [8, '穿脱纸尿裤', '穿脱衣物纸尿裤规范', '及格级', '良好'], [9, '穿脱衣物', '穿脱衣物纸尿裤规范', '及格级', '良好'], [10, '五官护理', '—', '基本达标级', '良好'], [11, '臀部清洁及护理', '红屁屁（尿布疹）', '基本达标级', '良好'], [12, '脐带消毒及脱落观察', '脐带护理规范', '基本达标级', '良好'], [13, '大小便观察', '便便观察规范', '基本达标级', '良好'], [14, '三浴三操', '洗澡护理规范', '基本达标级', '良好'], [15, '睡眠培养、作息调整', '睡眠培养规范', '基本达标级', '良好'], [16, '宝宝起居环境清洁', '家务活整理', '基本达标级', '良好'], [17, '宝宝行为观察与情绪管理', '能哄宝宝', '基本达标级', '良好'], [18, '宝宝日常护理安全', '上户安全规范', '良好级', '优秀'], [19, '离户前育婴技能教授', '—', '基本达标级', '良好'], [20, '黄疸观察及对症处理', '黄疸观察规范', '基本达标级', '良好'], [21, '吐奶、呛奶预防及处理', '呛奶急救规范', '基本达标级', '良好'], [22, '皮肤问题预防及基础护理', '皮肤护理（湿疹/热疹）', '基本达标级', '良好'], [23, '消化道问题预防及基础护理', '便便观察规范', '基本达标级', '良好'], [24, '常见生理现象观察与分辨', '—', '基本达标级', '良好'], [25, '其他异常状况观察与分辨', '—', '基本达标级', '及格'], [26, '遵医嘱协助喂药', '—', '优秀级', '优秀'], [27, '应急情况处理', '应急事项提前筹备', '基本达标级', '优秀'], [28, '五大领域能力发育', '—', '基本达标级', '良好'], [29, '常规早教游戏', '—', '及格级', '良好'], [30, '0-6 个月早教指引', '—', '基本达标级', '良好'], [31, '营养健康', '—', '基本达标级', '良好']
+          ]},
+          { cat: '妈妈护理', items: [
+            [32, '乳房护理、指导、清洁', '乳房护理规范', '基本达标级', '良好'], [33, '异常乳头护理', '—', '基本达标级', '良好'], [34, '生理性涨奶护理', '—', '基本达标级', '良好'], [35, '乳房按摩、疏通', '乳房护理规范', '及格级', '良好'], [36, '乳头皲裂预防及护理', '—', '良好级', '优秀'], [37, '少奶调理、生理性涨奶预防', '—', '及格级', '良好'], [38, '科学母乳喂养指导', '—', '基本达标级', '良好'], [39, '剖宫产/顺产伤口护理与恢复', '伤口护理规范', '基本达标级', '良好'], [40, '产褥期恶露排出观察与清理', '—', '基本达标级', '良好'], [41, '产褥汗观察与护理', '—', '及格级', '良好'], [42, '宝妈起居环境清洁', '家务活整理', '及格级', '良好'], [43, '月子洗发', '—', '及格级', '优秀'], [44, '伤口恢复期协助擦浴', '居家洗浴护理', '基本达标级', '及格'], [45, '月子足浴', '—', '基本达标级', '及格'], [46, '产后康复操指导', '—', '基本达标级', '及格'], [47, '产后情绪观察与抑郁预防', '情绪观察规范', '良好级', '良好'], [48, '会阴清洁', '会阴清洁规范', '基本达标级', '良好']
+          ]},
+          { cat: '月子餐', items: [
+            [49, '月子餐制作（三餐三点）', '未做三餐三点', '基本达标级', '良好'], [50, '常用食材处理', '—', '及格级', '超优秀'], [51, '特殊月子餐（按体质调整）', '按体质调整月子餐', '良好级', '—'], [52, '食品及烹饪环境安全', '上户安全规范', '及格级', '良好'], [53, '禁忌识别规范', '禁忌识别规范', '及格级', '优秀'], [54, '口味适配规范', '口味适配规范', '及格级', '优秀'], [55, '制作时效规范', '制作时效规范', '及格级', '优秀'], [56, '品种搭配规范', '品种搭配规范', '及格级', '优秀'], [57, '饮食沟通规范', '客户沟通规范', '及格级', '优秀']
+          ]},
+          { cat: '服务与上户规范', items: [
+            [58, '日常情绪疏导与陪伴', '情绪观察规范', '及格级', '良好'], [59, '家庭成员关系协调', '—', '基本达标级', '良好'], [60, '次日工作安排沟通', '执行效率与规划能力', '及格级', '良好'], [61, '宝宝情绪安抚方案', '能哄宝宝', '基本达标级', '良好'], [62, '医院陪护流程规范', '医院陪护流程规范', '基本达标级', '优秀'], [63, '开奶指导规范', '开奶指导规范', '基本达标级', '良好'], [64, '产康护理 · 袪头风', '产康护理能力', '基本达标级', '及格'], [65, '产康护理 · 四肢/腰背按摩', '产康护理能力', '基本达标级', '及格'], [66, '产康护理 · 三包调理', '产康护理能力', '基本达标级', '—'], [67, '上户护理红线', '上户护理红线', '优秀级', '优秀'], [68, '上户流程规范', '上户流程规范', '基本达标级', '优秀'], [69, '应急事项提前筹备', '应急事项提前筹备', '基本达标级', '良好']
+          ]}
+        ];
+        // 当前评定（例外项；未列＝优秀。21 呛奶急救=面试暴露薄弱、49 月子餐制作=回访延迟、56 品种搭配=结业考核不通过、50 食材处理=月子餐强项、64-66 产康未持证）
+        const curMap = { 4: ['良好', ''], 21: ['基本达标', 'warning'], 35: ['良好', ''], 46: ['良好', ''], 49: ['及格', 'warning'], 50: ['超优秀', 'success'], 56: ['不及格', 'danger'], 64: ['及格', ''], 65: ['及格', ''], 66: ['及格', ''] };
+        const skillNoteMap = { 56: '结业考核实操不通过 · 补考已约 2026-09-02' };
+        const skillFlawMap = { 21: 'FL-2026-005', 49: 'FL-2026-015' };
+        const skillGroups = skillSpec.map(g => {
+          const items = g.items.map(([no, item, cert, start, target]) => {
+            const [cur, curType] = curMap[no] || ['优秀', 'success'];
+            let st = '达标', stType = 'success';
+            if (target !== '—') {
+              const diff = RANK.indexOf(cur) - RANK.indexOf(target);
+              if (cur === '不及格' || diff <= -2) { st = '未达标'; stType = 'danger'; }
+              else if (diff === -1) { st = '预警'; stType = 'warning'; }
+            }
+            return { no, item, cert, start, cur, curType, target, st, stType, note: skillNoteMap[no] || '', flawId: skillFlawMap[no] || '' };
+          });
+          const bad = items.filter(i => i.st !== '达标');
+          return { cat: g.cat, total: items.length, lit: (items.length - bad.length) + '/' + items.length, items };
+        });
+        const allSkills = skillGroups.flatMap(g => g.items);
+        const skillAlerts = allSkills.filter(i => i.st !== '达标');
+        const skillGroupStats = skillGroups.map(g => ({
+          cat: g.cat, total: g.total, pass: g.items.filter(i => i.st === '达标').length,
+          bad: g.items.filter(i => i.st !== '达标')
+        }));
+
+        // ⑨ 积分流水（Sheet 16：一行一事；积分类型/审核状态按字典枚举）
+        const points = ref([
+          { date: '2026-07-10', type: '基础积分', event: '完单奖励', desc: 'YG20260610-02 完单 26 天', gain: '+50', cost: '', operator: '系统', audit: '已审核', note: '—' },
+          { date: '2026-07-10', type: '额外奖励', event: '客户好评', desc: '5 分好评', gain: '+20', cost: '', operator: '系统', audit: '已审核', note: '—' },
+          { date: '2026-04-02', type: '学习积分', event: '复训完成', desc: '月子餐复训', gain: '+30', cost: '', operator: '红姐', audit: '已审核', note: '—' },
+          { date: '2025-10-12', type: '违规扣分', event: '客诉扣减', desc: '喂养分歧客诉（闭环后减半）', gain: '', cost: '-30', operator: '红姐', audit: '已审核', note: '关联瑕疵 FL-2025-023' },
+          { date: '2026-08-19', type: '违规扣分', event: '仪容仪表违规', desc: '运营抽查指甲过长', gain: '', cost: '-10', operator: '运营组', audit: '已审核', note: '关联瑕疵 FL-2026-014' },
+          { date: '2025-03-15', type: '额外奖励', event: '晋升 Y5', desc: '逐级晋升奖励', gain: '+100', cost: '', operator: '系统', audit: '已审核', note: '—' }
+        ]);
+
+        // ⑦ 瑕疵与担保（Sheet 21：一条一行，担保字段随行；关联标签序号＝Sheet 17 真实序号 1-130）
+        const flaws = ref([
+          { id: 'FL-2026-015', level: '三级（可正常上架）', levelType: 'info', desc: '客服回访中客户补充反映：上户期间加餐偶有延迟', labelNo: '67（月子餐制作 · 未做三餐三点）', source: '客诉', orderId: 'YG20260610-02', date: '2026-08-20', status: '生效中', statusType: 'warning', guarantor: '—（三级不适用）', guaranteeReason: '—', audit: '—', consent: '不适用（三级正常上架）', liability: '无', note: '已同步月嫂，下周回访复核' },
+          { id: 'FL-2026-014', level: '三级（可正常上架）', levelType: 'info', desc: '运营抽查发现指甲过长（仪容不规范）', labelNo: '79（服务素养 · 个人卫生规范）', source: '其他', date: '2026-08-18', status: '生效中', statusType: 'warning', guarantor: '—（三级不适用）', guaranteeReason: '—', audit: '—', consent: '不适用（三级正常上架）', liability: '无', note: '已提醒整改，一周后复查' },
+          { id: 'FL-2026-005', level: '三级（可正常上架）', levelType: 'info', desc: '面试中宝宝急救知识回答薄弱（呛奶/心肺复苏）', labelNo: '36（宝宝护理 · 心肺复苏规范）', source: '面试', date: '2026-06-15', status: '生效中', statusType: 'warning', guarantor: '—（三级不适用）', guaranteeReason: '—', audit: '—', consent: '不适用（三级正常上架）', liability: '无', note: '已安排急救专项复训（排课中）' },
+          { id: 'FL-2026-008', level: '三级（可正常上架）', levelType: 'info', desc: '护理日志填写不及时（软性，已提醒整改）', labelNo: '75（服务素养 · 护理日志规范）', source: '督导查房', date: '2026-03-15', status: '生效中', statusType: 'warning', guarantor: '—（三级不适用）', guaranteeReason: '—', audit: '—', consent: '不适用（三级正常上架）', liability: '无', note: '整改观察至 2026-09' },
+          { id: 'FL-2025-023', level: '三级（可正常上架）', levelType: 'info', desc: '2025-09 单客诉：喂养分歧沟通不足', labelNo: '38（宝宝护理 · 喂养规范）', source: '客诉', orderId: 'YG20250908-04', date: '2025-09-30', status: '已解除', statusType: 'info', guarantor: '—（三级不适用）', guaranteeReason: '—', audit: '—', consent: '不适用（三级正常上架）', liability: '无', note: '已闭环：2025-11 完成沟通课复训' },
+          { id: 'FL-2024-006', level: '二级（需担保上架）', levelType: 'warning', desc: '早产儿护理实操不规范（技能短板，本人愿意回炉）', labelNo: '51（宝宝护理 · 基础护理能力）', source: '培训考核', date: '2024-06-12', status: '已解除', statusType: 'info', guarantor: '刘敏（培训老师）', guaranteeReason: '理论 95 分，仅实操单项短板，回炉意愿强', audit: '已通过（2024-06-18 · 月嫂老师）', consent: '是（2024-07 成单前已告知客户）', liability: '无', note: '2025-01 早产儿专项考核通过后解除' }
+        ]);
+
+        // ⑩ 状态变更流水（Sheet 8）
+        // ⑩ 变更流水（Sheet 8：状态类自动全量 + 人工编辑按字段留痕）
+        const stateLogs = ref([
+          { time: '2026-08-21 14:32', operator: '李秀珍（本人）', target: '意愿状态', field: '当前意愿', before: '可沟通', after: '真开放', afterType: 'success', reason: '企微确认：9 月单已定，10 月下旬可接新单' },
+          { time: '2026-08-19 11:20', operator: '系统', target: '档期状态', field: '档期段', before: '锁档', after: '定档', afterType: 'primary', reason: '订单 YG20260818-03 已签合同，48h 内转化' },
+          { time: '2026-08-18 10:05', operator: '系统', target: '档期状态', field: '档期段', before: '空闲', after: '锁档', afterType: 'warning', reason: '销售张萌发起锁档（48h 有效）' },
+          { time: '2026-08-10 09:15', operator: '红姐', target: '意愿状态', field: '当前意愿', before: '真开放', after: '可沟通', afterType: 'warning', reason: '电话确认家中有事，暂可沟通' },
+          { time: '2026-07-15 16:40', operator: '周芸（月嫂老师）', target: '档案字段', field: '意愿度评级', before: '中', after: '高', afterType: 'success', reason: '连续两单 5 分好评 + 推送响应稳定' },
+          { time: '2026-07-09 10:20', operator: '李秀珍（本人）', target: '档期状态', field: '请假（叠加）', before: '空闲（可售）', after: '请假叠加', afterType: 'warning', reason: '本人申请休假 2026-07-09 ~ 08-07，叠加层覆盖期间不可售、不计入等单' },
+          { time: '2026-07-08 18:00', operator: '系统', target: '档期状态', field: '档期段', before: '上户中', after: '空闲', afterType: 'success', reason: '订单 YG20260610-02 下户完成' },
+          { time: '2026-07-02 11:30', operator: '李秀珍（本人）', target: '档案字段', field: '形象视频', before: '旧版', after: '重新上传', afterType: 'success', reason: '更新形象资料（上传免审）' },
+          { time: '2026-06-12 08:30', operator: '系统', target: '档期状态', field: '档期段', before: '定档', after: '上户中', afterType: 'primary', reason: '上户签到' },
+          { time: '2026-03-15 14:20', operator: '系统', target: '档案字段', field: '标签点亮（75）', before: '达标', after: '预警', afterType: 'warning', flawId: 'FL-2026-008', reason: '瑕疵标记，关联标签置预警（Sheet 21+17）' }
+        ]);
+
+        // ?demo= 演示状态覆盖（视图层，不写回数据）
+        if (demo === 'clean') {
+          flaws.value = [];
+          alertStrip.value = [];
+        } else if (demo === 'stopped') {
+          personState.value = { text: '停单', type: 'danger' };
+          willingness.value = { text: '暂不接', type: 'info' };
+          stateLogs.value.unshift({ time: '2026-08-24 09:00', operator: '运营组', target: '人态', field: '工作状态', before: '空闲', after: '停单', afterType: 'danger', reason: '客诉达 2 次，暂停接单，复训考核后方可恢复（Sheet 19【四】）' });
+        } else if (demo === 'wallet') {
+          wallet.value = { status: '已开通', type: 'success', time: '2026-06-01 开通' };
+        }
+
+        // ② 形象照片（多张：内联 SVG 占位图演示缩略图墙+预览组，首张为头图）
+        const svgPhoto = (label, color) => 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="160" height="120" fill="' + color + '"/><text x="80" y="66" font-size="15" text-anchor="middle" fill="#ffffff">' + label + '</text></svg>');
+        const photoColors = ['#5b8def','#7a9e7e','#b88230','#8d6bb3','#4f9ea8','#a86a6a','#6a8cae','#7f8c5a','#9c7a5b','#5e8a78','#8662a0','#4a7fb5'];
+        const photos = ref(photoColors.map((c, i) => svgPhoto('形象照片 ' + (i + 1), c)));
+
+        return {
+          activeTab, personState, willingness, wallet, photos,
+          jumpFlaw, jumpTags, rowHl, alertStrip, jumpStrip, noop, credit, scrollTo, jumpService, activeFlawCount,
+          certs, trainings, exams,
+          segments,
+          services, ratings, keywords,
+          interviews, meetups, commLogs,
+          skillGroups, skillAlerts, skillGroupStats, skillDialog, showDetail, verifyFixed, verifyFlex, verifyDialog, pushDialog, pushRecords, points, flaws, stateLogs
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
