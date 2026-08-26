@@ -60,6 +60,26 @@
     .m-body { font-size: 12px; line-height: 1.6; }
     .m-open { font-weight: 600; }
 
+    /* 档期日历弹窗 */
+    .cal-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .cal-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; text-align: center; color: #1f2d3d; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-head { font-size: 12px; color: #909399; text-align: center; padding: 4px 0; }
+    .cal-cell { aspect-ratio: 1.4; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 4px; background: #f0f9eb; color: #529b2e; }
+    .cal-cell.blank { background: transparent; }
+    .cal-cell.locked { background: #fdf6ec; color: #b88230; font-weight: 600; }
+    .cal-cell.booked { background: #ecf5ff; color: #337ecc; font-weight: 600; }
+    .cal-cell.leave { background: #f4f0fa; color: #722ed1; font-weight: 600; }
+    .cal-cell.today { box-shadow: inset 0 0 0 2px #f56c6c; }
+    .cal-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: #606266; }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .dot.free { background: #f0f9eb; border: 1px solid #b3e19d; }
+    .dot.locked { background: #fdf6ec; border: 1px solid #eebe77; }
+    .dot.booked { background: #ecf5ff; border: 1px solid #79bbff; }
+    .dot.leave { background: #f4f0fa; border: 1px solid #b37feb; }
+    .dot.today { background: #fff; border: 2px solid #f56c6c; }
+
     @media (max-width: 768px) {
       .ph-left { width: 100%; border-right: none; border-bottom: 1px solid #f0f0f0; padding: 0 0 16px; }
       .ph-mid { min-width: 0; }
@@ -92,11 +112,11 @@
     SharedMenu.createVueApp({
       template: `
         <div>
-          <!-- ① 档案头概览卡（跨 Sheet 汇总，常驻顶部，打开即见） -->
-          <div class="content-card mb-2">
+          <!-- ① 档案头概览卡（跨 Sheet 汇总，常驻顶部，打开即见；点击卡片打开档期日历弹窗） -->
+          <div class="content-card mb-2" @click="calDialog = true" style="cursor:pointer">
             <div class="card-header">
               <span class="card-title">① 档案头概览</span>
-              <span class="src-note">跨 Sheet 汇总展示 · 字段清单区块① · 档案更新 2026-08-23</span>
+              <span class="src-note">跨 Sheet 汇总展示 · 字段清单区块① · 档案更新 2026-08-23 · 📅 点击卡片看档期日历</span>
             </div>
             <div class="card-body">
               <div class="ph-wrap">
@@ -106,7 +126,7 @@
                   <div class="ph-id">YG-1023</div>
                   <div class="ph-sub">42 岁 · 湖南邵阳<br>现居 广东深圳 · 龙岗</div>
                   <div class="ph-video">
-                    <el-tag type="success" effect="dark" size="small" style="cursor:pointer" @click="noop('在线播放形象视频')"><el-icon style="margin-right:4px"><VideoPlay /></el-icon>形象视频 · 已上传 · 点击播放</el-tag>
+                    <el-tag type="success" effect="dark" size="small" style="cursor:pointer" @click.stop="noop('在线播放形象视频')"><el-icon style="margin-right:4px"><VideoPlay /></el-icon>形象视频 · 已上传 · 点击播放</el-tag>
                   </div>
                   <div class="ph-chips">
                     <el-tag size="small" effect="plain">龙岗</el-tag>
@@ -153,10 +173,10 @@
                 </div>
                 <div class="ph-strip-row"><span class="st-label">结论</span>
                   <span style="font-size:13px">能力综合评级 <b>A（老师评估）</b> · 意愿度 <b>高（老师评估）</b> · </span>
-                  <el-link type="primary" style="font-size:13px" @click="skillDialog = true">达标 66/69</el-link>
+                  <el-link type="primary" style="font-size:13px" @click.stop="skillDialog = true">达标 66/69</el-link>
                 </div>
               </div>
-              <div class="alert-strip" v-if="alertStrip.length">
+              <div class="alert-strip" v-if="alertStrip.length" @click.stop>
                 <span class="as-item" v-for="a in alertStrip" :key="a.text">
                   <el-icon><WarningFilled /></el-icon>
                   <el-link type="warning" :underline="false" @click="jumpStrip(a)">{{ a.text }}</el-link>
@@ -166,6 +186,24 @@
           </div>
 
           <!-- ②~⑨ 分区 Tab（编号与字段清单区块一一对应；?tab= 可指定默认激活） -->
+          <el-dialog v-model="calDialog" title="档期日历 · 李秀珍（YG-1023）" width="900px" top="6vh">
+            <div class="cal-wrap">
+              <div v-for="m in calMonths" :key="m.title">
+                <div class="cal-title">{{ m.title }}</div>
+                <div class="cal-grid">
+                  <div class="cal-head" v-for="w in weekHeads" :key="w">{{ w }}</div>
+                  <div v-for="(c, i) in m.cells" :key="i" class="cal-cell" :class="c.cls">{{ c.label }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="cal-legend">
+              <span><i class="dot free"></i>空闲可售</span>
+              <span><i class="dot locked"></i>锁档（08-18 ~ 08-19 · 48h）</span>
+              <span><i class="dot booked"></i>定档（09-05 ~ 10-01 · 订单 YG20260818-03）</span>
+              <span><i class="dot leave"></i>请假叠加（08-01 ~ 08-07 休假 · 08-27 ~ 08-28 家中有事）</span>
+              <span><i class="dot today"></i>今天（08-24）</span>
+            </div>
+          </el-dialog>
           <div class="content-card">
             <div class="card-body" style="padding-top:10px">
               <el-tabs v-model="activeTab">
@@ -323,11 +361,9 @@
                     <el-table :data="skillAlerts" size="small" border style="width:100%;margin-bottom:14px">
                       <el-table-column prop="item" label="服务项目" min-width="180"></el-table-column>
                       <el-table-column prop="cert" label="关联标签" width="135"></el-table-column>
-                      <el-table-column label="当前评定" width="100">
-                        <template #default="{ row }"><el-tag size="small" :type="row.curType" effect="plain">{{ row.cur }}</el-tag></template>
-                      </el-table-column>
-                      <el-table-column prop="target" label="Y5 应达" width="90"></el-table-column>
-                      <el-table-column label="状态" width="90">
+                      <el-table-column prop="cur" label="当前技能评定" width="115"></el-table-column>
+                      <el-table-column prop="target" label="Y5 应达评定" width="110"></el-table-column>
+                      <el-table-column label="是否符合当前等级要求" width="160">
                         <template #default="{ row }"><el-tag :type="row.stType" size="small">{{ row.st }}</el-tag></template>
                       </el-table-column>
                       <el-table-column label="关联 / 处理" min-width="200">
@@ -367,11 +403,9 @@
                         <el-table-column prop="item" label="服务项目" min-width="190"></el-table-column>
                         <el-table-column prop="cert" label="关联标签" width="130"></el-table-column>
                         <el-table-column prop="start" label="起评等级" width="95"></el-table-column>
-                        <el-table-column label="当前评定" width="95">
-                          <template #default="scope"><el-tag size="small" :type="scope.row.curType" effect="plain">{{ scope.row.cur }}</el-tag></template>
-                        </el-table-column>
-                        <el-table-column prop="target" label="Y5 应达" width="85"></el-table-column>
-                        <el-table-column label="状态" width="85">
+                        <el-table-column prop="cur" label="当前技能评定" width="115"></el-table-column>
+                        <el-table-column prop="target" label="Y5 应达评定" width="110"></el-table-column>
+                        <el-table-column label="是否符合当前等级要求" width="160">
                           <template #default="scope"><el-tag :type="scope.row.stType" size="small">{{ scope.row.st }}</el-tag></template>
                         </el-table-column>
                       </el-table>
@@ -432,7 +466,8 @@
                     <div class="month-cell"><div class="m-name">2027-02</div><div class="m-body"><span class="m-free m-open">开放 28 天</span></div></div>
                     <div class="month-cell"><div class="m-name">2027-03</div><div class="m-body"><span class="m-free m-open">开放 31 天</span></div></div>
                   </div>
-                  <div style="font-size:12px;color:#909399;margin-top:10px;margin-bottom:16px">近 90 天档期利用：可售 46 天 · 售出 26 天 · 浪费 20 天（浪费率 43% · 剔除请假与已定段）</div>
+                  <div style="font-size:12px;color:#909399;margin-top:10px">近 30 天档期利用：上户 0 天 · 定档 0 天 · 锁档 2 天 · 请假 7 天 · 空闲可售 21 天（利用率 0%）</div>
+                  <div style="font-size:12px;color:#909399;margin-top:6px;margin-bottom:16px">近 90 天档期利用：可售 46 天 · 售出 26 天 · 浪费 20 天（浪费率 43% · 剔除请假与已定段）</div>
 
                   <div class="sub-title" style="display:flex;justify-content:space-between;align-items:center">意愿状态（想不想接）
                     <el-button size="small" @click="noop('代改意愿')">代改意愿</el-button>
@@ -477,6 +512,7 @@
                   <div class="sub-title sub-gap">档期状态</div>
                   <div class="kv-chips" style="align-items:center">
                     <span class="chip">档期状态<el-tag type="primary" size="small" style="margin-left:6px">定档</el-tag></span>
+                    <span class="chip">目前所在地<b>广东深圳 · 龙岗</b></span>
                     <span class="chip">本次等单开始日<b>2026-08-08</b></span>
                     <span class="chip">累计等单天数<b style="color:#e6a23c">10 天（08-08 → 08-18 锁档 · 高于均值）</b></span>
                     <span class="chip">历史平均等单天数<b>6.5 天</b></span>
@@ -779,7 +815,7 @@
         const urlTab = new URLSearchParams(window.location.search).get('tab');
         const activeTab = ref(TAB_NAMES.indexOf(urlTab) >= 0 ? urlTab : 'base');
 
-        // 演示状态：?demo=clean（无异常空态）| ?demo=stopped（停单态）
+        // 演示状态：?demo=clean（无异常空态）| ?demo=stopped（停单态）| ?demo=wallet（工资钱包已开通）
         const demo = new URLSearchParams(window.location.search).get('demo');
 
         // 概览卡可演示状态 + ⑦⑨⑩ 锚点互跳
@@ -870,6 +906,23 @@
         const showVerify = ref(false);
         const verifyDialog = ref(new URLSearchParams(window.location.search).get('verify') === '1');
         const pushDialog = ref(new URLSearchParams(window.location.search).get('push') === '1');
+        const calDialog = ref(new URLSearchParams(window.location.search).get('cal') === '1');
+
+        // 档期日历（弹窗：2026-08 周一表头偏移 5；2026-09 偏移 1）
+        const weekHeads = ['一', '二', '三', '四', '五', '六', '日'];
+        const buildMonth = (title, offset, days, stateMap) => {
+          const cells = [];
+          for (let i = 0; i < offset; i++) cells.push({ label: '', cls: 'blank' });
+          for (let d = 1; d <= days; d++) cells.push({ label: d, cls: stateMap[d] || 'free' });
+          return { title, cells };
+        };
+        const augState = { 1: 'leave', 2: 'leave', 3: 'leave', 4: 'leave', 5: 'leave', 6: 'leave', 7: 'leave', 18: 'locked', 19: 'locked', 27: 'leave', 28: 'leave', 24: 'free today' };
+        const sepState = {};
+        for (let d = 5; d <= 30; d++) sepState[d] = 'booked';
+        const calMonths = ref([
+          buildMonth('2026 年 8 月', 5, 31, augState),
+          buildMonth('2026 年 9 月', 1, 30, sepState)
+        ]);
 
         // ④ 推送确认记录（近 30 天，演示摘录 6 次；含 2 次超时未响应以解释 12/14；字段清单 §5 待补字段）
         const pushRecords = ref([
@@ -946,14 +999,14 @@
         const skillFlawMap = { 21: 'FL-2026-005', 49: 'FL-2026-015' };
         const skillGroups = skillSpec.map(g => {
           const items = g.items.map(([no, item, cert, start, target]) => {
-            const [cur, curType] = curMap[no] || ['优秀', 'success'];
+            const cur = (curMap[no] || ['优秀'])[0];
             let st = '达标', stType = 'success';
             if (target !== '—') {
               const diff = RANK.indexOf(cur) - RANK.indexOf(target);
               if (cur === '不及格' || diff <= -2) { st = '未达标'; stType = 'danger'; }
               else if (diff === -1) { st = '预警'; stType = 'warning'; }
             }
-            return { no, item, cert, start, cur, curType, target, st, stType, note: skillNoteMap[no] || '', flawId: skillFlawMap[no] || '' };
+            return { no, item, cert, start, cur, target, st, stType, note: skillNoteMap[no] || '', flawId: skillFlawMap[no] || '' };
           });
           const bad = items.filter(i => i.st !== '达标');
           return { cat: g.cat, total: items.length, lit: (items.length - bad.length) + '/' + items.length, items };
@@ -1024,7 +1077,7 @@
           segments,
           services, ratings, keywords,
           interviews, meetups, commLogs,
-          skillGroups, skillAlerts, skillGroupStats, skillDialog, showDetail, verifyFixed, verifyFlex, verifyDialog, pushDialog, pushRecords, points, flaws, stateLogs
+          skillGroups, skillAlerts, skillGroupStats, skillDialog, showDetail, verifyFixed, verifyFlex, verifyDialog, pushDialog, pushRecords, calDialog, weekHeads, calMonths, points, flaws, stateLogs
         };
       }
     }).mount('#app');
