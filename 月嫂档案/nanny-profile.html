@@ -32,6 +32,8 @@
     .warn-text { color: #e6a23c; font-weight: 600; }
     .ph-photo { width: 96px; height: 72px; border-radius: 8px; border: 1px dashed #c0c4cc; background: #f8f9fb; color: #909399; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 12px; gap: 3px; }
     .ph-chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+    .ph-strip { margin-top: 14px; border-top: 1px dashed #e4e7ed; padding-top: 12px; }
+    .ph-strip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
     .alert-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 14px; padding: 8px 14px; background: #fdf6ec; border: 1px solid #faecd8; border-radius: 6px; font-size: 13px; }
     .as-item { display: inline-flex; align-items: center; gap: 5px; color: #b88230; }
     .photo-wall { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -51,11 +53,19 @@
     .chip-link { cursor: pointer; }
     .chip-link:hover { border-color: #409eff; }
 
+    .m-free { color: #529b2e; } .m-book { color: #337ecc; } .m-lock { color: #b88230; } .m-leave { color: #722ed1; }
+    .month-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+    .month-cell { background: #f8f9fb; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px 10px; }
+    .m-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #1f2d3d; }
+    .m-body { font-size: 12px; line-height: 1.6; }
+    .m-open { font-weight: 600; }
+
     @media (max-width: 768px) {
       .ph-left { width: 100%; border-right: none; border-bottom: 1px solid #f0f0f0; padding: 0 0 16px; }
       .ph-mid { min-width: 0; }
       .status-grid { grid-template-columns: 1fr; }
       .ph-right { width: 100%; }
+      .month-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -133,6 +143,19 @@
                   <div class="metric"><div class="metric-v">12/14</div><div class="metric-l">近30天推送响应</div></div>
                 </div>
               </div>
+              <div class="ph-strip">
+                <div class="ph-strip-row"><span class="st-label">亮点</span>
+                  <el-tag size="small" style="margin-right:6px">早产儿护理</el-tag>
+                  <el-tag size="small" style="margin-right:6px">双胞胎</el-tag>
+                  <el-tag size="small" style="margin-right:6px">催乳通乳</el-tag>
+                  <el-tag size="small" style="margin-right:6px">月子餐</el-tag>
+                  <span style="font-size:12px;color:#606266">儿科护士 6 年 · 会粤语 · 有驾照 · 医院陪护经验丰富 · 多胎家庭服务经验</span>
+                </div>
+                <div class="ph-strip-row"><span class="st-label">结论</span>
+                  <span style="font-size:13px">能力综合评级 <b>A（老师评估）</b> · 意愿度 <b>高（老师评估）</b> · </span>
+                  <el-link type="primary" style="font-size:13px" @click="skillDialog = true">达标 66/69</el-link>
+                </div>
+              </div>
               <div class="alert-strip" v-if="alertStrip.length">
                 <span class="as-item" v-for="a in alertStrip" :key="a.text">
                   <el-icon><WarningFilled /></el-icon>
@@ -142,7 +165,7 @@
             </div>
           </div>
 
-          <!-- ②~⑩ 分区 Tab（编号与字段清单区块一一对应；?tab= 可指定默认激活） -->
+          <!-- ②~⑨ 分区 Tab（编号与字段清单区块一一对应；?tab= 可指定默认激活） -->
           <div class="content-card">
             <div class="card-body" style="padding-top:10px">
               <el-tabs v-model="activeTab">
@@ -205,6 +228,18 @@
 
                   <div class="sub-title sub-gap">个人介绍</div>
                   <div style="font-size:13px;line-height:1.9;color:#606266;background:#f8f9fb;border-radius:6px;padding:12px 16px">我叫李秀珍，湖南邵阳人，做月嫂 5 年、家政 8 年，护理过 18 个宝宝（含早产儿 3 例、双胞胎 2 对）。之前是儿科护士，擅长早产儿护理、月子餐和催乳通乳，持有母婴护理证、育婴师证、催乳证。我习惯用护理日志记录宝宝每天的喂养、睡眠和便便情况，让宝妈随时看得见、更安心。普通话和粤语都能沟通，可住家 24 小时服务。</div>
+
+                  <div class="sub-title sub-gap">从业经历（入职前 · 简历式）</div>
+                  <div class="kv-chips" style="margin-bottom:10px">
+                    <span class="chip">入行时间<b>2018-03（8 年）</b></span>
+                    <span class="chip">入行起点<b>育婴师</b></span>
+                  </div>
+                  <el-table :data="careers" size="small" border style="width:100%">
+                    <el-table-column prop="period" label="时间段" width="180"></el-table-column>
+                    <el-table-column prop="org" label="单位" width="210"></el-table-column>
+                    <el-table-column prop="role" label="岗位" width="120"></el-table-column>
+                    <el-table-column prop="note" label="备注" min-width="220"></el-table-column>
+                  </el-table>
 
                   <div class="sub-title sub-gap">银行与收款</div>
                   <el-descriptions :column="4" border size="small">
@@ -322,7 +357,7 @@
                   <div style="margin-top:8px">
                     <el-link type="primary" style="font-weight:normal" @click="skillDialog = true">查看全部 69 项</el-link>
                   </div>
-                  <div style="font-size:12px;color:#909399;margin-top:8px">基础准入见「准入双阶段评定」；行为素养类标签见 ⑧ 能力画像</div>
+                  <div style="font-size:12px;color:#909399;margin-top:8px">基础准入见「准入双阶段评定」；行为素养类标签见 ⑦ 瑕疵担保</div>
 
                   <el-dialog v-model="skillDialog" title="技能达标 · 全部 69 项（Sheet 26 技能考核标准 · 本级别 Y5 应达对照）" width="90%" top="4vh">
                     <div v-for="g in skillGroups" :key="g.cat" style="margin-bottom:16px">
@@ -386,6 +421,19 @@
                 <!-- ④ 意愿与档期（Sheet 5 + 6 + 7） -->
                 <el-tab-pane label="④ 意愿与档期" name="schedule">
                   <div class="pane-note">来源：Sheet 5 意愿状态 + Sheet 6 档期状态 + Sheet 7 等单时长 · 字段清单区块④</div>
+                  <div class="sub-title">未来档期概览（按月 · 近 8 个月）</div>
+                  <div class="month-grid">
+                    <div class="month-cell"><div class="m-name">2026-08（本月）</div><div class="m-body"><span class="m-free">可售 6 天</span> · <span class="m-leave">请假 2 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2026-09</div><div class="m-body"><span class="m-book">定档 26 天</span> · <span class="m-free">可售 4 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2026-10</div><div class="m-body"><span class="m-book">定档 1 天</span> · <span class="m-free">可售 30 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2026-11</div><div class="m-body"><span class="m-lock">锁档 27 天</span> · <span class="m-free">可售 3 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2026-12</div><div class="m-body"><span class="m-free m-open">开放 31 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2027-01</div><div class="m-body"><span class="m-free m-open">开放 31 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2027-02</div><div class="m-body"><span class="m-free m-open">开放 28 天</span></div></div>
+                    <div class="month-cell"><div class="m-name">2027-03</div><div class="m-body"><span class="m-free m-open">开放 31 天</span></div></div>
+                  </div>
+                  <div style="font-size:12px;color:#909399;margin-top:10px;margin-bottom:16px">近 90 天档期利用：可售 46 天 · 售出 26 天 · 浪费 20 天（浪费率 43% · 剔除请假与已定段）</div>
+
                   <div class="sub-title" style="display:flex;justify-content:space-between;align-items:center">意愿状态（想不想接）
                     <el-button size="small" @click="noop('代改意愿')">代改意愿</el-button>
                   </div>
@@ -453,14 +501,6 @@
                     <el-table-column prop="note" label="备注" min-width="180"></el-table-column>
                   </el-table>
 
-                  <div class="sub-title sub-gap">可售窗口（系统推导 · 今天起扣除已定段与请假覆盖）</div>
-                  <div class="kv-chips">
-                    <span class="chip">08-24 ~ 08-26<b>3 天</b></span>
-                    <span class="chip">08-29 ~ 09-04<b>7 天</b></span>
-                    <span class="chip">10-02 ~ 11-01<b>31 天</b></span>
-                    <span class="chip">11-29 起<b>开放</b></span>
-                  </div>
-
                   <el-dialog v-model="pushDialog" title="推送确认记录（近 30 天 · 14 次 · 演示摘录 6 次）" width="75%" top="8vh">
                     <el-table :data="pushRecords" size="small" border style="width:100%">
                       <el-table-column prop="time" label="推送时间" width="150"></el-table-column>
@@ -477,7 +517,10 @@
                 <el-tab-pane label="⑤ 匹配过程" name="match">
                   <div class="pane-note">来源：Sheet 12 面试记录 + Sheet 13 见面会记录 + Sheet 14 开档沟通记录 · 字段清单区块⑤</div>
                   <div class="kv-chips">
-                    <span class="chip">面试通过率<b>75%（9/12）</b></span>
+                    <span class="chip">面试通过率<b>64%（9/14）</b></span>
+                    <span class="chip">面试参与率<b>88%（参加 14 / 受邀 16 · 爽约 2）</b></span>
+                    <span class="chip">见面会参与率<b>67%（参加 4 / 被邀 6 · 邀约均为非上户/非请假档期）</b></span>
+                    <span class="chip">开档真实率<b>83%（沟通确认真实 10 / 开档 12 次）</b></span>
                     <span class="chip">见面会选中率<b>29%（5/17）</b></span>
                     <span class="chip">飞单率<b>0%（0/9）</b></span>
                     <span class="chip">平均响应速度<b>38 分钟</b></span>
@@ -656,32 +699,9 @@
                   </el-table>
                 </el-tab-pane>
 
-                <!-- ⑧ 能力画像（Sheet 11 · 卖点 + 结论；技能异常见 ③、瑕疵事件见 ⑦） -->
-                <el-tab-pane label="⑧ 能力画像" name="tags">
-                  <div class="pane-note">来源：Sheet 11 能力标签 · 字段清单区块⑧</div>
-                  <div class="sub-title">卖点</div>
-                  <el-descriptions :column="1" border size="small">
-                    <el-descriptions-item label="擅长领域">
-                      <el-tag size="small" style="margin-right:6px">早产儿护理</el-tag>
-                      <el-tag size="small" style="margin-right:6px">双胞胎</el-tag>
-                      <el-tag size="small" style="margin-right:6px">催乳通乳</el-tag>
-                      <el-tag size="small" style="margin-right:6px">月子餐</el-tag>
-                    </el-descriptions-item>
-                    <el-descriptions-item label="特殊经历">儿科护士 6 年 · 会粤语 · 有驾照可自驾</el-descriptions-item>
-                    <el-descriptions-item label="其他差异化标签">医院陪护经验丰富 · 多胎家庭服务经验</el-descriptions-item>
-                  </el-descriptions>
-
-                  <div class="sub-title sub-gap">能力结论</div>
-                  <div class="kv-chips">
-                    <span class="chip">能力综合评级<b>A（老师评估）</b></span>
-                    <span class="chip">意愿度<b>高（老师评估）</b></span>
-                    <span class="chip">系统证据<b><el-link type="primary" @click="skillDialog = true">达标 66/69</el-link></b> · <b>评分 4.8（18 单）</b> · <b><el-link type="primary" @click="activeTab = 'flaw'">生效中瑕疵 {{ activeFlawCount }} 项</el-link></b></span>
-                  </div>
-                </el-tab-pane>
-
-                <!-- ⑨ 积分（Sheet 16） -->
-                <el-tab-pane label="⑨ 积分" name="points">
-                  <div class="pane-note">来源：Sheet 16 积分记录 · 字段清单区块⑨</div>
+                <!-- ⑧ 积分（Sheet 16） -->
+                <el-tab-pane label="⑧ 积分" name="points">
+                  <div class="pane-note">来源：Sheet 16 积分记录 · 字段清单区块⑧</div>
                   <div class="kv-chips">
                     <span class="chip">当前定级<b>Y5</b></span>
                     <span class="chip">当前级别积分（升级后清零）<b>320</b></span>
@@ -720,9 +740,9 @@
                   </el-table>
                 </el-tab-pane>
 
-                <!-- ⑩ 变更流水（Sheet 8） -->
-                <el-tab-pane label="⑩ 变更流水" name="log">
-                  <div class="pane-note">来源：Sheet 8 档案变更记录 · 字段清单区块⑩</div>
+                <!-- ⑨ 变更流水（Sheet 8） -->
+                <el-tab-pane label="⑨ 变更流水" name="log">
+                  <div class="pane-note">来源：Sheet 8 档案变更记录 · 字段清单区块⑨</div>
                   <el-table :data="stateLogs" size="small" border style="width:100%">
                     <el-table-column prop="time" label="变更时间" width="150"></el-table-column>
                     <el-table-column prop="operator" label="操作人" width="130"></el-table-column>
@@ -755,7 +775,7 @@
         // ==================== Mock 数据（演示口径：今日 = 2026-08-24） ====================
 
         // 默认激活 Tab：支持 ?tab=base|produce|schedule|service|match|tags|points|flaw|log
-        const TAB_NAMES = ['base', 'produce', 'schedule', 'match', 'service', 'flaw', 'tags', 'points', 'log'];
+        const TAB_NAMES = ['base', 'produce', 'schedule', 'match', 'service', 'flaw', 'points', 'log'];
         const urlTab = new URLSearchParams(window.location.search).get('tab');
         const activeTab = ref(TAB_NAMES.indexOf(urlTab) >= 0 ? urlTab : 'base');
 
@@ -783,6 +803,15 @@
         const activeFlawCount = computed(() => flaws.value.filter(f => f.status === '生效中').length);
         const noop = (t) => { ElementPlus.ElMessage({ message: t + '（演示占位）', grouping: true, type: 'info' }); };
         const credit = 86;
+
+        // ③ 从业经历（Sheet 2：入职前履历，正序；儿科护士 6 年与亮点特殊经历互证）
+        const careers = ref([
+          { period: '2012 ~ 2018', org: '老家县人民医院 · 儿科', role: '护士', note: '入行前职业（护理功底来源）' },
+          { period: '2018-03 ~ 2020-04', org: '多喜娃', role: '育婴师', note: '入行起点：育婴/早教' },
+          { period: '2020-05 ~ 2023-05', org: '天鹅到家', role: '月嫂', note: '上户 11 单，转月嫂赛道' },
+          { period: '2023-06 ~ 2024-02', org: '私人接单', role: '月嫂', note: '老客户转介绍积累' },
+          { period: '2024-03 至今', org: '氧阁', role: '月嫂（Y5）', note: '2024-03-12 入职，直招定级 Y4 起' }
+        ]);
 
         // ② 资质证件（身份证 + 9 类技能证，存照片不存编号/有效期；健康证职能由体检报告五项承接）
         const certs = ref([
@@ -895,7 +924,7 @@
         const showDetail = ref(false);
         const skillDialog = ref(new URLSearchParams(window.location.search).get('skill') === '1');
 
-        // ③ 技能达标（Sheet 26 技能考核标准 69 项骨架：服务项目/关联标签/起评/Y5 应达；当前评定＝该月嫂考核评级，低于应达或触红线计入异常；基础准入见准入双阶段评定，行为素养类见 ⑧ 能力画像）
+        // ③ 技能达标（Sheet 26 技能考核标准 69 项骨架：服务项目/关联标签/起评/Y5 应达；当前评定＝该月嫂考核评级，低于应达或触红线计入异常；基础准入见准入双阶段评定，行为素养类见 ⑦ 瑕疵担保）
         const RANK = ['不及格', '基本达标', '及格', '良好', '优秀', '超优秀'];
         const skillSpec = [
           { cat: '宝宝护理', items: [
@@ -991,7 +1020,7 @@
         return {
           activeTab, personState, willingness, wallet, photos,
           jumpFlaw, jumpTags, rowHl, alertStrip, jumpStrip, noop, credit, scrollTo, jumpService, activeFlawCount,
-          certs, trainings, exams,
+          certs, trainings, exams, careers,
           segments,
           services, ratings, keywords,
           interviews, meetups, commLogs,
