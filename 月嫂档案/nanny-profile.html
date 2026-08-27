@@ -45,6 +45,9 @@
     .metric { background: #f8f9fb; border-radius: 6px; padding: 12px 6px; text-align: center; }
     .metric-v { font-size: 18px; font-weight: 600; color: #1f2d3d; }
     .metric-l { font-size: 12px; color: #909399; margin-top: 4px; }
+    .q-icon { font-size: 13px; color: #c0c4cc; cursor: help; }
+    .q-icon:hover { color: #409eff; }
+    .metric-q { grid-column: 1 / -1; text-align: right; line-height: 1; margin-bottom: -4px; }
 
     /* 汇总 chips */
     .kv-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -55,7 +58,17 @@
 
     .m-free { color: #529b2e; } .m-book { color: #337ecc; } .m-lock { color: #b88230; } .m-leave { color: #722ed1; }
     .month-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
-    .month-cell { background: #f8f9fb; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px 10px; }
+    .month-cell { background: #f8f9fb; border: 1px solid #ebeef5; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+    .month-cell:hover { border-color: #409eff; }
+
+    /* 等单统计面板 */
+    .idle-panels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 6px 0 16px; }
+    .idle-panel { border: 1px solid #ebeef5; border-radius: 8px; padding: 10px 14px; background: #f8f9fb; }
+    .ip-title { font-size: 12px; color: #909399; margin-bottom: 6px; }
+    .ip-num { font-size: 13px; color: #606266; margin-bottom: 6px; }
+    .ip-num b { font-size: 18px; color: #1f2d3d; margin: 0 2px; }
+    .ip-den { font-size: 12px; color: #909399; }
+    .ip-sub { font-size: 11px; color: #909399; margin-top: 4px; }
     .m-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #1f2d3d; }
     .m-body { font-size: 12px; line-height: 1.6; }
     .m-open { font-weight: 600; }
@@ -116,7 +129,7 @@
           <div class="content-card mb-2" @click="calDialog = true" style="cursor:pointer">
             <div class="card-header">
               <span class="card-title">① 档案头概览</span>
-              <span class="src-note">跨 Sheet 汇总展示 · 字段清单区块① · 档案更新 2026-08-23 · 📅 点击卡片看档期日历</span>
+              <span class="src-note">档案更新 2026-08-23 · 📅 点击卡片看档期日历</span><!-- 来源注：跨 Sheet 汇总展示 · 字段清单区块①（仅代码可见） -->
             </div>
             <div class="card-body">
               <div class="ph-wrap">
@@ -148,13 +161,30 @@
                     <div class="st-col">
                       <div class="st-group">状态</div>
                       <div class="st-item"><span class="st-label">工作状态</span><el-tag :type="personState.type">{{ personState.text }}</el-tag></div>
-                      <div class="st-item"><span class="st-label">当前意愿</span><el-tag :type="willingness.type">{{ willingness.text }}</el-tag><span class="warn-text" style="font-size:12px;margin-left:4px">至 2026-08-28（剩 4 天）</span></div>
+                      <div class="st-item"><span class="st-label">当前意愿</span><el-tag :type="willingness.type">{{ willingness.text }}</el-tag><span class="warn-text" style="font-size:12px;margin-left:4px">至 2026-08-28（剩 4 天） · 深圳龙岗</span></div>
                       <div class="st-item"><span class="st-label">档期状态</span><el-tag type="primary">定档</el-tag></div>
+                      <div class="st-item"><span class="st-label">等单统计</span><span>前 21/30 · 后 9/30 闲置<span style="font-size:12px;color:#909399"> · 利用率 41%</span></span></div>
                       <div class="st-item"><span class="st-label">档期段日期</span><span>2026-09-05 ~ 2026-10-01（26 天）</span></div>
                     </div>
                   </div>
                 </div>
                 <div class="ph-right">
+                  <div class="metric-q">
+                    <el-tooltip placement="bottom-end" effect="light">
+                      <template #content>
+                        <div style="font-size:12px;line-height:1.8">
+                          <b>指标口径</b><br>
+                          累计接单：历史累计完成订单数（Sheet 9 自动统计）<br>
+                          评分均值：全部已完成订单客户评分的算术平均值（1-5 星整数评分）<br>
+                          客诉：客户正式投诉次数及处理状态（Sheet 10；闭环=已处理完毕）<br>
+                          退单：客户中途退单次数（Sheet 10；退单必须同步删除档期段）<br>
+                          意愿可信度：推送确认结果与自标意愿逐次比对累计；连续拒单降分，低于 80 数字变红<br>
+                          近30天推送响应：近 30 天系统推送中，限时响应次数 / 推送总次数
+                        </div>
+                      </template>
+                      <el-icon class="q-icon"><QuestionFilled /></el-icon>
+                    </el-tooltip>
+                  </div>
                   <div class="metric"><div class="metric-v">18 单</div><div class="metric-l">累计接单</div></div>
                   <div class="metric"><div class="metric-v">4.8</div><div class="metric-l">评分均值</div></div>
                   <div class="metric"><div class="metric-v">1 起</div><div class="metric-l">客诉（已闭环）</div></div>
@@ -172,8 +202,8 @@
                   <span style="font-size:12px;color:#606266">儿科护士 6 年 · 会粤语 · 有驾照 · 医院陪护经验丰富 · 多胎家庭服务经验</span>
                 </div>
                 <div class="ph-strip-row"><span class="st-label">结论</span>
-                  <span style="font-size:13px">能力综合评级 <b>A（老师评估）</b> · 意愿度 <b>高（老师评估）</b> · </span>
-                  <el-link type="primary" style="font-size:13px" @click.stop="skillDialog = true">达标 66/69</el-link>
+                  <span style="font-size:13px">能力综合评级 <b>A（老师评估 · 2026-07-20）</b> · 意愿度 <b>高（老师评估 · 2026-07-15）</b> · </span>
+                  <el-link type="primary" style="font-size:13px" @click.stop="skillDialog = true">技能达标 66/69</el-link>
                 </div>
               </div>
               <div class="alert-strip" v-if="alertStrip.length" @click.stop>
@@ -209,26 +239,26 @@
               <el-tabs v-model="activeTab">
                 <!-- ② 基础信息（Sheet 1） -->
                 <el-tab-pane label="② 基础信息" name="base">
-                  <div class="pane-note">来源：Sheet 1 基础信息 · 字段清单区块②</div>
+                  <!-- <div class="pane-note">来源：Sheet 1 基础信息 · 字段清单区块②</div> -->
                   <div class="sub-title">身份基础</div>
                   <el-descriptions :column="4" border size="small">
                     <el-descriptions-item label="姓名">李秀珍</el-descriptions-item>
+                    <el-descriptions-item label="身份证">4403**********2118（照片已存）</el-descriptions-item>
                     <el-descriptions-item label="类别"><el-tag size="small" type="primary" effect="plain">签约月嫂</el-tag></el-descriptions-item>
-                    <el-descriptions-item label="年龄">42 岁</el-descriptions-item>
-                    <el-descriptions-item label="籍贯">湖南邵阳</el-descriptions-item>
-                    <el-descriptions-item label="民族">汉族</el-descriptions-item>
                     <el-descriptions-item label="出生日期">1984-11-06</el-descriptions-item>
+                    <el-descriptions-item label="年龄">42 岁</el-descriptions-item>
                     <el-descriptions-item label="属相">鼠</el-descriptions-item>
                     <el-descriptions-item label="星座">天蝎座</el-descriptions-item>
-                    <el-descriptions-item label="生育状况">已育（2 子）</el-descriptions-item>
-                    <el-descriptions-item label="MBTI 测评">ISFJ</el-descriptions-item>
-                    <el-descriptions-item label="联系方式">138****6621</el-descriptions-item>
-                    <el-descriptions-item label="现居地">广东深圳 · 龙岗</el-descriptions-item>
+                    <el-descriptions-item label="籍贯">湖南邵阳</el-descriptions-item>
+                    <el-descriptions-item label="民族">汉族</el-descriptions-item>
                     <el-descriptions-item label="学历">初中</el-descriptions-item>
                     <el-descriptions-item label="婚姻状况">已婚</el-descriptions-item>
-                    <el-descriptions-item label="入职时间">2024-03-12</el-descriptions-item>
-                    <el-descriptions-item label="身份证">4403**********2118（照片已存）</el-descriptions-item>
+                    <el-descriptions-item label="生育状况">已育（2 子）</el-descriptions-item>
+                    <el-descriptions-item label="联系方式">138****6621</el-descriptions-item>
+                    <el-descriptions-item label="现居地">广东深圳 · 龙岗</el-descriptions-item>
                     <el-descriptions-item label="紧急联系人">李建军（丈夫）· 138****3305</el-descriptions-item>
+                    <el-descriptions-item label="MBTI 测评">ISFJ</el-descriptions-item>
+                    <el-descriptions-item label="入职时间">2024-03-12</el-descriptions-item>
                     <el-descriptions-item label="月嫂老师">周芸（2024-03-12 绑定）</el-descriptions-item>
                     <el-descriptions-item label="培训老师">刘敏（2024-03-15 绑定）</el-descriptions-item>
                     <el-descriptions-item label="离册时间 / 原因">—<el-button size="small" style="margin-left:10px" @click="noop('标记离册')">标记离册</el-button></el-descriptions-item>
@@ -298,7 +328,7 @@
 
                 <!-- ③ 来源 · 培训 · 考核定级（Sheet 2 + 3 + 4） -->
                 <el-tab-pane label="③ 来源与培训" name="produce">
-                  <div class="pane-note">来源：Sheet 2 来源招聘履历 + Sheet 3 培训履历 + Sheet 4 考核定级履历 · 字段清单区块③</div>
+                  <!-- <div class="pane-note">来源：Sheet 2 来源招聘履历 + Sheet 3 培训履历 + Sheet 4 考核定级履历 · 字段清单区块③</div> -->
                   <div class="sub-title">来源与招聘</div>
                   <el-descriptions :column="3" border size="small">
                     <el-descriptions-item label="渠道来源">转介绍（老月嫂引荐）</el-descriptions-item>
@@ -454,9 +484,9 @@
 
                 <!-- ④ 意愿与档期（Sheet 5 + 6 + 7） -->
                 <el-tab-pane label="④ 意愿与档期" name="schedule">
-                  <div class="pane-note">来源：Sheet 5 意愿状态 + Sheet 6 档期状态 + Sheet 7 等单时长 · 字段清单区块④</div>
+                  <!-- <div class="pane-note">来源：Sheet 5 意愿状态 + Sheet 6 档期状态 + Sheet 7 等单与闲置时长 · 字段清单区块④</div> -->
                   <div class="sub-title">未来档期概览（按月 · 近 8 个月）</div>
-                  <div class="month-grid">
+                  <div class="month-grid" @click="calDialog = true" title="点击查看档期日历">
                     <div class="month-cell"><div class="m-name">2026-08（本月）</div><div class="m-body"><span class="m-free">可售 6 天</span> · <span class="m-leave">请假 2 天</span></div></div>
                     <div class="month-cell"><div class="m-name">2026-09</div><div class="m-body"><span class="m-book">定档 26 天</span> · <span class="m-free">可售 4 天</span></div></div>
                     <div class="month-cell"><div class="m-name">2026-10</div><div class="m-body"><span class="m-book">定档 1 天</span> · <span class="m-free">可售 30 天</span></div></div>
@@ -466,8 +496,6 @@
                     <div class="month-cell"><div class="m-name">2027-02</div><div class="m-body"><span class="m-free m-open">开放 28 天</span></div></div>
                     <div class="month-cell"><div class="m-name">2027-03</div><div class="m-body"><span class="m-free m-open">开放 31 天</span></div></div>
                   </div>
-                  <div style="font-size:12px;color:#909399;margin-top:10px">近 30 天档期利用：上户 0 天 · 定档 0 天 · 锁档 2 天 · 请假 7 天 · 空闲可售 21 天（利用率 0%）</div>
-                  <div style="font-size:12px;color:#909399;margin-top:6px;margin-bottom:16px">近 90 天档期利用：可售 46 天 · 售出 26 天 · 浪费 20 天（浪费率 43% · 剔除请假与已定段）</div>
 
                   <div class="sub-title" style="display:flex;justify-content:space-between;align-items:center">意愿状态（想不想接）
                     <el-button size="small" @click="noop('代改意愿')">代改意愿</el-button>
@@ -476,6 +504,7 @@
                     <el-descriptions-item label="当前意愿">
                       <el-tag :type="willingness.type" size="small">{{ willingness.text }}</el-tag>
                       <span class="warn-text" style="margin-left:8px">有效期至 2026-08-28（剩 4 天）</span>
+                      <span style="font-size:12px;color:#909399;margin-left:8px">所在地：广东深圳 · 龙岗</span>
                     </el-descriptions-item>
                     <el-descriptions-item label="意愿变更时间">2026-08-21 14:32</el-descriptions-item>
                     <el-descriptions-item label="意愿备注">9 月单已定，10 月下旬起可接新单</el-descriptions-item>
@@ -512,11 +541,26 @@
                   <div class="sub-title sub-gap">档期状态</div>
                   <div class="kv-chips" style="align-items:center">
                     <span class="chip">档期状态<el-tag type="primary" size="small" style="margin-left:6px">定档</el-tag></span>
-                    <span class="chip">目前所在地<b>广东深圳 · 龙岗</b></span>
-                    <span class="chip">本次等单开始日<b>2026-08-08</b></span>
-                    <span class="chip">累计等单天数<b style="color:#e6a23c">10 天（08-08 → 08-18 锁档 · 高于均值）</b></span>
-                    <span class="chip">历史平均等单天数<b>6.5 天</b></span>
-                    <span class="chip">连续闲置天数<b style="color:#e6a23c">16 天（08-08 → 今 · 高于阈值 14 天）</b></span>
+                  </div>
+                  <div class="idle-panels">
+                    <div class="idle-panel">
+                      <div class="ip-title">过去 30 天</div>
+                      <div class="ip-num">闲置 <b>21</b><span class="ip-den">/30 天</span></div>
+                      <el-progress :percentage="70" :stroke-width="8" :show-text="false" color="#e6a23c"></el-progress>
+                      <div class="ip-sub">闲置率 70%</div>
+                    </div>
+                    <div class="idle-panel">
+                      <div class="ip-title">未来 30 天</div>
+                      <div class="ip-num">闲置 <b>9</b><span class="ip-den">/30 天</span></div>
+                      <el-progress :percentage="30" :stroke-width="8" :show-text="false" color="#e6a23c"></el-progress>
+                      <div class="ip-sub">闲置率 30%</div>
+                    </div>
+                    <div class="idle-panel">
+                      <div class="ip-title">60 天可售档期利用率</div>
+                      <div class="ip-num"><b>41%</b></div>
+                      <el-progress :percentage="41" :stroke-width="8" :show-text="false" color="#67c23a"></el-progress>
+                      <div class="ip-sub">售出 21 天 ÷ 可售 51 天（已剔除请假 9 天）</div>
+                    </div>
                   </div>
 
                   <div class="sub-title sub-gap" style="display:flex;justify-content:space-between;align-items:center">档期段列表（一个月嫂可多段并存 · 一段一行）
@@ -551,7 +595,7 @@
 
                 <!-- ⑤ 匹配过程（Sheet 12 + 13 + 14） -->
                 <el-tab-pane label="⑤ 匹配过程" name="match">
-                  <div class="pane-note">来源：Sheet 12 面试记录 + Sheet 13 见面会记录 + Sheet 14 开档沟通记录 · 字段清单区块⑤</div>
+                  <!-- <div class="pane-note">来源：Sheet 12 面试记录 + Sheet 13 见面会记录 + Sheet 14 开档沟通记录 · 字段清单区块⑤</div> -->
                   <div class="kv-chips">
                     <span class="chip">面试通过率<b>64%（9/14）</b></span>
                     <span class="chip">面试参与率<b>88%（参加 14 / 受邀 16 · 爽约 2）</b></span>
@@ -622,7 +666,7 @@
 
                 <!-- ⑥ 服务履历与客户评价（Sheet 9 + 10） -->
                 <el-tab-pane label="⑥ 服务与评价" name="service">
-                  <div class="pane-note">来源：Sheet 9 服务履历 + Sheet 10 客户评定 · 字段清单区块⑥</div>
+                  <!-- <div class="pane-note">来源：Sheet 9 服务履历 + Sheet 10 客户评定 · 字段清单区块⑥</div> -->
                   <div class="kv-chips">
                     <span class="chip">累计接单<b>18 单</b></span>
                     <span class="chip">评分均值<b>4.8</b></span>
@@ -691,7 +735,7 @@
 
                 <!-- ⑦ 瑕疵与担保（Sheet 21） -->
                 <el-tab-pane label="⑦ 瑕疵担保" name="flaw">
-                  <div class="pane-note">来源：Sheet 21 瑕疵与担保记录 · 字段清单区块⑦</div>
+                  <!-- <div class="pane-note">来源：Sheet 21 瑕疵与担保记录 · 字段清单区块⑦</div> -->
                   <el-table :data="flaws" size="small" border style="width:100%" :row-class-name="rowHl">
                     <template #empty>暂无瑕疵记录</template>
                     <el-table-column type="expand" width="36">
@@ -737,7 +781,7 @@
 
                 <!-- ⑧ 积分（Sheet 16） -->
                 <el-tab-pane label="⑧ 积分" name="points">
-                  <div class="pane-note">来源：Sheet 16 积分记录 · 字段清单区块⑧</div>
+                  <!-- <div class="pane-note">来源：Sheet 16 积分记录 · 字段清单区块⑧</div> -->
                   <div class="kv-chips">
                     <span class="chip">当前定级<b>Y5</b></span>
                     <span class="chip">当前级别积分（升级后清零）<b>320</b></span>
@@ -778,7 +822,7 @@
 
                 <!-- ⑨ 变更流水（Sheet 8） -->
                 <el-tab-pane label="⑨ 变更流水" name="log">
-                  <div class="pane-note">来源：Sheet 8 档案变更记录 · 字段清单区块⑨</div>
+                  <!-- <div class="pane-note">来源：Sheet 8 档案变更记录 · 字段清单区块⑨</div> -->
                   <el-table :data="stateLogs" size="small" border style="width:100%">
                     <el-table-column prop="time" label="变更时间" width="150"></el-table-column>
                     <el-table-column prop="operator" label="操作人" width="130"></el-table-column>
