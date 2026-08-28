@@ -19,8 +19,6 @@ const MENU_CONFIG = {
       items: [
         { id: 'role', name: '角色管理', icon: 'Avatar', url: 'role-list.html' },
         { id: 'perm', name: '权限点清单', icon: 'Key', url: 'perm-points.html' },
-        { id: 'grant', name: '授权查询', icon: 'Search', url: 'grant-query.html' },
-        { id: 'menu-config', name: '菜单配置', icon: 'Menu', url: 'menu-config.html' },
         { id: 'system-access', name: '系统接入', icon: 'Connection', url: 'system-access.html' }
       ]
     },
@@ -28,17 +26,15 @@ const MENU_CONFIG = {
       title: '账号管理',
       items: [
         { id: 'account', name: '账号查询', icon: 'UserFilled', url: 'account-search.html' },
-        { id: 'appeal', name: '申诉审核', icon: 'Tickets', url: 'appeal-review.html' }
+        { id: 'stats', name: '账号统计', icon: 'DataLine', url: 'account-stats.html' }
       ]
     },
     {
       title: '全局配置',
       items: [
-        { id: 'config-auth', name: '认证源配置', icon: 'Lock', url: 'config-auth.html' },
+        { id: 'config-auth', name: '认证源清单', icon: 'Lock', url: 'config-auth.html' },
         { id: 'config-security', name: '安全策略', icon: 'Setting', url: 'config-security.html' },
-        { id: 'config-channel', name: '端与准入', icon: 'Grid', url: 'config-channel.html' },
-        { id: 'config-text', name: '文案配置', icon: 'Document', url: 'config-text.html' },
-        { id: 'config-message', name: '消息模板', icon: 'Message', url: 'config-message.html' }
+        { id: 'config-channel', name: '端与准入清单', icon: 'Grid', url: 'config-channel.html' }
       ]
     },
     {

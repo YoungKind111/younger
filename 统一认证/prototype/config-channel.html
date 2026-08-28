@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>端与准入管理 - 统一管理后台</title>
+  <title>端与准入清单 - 统一管理后台</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
   <link rel="stylesheet" href="shared-styles.css">
 </head>
@@ -19,18 +19,18 @@
   <script>
     const { ref } = Vue;
 
-    SharedMenu.initPageLayout('config-channel', { title: '端与准入管理' });
+    SharedMenu.initPageLayout('config-channel', { title: '端与准入清单' });
 
     SharedMenu.createVueApp({
       template: `
         <div class="content-card">
           <div class="card-header">
-            <span class="card-title">端清单与端×主体准入映射</span>
+            <span class="card-title">端清单与端×主体准入（只读）</span>
             <el-button size="small" @click="addVisible = true"><el-icon><Plus /></el-icon> 登记新端</el-button>
           </div>
           <div class="card-body">
             <el-alert type="info" :closable="false" style="margin-bottom:14px;"
-              title="主体类型不允许进入的端，登录即在网关拦截并返回明确错误码；配置免发版生效。"></el-alert>
+              title="准入映射在端接入（登记）时确定，本页只读展示；主体类型不允许进入的端，登录即在网关拦截并返回明确错误码。"></el-alert>
             <el-table :data="channels" style="width: 100%">
               <el-table-column prop="name" label="端" width="170"></el-table-column>
               <el-table-column prop="channel" label="channel" width="140">
@@ -38,27 +38,30 @@
               </el-table-column>
               <el-table-column label="允许进入的主体类型" min-width="320">
                 <template #default="{ row }">
-                  <el-checkbox-group v-model="row.parties">
-                    <el-checkbox value="customer">customer</el-checkbox>
-                    <el-checkbox value="worker">worker</el-checkbox>
-                    <el-checkbox value="staff">staff</el-checkbox>
-                    <el-checkbox value="promoter">promoter</el-checkbox>
-                    <el-checkbox value="agency_user" disabled>agency_user（二期）</el-checkbox>
-                  </el-checkbox-group>
+                  <el-tag v-for="p in row.parties" :key="p" size="small" style="margin-right:6px;">{{ p }}</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
+              <el-table-column prop="remark" label="备注" min-width="220"></el-table-column>
             </el-table>
-            <div style="margin-top:16px;text-align:right;">
-              <el-button type="primary" @click="save">保存配置</el-button>
-            </div>
           </div>
 
-          <el-dialog v-model="addVisible" title="登记新端" width="440px">
-            <el-form label-width="90px">
-              <el-form-item label="端名称"><el-input placeholder="如：机构端"></el-input></el-form-item>
-              <el-form-item label="channel"><el-input placeholder="如：agency_web"></el-input></el-form-item>
+          <el-dialog v-model="addVisible" title="登记新端（接入期动作）" width="480px">
+            <el-form :model="addForm" label-width="110px">
+              <el-form-item label="端名称" required><el-input v-model="addForm.name" placeholder="如：机构端"></el-input></el-form-item>
+              <el-form-item label="channel" required><el-input v-model="addForm.channel" placeholder="如：agency_web"></el-input></el-form-item>
+              <el-form-item label="允许主体" required>
+                <el-checkbox-group v-model="addForm.parties">
+                  <el-checkbox value="customer">customer</el-checkbox>
+                  <el-checkbox value="worker">worker</el-checkbox>
+                  <el-checkbox value="staff">staff</el-checkbox>
+                  <el-checkbox value="promoter">promoter</el-checkbox>
+                  <el-checkbox value="agency_user">agency_user</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
             </el-form>
+            <div style="font-size:12px;color:#909399;padding-left:110px;">
+              准入映射登记后如需变更，属端开发调整（跟随端发版）。
+            </div>
             <template #footer>
               <el-button @click="addVisible = false">取消</el-button>
               <el-button type="primary" @click="addChannel">登记</el-button>
@@ -72,23 +75,24 @@
           { name: '客户端 APP', channel: 'client_app', parties: ['customer'], remark: '一键登录（二期）' },
           { name: '月嫂端小程序', channel: 'worker_mini', parties: ['worker'], remark: '黑名单/冻结在网关拦截' },
           { name: '月嫂端 APP', channel: 'worker_app', parties: ['worker'], remark: '一键登录（二期）' },
-          { name: '月嫂招聘小程序', channel: 'recruit_mini', parties: ['promoter'], remark: '开放注册：自荐/推荐均生成线索，挂 promoter 主体' },
+          { name: '月嫂招聘小程序', channel: 'recruit_mini', parties: ['promoter'], remark: '自荐/推荐均生成线索，挂 promoter 主体' },
           { name: '内部员工端小程序', channel: 'staff_mini', parties: ['staff'], remark: '' },
           { name: '业务管理后台', channel: 'admin_web', parties: ['staff'], remark: '' },
           { name: 'SCRM', channel: 'scrm_web', parties: ['staff'], remark: '企微扫码 + memberid 映射' }
         ]);
 
         const addVisible = ref(false);
+        const addForm = ref({ name: '', channel: '', parties: [] });
         const addChannel = () => {
+          if (!addForm.value.name || !addForm.value.channel || !addForm.value.parties.length) {
+            ElementPlus.ElMessage.warning('请填写端名称、channel 并选择允许主体');
+            return;
+          }
           addVisible.value = false;
-          ElementPlus.ElMessage.success('新端已登记，请为其配置准入映射与认证源');
+          ElementPlus.ElMessage.success('新端已登记，准入映射随登记确定；联调完成后启用');
         };
 
-        const save = () => {
-          ElementPlus.ElMessage.success('准入映射已保存并即时生效，变更已入审计日志');
-        };
-
-        return { channels, addVisible, addChannel, save };
+        return { channels, addVisible, addForm, addChannel };
       }
     }).mount('#app');
   </script>

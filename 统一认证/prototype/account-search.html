@@ -17,68 +17,101 @@
   <script src="shared-menu.js"></script>
 
   <script>
-    const { ref } = Vue;
+    const { ref, computed } = Vue;
 
     SharedMenu.initPageLayout('account', { title: '账号查询' });
 
     SharedMenu.createVueApp({
       template: `
         <div>
-          <!-- 搜索区 -->
-          <div class="content-card mb-2">
+          <!-- ========== 列表视图 ========== -->
+          <div v-if="mode === 'list'" class="content-card">
+            <div class="card-header"><span class="card-title">账号列表</span></div>
             <div class="card-body">
-              <div class="filter-bar" style="margin-bottom:0;">
-                <el-radio-group v-model="queryBy">
-                  <el-radio value="phone">手机号</el-radio>
-                  <el-radio value="openid">openid</el-radio>
-                  <el-radio value="id">账号 ID</el-radio>
-                </el-radio-group>
-                <el-input v-model="keyword" :placeholder="'输入' + queryLabel" style="width: 280px">
+              <div class="filter-bar">
+                <el-input v-model="keyword" placeholder="手机号 / openid / 账号 ID" clearable style="width: 240px">
                   <template #prefix><el-icon><Search /></el-icon></template>
                 </el-input>
-                <el-button type="primary" @click="doQuery">查询</el-button>
+                <el-select v-model="partyFilter" placeholder="主体类型" clearable style="width: 160px">
+                  <el-option label="customer（客户）" value="customer"></el-option>
+                  <el-option label="worker（月嫂）" value="worker"></el-option>
+                  <el-option label="staff（员工）" value="staff"></el-option>
+                  <el-option label="promoter（推广者）" value="promoter"></el-option>
+                </el-select>
+                <el-select v-model="statusFilter" placeholder="状态" clearable style="width: 140px">
+                  <el-option v-for="s in statusOptions" :key="s" :label="s" :value="s"></el-option>
+                </el-select>
+                <el-date-picker v-model="regRange" type="daterange" start-placeholder="注册开始" end-placeholder="注册结束" style="width: 240px"></el-date-picker>
+              </div>
+
+              <el-table :data="filteredList" style="width: 100%" @row-click="openDetail" highlight-current-row>
+                <el-table-column prop="id" label="账号 ID" width="120">
+                  <template #default="{ row }"><code style="font-size:12px;">{{ row.id }}</code></template>
+                </el-table-column>
+                <el-table-column prop="phone" label="手机号" width="140"></el-table-column>
+                <el-table-column label="绑定主体" min-width="200">
+                  <template #default="{ row }">
+                    <el-tag v-for="p in row.parties" :key="p" size="small" effect="plain"
+                            :type="{ customer: 'primary', worker: 'success', staff: 'warning', promoter: 'danger' }[p]"
+                            style="margin-right:4px;">{{ p }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态" width="110">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="statusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="regTime" label="注册时间" width="150"></el-table-column>
+                <el-table-column prop="lastLogin" label="最近登录" width="150"></el-table-column>
+                <el-table-column label="操作" width="90">
+                  <template #default><el-button link type="primary">详情</el-button></template>
+                </el-table-column>
+              </el-table>
+
+              <div class="pagination-bar">
+                <el-pagination :page-size="10" :total="filteredList.length" layout="total, prev, pager, next" background></el-pagination>
               </div>
             </div>
           </div>
 
-          <div v-if="result">
-            <!-- 账号信息 + 操作 -->
+          <!-- ========== 详情视图 ========== -->
+          <template v-else>
             <div class="content-card mb-2">
               <div class="card-header">
                 <span class="card-title">
-                  账号 {{ result.id }}
-                  <el-tag :type="result.status === '正常' ? 'success' : 'danger'" size="small" style="margin-left:8px;">{{ result.status }}</el-tag>
+                  账号 {{ current.id }}
+                  <el-tag :type="statusType(current.status)" size="small" style="margin-left:8px;">{{ current.status }}</el-tag>
                 </span>
                 <div>
+                  <el-button size="small" @click="mode = 'list'"><el-icon><Back /></el-icon> 返回列表</el-button>
                   <el-button size="small" type="danger" plain @click="disableVisible = true">
-                    {{ result.status === '正常' ? '禁用' : '启用' }}
+                    {{ current.status === '已禁用' ? '启用' : '禁用' }}
                   </el-button>
                   <el-button size="small" @click="resetVisible = true">凭证重置</el-button>
                 </div>
               </div>
               <div class="card-body">
                 <el-descriptions :column="3" border size="small">
-                  <el-descriptions-item label="手机号">138****2046</el-descriptions-item>
+                  <el-descriptions-item label="手机号">{{ current.phone }}</el-descriptions-item>
                   <el-descriptions-item label="登录方式">微信 / 手机验证码 / 密码</el-descriptions-item>
                   <el-descriptions-item label="unionid">o6_bm****8e3c</el-descriptions-item>
-                  <el-descriptions-item label="注册来源">无感知注册（客户端小程序）</el-descriptions-item>
-                  <el-descriptions-item label="创建时间">2024-03-18 11:30</el-descriptions-item>
-                  <el-descriptions-item label="最近登录">2026-08-27 09:12</el-descriptions-item>
+                  <el-descriptions-item label="注册来源">{{ current.source }}</el-descriptions-item>
+                  <el-descriptions-item label="创建时间">{{ current.regTime }}</el-descriptions-item>
+                  <el-descriptions-item label="最近登录">{{ current.lastLogin }}</el-descriptions-item>
                 </el-descriptions>
               </div>
             </div>
 
-            <!-- 绑定主体 -->
             <div class="content-card mb-2">
-              <div class="card-header"><span class="card-title">绑定主体（2）</span></div>
+              <div class="card-header"><span class="card-title">绑定主体（{{ current.parties.length }}）</span></div>
               <div class="card-body">
-                <el-table :data="result.parties" size="small">
+                <el-table :data="partyRows" size="small">
                   <el-table-column prop="type" label="主体类型" width="120">
                     <template #default="{ row }">
-                      <el-tag size="small" :type="{ customer: 'primary', worker: 'success', staff: 'warning' }[row.type]">{{ row.type }}</el-tag>
+                      <el-tag size="small" :type="{ customer: 'primary', worker: 'success', staff: 'warning', promoter: 'danger' }[row.type]">{{ row.type }}</el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="name" label="主体" width="140"></el-table-column>
+                  <el-table-column prop="name" label="主体" width="160"></el-table-column>
                   <el-table-column prop="bindType" label="绑定方式" width="140"></el-table-column>
                   <el-table-column prop="bindTime" label="绑定时间" width="160"></el-table-column>
                   <el-table-column prop="status" label="主体状态">
@@ -90,11 +123,10 @@
               </div>
             </div>
 
-            <!-- 最近登录 -->
             <div class="content-card">
               <div class="card-header"><span class="card-title">最近 10 条登录记录</span></div>
               <div class="card-body">
-                <el-table :data="result.logins" size="small">
+                <el-table :data="loginRows" size="small">
                   <el-table-column prop="time" label="时间" width="160"></el-table-column>
                   <el-table-column prop="channel" label="端" width="160"></el-table-column>
                   <el-table-column prop="ip" label="IP" width="140"></el-table-column>
@@ -106,18 +138,12 @@
                 </el-table>
               </div>
             </div>
-          </div>
+          </template>
 
-          <div v-else class="content-card">
-            <div class="card-body" style="color:#909399;text-align:center;padding:48px 0;">
-              输入手机号 / openid / 账号 ID 查询（演示：输入任意内容点击查询）
-            </div>
-          </div>
-
-          <!-- 禁用对话框（两级封禁 + 二次验证） -->
-          <el-dialog v-model="disableVisible" title="禁用账号（两级封禁）" width="480px">
+          <!-- 禁用对话框（两级禁用 + 二次验证） -->
+          <el-dialog v-model="disableVisible" title="禁用账号（两级禁用）" width="480px">
             <el-form label-width="90px">
-              <el-form-item label="封禁级别">
+              <el-form-item label="禁用级别">
                 <el-radio-group v-model="disableForm.level">
                   <el-radio value="party">封主体（单一身份失效）</el-radio>
                   <el-radio value="account">封账号（全部身份失效）</el-radio>
@@ -125,8 +151,7 @@
               </el-form-item>
               <el-form-item label="选择主体" v-if="disableForm.level === 'party'">
                 <el-select v-model="disableForm.party" style="width:100%">
-                  <el-option label="customer（家庭客户）" value="customer"></el-option>
-                  <el-option label="staff（内部员工）" value="staff"></el-option>
+                  <el-option v-for="p in current.parties" :key="p" :label="p" :value="p"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="禁用原因">
@@ -158,50 +183,75 @@
         </div>
       `,
       setup() {
-        const queryBy = ref('phone');
-        const keyword = ref('');
-        const queryLabel = ref('手机号');
-        Vue.watch(queryBy, (v) => {
-          queryLabel.value = { phone: '手机号', openid: 'openid', id: '账号 ID' }[v];
-        });
+        // ==================== 账号列表（Mock，覆盖四类主体与各状态） ====================
+        const accounts = ref([
+          { id: 'ACC-10086', phone: '138****2046', parties: ['customer', 'staff'], status: '正常', source: '无感知注册（客户端小程序）', regTime: '2024-03-18 11:30', lastLogin: '2026-08-27 09:12' },
+          { id: 'ACC-10231', phone: '139****7788', parties: ['worker'], status: '已禁用', source: '无感知注册（月嫂端小程序）', regTime: '2024-06-02 14:08', lastLogin: '2026-08-24 17:55' },
+          { id: 'ACC-10021', phone: '137****5566', parties: ['customer'], status: '正常', source: '无感知注册（客户端小程序）', regTime: '2024-05-11 09:20', lastLogin: '2026-08-27 08:40' },
+          { id: 'ACC-10455', phone: '139****7788', parties: ['customer'], status: '正常', source: '无感知注册（客户端 APP）', regTime: '2025-01-19 16:33', lastLogin: '2026-08-26 22:17' },
+          { id: 'ACC-10098', phone: '136****2233', parties: ['worker', 'customer'], status: '正常', source: '首登绑定（月嫂端小程序）', regTime: '2024-08-25 10:12', lastLogin: '2026-08-27 07:58' },
+          { id: 'ACC-10501', phone: '135****8890', parties: ['promoter'], status: '正常', source: '无感知注册（月嫂招聘小程序）', regTime: '2026-08-25 15:42', lastLogin: '2026-08-27 10:05' },
+          { id: 'ACC-10502', phone: '137****4412', parties: ['promoter'], status: '正常', source: '无感知注册（月嫂招聘小程序）', regTime: '2026-08-26 09:31', lastLogin: '2026-08-26 09:31' },
+          { id: 'ACC-10112', phone: '138****6630', parties: ['staff'], status: '正常', source: '邀请制开户（员工）', regTime: '2024-09-01 11:00', lastLogin: '2026-08-26 18:40' },
+          { id: 'ACC-10133', phone: '136****9012', parties: ['staff'], status: '正常', source: '邀请制开户（员工）', regTime: '2025-02-14 14:22', lastLogin: '2026-08-24 10:40' },
+          { id: 'ACC-09876', phone: '135****3321', parties: ['worker'], status: '正常', source: '首登绑定（月嫂端 APP）', regTime: '2024-04-22 08:15', lastLogin: '2026-08-27 06:50' },
+          { id: 'ACC-10560', phone: '138****9907', parties: ['staff'], status: '未激活', source: '邀请制开户（员工）', regTime: '2026-08-27 16:44', lastLogin: '—' }
+        ]);
 
-        // ==================== Mock 查询结果 ====================
-        const result = ref(null);
-        const doQuery = () => {
-          result.value = {
-            id: 'ACC-10086', status: '正常',
-            parties: [
-              { type: 'customer', name: '刘倩（客户）', bindType: '手机号匹配', bindTime: '2024-03-18 11:30', status: '正常' },
-              { type: 'staff', name: '刘倩（员工）', bindType: '邀请绑定', bindTime: '2024-03-20 09:00', status: '正常' }
-            ],
-            logins: [
-              { time: '2026-08-27 09:12', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
-              { time: '2026-08-26 18:40', channel: '客户端小程序', ip: '112.96.33.18', result: '成功' },
-              { time: '2026-08-26 09:03', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
-              { time: '2026-08-25 22:17', channel: '客户端小程序', ip: '223.104.64.9', result: '失败（验证码错误）' },
-              { time: '2026-08-25 11:08', channel: '月嫂端小程序', ip: '223.104.64.9', result: '成功' },
-              { time: '2026-08-24 17:55', channel: '客户端小程序', ip: '120.229.88.4', result: '失败（账号锁定中）' },
-              { time: '2026-08-24 09:31', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
-              { time: '2026-08-23 20:14', channel: '客户端小程序', ip: '112.96.33.18', result: '成功' },
-              { time: '2026-08-23 08:52', channel: '月嫂端小程序', ip: '223.104.64.9', result: '成功' },
-              { time: '2026-08-22 13:27', channel: '客户端小程序', ip: '112.96.33.18', result: '成功' }
-            ]
-          };
-          ElementPlus.ElMessage.success('查询完成（查询行为已写入审计日志）');
+        const statusOptions = ['正常', '已禁用', '未激活'];
+        const statusType = (s) => ({
+          '正常': 'success', '已禁用': 'danger', '未激活': 'info'
+        }[s]);
+
+        const keyword = ref('');
+        const partyFilter = ref('');
+        const statusFilter = ref('');
+        const regRange = ref(null);
+
+        const filteredList = computed(() => accounts.value.filter(r => {
+          const mk = !keyword.value || r.id.toLowerCase().includes(keyword.value.toLowerCase()) || r.phone.includes(keyword.value);
+          const mp = !partyFilter.value || r.parties.includes(partyFilter.value);
+          const ms = !statusFilter.value || r.status === statusFilter.value;
+          return mk && mp && ms;
+        }));
+
+        // ==================== 详情视图 ====================
+        const mode = ref('list');
+        const current = ref({});
+
+        const openDetail = (row) => {
+          current.value = row;
+          disableForm.value = { level: 'account', party: '', reason: '', code: '' };
+          mode.value = 'detail';
         };
 
-        // ==================== 禁用 ====================
+        // 详情页主体/登录记录（Mock 演示数据）
+        const partyRows = computed(() => (current.value.parties || []).map(p => ({
+          type: p,
+          name: { customer: '家庭客户档案', worker: '月嫂档案', staff: '员工档案', promoter: '推广者档案' }[p],
+          bindType: { customer: '无感知注册', worker: '手机号匹配', staff: '邀请绑定', promoter: '无感知注册' }[p],
+          bindTime: current.value.regTime,
+          status: current.value.status === '已禁用' ? '正常（主体）' : '正常'
+        })));
+
+        const loginRows = ref([
+          { time: '2026-08-27 09:12', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-26 18:40', channel: '客户端小程序', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-26 09:03', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-25 22:17', channel: '客户端小程序', ip: '223.104.64.9', result: '失败（验证码错误）' },
+          { time: '2026-08-25 11:08', channel: '月嫂端小程序', ip: '223.104.64.9', result: '成功' }
+        ]);
+
+        // ==================== 禁用 / 凭证重置 ====================
         const disableVisible = ref(false);
         const disableForm = ref({ level: 'account', party: '', reason: '', code: '' });
         const confirmDisable = () => {
           if (!disableForm.value.reason) { ElementPlus.ElMessage.warning('禁用原因必填'); return; }
           if (!disableForm.value.code || disableForm.value.code.length !== 6) { ElementPlus.ElMessage.warning('请输入 6 位二次验证码'); return; }
           disableVisible.value = false;
-          result.value.status = '已禁用';
-          ElementPlus.ElMessage.success('已禁用：≤5 秒全端 token 失效，操作已留审计');
+          ElementPlus.ElMessage.success('已执行：≤5 秒全端 token 失效，操作已留审计');
         };
 
-        // ==================== 凭证重置 ====================
         const resetVisible = ref(false);
         const resetType = ref('sms');
         const confirmReset = () => {
@@ -209,16 +259,13 @@
           ElementPlus.ElMessage.success('临时密码已短信下发；既有 token 已全部吊销');
         };
 
-        // URL 参数指定账号（从其他页面跳入时自动查询）
-        const urlId = new URLSearchParams(window.location.search).get('id');
-        if (urlId) { keyword.value = urlId; doQuery(); }
-
         return {
-          queryBy, keyword, queryLabel, result, doQuery,
-          disableVisible, disableForm, confirmDisable,
-          resetVisible, resetType, confirmReset
+          accounts, statusOptions, statusType, keyword, partyFilter, statusFilter, regRange, filteredList,
+          mode, current, openDetail, partyRows, loginRows,
+          disableVisible, disableForm, confirmDisable, resetVisible, resetType, confirmReset
         };
       }
     }).mount('#app');
-  </script></body>
+  </script>
+</body>
 </html>

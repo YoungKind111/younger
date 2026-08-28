@@ -72,7 +72,11 @@
                 <el-table-column label="数据范围" width="100">
                   <template #default="{ row }">{{ scopeLabel(row.dataScope) }}</template>
                 </el-table-column>
-                <el-table-column prop="members" label="成员数" width="80"></el-table-column>
+                <el-table-column label="成员数" width="90">
+                  <template #default="{ row }">
+                    <el-button link type="primary" @click="showMembers(row)">{{ row.members }}</el-button>
+                  </template>
+                </el-table-column>
                 <el-table-column label="状态" width="90">
                   <template #default="{ row }">
                     <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
@@ -105,6 +109,19 @@
               <el-button @click="dialogVisible = false">取消</el-button>
               <el-button type="primary" @click="createRole">创建并配置权限</el-button>
             </template>
+          </el-dialog>
+
+          <!-- 角色成员弹窗 -->
+          <el-dialog v-model="memberVisible" :title="'角色成员 · ' + memberRole" width="480px">
+            <el-table :data="memberList" size="small">
+              <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+              <el-table-column prop="dept" label="部门"></el-table-column>
+              <el-table-column prop="status" label="在职状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="row.status === '在职' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
           </el-dialog>
         </div>
       `,
@@ -178,6 +195,34 @@
 
         const goDetail = () => { window.location.href = 'role-detail.html'; };
 
+        // ==================== 角色成员查看（按角色查人） ====================
+        const memberVisible = ref(false);
+        const memberRole = ref('');
+        const memberMap = {
+          '销售顾问': [
+            { name: '陈曦', dept: '佛山销售分部 / 容桂店', status: '在职' },
+            { name: '刘倩', dept: '佛山销售分部', status: '在职' },
+            { name: '赵鹏', dept: '广州销售分部', status: '在职' },
+            { name: '孙丽', dept: '深圳销售分部', status: '在职' }
+          ],
+          '销售主管': [{ name: '刘倩', dept: '佛山销售分部', status: '在职' }],
+          '月嫂运营专员': [{ name: '周敏', dept: '运营部 / 月嫂管理组', status: '在职' }],
+          '月嫂主管': [{ name: '吴芳', dept: '运营部 / 月嫂管理组', status: '在职' }],
+          '财务专员': [{ name: '郑凯', dept: '财务部', status: '在职' }],
+          '招生顾问': [{ name: '何静', dept: '招生业务部 / 招生转化组', status: '在职' }],
+          '招生主管': [{ name: '罗军', dept: '招生业务部', status: '在职' }],
+          '培训教务': [{ name: '高燕', dept: '运营部 / 培训组', status: '在职' }],
+          '产康店长': [{ name: '梁欣', dept: '产康业务 / 佛山产康分部 / 北滘店', status: '在职' }],
+          '育婴顾问': [{ name: '宋洁', dept: '月嫂销售业务 / 育婴业务组', status: '已离职' }],
+          '客服': [{ name: '王芳', dept: '运营部 / 客服组', status: '在职' }]
+        };
+        const memberList = ref([]);
+        const showMembers = (row) => {
+          memberRole.value = row.name;
+          memberList.value = memberMap[row.name] || [];
+          memberVisible.value = true;
+        };
+
         const handleCopy = (row) => {
           ElementPlus.ElMessage.success(`已复制「${row.name}」，可在此基础上微调`);
         };
@@ -190,7 +235,7 @@
         return {
           statCards, tableData, keyword, systemFilter, scopeFilter, systems, scopeOptions,
           filteredData, scopeLabel,
-          dialogVisible, form,
+          dialogVisible, form, memberVisible, memberRole, memberList, showMembers,
           handleAdd, createRole, goDetail, handleCopy, handleToggle
         };
       }

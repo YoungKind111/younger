@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号统计 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; }
+    .bar-row .bl { width: 130px; flex-shrink: 0; color: #606266; }
+    .bar-row .bv { width: 70px; flex-shrink: 0; text-align: right; color: #1f2d3d; font-weight: 600; }
+    .bar-track { flex: 1; height: 14px; background: #f0f2f5; border-radius: 7px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 7px; background: #1890ff; }
+    .trend { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding: 10px 4px 0; }
+    .trend-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .trend-bar { width: 70%; background: #1890ff; border-radius: 4px 4px 0 0; min-height: 4px; }
+    .trend-v { font-size: 12px; font-weight: 600; color: #1f2d3d; }
+    .trend-d { font-size: 12px; color: #909399; }
+    @media (max-width: 960px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('stats', { title: '账号统计' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <!-- 核心指标卡 -->
+          <div class="grid-4 mb-2">
+            <div class="stat-card" v-for="c in statCards" :key="c.title">
+              <div class="stat-header">
+                <span class="stat-title">{{ c.title }}</span>
+                <div class="stat-icon" :class="c.color"><el-icon :size="20"><component :is="c.icon" /></el-icon></div>
+              </div>
+              <div class="stat-value">{{ c.value }}</div>
+            </div>
+          </div>
+
+          <div class="grid-2col">
+            <!-- 主体类型分布 -->
+            <div class="content-card">
+              <div class="card-header"><span class="card-title">主体类型分布（account 绑定）</span></div>
+              <div class="card-body">
+                <div class="bar-row" v-for="r in partyStats" :key="r.label">
+                  <span class="bl">{{ r.label }}</span>
+                  <div class="bar-track"><div class="bar-fill" :style="{ width: r.pct + '%', background: r.color }"></div></div>
+                  <span class="bv">{{ r.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 账号状态分布 -->
+            <div class="content-card">
+              <div class="card-header"><span class="card-title">账号状态分布</span></div>
+              <div class="card-body">
+                <div class="bar-row" v-for="r in statusStats" :key="r.label">
+                  <span class="bl">{{ r.label }}</span>
+                  <div class="bar-track"><div class="bar-fill" :style="{ width: r.pct + '%', background: r.color }"></div></div>
+                  <span class="bv">{{ r.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 各端今日登录 -->
+            <div class="content-card">
+              <div class="card-header"><span class="card-title">各端今日登录人次</span></div>
+              <div class="card-body">
+                <div class="bar-row" v-for="r in channelStats" :key="r.label">
+                  <span class="bl">{{ r.label }}</span>
+                  <div class="bar-track"><div class="bar-fill" :style="{ width: r.pct + '%', background: '#52c41a' }"></div></div>
+                  <span class="bv">{{ r.value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 近 7 日新增账号 -->
+            <div class="content-card">
+              <div class="card-header"><span class="card-title">近 7 日新增账号（无感知注册占比 {{ autoPct }}%）</span></div>
+              <div class="card-body">
+                <div class="trend">
+                  <div class="trend-col" v-for="t in trend7" :key="t.day">
+                    <span class="trend-v">{{ t.value }}</span>
+                    <div class="trend-bar" :style="{ height: t.h + 'px' }"></div>
+                    <span class="trend-d">{{ t.day }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        // ==================== 核心指标（Mock） ====================
+        const statCards = ref([
+          { title: '账号总数', value: '12,846', icon: 'User', color: 'blue' },
+          { title: '今日新增', value: 57, icon: 'Plus', color: 'green' },
+          { title: '今日登录人次', value: '1,893', icon: 'DataLine', color: 'orange' },
+          { title: '已禁用账号', value: 41, icon: 'Lock', color: 'red' }
+        ]);
+
+        // 主体类型分布（一个 account 可绑多主体，按绑定关系计）
+        const partyStats = ref([
+          { label: 'customer（客户）', value: 10234, pct: 100, color: '#1890ff' },
+          { label: 'worker（月嫂）', value: 1832, pct: 18, color: '#52c41a' },
+          { label: 'promoter（推广者）', value: 486, pct: 5, color: '#fa8c16' },
+          { label: 'staff（员工）', value: 246, pct: 2.4, color: '#722ed1' },
+        ]);
+
+        // 账号状态分布
+        const statusStats = ref([
+          { label: '正常', value: 12799, pct: 100, color: '#52c41a' },
+          { label: '已禁用', value: 41, pct: 1.5, color: '#f5222d' },
+          { label: '未激活', value: 6, pct: 0.5, color: '#909399' }
+        ]);
+
+        // 各端今日登录
+        const channelStats = ref([
+          { label: '客户端小程序', value: 1204, pct: 100 },
+          { label: '月嫂端小程序', value: 386, pct: 32 },
+          { label: '月嫂招聘小程序', value: 142, pct: 12 },
+          { label: '客户端 APP', value: 98, pct: 8 },
+          { label: '业务管理后台', value: 41, pct: 3.4 },
+          { label: '内部员工端小程序', value: 18, pct: 1.5 },
+          { label: 'SCRM', value: 4, pct: 0.3 }
+        ]);
+
+        // 近 7 日新增
+        const trend7 = ref([
+          { day: '08-22', value: 41, h: 58 },
+          { day: '08-23', value: 53, h: 75 },
+          { day: '08-24', value: 38, h: 54 },
+          { day: '08-25', value: 62, h: 88 },
+          { day: '08-26', value: 49, h: 70 },
+          { day: '08-27', value: 71, h: 100 },
+          { day: '08-28', value: 57, h: 81 }
+        ]);
+        const autoPct = ref(87);
+
+        return { statCards, partyStats, statusStats, channelStats, trend7, autoPct };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

@@ -55,7 +55,7 @@
           { title: '在职员工', value: 246, icon: 'User', color: 'blue', url: 'staff-list.html' },
           { title: '接入系统', value: 3, icon: 'Grid', color: 'green', url: 'system-access.html' },
           { title: '今日登录人次', value: 189, icon: 'DataLine', color: 'orange', url: 'audit-log.html' },
-          { title: '待审申诉', value: 2, icon: 'Tickets', color: 'red', url: 'appeal-review.html' }
+          { title: '今日禁用操作', value: 3, icon: 'Lock', color: 'red', url: 'audit-log.html' }
         ]);
 
         const modules = ref([
@@ -63,11 +63,10 @@
           { title: '员工管理', desc: '员工开通（邀请制）、调岗、离职三连联动', icon: 'User', color: '#1890ff', url: 'staff-list.html' },
           { title: '角色管理', desc: '角色增删改、复制；权限矩阵双视图配置', icon: 'Avatar', color: '#52c41a', url: 'role-list.html' },
           { title: '权限点清单', desc: '各系统注册的权限点总表，按系统分组', icon: 'Key', color: '#52c41a', url: 'perm-points.html' },
-          { title: '授权查询', desc: '按员工查角色、按角色查成员（双向）', icon: 'Search', color: '#52c41a', url: 'grant-query.html' },
           { title: '系统接入', desc: '业务系统接入向导：登记 → manifest → 发布', icon: 'Connection', color: '#52c41a', url: 'system-access.html' },
           { title: '账号查询', desc: '手机号/openid/ID 查账号状态、绑定主体、登录记录', icon: 'UserFilled', color: '#fa8c16', url: 'account-search.html' },
-          { title: '申诉审核', desc: '换绑申诉工单审核，结果双通道通知', icon: 'Tickets', color: '#fa8c16', url: 'appeal-review.html' },
-          { title: '全局配置', desc: '认证源 / 安全策略 / 端与准入 / 文案 / 消息模板', icon: 'Setting', color: '#722ed1', url: 'config-auth.html' },
+          { title: '账号统计', desc: '账号总量、主体分布、状态分布、各端登录与新增趋势', icon: 'DataLine', color: '#fa8c16', url: 'account-stats.html' },
+          { title: '全局配置', desc: '认证源 / 安全策略 / 端与准入', icon: 'Setting', color: '#722ed1', url: 'config-auth.html' },
           { title: '审计查询', desc: '认证与权限操作留痕，组合筛选 + 导出', icon: 'Document', color: '#722ed1', url: 'audit-log.html' },
           { title: '个人中心', desc: '修改密码、登录设备管理', icon: 'User', color: '#722ed1', url: 'profile.html' }
         ]);
