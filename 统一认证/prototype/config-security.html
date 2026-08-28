@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安全策略 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('config-security', { title: '安全策略' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card" style="max-width:760px;">
+          <div class="card-header"><span class="card-title">安全策略参数</span></div>
+          <div class="card-body">
+            <el-form :model="form" label-width="200px">
+              <el-divider content-position="left">登录防爆破</el-divider>
+              <el-form-item label="连续失败锁定阈值（次）">
+                <el-input-number v-model="form.failThreshold" :min="3" :max="10"></el-input-number>
+              </el-form-item>
+              <el-form-item label="锁定时长（分钟）">
+                <el-input-number v-model="form.lockMinutes" :min="5" :max="1440"></el-input-number>
+              </el-form-item>
+              <el-form-item label="同 IP 高频触发验证码">
+                <el-switch v-model="form.ipCaptcha"></el-switch>
+              </el-form-item>
+
+              <el-divider content-position="left">会话与令牌</el-divider>
+              <el-form-item label="会话有效期（小时）">
+                <el-input-number v-model="form.sessionHours" :min="1" :max="720"></el-input-number>
+              </el-form-item>
+              <el-form-item label="同账号允许同时在线端数">
+                <el-input-number v-model="form.onlineLimit" :min="1" :max="10"></el-input-number>
+              </el-form-item>
+              <el-form-item label="新登录踢旧端">
+                <el-switch v-model="form.kickOld"></el-switch>
+              </el-form-item>
+
+              <el-divider content-position="left">密码策略</el-divider>
+              <el-form-item label="最小长度">
+                <el-input-number v-model="form.pwdLen" :min="6" :max="32"></el-input-number>
+              </el-form-item>
+              <el-form-item label="必须包含">
+                <el-checkbox-group v-model="form.pwdRules">
+                  <el-checkbox value="letter">字母</el-checkbox>
+                  <el-checkbox value="number">数字</el-checkbox>
+                  <el-checkbox value="symbol">特殊字符</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+
+              <el-divider content-position="left">验证码频率</el-divider>
+              <el-form-item label="同号每分钟限发（条）">
+                <el-input-number v-model="form.smsPerMin" :min="1" :max="5"></el-input-number>
+              </el-form-item>
+              <el-form-item label="同号每天限发（条）">
+                <el-input-number v-model="form.smsPerDay" :min="5" :max="50"></el-input-number>
+              </el-form-item>
+            </el-form>
+            <div style="text-align:right;">
+              <el-button type="primary" @click="save">保存（免发版生效）</el-button>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        const form = ref({
+          failThreshold: 5, lockMinutes: 30, ipCaptcha: true,
+          sessionHours: 12, onlineLimit: 3, kickOld: false,
+          pwdLen: 8, pwdRules: ['letter', 'number'],
+          smsPerMin: 1, smsPerDay: 10
+        });
+
+        const save = () => {
+          ElementPlus.ElMessage.success('安全策略已保存并即时生效，变更已入审计日志');
+        };
+
+        return { form, save };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

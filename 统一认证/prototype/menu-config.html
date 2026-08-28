@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>菜单配置 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('menu-config', { title: '菜单配置' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <el-alert type="info" :closable="false" class="mb-2"
+            title="本页配置统一管理后台自身的菜单对哪些角色可见；业务系统的菜单由各系统自己的权限点控制（见角色详情）。">
+          </el-alert>
+          <div class="content-card">
+            <div class="card-header"><span class="card-title">本后台菜单的角色可见性</span></div>
+            <div class="card-body">
+              <el-table :data="menus" style="width: 100%" row-key="name" default-expand-all>
+                <el-table-column prop="name" label="菜单" min-width="180"></el-table-column>
+                <el-table-column label="可见角色" min-width="380">
+                  <template #default="{ row }">
+                    <el-checkbox-group :model-value="row.roles" :disabled="row.fixed"
+                                       @change="(v) => onRolesChange(row, v)">
+                      <el-checkbox v-for="r in roleOptions" :key="r" :value="r">{{ r }}</el-checkbox>
+                    </el-checkbox-group>
+                    <span v-if="row.fixed" style="font-size:12px;color:#909399;margin-left:8px;">（内置管理员可见，不可改）</span>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div style="margin-top:16px;text-align:right;">
+                <el-button type="primary" @click="save">保存配置</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        const roleOptions = ['系统管理员', '安全管理员', '客服', '运营', 'HR'];
+
+        const menus = ref([
+          { name: '组织与员工', fixed: false, roles: ['系统管理员', 'HR'], children: [
+            { name: '组织架构', fixed: false, roles: ['系统管理员', 'HR'] },
+            { name: '员工管理', fixed: false, roles: ['系统管理员', 'HR'] }
+          ]},
+          { name: '权限管理', fixed: false, roles: ['系统管理员'], children: [
+            { name: '角色管理', fixed: false, roles: ['系统管理员'] },
+            { name: '权限点清单', fixed: false, roles: ['系统管理员', '安全管理员'] },
+            { name: '授权查询', fixed: false, roles: ['系统管理员', '安全管理员', 'HR'] },
+            { name: '菜单配置', fixed: true, roles: ['系统管理员'] },
+            { name: '系统接入', fixed: true, roles: ['系统管理员'] }
+          ]},
+          { name: '账号管理', fixed: false, roles: ['系统管理员', '客服', '安全管理员'], children: [
+            { name: '账号查询', fixed: false, roles: ['系统管理员', '客服', '安全管理员'] },
+            { name: '人工合并', fixed: false, roles: ['系统管理员'] },
+            { name: '申诉审核', fixed: false, roles: ['系统管理员', '客服'] }
+          ]},
+          { name: '全局配置', fixed: true, roles: ['系统管理员'] },
+          { name: '审计中心', fixed: false, roles: ['系统管理员', '安全管理员'] }
+        ]);
+
+        // 父子联动：改父级 → 子级跟随；改子级 → 父级取子级并集
+        const parentOf = {};
+        menus.value.forEach(g => (g.children || []).forEach(c => { parentOf[c.name] = g; }));
+
+        const onRolesChange = (row, v) => {
+          row.roles = v;
+          if (row.children) {
+            row.children.forEach(c => { c.roles = [...v]; });
+          }
+          const p = parentOf[row.name];
+          if (p) {
+            p.roles = [...new Set(p.children.flatMap(c => c.roles))];
+          }
+        };
+
+        const save = () => {
+          ElementPlus.ElMessage.success('菜单可见性已保存，变更已写入审计日志');
+        };
+
+        return { menus, roleOptions, onRolesChange, save };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

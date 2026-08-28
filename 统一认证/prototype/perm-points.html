@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>权限点清单 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('perm', { title: '权限点清单' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <el-alert type="info" :closable="false" class="mb-2"
+            title="权限点由各业务系统自动注册（代码注解扫描 / 存量盘点 manifest 导入），无需手工维护；与角色详情的权限树同源。本页只读查看，分配动作在「角色管理」进行。">
+          </el-alert>
+
+          <!-- 统计卡片 -->
+          <div class="grid-4 mb-2">
+            <div class="stat-card" v-for="card in statCards" :key="card.title">
+              <div class="stat-header">
+                <span class="stat-title">{{ card.title }}</span>
+                <div class="stat-icon" :class="card.color">
+                  <el-icon :size="20"><component :is="card.icon" /></el-icon>
+                </div>
+              </div>
+              <div class="stat-value">{{ card.value }}</div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">权限点总表（按系统分组）</span>
+              <el-button size="small" @click="syncNow">
+                <el-icon><Refresh /></el-icon> 手动同步注册表
+              </el-button>
+            </div>
+            <div class="card-body">
+              <div class="filter-bar">
+                <el-select v-model="systemFilter" placeholder="系统" clearable style="width: 150px">
+                  <el-option v-for="s in systems" :key="s" :label="s" :value="s"></el-option>
+                </el-select>
+                <el-select v-model="typeFilter" placeholder="类型" clearable style="width: 120px">
+                  <el-option label="页面" value="page"></el-option>
+                  <el-option label="操作" value="op"></el-option>
+                </el-select>
+                <el-select v-model="statusFilter" placeholder="状态" clearable style="width: 120px">
+                  <el-option label="正常" value="active"></el-option>
+                  <el-option label="已废弃" value="deprecated"></el-option>
+                </el-select>
+                <el-input v-model="keyword" placeholder="搜索名称 / 编码" clearable style="width: 220px">
+                  <template #prefix><el-icon><Search /></el-icon></template>
+                </el-input>
+              </div>
+
+              <el-table :data="filteredData" style="width: 100%" row-key="code" default-expand-all>
+                <el-table-column prop="name" label="权限点" min-width="170"></el-table-column>
+                <el-table-column prop="code" label="编码" min-width="180">
+                  <template #default="{ row }">
+                    <code style="font-size:12px;color:#606266;">{{ row.code }}</code>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="module" label="所属模块" width="110"></el-table-column>
+                <el-table-column prop="system" label="所属系统" width="120"></el-table-column>
+                <el-table-column label="类型" width="80">
+                  <template #default="{ row }">
+                    <el-tag :type="row.type === 'page' ? 'info' : 'warning'" size="small">
+                      {{ row.type === 'page' ? '页面' : '操作' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="roles" label="引用角色数" width="95"></el-table-column>
+                <el-table-column label="状态" width="90">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+                      {{ row.status === 'active' ? '正常' : '已废弃' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="syncTime" label="最近同步" width="150"></el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        // ==================== Mock：3 个系统注册的权限点（与角色详情权限树同源） ====================
+        const systems = ['统一认证中心', 'ERP', 'SCRM'];
+
+        const tableData = ref([
+          // 统一认证中心 · 账号管理
+          { name: '账号查询', code: 'account:query', module: '账号管理', system: '统一认证中心', type: 'page', roles: 4, status: 'active', syncTime: '2026-08-20 10:12' },
+          { name: '禁用启用', code: 'account:disable', module: '账号管理', system: '统一认证中心', type: 'op', roles: 2, status: 'active', syncTime: '2026-08-20 10:12' },
+          { name: '凭证重置', code: 'account:credential-reset', module: '账号管理', system: '统一认证中心', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-20 10:12' },
+          { name: '申诉审核', code: 'account:appeal', module: '账号管理', system: '统一认证中心', type: 'page', roles: 2, status: 'active', syncTime: '2026-08-20 10:12' },
+          // ERP · 销售管理
+          { name: '线索管理', code: 'erp:lead:view', module: '销售管理', system: 'ERP', type: 'page', roles: 3, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '线索-分配', code: 'erp:lead:assign', module: '销售管理', system: 'ERP', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '客户管理', code: 'erp:customer:view', module: '销售管理', system: 'ERP', type: 'page', roles: 3, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '订单管理', code: 'erp:order:view', module: '销售管理', system: 'ERP', type: 'page', roles: 3, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '订单-变更', code: 'erp:order:change', module: '销售管理', system: 'ERP', type: 'op', roles: 2, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '合同管理', code: 'erp:contract:view', module: '销售管理', system: 'ERP', type: 'page', roles: 2, status: 'active', syncTime: '2026-08-25 09:05' },
+          // ERP · 月嫂薪酬
+          { name: '工资账单', code: 'erp:wage-bill:view', module: '月嫂薪酬', system: 'ERP', type: 'page', roles: 2, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '工资-发放', code: 'erp:wage-bill:pay', module: '月嫂薪酬', system: 'ERP', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-25 09:05' },
+          // ERP · 审批管理
+          { name: '审核中心', code: 'erp:audit:center', module: '审批管理', system: 'ERP', type: 'page', roles: 4, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '⧨ 订单变更', code: 'erp:audit:order-change', module: '审批管理', system: 'ERP', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-25 09:05' },
+          { name: '⧨ 退款审核', code: 'erp:audit:refund', module: '审批管理', system: 'ERP', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-25 09:05' },
+          // ERP · 已废弃示例
+          { name: '订单导出（旧）', code: 'erp:order:export', module: '销售管理', system: 'ERP', type: 'op', roles: 1, status: 'deprecated', syncTime: '2026-08-25 09:05' },
+          // SCRM · 客户跟进
+          { name: '线索管理', code: 'scrm:lead:view', module: '客户跟进', system: 'SCRM', type: 'page', roles: 3, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '线索-跟进', code: 'scrm:lead:follow', module: '客户跟进', system: 'SCRM', type: 'op', roles: 3, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '线索-分配', code: 'scrm:lead:assign', module: '客户跟进', system: 'SCRM', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '⧨ 介绍人员', code: 'scrm:lead:referrer', module: '客户跟进', system: 'SCRM', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '客户管理', code: 'scrm:customer:view', module: '客户跟进', system: 'SCRM', type: 'page', roles: 2, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '客户-转让', code: 'scrm:customer:transfer', module: '客户跟进', system: 'SCRM', type: 'op', roles: 1, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '会话存档', code: 'scrm:chat:view', module: '客户跟进', system: 'SCRM', type: 'page', roles: 1, status: 'active', syncTime: '2026-08-26 16:40' },
+          { name: '统计分析', code: 'scrm:stats:view', module: '客户跟进', system: 'SCRM', type: 'page', roles: 1, status: 'active', syncTime: '2026-08-26 16:40' }
+        ]);
+
+        const statCards = computed(() => {
+          const all = tableData.value;
+          return [
+            { title: '接入系统', value: systems.length, icon: 'Grid', color: 'blue' },
+            { title: '权限点总数', value: all.length, icon: 'Key', color: 'green' },
+            { title: '页面级', value: all.filter(i => i.type === 'page').length, icon: 'Document', color: 'orange' },
+            { title: '已废弃', value: all.filter(i => i.status === 'deprecated').length, icon: 'Warning', color: 'red' }
+          ];
+        });
+
+        // ==================== 筛选 ====================
+        const systemFilter = ref('');
+        const typeFilter = ref('');
+        const statusFilter = ref('');
+        const keyword = ref('');
+
+        const filteredData = computed(() => {
+          return tableData.value.filter(item => {
+            const matchSystem = !systemFilter.value || item.system === systemFilter.value;
+            const matchType = !typeFilter.value || item.type === typeFilter.value;
+            const matchStatus = !statusFilter.value || item.status === statusFilter.value;
+            const matchKeyword = !keyword.value || item.name.includes(keyword.value) || item.code.includes(keyword.value);
+            return matchSystem && matchType && matchStatus && matchKeyword;
+          });
+        });
+
+        const syncNow = () => {
+          ElementPlus.ElMessage.success('已触发注册表同步：3 个系统均为最新（通常随系统发版自动完成）');
+        };
+
+        return {
+          statCards, systems, tableData,
+          systemFilter, typeFilter, statusFilter, keyword,
+          filteredData, syncNow
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

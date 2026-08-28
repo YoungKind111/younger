@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>员工管理 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .offboard-step { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px dashed #ebeef5; font-size: 13px; }
+    .offboard-step:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('staff-list', { title: '员工管理' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">员工列表</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                <el-icon><Plus /></el-icon> 员工开通
+              </el-button>
+            </div>
+            <div class="card-body">
+              <div class="filter-bar">
+                <el-input v-model="keyword" placeholder="搜索姓名 / 账号 / 手机号" clearable style="width: 220px">
+                  <template #prefix><el-icon><Search /></el-icon></template>
+                </el-input>
+                <el-select v-model="deptFilter" placeholder="部门" clearable style="width: 200px">
+                  <el-option v-for="d in deptOptions" :key="d" :label="d" :value="d"></el-option>
+                </el-select>
+                <el-select v-model="statusFilter" placeholder="在职状态" clearable style="width: 120px">
+                  <el-option label="在职" value="在职"></el-option>
+                  <el-option label="已离职" value="已离职"></el-option>
+                  <el-option label="待激活" value="待激活"></el-option>
+                </el-select>
+              </div>
+
+              <el-table :data="filteredData" style="width: 100%">
+                <el-table-column prop="name" label="姓名" width="100">
+                  <template #default="{ row }">
+                    <a :href="'staff-detail.html?name=' + encodeURIComponent(row.name)" style="color:#1890ff;text-decoration:none;">{{ row.name }}</a>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="account" label="账号" width="120"></el-table-column>
+                <el-table-column prop="dept" label="部门" min-width="200" show-overflow-tooltip></el-table-column>
+                <el-table-column label="角色" min-width="140">
+                  <template #default="{ row }">
+                    <el-tag v-for="r in row.roles" :key="r" size="small" effect="plain" style="margin-right:4px;">{{ r }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="在职状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="statusType(row.status)" size="small">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="账号状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.accountStatus === '正常' ? 'success' : 'danger'" size="small">{{ row.accountStatus }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200">
+                  <template #default="{ row }">
+                    <el-button link type="primary" @click="goDetail">详情/调岗</el-button>
+                    <el-button link type="danger" :disabled="row.status === '已离职'" @click="handleOffboard(row)">离职</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div class="pagination-bar">
+                <el-pagination :page-size="10" :total="filteredData.length" layout="total, prev, pager, next" background></el-pagination>
+              </div>
+            </div>
+          </div>
+
+          <!-- 员工开通对话框（邀请制开户） -->
+          <el-dialog v-model="addVisible" title="员工开通（邀请制开户）" width="480px">
+            <el-form :model="addForm" label-width="90px">
+              <el-form-item label="姓名" required><el-input v-model="addForm.name"></el-input></el-form-item>
+              <el-form-item label="手机号" required><el-input v-model="addForm.phone" placeholder="用于企微绑定与登录"></el-input></el-form-item>
+              <el-form-item label="邮箱" required><el-input v-model="addForm.email" placeholder="用于接收邀请邮件"></el-input></el-form-item>
+              <el-form-item label="部门" required>
+                <el-select v-model="addForm.dept" style="width:100%">
+                  <el-option v-for="d in deptOptions" :key="d" :label="d" :value="d"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="角色">
+                <el-select v-model="addForm.roles" multiple style="width:100%">
+                  <el-option v-for="r in roleOptions" :key="r" :label="r" :value="r"></el-option>
+                </el-select>
+                <div style="font-size:12px;color:#909399;margin-top:4px;">选填：可先开通，稍后在员工详情中授权</div>
+              </el-form-item>
+            </el-form>
+            <div style="font-size:12px;color:#909399;line-height:1.8;padding-left:90px;">
+              开通后系统发送邀请邮件（链接 72 小时有效、一次性使用）；员工激活并设置密码后方可登录；未激活不可登录。<br>
+              建档成功后将<strong>自动创建企微成员并回写绑定</strong>（企微扫码登录、SCRM 随之可用）。
+            </div>
+            <template #footer>
+              <el-button @click="addVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveAdd">建档并发送邀请</el-button>
+            </template>
+          </el-dialog>
+
+          <!-- 离职处理对话框（三连联动） -->
+          <el-dialog v-model="offboardVisible" :title="'离职处理 · ' + offboardRow.name" width="520px">
+            <el-alert type="warning" :closable="false" style="margin-bottom:14px;"
+              title="禁用认证账号为必执行项；企微处置按实际情况二选一。"></el-alert>
+            <div class="offboard-step">
+              <el-icon color="#52c41a"><CircleCheck /></el-icon>
+              <span>① 禁用认证账号（必执行）—— ≤5 秒全端 token 失效（ERP / SCRM / 小程序全部登出）</span>
+            </div>
+            <el-radio-group v-model="weworkMode" style="margin:14px 0 6px;">
+              <el-radio value="disable">禁用企微成员 + 触发客户继承（默认）</el-radio>
+              <el-radio value="keep">保留企微号继续使用（不触发继承）</el-radio>
+            </el-radio-group>
+            <template v-if="weworkMode === 'disable'">
+              <div class="offboard-step">
+                <el-icon color="#52c41a"><CircleCheck /></el-icon>
+                <span>② 禁用企微成员 —— 企微登录态失效，SCRM 随之不可登录</span>
+              </div>
+              <div class="offboard-step">
+                <el-icon color="#fa8c16"><Loading /></el-icon>
+                <span>③ 触发 SCRM 客户继承 —— 名下 28 个客户/线索待分配，继承给：{{ offboardRow.successor }}</span>
+              </div>
+            </template>
+            <div class="offboard-step" v-else>
+              <el-icon color="#1890ff"><InfoFilled /></el-icon>
+              <span>② 保留企微号 —— 企微账号继续由公司/继任者使用，客户关系不迁移；注意：该企微号仍可直登 SCRM，请确认使用人</span>
+            </div>
+            <div style="margin-top:14px;">
+              <el-checkbox v-model="offboardConfirm">已确认 {{ offboardRow.name }} 的工作交接安排，执行离职</el-checkbox>
+            </div>
+            <template #footer>
+              <el-button @click="offboardVisible = false">取消</el-button>
+              <el-button type="danger" :disabled="!offboardConfirm" @click="confirmOffboard">执行离职</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // ==================== Mock 数据（对齐 RBAC 种子） ====================
+        const tableData = ref([
+          { name: '陈曦', account: 'chenxi', dept: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 容桂店', roles: ['销售顾问'], status: '在职', accountStatus: '正常' },
+          { name: '刘倩', account: 'liuqian', dept: '氧阁健康 / 月嫂销售业务 / 佛山销售分部', roles: ['销售顾问', '销售主管'], status: '在职', accountStatus: '正常' },
+          { name: '赵鹏', account: 'zhaopeng', dept: '氧阁健康 / 月嫂销售业务 / 广州销售分部', roles: ['销售顾问'], status: '在职', accountStatus: '正常' },
+          { name: '孙丽', account: 'sunli', dept: '氧阁健康 / 月嫂销售业务 / 深圳销售分部', roles: ['销售顾问'], status: '在职', accountStatus: '锁定中' },
+          { name: '周敏', account: 'zhoumin', dept: '氧阁健康 / 运营部 / 月嫂管理组', roles: ['月嫂运营专员'], status: '在职', accountStatus: '正常' },
+          { name: '吴芳', account: 'wufang', dept: '氧阁健康 / 运营部 / 月嫂管理组', roles: ['月嫂主管'], status: '在职', accountStatus: '正常' },
+          { name: '郑凯', account: 'zhengkai', dept: '氧阁健康 / 财务部', roles: ['财务专员'], status: '在职', accountStatus: '正常' },
+          { name: '何静', account: 'hejing', dept: '氧阁健康 / 招生业务部 / 招生转化组', roles: ['招生顾问'], status: '在职', accountStatus: '正常' },
+          { name: '罗军', account: 'luojun', dept: '氧阁健康 / 招生业务部', roles: ['招生主管'], status: '在职', accountStatus: '正常' },
+          { name: '高燕', account: 'gaoyan', dept: '氧阁健康 / 运营部 / 培训组', roles: ['培训教务'], status: '在职', accountStatus: '正常' },
+          { name: '梁欣', account: 'liangxin', dept: '氧阁健康 / 产康业务 / 佛山产康分部 / 北滘店', roles: ['产康店长'], status: '在职', accountStatus: '正常' },
+          { name: '王芳', account: 'wangfang', dept: '氧阁健康 / 运营部 / 客服组', roles: ['客服'], status: '在职', accountStatus: '正常' },
+          { name: '冯雪', account: 'fengxue', dept: '氧阁健康 / 运营部 / 客服组', roles: ['客服'], status: '在职', accountStatus: '正常' },
+          { name: '蒋涛', account: 'jiangtao', dept: '氧阁健康 / 市场部 / 新媒体运营组', roles: ['运营'], status: '在职', accountStatus: '正常' },
+          { name: '韩雪', account: 'hanxue', dept: '氧阁健康 / 信息部 / 技术开发线', roles: ['系统管理员'], status: '在职', accountStatus: '正常' },
+          { name: '宋洁', account: 'songjie', dept: '氧阁健康 / 月嫂销售业务 / 育婴业务组', roles: ['育婴顾问'], status: '已离职', accountStatus: '已禁用' },
+          { name: '林涛', account: 'lintao', dept: '氧阁健康 / 招生业务部 / 招生转化组', roles: ['招生顾问'], status: '待激活', accountStatus: '未激活' },
+          { name: '许晴', account: 'xuqing', dept: '氧阁健康 / 运营部 / 培训组', roles: ['培训教务'], status: '待激活', accountStatus: '未激活' }
+        ]);
+
+        const deptOptions = [...new Set(tableData.value.map(r => r.dept))];
+        const roleOptions = ['销售顾问', '销售主管', '月嫂运营专员', '月嫂主管', '财务专员', '招生顾问', '招生主管', '培训教务', '产康店长', '育婴顾问', '客服'];
+
+        const keyword = ref('');
+        const deptFilter = ref('');
+        const statusFilter = ref('');
+
+        const filteredData = computed(() => tableData.value.filter(r => {
+          const mk = !keyword.value || r.name.includes(keyword.value) || r.account.includes(keyword.value);
+          const md = !deptFilter.value || r.dept === deptFilter.value;
+          const ms = !statusFilter.value || r.status === statusFilter.value;
+          return mk && md && ms;
+        }));
+
+        const statusType = (s) => ({ '在职': 'success', '已离职': 'info', '待激活': 'warning' }[s]);
+
+        // ==================== 员工开通 ====================
+        const addVisible = ref(false);
+        const addForm = ref({ name: '', phone: '', email: '', dept: '', roles: [] });
+        const handleAdd = () => {
+          addForm.value = { name: '', phone: '', dept: '', roles: [] };
+          addVisible.value = true;
+        };
+        const saveAdd = () => {
+          if (!addForm.value.name || !addForm.value.phone || !addForm.value.email || !addForm.value.dept) {
+            ElementPlus.ElMessage.warning('请填写必填项：姓名、手机号、邮箱、部门');
+            return;
+          }
+          addVisible.value = false;
+          ElementPlus.ElMessage.success(`已建档并向 ${addForm.value.email} 发送邀请邮件（72h 有效、一次性）`);
+        };
+
+        // ==================== 离职处理 ====================
+        const offboardVisible = ref(false);
+        const offboardConfirm = ref(false);
+        const weworkMode = ref('disable');
+        const offboardRow = ref({ name: '', successor: '刘倩（同部门主管）' });
+        const handleOffboard = (row) => {
+          offboardRow.value = { ...row, successor: '刘倩（同部门主管）' };
+          offboardConfirm.value = false;
+          weworkMode.value = 'disable';
+          offboardVisible.value = true;
+        };
+        const confirmOffboard = () => {
+          offboardVisible.value = false;
+          const msg = weworkMode.value === 'disable'
+            ? `${offboardRow.value.name} 已离职：账号已禁用（≤5s 全端失效）、企微已禁用、客户继承已触发`
+            : `${offboardRow.value.name} 已离职：账号已禁用（≤5s 全端失效）；企微号保留继续使用，客户不迁移`;
+          ElementPlus.ElMessage.success(msg);
+        };
+
+        const goDetail = () => { window.location.href = 'staff-detail.html'; };
+
+        return {
+          tableData, deptOptions, roleOptions, keyword, deptFilter, statusFilter,
+          filteredData, statusType,
+          addVisible, addForm, handleAdd, saveAdd,
+          offboardVisible, offboardConfirm, weworkMode, offboardRow, handleOffboard, confirmOffboard,
+          goDetail
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

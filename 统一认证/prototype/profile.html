@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('', { title: '个人中心' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div style="max-width:820px;">
+          <div class="content-card mb-2">
+            <div class="card-header"><span class="card-title">修改密码</span></div>
+            <div class="card-body">
+              <el-form :model="pwdForm" label-width="90px" style="max-width:420px;">
+                <el-form-item label="原密码">
+                  <el-input v-model="pwdForm.old" type="password" show-password></el-input>
+                </el-form-item>
+                <el-form-item label="新密码">
+                  <el-input v-model="pwdForm.newPwd" type="password" show-password placeholder="≥8 位，含字母+数字"></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码">
+                  <el-input v-model="pwdForm.confirm" type="password" show-password></el-input>
+                </el-form-item>
+              </el-form>
+              <el-alert type="info" :closable="false" style="margin-bottom:12px;"
+                title="修改成功后，该账号所有已登录设备将被踢下线（token 全部吊销）。"></el-alert>
+              <div style="text-align:right;">
+                <el-button type="primary" @click="changePwd">确认修改</el-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header"><span class="card-title">登录设备</span></div>
+            <div class="card-body">
+              <el-table :data="devices" style="width: 100%">
+                <el-table-column prop="device" label="设备" width="220">
+                  <template #default="{ row }">
+                    {{ row.device }}
+                    <el-tag v-if="row.current" type="success" size="small" style="margin-left:6px;">本机</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="channel" label="端" width="160"></el-table-column>
+                <el-table-column prop="lastActive" label="最近活跃" width="160"></el-table-column>
+                <el-table-column prop="ip" label="IP"></el-table-column>
+                <el-table-column label="操作" width="100">
+                  <template #default="{ row }">
+                    <el-button link type="danger" :disabled="row.current" @click="kick(row)">踢出</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        const pwdForm = ref({ old: '', newPwd: '', confirm: '' });
+
+        const changePwd = () => {
+          if (!pwdForm.value.old || !pwdForm.value.newPwd) { ElementPlus.ElMessage.warning('请填写完整'); return; }
+          if (pwdForm.value.newPwd !== pwdForm.value.confirm) { ElementPlus.ElMessage.error('两次输入的新密码不一致'); return; }
+          pwdForm.value = { old: '', newPwd: '', confirm: '' };
+          ElementPlus.ElMessage.success('密码已修改，其他设备已全部踢下线');
+        };
+
+        const devices = ref([
+          { device: 'Windows · Edge 浏览器', channel: '统一管理后台', lastActive: '2026-08-27 11:20', ip: '112.96.33.18', current: true },
+          { device: 'iPhone 15 · 企业微信', channel: '内部员工端小程序', lastActive: '2026-08-26 18:40', ip: '112.96.33.18', current: false },
+          { device: 'MacBook · Chrome', channel: '业务管理后台', lastActive: '2026-08-24 09:03', ip: '183.6.52.77', current: false }
+        ]);
+
+        const kick = (row) => {
+          ElementPlus.ElMessageBox.confirm(`踢出设备「${row.device}」？其 token 将 ≤5 秒失效。`, '踢出确认', { type: 'warning' })
+            .then(() => {
+              devices.value = devices.value.filter(d => d !== row);
+              ElementPlus.ElMessage.success('已踢出，该设备 token ≤5 秒失效');
+            }).catch(() => {});
+        };
+
+        return { pwdForm, changePwd, devices, kick };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

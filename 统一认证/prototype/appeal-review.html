@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>申诉审核 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('appeal', { title: '申诉审核' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header"><span class="card-title">申诉工单</span></div>
+          <div class="card-body">
+            <el-tabs v-model="tab">
+              <el-tab-pane v-for="t in tabs" :key="t.name" :name="t.name">
+                <template #label>{{ t.label }} <el-badge v-if="t.name === 'pending'" :value="countOf('pending')" type="warning"></el-badge></template>
+              </el-tab-pane>
+            </el-tabs>
+
+            <el-table :data="filtered" style="width: 100%">
+              <el-table-column prop="id" label="工单号" width="110"></el-table-column>
+              <el-table-column label="申诉类型" width="170">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="row.type === '旧手机号不可用' ? 'warning' : 'danger'">{{ row.type }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="applicant" label="申请人" width="110"></el-table-column>
+              <el-table-column prop="account" label="涉及账号" width="120"></el-table-column>
+              <el-table-column prop="time" label="提交时间" width="160"></el-table-column>
+              <el-table-column label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="{ pending: 'warning', approved: 'success', rejected: 'danger' }[row.status]">
+                    {{ { pending: '待审核', approved: '已通过', rejected: '已驳回' }[row.status] }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100">
+                <template #default="{ row }">
+                  <el-button link type="primary" @click="openDetail(row)">{{ row.status === 'pending' ? '审核' : '查看' }}</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 审核详情对话框 -->
+          <el-dialog v-model="detailVisible" :title="'申诉详情 · ' + current.id" width="560px">
+            <el-descriptions :column="1" border size="small" style="margin-bottom:14px;">
+              <el-descriptions-item label="申诉类型">{{ current.type }}</el-descriptions-item>
+              <el-descriptions-item label="申请人">{{ current.applicant }}（新手机号 {{ current.newPhone }}）</el-descriptions-item>
+              <el-descriptions-item label="涉及账号">{{ current.account }}（原绑定 139****7788）</el-descriptions-item>
+              <el-descriptions-item label="申诉说明">{{ current.desc }}</el-descriptions-item>
+              <el-descriptions-item label="证明材料">
+                <el-tag size="small" style="margin-right:6px;" v-for="f in current.files" :key="f">{{ f }}</el-tag>
+              </el-descriptions-item>
+            </el-descriptions>
+
+            <template v-if="current.status === 'pending'">
+              <el-input v-model="rejectReason" type="textarea" :rows="2"
+                placeholder="驳回理由（驳回时必填，将随通知发给申请人）" style="margin-bottom:12px;"></el-input>
+              <el-alert type="info" :closable="false"
+                title="通过/驳回均通知发起人（小程序订阅消息 + 短信，至少一种可达）；驳回通知含理由与重新申诉入口；通知发送结果入审计日志。"></el-alert>
+            </template>
+            <el-alert v-else type="success" :closable="false"
+              :title="'已' + (current.status === 'approved' ? '通过并执行换绑' : '驳回') + '；通知已送达（订阅消息）。'"></el-alert>
+
+            <template #footer v-if="current.status === 'pending'">
+              <el-button type="danger" plain @click="reject">驳回</el-button>
+              <el-button type="primary" @click="approve">通过并执行换绑</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const tab = ref('pending');
+        const tabs = [
+          { name: 'pending', label: '待审核' },
+          { name: 'approved', label: '已通过' },
+          { name: 'rejected', label: '已驳回' }
+        ];
+
+        const list = ref([
+          { id: 'AP-2027', type: '旧手机号不可用', applicant: '王秀兰', account: 'ACC-10021', newPhone: '137****5566', time: '2026-08-27 10:24', status: 'pending', desc: '原号码已停机两年，无法接收验证码，附入网证明。', files: ['入网证明.jpg', '身份证正面.jpg'] },
+          { id: 'AP-2026', type: '这不是我的账号', applicant: '李强', account: 'ACC-10455', newPhone: '139****7788', time: '2026-08-27 09:10', status: 'pending', desc: '手机号是新办的，登录发现已有别人的订单记录，疑似二次放号。', files: ['入网证明.jpg'] },
+          { id: 'AP-2025', type: '旧手机号不可用', applicant: '张翠花', account: 'ACC-10086', newPhone: '138****2046', time: '2026-08-26 15:42', status: 'approved', desc: '原号码注销，附证明。', files: ['入网证明.jpg'] },
+          { id: 'AP-2024', type: '这不是我的账号', applicant: '赵磊', account: 'ACC-10312', newPhone: '136****9012', time: '2026-08-25 11:05', status: 'rejected', desc: '称账号非本人。', files: ['无有效证明'] },
+          { id: 'AP-2023', type: '旧手机号不可用', applicant: '刘金凤', account: 'ACC-10298', newPhone: '135****3321', time: '2026-08-24 16:30', status: 'approved', desc: '号码已停用，无法收码。', files: ['入网证明.jpg', '缴费记录.pdf'] },
+          { id: 'AP-2022', type: '这不是我的账号', applicant: '陈建国', account: 'ACC-10277', newPhone: '139****1145', time: '2026-08-24 09:18', status: 'rejected', desc: '登录后发现陌生家庭成员。', files: ['截图证据.jpg'] },
+          { id: 'AP-2021', type: '旧手机号不可用', applicant: '杨春花', account: 'ACC-10240', newPhone: '137****8890', time: '2026-08-23 14:52', status: 'approved', desc: '月嫂换号，附入网证明。', files: ['入网证明.jpg'] },
+          { id: 'AP-2020', type: '旧手机号不可用', applicant: '黄丽华', account: 'ACC-10185', newPhone: '138****6673', time: '2026-08-22 10:07', status: 'rejected', desc: '证明材料模糊无法核验。', files: ['证明照片不清晰.jpg'] }
+        ]);
+
+        const filtered = computed(() => list.value.filter(r => r.status === tab.value));
+        const countOf = (s) => list.value.filter(r => r.status === s).length;
+
+        const detailVisible = ref(false);
+        const current = ref({});
+        const rejectReason = ref('');
+
+        const openDetail = (row) => {
+          current.value = row;
+          rejectReason.value = '';
+          detailVisible.value = true;
+        };
+
+        const approve = () => {
+          current.value.status = 'approved';
+          detailVisible.value = false;
+          ElementPlus.ElMessage.success('已通过：换绑已执行、旧 token 全部吊销，通知已送达（订阅消息+短信）');
+        };
+
+        const reject = () => {
+          if (!rejectReason.value) { ElementPlus.ElMessage.warning('驳回理由必填'); return; }
+          current.value.status = 'rejected';
+          detailVisible.value = false;
+          ElementPlus.ElMessage.success('已驳回：通知含理由与重新申诉入口，发送结果已入审计');
+        };
+
+        return { tab, tabs, list, filtered, countOf, detailVisible, current, rejectReason, openDetail, approve, reject };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

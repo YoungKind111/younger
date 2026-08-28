@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>端与准入管理 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('config-channel', { title: '端与准入管理' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header">
+            <span class="card-title">端清单与端×主体准入映射</span>
+            <el-button size="small" @click="addVisible = true"><el-icon><Plus /></el-icon> 登记新端</el-button>
+          </div>
+          <div class="card-body">
+            <el-alert type="info" :closable="false" style="margin-bottom:14px;"
+              title="主体类型不允许进入的端，登录即在网关拦截并返回明确错误码；配置免发版生效。"></el-alert>
+            <el-table :data="channels" style="width: 100%">
+              <el-table-column prop="name" label="端" width="170"></el-table-column>
+              <el-table-column prop="channel" label="channel" width="140">
+                <template #default="{ row }"><code style="font-size:12px;">{{ row.channel }}</code></template>
+              </el-table-column>
+              <el-table-column label="允许进入的主体类型" min-width="320">
+                <template #default="{ row }">
+                  <el-checkbox-group v-model="row.parties">
+                    <el-checkbox value="customer">customer</el-checkbox>
+                    <el-checkbox value="worker">worker</el-checkbox>
+                    <el-checkbox value="staff">staff</el-checkbox>
+                    <el-checkbox value="promoter">promoter</el-checkbox>
+                    <el-checkbox value="agency_user" disabled>agency_user（二期）</el-checkbox>
+                  </el-checkbox-group>
+                </template>
+              </el-table-column>
+              <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
+            </el-table>
+            <div style="margin-top:16px;text-align:right;">
+              <el-button type="primary" @click="save">保存配置</el-button>
+            </div>
+          </div>
+
+          <el-dialog v-model="addVisible" title="登记新端" width="440px">
+            <el-form label-width="90px">
+              <el-form-item label="端名称"><el-input placeholder="如：机构端"></el-input></el-form-item>
+              <el-form-item label="channel"><el-input placeholder="如：agency_web"></el-input></el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="addVisible = false">取消</el-button>
+              <el-button type="primary" @click="addChannel">登记</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const channels = ref([
+          { name: '客户端小程序', channel: 'client_mini', parties: ['customer'], remark: '家庭客户' },
+          { name: '客户端 APP', channel: 'client_app', parties: ['customer'], remark: '一键登录（二期）' },
+          { name: '月嫂端小程序', channel: 'worker_mini', parties: ['worker'], remark: '黑名单/冻结在网关拦截' },
+          { name: '月嫂端 APP', channel: 'worker_app', parties: ['worker'], remark: '一键登录（二期）' },
+          { name: '月嫂招聘小程序', channel: 'recruit_mini', parties: ['promoter'], remark: '开放注册：自荐/推荐均生成线索，挂 promoter 主体' },
+          { name: '内部员工端小程序', channel: 'staff_mini', parties: ['staff'], remark: '' },
+          { name: '业务管理后台', channel: 'admin_web', parties: ['staff'], remark: '' },
+          { name: 'SCRM', channel: 'scrm_web', parties: ['staff'], remark: '企微扫码 + memberid 映射' }
+        ]);
+
+        const addVisible = ref(false);
+        const addChannel = () => {
+          addVisible.value = false;
+          ElementPlus.ElMessage.success('新端已登记，请为其配置准入映射与认证源');
+        };
+
+        const save = () => {
+          ElementPlus.ElMessage.success('准入映射已保存并即时生效，变更已入审计日志');
+        };
+
+        return { channels, addVisible, addChannel, save };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

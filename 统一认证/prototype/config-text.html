@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文案配置 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('config-text', { title: '文案配置' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header"><span class="card-title">下发文案配置</span></div>
+          <div class="card-body">
+            <el-alert type="info" :closable="false" style="margin-bottom:14px;"
+              title="认证中心只下发状态码与文案，展示页面由各端承接；支持变量占位（如 {剩余分钟}）。修改免发版生效。"></el-alert>
+            <el-table :data="texts" style="width: 100%">
+              <el-table-column prop="scene" label="场景" width="180"></el-table-column>
+              <el-table-column prop="keyName" label="文案 key" width="200">
+                <template #default="{ row }"><code style="font-size:12px;">{{ row.keyName }}</code></template>
+              </el-table-column>
+              <el-table-column prop="content" label="当前文案" min-width="320" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="updateTime" label="最近修改" width="150"></el-table-column>
+              <el-table-column label="操作" width="90">
+                <template #default="{ row }">
+                  <el-button link type="primary" @click="edit(row)">编辑</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <el-dialog v-model="editVisible" :title="'编辑文案 · ' + current.scene" width="520px">
+            <el-input v-model="editContent" type="textarea" :rows="4"></el-input>
+            <div style="font-size:12px;color:#909399;margin-top:8px;">可用变量：{剩余分钟} {剩余天数} {客服电话}</div>
+            <template #footer>
+              <el-button @click="editVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveEdit">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const texts = ref([
+          { scene: '账号禁用提示', keyName: 'auth.disabled.account', content: '您的账号已被限制登录，如有疑问请联系客服 {客服电话} 或提交申诉。', updateTime: '2026-08-20 10:12' },
+          { scene: '主体禁用提示', keyName: 'auth.disabled.party', content: '该身份已被限制使用，您的其他身份不受影响。', updateTime: '2026-08-20 10:12' },
+          { scene: '登录锁定提示', keyName: 'auth.lock', content: '失败次数过多，账号已锁定，请 {剩余分钟} 分钟后再试。', updateTime: '2026-08-20 10:12' },
+          { scene: '注销冷静期提示', keyName: 'auth.cancel.cooling', content: '您的账号将于 {剩余天数} 天后注销。如需继续使用，请点击撤销注销。', updateTime: '2026-08-21 14:30' },
+          { scene: '申诉驳回通知', keyName: 'auth.appeal.rejected', content: '很抱歉，您的申诉未通过：{驳回理由}。可补充材料后重新提交。', updateTime: '2026-08-21 14:30' },
+          { scene: '申诉通过通知', keyName: 'auth.appeal.approved', content: '您的申诉已通过，手机号已换绑，请使用新号码登录。', updateTime: '2026-08-21 14:30' },
+          { scene: '验证码错误提示', keyName: 'auth.sms.error', content: '验证码错误或已过期，请重新获取（单条验证码 5 分钟内有效）。', updateTime: '2026-08-22 09:05' },
+          { scene: 'worker 准入引导', keyName: 'auth.guide.worker_onboarding', content: '您还未完成月嫂建档，请前往「月嫂招聘小程序」留资，或联系招聘顾问 {客服电话}。', updateTime: '2026-08-22 09:05' },
+          { scene: '换绑成功提示', keyName: 'auth.change_phone.done', content: '手机号已换绑，请使用新号码重新登录（其他设备已退出）。', updateTime: '2026-08-22 09:05' }
+        ]);
+
+        const editVisible = ref(false);
+        const editContent = ref('');
+        const current = ref({});
+
+        const edit = (row) => {
+          current.value = row;
+          editContent.value = row.content;
+          editVisible.value = true;
+        };
+
+        const saveEdit = () => {
+          current.value.content = editContent.value;
+          current.value.updateTime = '2026-08-27 ' + new Date().toTimeString().slice(0, 5);
+          editVisible.value = false;
+          ElementPlus.ElMessage.success('文案已保存并即时生效，变更已入审计日志');
+        };
+
+        return { texts, editVisible, editContent, current, edit, saveEdit };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

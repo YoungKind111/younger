@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消息模板 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('config-message', { title: '消息模板' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header">
+            <span class="card-title">消息模板</span>
+            <el-button type="primary" size="small" @click="edit(null)"><el-icon><Plus /></el-icon> 新增模板</el-button>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <el-select v-model="channelFilter" placeholder="通道" clearable style="width: 150px">
+                <el-option label="短信" value="短信"></el-option>
+                <el-option label="小程序订阅消息" value="小程序订阅消息"></el-option>
+                <el-option label="邮件" value="邮件"></el-option>
+              </el-select>
+              <el-input v-model="keyword" placeholder="搜索模板名称 / 场景" clearable style="width: 220px">
+                <template #prefix><el-icon><Search /></el-icon></template>
+              </el-input>
+            </div>
+            <el-table :data="filtered" style="width: 100%">
+              <el-table-column prop="name" label="模板名称" width="160"></el-table-column>
+              <el-table-column prop="channel" label="通道" width="140">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="row.channel === '短信' ? 'primary' : 'success'">{{ row.channel }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="scene" label="使用场景" width="180"></el-table-column>
+              <el-table-column prop="content" label="内容" min-width="280" show-overflow-tooltip></el-table-column>
+              <el-table-column label="状态" width="90">
+                <template #default="{ row }">
+                  <el-switch :model-value="row.enabled" @change="toggle(row)"></el-switch>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="90">
+                <template #default="{ row }">
+                  <el-button link type="primary" @click="edit(row)">编辑</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <el-dialog v-model="editVisible" :title="isEdit ? '编辑模板' : '新增模板'" width="560px">
+            <el-form :model="form" label-width="90px">
+              <el-form-item label="模板名称"><el-input v-model="form.name"></el-input></el-form-item>
+              <el-form-item label="通道">
+                <el-radio-group v-model="form.channel">
+                  <el-radio value="短信">短信</el-radio>
+                  <el-radio value="小程序订阅消息">小程序订阅消息</el-radio>
+                  <el-radio value="邮件">邮件</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="使用场景"><el-input v-model="form.scene" placeholder="如：登录验证码"></el-input></el-form-item>
+              <el-form-item label="模板内容">
+                <el-input v-model="form.content" type="textarea" :rows="4"></el-input>
+              </el-form-item>
+            </el-form>
+            <div style="font-size:12px;color:#909399;padding-left:90px;">
+              变量用花括号占位，如 {验证码}、{有效期}、{驳回理由}；短信模板需与通道侧签名模板一致。
+            </div>
+            <template #footer>
+              <el-button @click="editVisible = false">取消</el-button>
+              <el-button type="primary" @click="save">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        const list = ref([
+          { name: '登录验证码', channel: '短信', scene: '验证码登录', content: '【氧阁】验证码 {验证码}，{有效期} 分钟内有效，请勿泄露。', enabled: true },
+          { name: '员工开通邀请', channel: '邮件', scene: '邀请制开户', content: '您已被开通氧阁员工账号，点击 {链接} 激活（72 小时内有效）。', enabled: true },
+          { name: '凭证重置通知', channel: '短信', scene: '凭证重置', content: '【氧阁】您的临时密码为 {临时密码}，请登录后立即修改。', enabled: true },
+          { name: '申诉结果通知', channel: '小程序订阅消息', scene: '申诉审核结果', content: '您的申诉{结果}。{驳回理由}点击查看详情。', enabled: true },
+          { name: '注销冷静期提醒', channel: '短信', scene: '注销冷静期', content: '【氧阁】您的账号将于 {剩余天数} 天后注销，登录可撤销。', enabled: false },
+          { name: '换绑成功通知', channel: '短信', scene: '换绑手机号', content: '【氧阁】您的账号已换绑至新号码，请使用新号码登录。', enabled: true },
+          { name: '账号禁用通知', channel: '短信', scene: '账号禁用', content: '【氧阁】您的账号因 {原因} 已被限制登录，详询客服 {客服电话}。', enabled: true },
+          { name: '面试邀约通知', channel: '小程序订阅消息', scene: '招聘线索跟进', content: '您有一条面试邀约：{时间} {地点}，点击查看详情。', enabled: false }
+        ]);
+
+        const channelFilter = ref('');
+        const keyword = ref('');
+        const filtered = computed(() => list.value.filter(t => {
+          const mc = !channelFilter.value || t.channel === channelFilter.value;
+          const mk = !keyword.value || t.name.includes(keyword.value) || t.scene.includes(keyword.value);
+          return mc && mk;
+        }));
+
+        const editVisible = ref(false);
+        const isEdit = ref(false);
+        const form = ref({ name: '', channel: '短信', scene: '', content: '' });
+
+        const edit = (row) => {
+          isEdit.value = !!row;
+          form.value = row ? { ...row } : { name: '', channel: '短信', scene: '', content: '' };
+          editVisible.value = true;
+        };
+
+        const save = () => {
+          editVisible.value = false;
+          ElementPlus.ElMessage.success(isEdit.value ? '模板已更新' : '模板已创建');
+        };
+
+        const toggle = (row) => {
+          row.enabled = !row.enabled;
+          ElementPlus.ElMessage.success(`模板「${row.name}」已${row.enabled ? '启用' : '停用'}，变更已入审计`);
+        };
+
+        return { list, channelFilter, keyword, filtered, editVisible, isEdit, form, edit, save, toggle };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组织架构 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .org-grid { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 960px) { .org-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('org-tree', { title: '组织架构' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="org-grid">
+          <!-- 左：部门树 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">部门树（47 个节点）</span>
+              <el-button type="primary" size="small" @click="handleAddDept">
+                <el-icon><Plus /></el-icon> 新增部门
+              </el-button>
+            </div>
+            <div class="card-body">
+              <el-input v-model="filterText" placeholder="搜索部门" clearable style="margin-bottom:12px;">
+                <template #prefix><el-icon><Search /></el-icon></template>
+              </el-input>
+              <el-tree
+                ref="treeRef"
+                :data="orgTree"
+                :props="{ label: 'name', children: 'children' }"
+                node-key="path"
+                default-expand-all
+                highlight-current
+                :expand-on-click-node="false"
+                :filter-node-method="filterNode"
+                @node-click="handleNodeClick"
+              ></el-tree>
+            </div>
+          </div>
+
+          <!-- 右：部门详情 -->
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">{{ currentDept ? currentDept.name : '请选择部门' }}</span>
+              <div v-if="currentDept">
+                <el-button size="small" @click="handleEditDept">编辑</el-button>
+                <el-button size="small" type="danger" plain @click="handleDisableDept">停用</el-button>
+              </div>
+            </div>
+            <div class="card-body" v-if="currentDept">
+              <el-descriptions :column="2" border size="small" style="margin-bottom:16px;">
+                <el-descriptions-item label="完整路径">{{ currentDept.path }}</el-descriptions-item>
+                <el-descriptions-item label="负责人">{{ currentDept.leader }}</el-descriptions-item>
+                <el-descriptions-item label="在编人数">{{ members.length }}</el-descriptions-item>
+                <el-descriptions-item label="状态"><el-tag type="success" size="small">启用</el-tag></el-descriptions-item>
+              </el-descriptions>
+
+              <el-alert type="info" :closable="false" style="margin-bottom:12px;"
+                title="数据范围「本部门 / 本部门及下级」以本树为准；部门调整将影响相关角色的数据过滤范围。">
+              </el-alert>
+
+              <div style="font-weight:600;margin-bottom:8px;">部门成员</div>
+              <el-table :data="members" size="small">
+                <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+                <el-table-column prop="role" label="角色"></el-table-column>
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === '在职' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="card-body" v-else>
+              <div style="color:#909399;text-align:center;padding:48px 0;">点击左侧部门查看详情</div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑部门对话框 -->
+          <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑部门' : '新增部门'" width="440px">
+            <el-form :model="form" label-width="90px">
+              <el-form-item label="上级部门">
+                <el-input v-model="form.parent" disabled></el-input>
+              </el-form-item>
+              <el-form-item label="部门名称">
+                <el-input v-model="form.name" placeholder="如：南海店"></el-input>
+              </el-form-item>
+              <el-form-item label="负责人">
+                <el-input v-model="form.leader" placeholder="选填"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveDept">保存</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // Mock：对齐《ERP组织树快照》裁剪版
+        const orgTree = ref([
+          { name: '氧阁健康', path: '氧阁健康', leader: 'CEO', children: [
+            { name: '月嫂销售业务', path: '氧阁健康 / 月嫂销售业务', leader: '王总', children: [
+              { name: '佛山销售分部', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部', leader: '刘倩', children: [
+                { name: '容桂店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 容桂店', leader: '陈曦' },
+                { name: '北滘店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 北滘店', leader: '—' },
+                { name: '南海店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 南海店', leader: '—' }
+              ]},
+              { name: '广州销售分部', path: '氧阁健康 / 月嫂销售业务 / 广州销售分部', leader: '赵鹏' },
+              { name: '深圳销售分部', path: '氧阁健康 / 月嫂销售业务 / 深圳销售分部', leader: '孙丽' },
+              { name: '育婴业务组', path: '氧阁健康 / 月嫂销售业务 / 育婴业务组', leader: '—' },
+              { name: '匹配组', path: '氧阁健康 / 月嫂销售业务 / 匹配组', leader: '—' }
+            ]},
+            { name: '运营部', path: '氧阁健康 / 运营部', leader: '李总', children: [
+              { name: '月嫂管理组', path: '氧阁健康 / 运营部 / 月嫂管理组', leader: '周敏' },
+              { name: '培训组', path: '氧阁健康 / 运营部 / 培训组', leader: '高燕' },
+              { name: '客服组', path: '氧阁健康 / 运营部 / 客服组', leader: '王芳' },
+              { name: '督导组', path: '氧阁健康 / 运营部 / 督导组', leader: '—' }
+            ]},
+            { name: '招生业务部', path: '氧阁健康 / 招生业务部', leader: '罗军', children: [
+              { name: '招生转化组', path: '氧阁健康 / 招生业务部 / 招生转化组', leader: '何静' },
+              { name: '渠道开发组', path: '氧阁健康 / 招生业务部 / 渠道开发组', leader: '—' }
+            ]},
+            { name: '财务部', path: '氧阁健康 / 财务部', leader: '郑凯' },
+            { name: '产康业务', path: '氧阁健康 / 产康业务', leader: '—', children: [
+              { name: '佛山产康分部', path: '氧阁健康 / 产康业务 / 佛山产康分部', leader: '梁欣' },
+              { name: '广州产康分部', path: '氧阁健康 / 产康业务 / 广州产康分部', leader: '—' }
+            ]},
+            { name: '市场部', path: '氧阁健康 / 市场部', leader: '蒋涛', children: [
+              { name: '新媒体运营组', path: '氧阁健康 / 市场部 / 新媒体运营组', leader: '蒋涛' },
+              { name: '私域运营组', path: '氧阁健康 / 市场部 / 私域运营组', leader: '—' }
+            ]},
+            { name: '信息部', path: '氧阁健康 / 信息部', leader: '韩雪', children: [
+              { name: '技术开发线', path: '氧阁健康 / 信息部 / 技术开发线', leader: '韩雪' },
+              { name: '产品线', path: '氧阁健康 / 信息部 / 产品线', leader: '—' }
+            ]}
+          ]}
+        ]);
+
+        const allMembers = {
+          '氧阁健康 / 月嫂销售业务 / 佛山销售分部': [
+            { name: '刘倩', role: '销售主管', status: '在职' },
+            { name: '陈曦', role: '销售顾问', status: '在职' }
+          ],
+          '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 容桂店': [
+            { name: '陈曦', role: '销售顾问', status: '在职' }
+          ],
+          '氧阁健康 / 月嫂销售业务 / 广州销售分部': [
+            { name: '赵鹏', role: '销售顾问', status: '在职' }
+          ],
+          '氧阁健康 / 月嫂销售业务 / 深圳销售分部': [
+            { name: '孙丽', role: '销售顾问', status: '在职' }
+          ],
+          '氧阁健康 / 运营部 / 月嫂管理组': [
+            { name: '周敏', role: '月嫂运营专员', status: '在职' },
+            { name: '吴芳', role: '月嫂主管', status: '在职' }
+          ],
+          '氧阁健康 / 运营部 / 培训组': [
+            { name: '高燕', role: '培训教务', status: '在职' },
+            { name: '许晴', role: '培训教务', status: '待激活' }
+          ],
+          '氧阁健康 / 运营部 / 客服组': [
+            { name: '王芳', role: '客服', status: '在职' },
+            { name: '冯雪', role: '客服', status: '在职' }
+          ],
+          '氧阁健康 / 招生业务部': [
+            { name: '罗军', role: '招生主管', status: '在职' }
+          ],
+          '氧阁健康 / 招生业务部 / 招生转化组': [
+            { name: '何静', role: '招生顾问', status: '在职' },
+            { name: '林涛', role: '招生顾问', status: '待激活' }
+          ],
+          '氧阁健康 / 财务部': [
+            { name: '郑凯', role: '财务专员', status: '在职' }
+          ],
+          '氧阁健康 / 产康业务 / 佛山产康分部': [
+            { name: '梁欣', role: '产康店长', status: '在职' }
+          ],
+          '氧阁健康 / 信息部 / 技术开发线': [
+            { name: '韩雪', role: '系统管理员', status: '在职' }
+          ]
+        };
+
+        const currentDept = ref(null);
+        const members = computed(() => currentDept.value ? (allMembers[currentDept.value.path] || []) : []);
+
+        const filterText = ref('');
+        const treeRef = ref(null);
+        const filterNode = (value, data) => !value || data.name.includes(value);
+        Vue.watch(filterText, (v) => treeRef.value && treeRef.value.filter(v));
+
+        const handleNodeClick = (data) => { currentDept.value = data; };
+
+        // ==================== 部门编辑 ====================
+        const dialogVisible = ref(false);
+        const isEdit = ref(false);
+        const form = ref({ parent: '', name: '', leader: '' });
+
+        const handleAddDept = () => {
+          if (!currentDept.value) {
+            ElementPlus.ElMessage.warning('请先在左侧选择上级部门');
+            return;
+          }
+          isEdit.value = false;
+          form.value = { parent: currentDept.value.path, name: '', leader: '' };
+          dialogVisible.value = true;
+        };
+        const handleEditDept = () => {
+          isEdit.value = true;
+          form.value = { parent: currentDept.value.path, name: currentDept.value.name, leader: currentDept.value.leader };
+          dialogVisible.value = true;
+        };
+        const saveDept = () => {
+          if (!form.value.name) { ElementPlus.ElMessage.warning('请填写部门名称'); return; }
+          dialogVisible.value = false;
+          ElementPlus.ElMessage.success(isEdit.value ? '部门已更新' : `已在「${form.value.parent}」下新增部门「${form.value.name}」`);
+        };
+        const handleDisableDept = () => {
+          ElementPlus.ElMessageBox.confirm(
+            `停用「${currentDept.value.name}」？停用后该部门员工的数据范围归属需重新指定。`, '停用确认', { type: 'warning' }
+          ).then(() => ElementPlus.ElMessage.success('已停用（原型演示）')).catch(() => {});
+        };
+
+        return {
+          orgTree, currentDept, members, filterText, treeRef, filterNode, handleNodeClick,
+          dialogVisible, isEdit, form, handleAddDept, handleEditDept, saveDept, handleDisableDept
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

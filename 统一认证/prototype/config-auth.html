@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>认证源配置 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    SharedMenu.initPageLayout('config-auth', { title: '认证源配置' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header"><span class="card-title">各端启用的登录方式</span></div>
+          <div class="card-body">
+            <el-alert type="info" :closable="false" style="margin-bottom:14px;"
+              title="配置免发版生效；至少保留一种登录方式；变更写入审计日志。"></el-alert>
+            <el-table :data="channels" style="width: 100%">
+              <el-table-column prop="name" label="端" width="180">
+                <template #default="{ row }">
+                  <div>{{ row.name }}</div>
+                  <code style="font-size:11px;color:#909399;">{{ row.channel }}</code>
+                </template>
+              </el-table-column>
+              <el-table-column label="微信 code" width="120" align="center">
+                <template #default="{ row }"><el-checkbox v-model="row.wechat"></el-checkbox></template>
+              </el-table-column>
+              <el-table-column label="手机验证码" width="120" align="center">
+                <template #default="{ row }"><el-checkbox v-model="row.sms"></el-checkbox></template>
+              </el-table-column>
+              <el-table-column label="账号密码" width="120" align="center">
+                <template #default="{ row }"><el-checkbox v-model="row.password"></el-checkbox></template>
+              </el-table-column>
+              <el-table-column label="企微扫码" width="120" align="center">
+                <template #default="{ row }"><el-checkbox v-model="row.wework"></el-checkbox></template>
+              </el-table-column>
+              <el-table-column label="一键登录（二期）" align="center">
+                <template #default="{ row }"><el-checkbox v-model="row.oneClick" disabled></el-checkbox></template>
+              </el-table-column>
+            </el-table>
+            <div style="margin-top:16px;text-align:right;">
+              <el-button type="primary" @click="save">保存配置</el-button>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        const channels = ref([
+          { name: '客户端小程序', channel: 'client_mini', wechat: true, sms: true, password: false, wework: false, oneClick: false },
+          { name: '客户端 APP', channel: 'client_app', wechat: true, sms: true, password: false, wework: false, oneClick: false },
+          { name: '月嫂端小程序', channel: 'worker_mini', wechat: true, sms: true, password: false, wework: false, oneClick: false },
+          { name: '月嫂端 APP', channel: 'worker_app', wechat: true, sms: true, password: false, wework: false, oneClick: false },
+          { name: '月嫂招聘小程序', channel: 'recruit_mini', wechat: true, sms: true, password: false, wework: false, oneClick: false },
+          { name: '内部员工端小程序', channel: 'staff_mini', wechat: true, sms: true, password: true, wework: false, oneClick: false },
+          { name: '业务管理后台', channel: 'admin_web', wechat: false, sms: false, password: true, wework: true, oneClick: false },
+          { name: 'SCRM', channel: 'scrm_web', wechat: false, sms: false, password: true, wework: true, oneClick: false }
+        ]);
+
+        const save = () => {
+          const bad = channels.value.find(c => !c.wechat && !c.sms && !c.password && !c.wework);
+          if (bad) {
+            ElementPlus.ElMessage.error(`「${bad.name}」至少保留一种登录方式`);
+            return;
+          }
+          ElementPlus.ElMessage.success('认证源配置已保存并即时生效，变更已入审计日志');
+        };
+
+        return { channels, save };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

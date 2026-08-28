@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色权限配置 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+  <style>
+    .top-card { margin-bottom: 16px; }
+    .top-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+    .top-row .el-form-item { margin-bottom: 0; }
+    .top-actions { margin-left: auto; display: flex; gap: 8px; }
+    .scope-hint { font-size: 12px; color: #909399; margin-top: 8px; }
+    /* 视图①：已授权表 */
+    .grant-group { margin-bottom: 18px; }
+    .grant-group-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .grant-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 8px 16px; border-top: 1px solid #f5f5f5; font-size: 13px; }
+    .grant-row .pn { width: 130px; font-weight: 500; flex-shrink: 0; padding-top: 2px; }
+    .grant-row .pn.tab { padding-left: 16px; color: #ad6800; font-weight: 400; }
+    .grant-row .acts { flex: 1; }
+    .grant-row .scope { width: 170px; flex-shrink: 0; color: #909399; padding-top: 2px; }
+    .narrow-tag { color: #f5222d; font-size: 11px; margin-left: 4px; }
+    .empty-tip { text-align: center; color: #909399; padding: 48px 0; }
+    /* 视图②：编辑模式 */
+    .edit-toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+    .module-block { margin-bottom: 6px; }
+    .module-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-weight: 600; font-size: 14px; }
+    .page-row { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0 9px 16px; border-top: 1px solid #f5f5f5; flex-wrap: wrap; }
+    .page-row .pn { width: 110px; font-size: 13px; font-weight: 500; padding-top: 4px; flex-shrink: 0; }
+    .page-row .acts { flex: 1; min-width: 300px; }
+    .page-row .scope-box { width: 160px; flex-shrink: 0; }
+    .tab-row { background: #fffaf0; }
+    .tab-row .pn { padding-left: 14px; font-weight: 400; color: #ad6800; }
+    .risk-label { color: #f5222d; }
+    .risk-label::after { content: " ⚠"; font-size: 11px; }
+    .hit-row { background: #e6f7ff; }
+    .mod-title { display: flex; align-items: center; gap: 8px; }
+    .mod-sel { font-size: 12px; color: #1890ff; }
+    .mod-ops { margin-left: auto; }
+    .el-collapse-item__header { display: flex; }
+    .el-collapse-item__header .mod-ops { margin-left: auto; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- CDN（锁定版本，顺序固定） -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+  <script src="perm-data.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('role', {
+      title: '角色权限配置',
+      breadcrumb: '<a href="role-list.html">角色管理</a> / 销售主管'
+    });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <!-- 顶部：角色信息（两个视图共用） -->
+          <div class="content-card top-card">
+            <div class="card-body">
+              <div class="top-row">
+                <el-form-item label="角色名称">
+                  <el-input v-model="form.name" style="width: 180px"></el-input>
+                </el-form-item>
+                <el-form-item label="基准范围">
+                  <el-select v-model="form.baseScope" style="width: 170px">
+                    <el-option v-for="s in allScopes" :key="s" :label="s" :value="s"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="已授权">
+                  <b style="color:#1890ff;font-size:18px">{{ totalChecked }}</b> 项
+                </el-form-item>
+                <div class="top-actions">
+                  <template v-if="mode === 'view'">
+                    <el-button type="primary" @click="mode = 'edit'">
+                      <el-icon><Edit /></el-icon> 调整权限
+                    </el-button>
+                  </template>
+                  <template v-else>
+                    <el-button @click="mode = 'view'">完成，返回已授权视图</el-button>
+                  </template>
+                  <el-button type="success" @click="publish">发布</el-button>
+                </div>
+              </div>
+              <div class="scope-hint">
+                基准范围是角色的上限（全公司统一六档）；页面/页签可在上限内收窄、不能放宽；过滤由框架统一执行。
+              </div>
+            </div>
+          </div>
+
+          <el-alert v-if="mode === 'edit'" type="info" :closable="false" class="mb-2"
+            title="权限树按各系统菜单结构归类（系统 ▸ 一级模块=菜单分组 ▸ 侧边栏页面 ▸ ⧨页内页签），与菜单一处维护、同源同步；数据范围逐页只能收窄；红色 ⚠ 为高风险动作（要求 MFA/幂等/审计）。">
+          </el-alert>
+          <el-alert v-if="mutexWarnings.length" type="warning" :closable="false" class="mb-2"
+            :title="'互斥提醒：' + mutexWarnings.join('；')"></el-alert>
+
+          <!-- ========== 视图①：已授权（默认，只读紧凑表） ========== -->
+          <div v-if="mode === 'view'" class="content-card">
+            <div class="card-header"><span class="card-title">已授权内容</span></div>
+            <div class="card-body">
+              <div v-if="!grantedGroups.length" class="empty-tip">
+                尚未授予任何权限，点击右上角「调整权限」开始配置
+              </div>
+              <div v-for="g in grantedGroups" :key="g.sys" class="grant-group">
+                <div class="grant-group-title">
+                  <el-tag size="small" effect="dark">{{ g.sys }}</el-tag>
+                  <span style="color:#909399;font-weight:400;font-size:12px;">{{ g.rows.length }} 个页面/页签</span>
+                </div>
+                <div v-for="r in g.rows" :key="r.key" class="grant-row">
+                  <span class="pn" :class="{ tab: r.isTab }">{{ r.isTab ? '⧨ ' : '' }}{{ r.name }}</span>
+                  <span class="acts">
+                    <el-tag v-for="a in r.acts" :key="a" size="small" effect="plain" style="margin:0 4px 4px 0">{{ a }}</el-tag>
+                  </span>
+                  <span class="scope">
+                    <template v-if="r.scope === '自定义部门'">
+                      <el-button link type="primary" size="small" @click="openCustom(r.key)">
+                        自定义部门（已圈 {{ customCount(r.key) }} 个）
+                      </el-button>
+                    </template>
+                    <template v-else>
+                      {{ r.scope || '跟随基准' }}
+                      <span v-if="r.scope" class="narrow-tag">已收窄</span>
+                    </template>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 视图②：调整权限（系统 Tab + 搜索） ========== -->
+          <div v-else class="content-card">
+            <div class="card-header">
+              <span class="card-title">调整权限</span>
+              <div>
+                <el-button size="small" type="primary" plain @click="grantAllView">全铺「查看」</el-button>
+                <el-button size="small" type="danger" plain @click="clearAll">清空</el-button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="edit-toolbar">
+                <el-input v-model="searchKey" placeholder="搜索页面 / 页签，直接定位" clearable style="width: 260px">
+                  <template #prefix><el-icon><Search /></el-icon></template>
+                </el-input>
+                <span style="font-size:12px;color:#909399;">默认只展开有授权的模块</span>
+              </div>
+
+              <el-tabs v-model="activeSystem">
+                <el-tab-pane v-for="sys in systems" :key="sys.name" :name="sys.name">
+                  <template #label>
+                    {{ sys.name }}
+                    <el-badge v-if="sysSelected(sys.name)" :value="sysSelected(sys.name)" type="primary" style="margin-left:4px;"></el-badge>
+                  </template>
+
+                  <el-collapse :model-value="openNames(sys)" @change="(v) => setOpen(sys.name, v)">
+                    <el-collapse-item v-for="mod in filteredModules(sys)" :key="mod.name" :name="mod.name">
+                      <template #title>
+                        <span class="mod-title">
+                          <strong>{{ mod.name }}</strong>
+                          <span class="mod-sel" v-if="modSelected(sys.name, mod)">已选 {{ modSelected(sys.name, mod) }} 页</span>
+                        </span>
+                        <span class="mod-ops" @click.stop>
+                          <el-button link type="primary" size="small" @click.stop="moduleSelectAll(sys.name, mod, true)">全选</el-button>
+                          <el-button link size="small" @click.stop="moduleSelectAll(sys.name, mod, false)">清空</el-button>
+                        </span>
+                      </template>
+
+                      <template v-for="p in mod.pages" :key="p.n">
+                        <div class="page-row" :class="rowClass(pk(sys.name, mod.name, p.n), p.n)">
+                          <span class="pn">{{ p.n }}
+                          </span>
+                          <span class="acts">
+                            <el-checkbox-group :model-value="getActs(pk(sys.name, mod.name, p.n))"
+                                               @change="(v) => handleActs(pk(sys.name, mod.name, p.n), v)">
+                              <el-checkbox v-for="a in p.acts" :key="a" :value="a">
+                                <span :class="{ 'risk-label': isRisk(a) }">{{ a }}</span>
+                              </el-checkbox>
+                            </el-checkbox-group>
+                          </span>
+                          <span class="scope-box">
+                            <el-select :model-value="getScope(pk(sys.name, mod.name, p.n))" placeholder="跟随基准"
+                                       clearable size="small"
+                                       @change="(v) => handleScope(pk(sys.name, mod.name, p.n), v)">
+                              <el-option v-for="s in narrowScopes" :key="s" :label="s" :value="s"></el-option>
+                            </el-select>
+                            <span v-if="getScope(pk(sys.name, mod.name, p.n)) && getScope(pk(sys.name, mod.name, p.n)) !== '自定义部门'" class="narrow-tag">已收窄</span>
+                            <el-button v-if="getScope(pk(sys.name, mod.name, p.n)) === '自定义部门'" link type="primary" size="small"
+                                       @click="openCustom(pk(sys.name, mod.name, p.n))">
+                              已圈 {{ customCount(pk(sys.name, mod.name, p.n)) }} 个部门，查看/调整
+                            </el-button>
+                          </span>
+                        </div>
+                        <div v-for="t in (p.tabs || [])" :key="t.n" class="page-row tab-row" :class="rowClass(tk(sys.name, mod.name, p.n, t.n), t.n)">
+                          <span class="pn">⧨ {{ t.n }}
+                          </span>
+                          <span class="acts">
+                            <el-checkbox-group :model-value="getActs(tk(sys.name, mod.name, p.n, t.n))"
+                                               @change="(v) => handleActs(tk(sys.name, mod.name, p.n, t.n), v)">
+                              <el-checkbox v-for="a in t.acts" :key="a" :value="a">
+                                <span :class="{ 'risk-label': isRisk(a) }">{{ a }}</span>
+                              </el-checkbox>
+                            </el-checkbox-group>
+                          </span>
+                          <span class="scope-box">
+                            <el-select :model-value="getScope(tk(sys.name, mod.name, p.n, t.n))" placeholder="跟随父页"
+                                       clearable size="small"
+                                       @change="(v) => handleScope(tk(sys.name, mod.name, p.n, t.n), v)">
+                              <el-option v-for="s in narrowScopes" :key="s" :label="s" :value="s"></el-option>
+                            </el-select>
+                            <span v-if="getScope(tk(sys.name, mod.name, p.n, t.n)) && getScope(tk(sys.name, mod.name, p.n, t.n)) !== '自定义部门'" class="narrow-tag">已收窄</span>
+                            <el-button v-if="getScope(tk(sys.name, mod.name, p.n, t.n)) === '自定义部门'" link type="primary" size="small"
+                                       @click="openCustom(tk(sys.name, mod.name, p.n, t.n))">
+                              已圈 {{ customCount(tk(sys.name, mod.name, p.n, t.n)) }} 个部门，查看/调整
+                            </el-button>
+                          </span>
+                        </div>
+                      </template>
+                    </el-collapse-item>
+                  </el-collapse>
+                  <div v-if="!filteredModules(sys).length" class="empty-tip">无匹配「{{ searchKey }}」的页面</div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </div>
+
+          <!-- 自定义部门圈选对话框 -->
+          <el-dialog v-model="customVisible" title="自定义部门范围" width="480px">
+            <div style="color:#909399;font-size:12px;margin-bottom:8px">
+              {{ customKey }} —— 勾选可见的部门节点（含其子部门）
+            </div>
+            <el-tree
+              ref="customTreeRef"
+              :data="orgTree"
+              :props="{ label: 'name', children: 'children' }"
+              node-key="path"
+              show-checkbox
+              default-expand-all
+              :default-checked-keys="customChecked"
+            ></el-tree>
+            <template #footer>
+              <el-button @click="customVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveCustom">确认圈选</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // ==================== 角色 ====================
+        const allScopes = ['本人', '本人及下属', '本部门', '本部门及下级', '全机构', '自定义部门'];
+        const scopeRank = { '本人': 0, '本人及下属': 1, '本部门': 2, '本部门及下级': 3, '自定义部门': 3.5, '全机构': 4 };
+        const pk = (s, m, p) => s + '/' + m + '/' + p;
+        const tk = (s, m, p, t) => s + '/' + m + '/' + p + '/' + t;
+
+        const salesPreset = () => ({
+          pages: {
+            [pk('ERP', '销售管理', '线索管理')]: ['查看', '新增', '编辑', '领取', '分配', '跟进', '转化', '导出'],
+            [pk('ERP', '销售管理', '客户管理')]: ['查看', '新增', '编辑', '跟进', '转移', '匹配', '导出'],
+            [pk('ERP', '销售管理', '订单管理')]: ['查看', '编辑', '匹配', '变更', '导出'],
+            [pk('ERP', '销售管理', '合同管理')]: ['查看', '新增', '编辑', '发起签署', '导出'],
+            [tk('ERP', '审批管理', '审核中心', '订单变更')]: ['查看', '同意', '驳回'],
+            [pk('SCRM', '客户跟进', '线索管理')]: ['查看', '跟进'],
+            [pk('SCRM', '客户跟进', '统计分析')]: ['查看']
+          },
+          scopes: { [pk('ERP', '销售管理', '客户管理')]: '本部门' }
+        });
+
+        // ==================== 角色预置（各角色现有配置快照） ====================
+        const rolePresets = {
+          'SCRM 主管': () => ({
+            pages: {
+              [pk('SCRM', '客户跟进', '线索管理')]: ['查看', '跟进', '分配', '导出'],
+              [tk('SCRM', '客户跟进', '线索管理', '介绍人员')]: ['查看', '新增', '编辑', '停用'],
+              [pk('SCRM', '客户跟进', '客户管理')]: ['查看', '跟进', '转让'],
+              [pk('SCRM', '客户跟进', '会话存档')]: ['查看'],
+              [pk('SCRM', '客户跟进', '统计分析')]: ['查看', '导出']
+            },
+            scopes: {}
+          }),
+          '客服': () => ({
+            pages: {
+              [pk('统一认证中心', '账号管理', '账号查询')]: ['查看'],
+              [pk('统一认证中心', '账号管理', '申诉审核')]: ['查看', '通过', '驳回']
+            },
+            scopes: {}
+          })
+        };
+
+        // URL 参数指定角色（角色列表跳入）；无预置的角色从空白开始
+        const urlRole = new URLSearchParams(window.location.search).get('role');
+        const initPreset = (urlRole && rolePresets[urlRole]) || salesPreset;
+
+        const form = ref({ name: urlRole || '销售主管', baseScope: '本部门及下级' });
+        const narrowScopes = computed(() =>
+          allScopes.filter(s => scopeRank[s] <= scopeRank[form.value.baseScope]));
+
+        const st = ref(initPreset());
+        let published = JSON.parse(JSON.stringify(initPreset()));
+
+        // ==================== 权限资源树（perm-data.js：按各系统菜单结构归类） ====================
+        const systems = ref(window.PERM_SYSTEMS);
+
+        // ==================== 状态 ====================
+        const highRiskActs = ['删除', '作废', '发放', '付款登记', '退款', '确认退款', '退保', '锁定释放', '停止抢单'];
+        const mutexRules = [
+          { a: '生成', b: '发放', msg: '生成与发放应分离（资金风险）' },
+          { a: '审核通过', b: '确认退款', msg: '审核与退款确认应分离' }
+        ];
+        const isRisk = (a) => highRiskActs.includes(a);
+
+
+        const getActs = (k) => st.value.pages[k] || [];
+        const getScope = (k) => st.value.scopes[k] || '';
+
+        const handleActs = (k, v) => {
+          const added = v.filter(a => !getActs(k).includes(a));
+          const riskAdded = added.filter(isRisk);
+          if (riskAdded.length) {
+            ElementPlus.ElMessage.warning(`⚠ ${riskAdded.join('、')} 属高风险动作：要求 MFA、幂等与审计留痕`);
+          }
+          st.value.pages[k] = v;
+        };
+
+        const handleScope = (k, v) => {
+          if (v === '自定义部门') {
+            openCustom(k);
+            return; // 确认圈选后才写入
+          }
+          st.value.scopes[k] = v || '';
+          if (v !== '自定义部门' && st.value.custom) delete st.value.custom[k];
+        };
+
+        // ==================== 自定义部门圈选 ====================
+        const customVisible = ref(false);
+        const customKey = ref('');
+        const customChecked = ref([]);
+        const customTreeRef = ref(null);
+        const orgTree = ref([
+          { name: '氧阁健康', path: '氧阁健康', children: [
+            { name: '月嫂销售业务', path: '氧阁健康 / 月嫂销售业务', children: [
+              { name: '佛山销售分部', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部', children: [
+                { name: '容桂店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 容桂店' },
+                { name: '北滘店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 北滘店' },
+                { name: '南海店', path: '氧阁健康 / 月嫂销售业务 / 佛山销售分部 / 南海店' }
+              ]},
+              { name: '广州销售分部', path: '氧阁健康 / 月嫂销售业务 / 广州销售分部' },
+              { name: '深圳销售分部', path: '氧阁健康 / 月嫂销售业务 / 深圳销售分部' }
+            ]},
+            { name: '运营部', path: '氧阁健康 / 运营部' },
+            { name: '财务部', path: '氧阁健康 / 财务部' }
+          ]}
+        ]);
+
+        // 打开圈选弹窗（回显已勾选节点）
+        const openCustom = (k) => {
+          customKey.value = k;
+          customChecked.value = (st.value.custom || {})[k] || [];
+          customVisible.value = true;
+        };
+
+        const customCount = (k) => ((st.value.custom || {})[k] || []).length;
+
+        const saveCustom = () => {
+          const checked = customTreeRef.value.getCheckedKeys(true);
+          if (!checked.length) {
+            ElementPlus.ElMessage.warning('请至少圈选一个部门');
+            return;
+          }
+          if (!st.value.custom) st.value.custom = {};
+          st.value.custom[customKey.value] = checked;
+          st.value.scopes[customKey.value] = '自定义部门';
+          customVisible.value = false;
+          ElementPlus.ElMessage.success(`已圈选 ${checked.length} 个部门节点（含其子部门）`);
+        };
+
+        // ==================== 视图切换 ====================
+        const mode = ref('view');
+        const activeSystem = ref('ERP');
+        const searchKey = ref('');
+
+        // ==================== 视图①：已授权分组表 ====================
+        const grantedGroups = computed(() => {
+          const groups = [];
+          systems.value.forEach(sys => {
+            const rows = [];
+            sys.modules.forEach(mod => mod.pages.forEach(p => {
+              const k = pk(sys.name, mod.name, p.n);
+              if (getActs(k).length) {
+                rows.push({ key: k, name: p.n, isTab: false, acts: getActs(k), scope: getScope(k) });
+              }
+              (p.tabs || []).forEach(t => {
+                const k2 = tk(sys.name, mod.name, p.n, t.n);
+                if (getActs(k2).length) {
+                  rows.push({ key: k2, name: t.n, isTab: true, acts: getActs(k2), scope: getScope(k2) });
+                }
+              });
+            }));
+            if (rows.length) groups.push({ sys: sys.name, rows });
+          });
+          return groups;
+        });
+
+        // ==================== 视图②：搜索过滤 ====================
+        const filteredModules = (sys) => {
+          if (!searchKey.value) return sys.modules;
+          const kw = searchKey.value;
+          return sys.modules.map(mod => ({
+            ...mod,
+            pages: mod.pages.filter(p =>
+              p.n.includes(kw) || (p.tabs || []).some(t => t.n.includes(kw)))
+          })).filter(mod => mod.pages.length);
+        };
+
+        const rowClass = (key, name) => ({
+          'hit-row': searchKey.value && name.includes(searchKey.value)
+        });
+
+        // ==================== 模块折叠：默认展开"有授权或有差异"的模块 ====================
+        const openMap = ref({});
+
+        const modSelected = (sysName, mod) => {
+          let n = 0;
+          mod.pages.forEach(p => {
+            if (getActs(pk(sysName, mod.name, p.n)).length) n++;
+            (p.tabs || []).forEach(t => {
+              if (getActs(tk(sysName, mod.name, p.n, t.n)).length) n++;
+            });
+          });
+          return n;
+        };
+
+        const defaultOpenNames = (sys) =>
+          sys.modules.filter(m => modSelected(sys.name, m) > 0).map(m => m.name);
+
+        const openNames = (sys) => {
+          if (searchKey.value) return filteredModules(sys).map(m => m.name);
+          return openMap.value[sys.name] !== undefined ? openMap.value[sys.name] : defaultOpenNames(sys);
+        };
+
+        const setOpen = (sysName, v) => { openMap.value[sysName] = v; };
+
+        // ==================== 快捷操作 ====================
+        const moduleSelectAll = (sysName, mod, on) => {
+          mod.pages.forEach(p => {
+            st.value.pages[pk(sysName, mod.name, p.n)] = on ? [...p.acts] : [];
+            (p.tabs || []).forEach(t => {
+              st.value.pages[tk(sysName, mod.name, p.n, t.n)] = on ? [...t.acts] : [];
+            });
+          });
+          ElementPlus.ElMessage.success(on ? `已全选「${mod.name}」` : `已清空「${mod.name}」`);
+        };
+
+        const grantAllView = () => {
+          let n = 0;
+          systems.value.forEach(sys => sys.modules.forEach(mod => mod.pages.forEach(p => {
+            const k = pk(sys.name, mod.name, p.n);
+            if (!getActs(k).includes('查看')) { st.value.pages[k] = [...getActs(k), '查看']; n++; }
+            (p.tabs || []).forEach(t => {
+              const k2 = tk(sys.name, mod.name, p.n, t.n);
+              if (!getActs(k2).includes('查看')) { st.value.pages[k2] = [...getActs(k2), '查看']; n++; }
+            });
+          })));
+          ElementPlus.ElMessage.success(`已为 ${n} 个页面/页签铺上「查看」，再逐页加写权限`);
+        };
+
+        const clearAll = () => {
+          st.value = { pages: {}, scopes: {} };
+          openMap.value = {};
+        };
+
+        // ==================== 统计 / 互斥 ====================
+        const totalChecked = computed(() =>
+          Object.values(st.value.pages).reduce((sum, acts) => sum + (acts ? acts.length : 0), 0));
+
+        const sysSelected = (sysName) =>
+          Object.keys(st.value.pages).filter(k => k.startsWith(sysName + '/') && st.value.pages[k].length).length;
+
+        const mutexWarnings = computed(() => {
+          const out = [];
+          Object.entries(st.value.pages).forEach(([k, acts]) => {
+            if (!acts || !acts.length) return;
+            mutexRules.forEach(r => {
+              if (acts.includes(r.a) && acts.includes(r.b)) out.push(`${k} 同时授予「${r.a}+${r.b}」（${r.msg}）`);
+            });
+          });
+          return out;
+        });
+
+        // ==================== 发布（diff） ====================
+        const publish = () => {
+          const diffs = [];
+          const keys = new Set([...Object.keys(published.pages || {}), ...Object.keys(st.value.pages)]);
+          keys.forEach(k => {
+            const o = published.pages[k] || [], n = st.value.pages[k] || [];
+            const added = n.filter(a => !o.includes(a));
+            const removed = o.filter(a => !n.includes(a));
+            if (added.length) diffs.push(`<span style="color:#52c41a">+ ${k}：${added.join('、')}</span>`);
+            if (removed.length) diffs.push(`<span style="color:#f5222d">− ${k}：${removed.join('、')}</span>`);
+          });
+          const scopeKeys = new Set([...Object.keys(published.scopes || {}), ...Object.keys(st.value.scopes)]);
+          scopeKeys.forEach(k => {
+            const o = published.scopes[k] || '', n = st.value.scopes[k] || '';
+            if (o !== n && (o || n)) diffs.push(`<span style="color:#fa8c16">◆ ${k} 范围：${o || '跟随基准'} → ${n || '跟随基准'}</span>`);
+          });
+          const shown = diffs.slice(0, 12);
+          const more = diffs.length > 12 ? `<div style="color:#909399;margin-top:6px">…另有 ${diffs.length - 12} 条变更</div>` : '';
+          const diffHtml = diffs.length
+            ? `<div style="max-height:280px;overflow:auto;text-align:left;font-size:13px;line-height:1.9">${shown.join('<br>')}${more}</div>`
+            : '<div style="color:#909399">与上次发布版本一致，无变更</div>';
+
+          ElementPlus.ElMessageBox.confirm(
+            `<div style="margin-bottom:8px">发布「${form.value.name}」的权限配置？发布后其成员立即生效。</div>${diffHtml}`,
+            '发布确认（变更明细）',
+            { type: 'warning', confirmButtonText: '发布', cancelButtonText: '再想想', dangerouslyUseHTMLString: true }
+          ).then(() => {
+            published = JSON.parse(JSON.stringify(st.value));
+            ElementPlus.ElMessage.success(`已发布：${diffs.length} 条变更生效`);
+          }).catch(() => {});
+        };
+
+        return {
+          form, allScopes, narrowScopes, systems,
+          mode, activeSystem, searchKey,
+          pk, tk, getActs, getScope, handleActs, handleScope, isRisk,
+          grantedGroups, filteredModules, rowClass,
+          openNames, setOpen, modSelected,
+          moduleSelectAll, grantAllView, clearAll,
+          customVisible, customKey, customChecked, customTreeRef, orgTree, openCustom, customCount, saveCustom,
+          totalChecked, sysSelected, mutexWarnings, publish
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

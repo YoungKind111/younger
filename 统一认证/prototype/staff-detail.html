@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>员工详情 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref } = Vue;
+
+    const staffName = new URLSearchParams(window.location.search).get('name') || '刘倩';
+
+    SharedMenu.initPageLayout('staff-list', {
+      title: '员工详情',
+      breadcrumb: '<a href="staff-list.html">员工管理</a> / ' + staffName
+    });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <div class="grid-2col">
+            <!-- 左：档案 + 调岗 -->
+            <div>
+              <div class="content-card mb-2">
+                <div class="card-header"><span class="card-title">员工档案</span></div>
+                <div class="card-body">
+                  <el-descriptions :column="1" border size="small">
+                    <el-descriptions-item label="姓名">{{ staffName }}</el-descriptions-item>
+                    <el-descriptions-item label="手机号">138****2046</el-descriptions-item>
+                    <el-descriptions-item label="部门">氧阁健康 / 月嫂销售业务 / 佛山销售分部</el-descriptions-item>
+                    <el-descriptions-item label="兼任部门">氧阁健康 / 月嫂销售业务 / 中山销售分部</el-descriptions-item>
+                    <el-descriptions-item label="岗位">销售主管</el-descriptions-item>
+                    <el-descriptions-item label="在职状态"><el-tag type="success" size="small">在职</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="入职日期">2024-03-18</el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </div>
+
+              <!-- 企微绑定（5.2 企微绑定与通讯录同步） -->
+              <div class="content-card mb-2">
+                <div class="card-header">
+                  <span class="card-title">企微绑定</span>
+                  <el-button size="small" @click="bindVisible = true">手工补绑</el-button>
+                </div>
+                <div class="card-body">
+                  <el-descriptions :column="1" border size="small">
+                    <el-descriptions-item label="绑定状态"><el-tag type="success" size="small">已绑定</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="企微 memberid">LiuQian_0832</el-descriptions-item>
+                    <el-descriptions-item label="绑定方式">开通时自动回写（企微 API）</el-descriptions-item>
+                    <el-descriptions-item label="最近同步">2026-08-27 09:00（单向：主数据 → 企微）</el-descriptions-item>
+                  </el-descriptions>
+                  <el-alert type="info" :closable="false" style="margin-top:10px;"
+                    title="手工补绑仅用于手机号匹配失败等兜底场景；企微侧变更不会回流（单向同步）。"></el-alert>
+                </div>
+              </div>
+
+              <div class="content-card">
+                <div class="card-header"><span class="card-title">调岗</span></div>
+                <div class="card-body">
+                  <el-form :model="transferForm" label-width="90px">
+                    <el-form-item label="主部门">
+                      <el-cascader v-model="transferForm.dept" :options="deptOptions" style="width:100%"></el-cascader>
+                    </el-form-item>
+                    <el-form-item label="兼任部门">
+                      <el-select v-model="transferForm.extraDepts" multiple style="width:100%"
+                                 placeholder="可多选；数据范围「本部门」按 主部门 ∪ 兼任部门 计算">
+                        <el-option v-for="d in extraDeptOptions" :key="d" :label="d" :value="d"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="角色">
+                      <el-select v-model="transferForm.roles" multiple style="width:100%">
+                        <el-option v-for="r in roleOptions" :key="r" :label="r" :value="r"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="数据范围">
+                      <el-select v-model="transferForm.dataScope" style="width:100%">
+                        <el-option v-for="s in scopeOptions" :key="s" :label="s" :value="s"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-form>
+                  <el-alert type="info" :closable="false" style="margin-bottom:12px;"
+                    title="调岗保存后，role_ids 与 data_scope 随下次 token 签发即生效；「本部门及下级」按所选部门节点计算。"></el-alert>
+                  <div style="text-align:right;">
+                    <el-button type="primary" @click="saveTransfer">保存调岗</el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右：关联账号 + 操作记录 -->
+            <div>
+              <div class="content-card mb-2">
+                <div class="card-header">
+                  <span class="card-title">关联认证账号（account）</span>
+                  <el-button size="small" @click="goAccount">去账号查询</el-button>
+                </div>
+                <div class="card-body">
+                  <el-descriptions :column="1" border size="small">
+                    <el-descriptions-item label="账号 ID">ACC-10086</el-descriptions-item>
+                    <el-descriptions-item label="登录方式">用户名密码 / 企微扫码</el-descriptions-item>
+                    <el-descriptions-item label="账号状态"><el-tag type="success" size="small">正常</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="企微成员状态"><el-tag type="success" size="small">正常（SCRM 可登录）</el-tag></el-descriptions-item>
+                    <el-descriptions-item label="绑定主体">staff（本员工档案）</el-descriptions-item>
+                  </el-descriptions>
+                  <div style="font-weight:600;margin:14px 0 8px;">最近登录</div>
+                  <el-table :data="logins" size="small">
+                    <el-table-column prop="time" label="时间" width="150"></el-table-column>
+                    <el-table-column prop="channel" label="端" width="140"></el-table-column>
+                    <el-table-column prop="ip" label="IP"></el-table-column>
+                  </el-table>
+                </div>
+              </div>
+
+              <div class="content-card">
+                <div class="card-header"><span class="card-title">操作记录</span></div>
+                <div class="card-body">
+                  <el-timeline style="padding-left:4px;">
+                    <el-timeline-item v-for="(op, i) in ops" :key="i" :timestamp="op.time" :type="op.type">
+                      {{ op.text }}
+                    </el-timeline-item>
+                  </el-timeline>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 手工补绑企微对话框 -->
+          <el-dialog v-model="bindVisible" title="手工补绑企微" width="440px">
+            <el-alert type="warning" :closable="false" style="margin-bottom:14px;"
+              title="仅用于手机号匹配失败的兜底场景；补绑前请核对手机号与企微通讯录一致。"></el-alert>
+            <el-form label-width="110px">
+              <el-form-item label="员工手机号">
+                <el-input model-value="138****2046" disabled></el-input>
+              </el-form-item>
+              <el-form-item label="企微 memberid">
+                <el-input v-model="bindForm.memberid" placeholder="企微通讯录中的成员 ID"></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="bindVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmBind">核对并绑定</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // ==================== 调岗 ====================
+        const deptOptions = ref([
+          { value: '月嫂销售业务', label: '月嫂销售业务', children: [
+            { value: '佛山销售分部', label: '佛山销售分部', children: [
+              { value: '容桂店', label: '容桂店' },
+              { value: '北滘店', label: '北滘店' },
+              { value: '南海店', label: '南海店' }
+            ]},
+            { value: '广州销售分部', label: '广州销售分部' },
+            { value: '深圳销售分部', label: '深圳销售分部' }
+          ]},
+          { value: '运营部', label: '运营部', children: [
+            { value: '月嫂管理组', label: '月嫂管理组' },
+            { value: '培训组', label: '培训组' },
+            { value: '客服组', label: '客服组' }
+          ]}
+        ]);
+        const roleOptions = ['销售顾问', '销售主管', '月嫂运营专员', '月嫂主管', '财务专员', '招生顾问', '招生主管', '培训教务', '产康店长', '育婴顾问', '客服'];
+        const scopeOptions = ['本人', '本人及下属', '本部门', '本部门及下级', '全机构', '自定义部门'];
+        const extraDeptOptions = ['月嫂销售业务 / 中山销售分部', '月嫂销售业务 / 广州销售分部', '月嫂销售业务 / 深圳销售分部', '运营部 / 客服组'];
+
+        const transferForm = ref({
+          dept: ['月嫂销售业务', '佛山销售分部'],
+          extraDepts: ['月嫂销售业务 / 中山销售分部'],
+          roles: ['销售顾问', '销售主管'],
+          dataScope: '本部门及下级'
+        });
+
+        const saveTransfer = () => {
+          ElementPlus.ElMessage.success('调岗已保存：角色与数据范围随下次 token 签发生效');
+        };
+
+        // ==================== Mock：登录记录 / 操作记录 ====================
+        const logins = ref([
+          { time: '2026-08-27 09:12', channel: '业务管理后台', ip: '112.96.33.18' },
+          { time: '2026-08-26 18:40', channel: '内部员工端小程序', ip: '112.96.33.18' },
+          { time: '2026-08-26 09:03', channel: '业务管理后台', ip: '112.96.33.18' }
+        ]);
+
+        const ops = ref([
+          { time: '2026-07-02 10:20', text: '角色变更：销售顾问 → 销售顾问+销售主管（操作人：王总）', type: 'primary' },
+          { time: '2026-05-16 14:08', text: '数据范围调整：本部门 → 本部门及下级（操作人：王总）', type: 'primary' },
+          { time: '2025-11-03 09:44', text: '调岗：容桂店 → 佛山销售分部（操作人：HR）', type: '' },
+          { time: '2024-03-18 11:30', text: '员工开通：建档并发送邀请邮件（操作人：HR）', type: 'success' }
+        ]);
+
+        const goAccount = () => { window.location.href = 'account-search.html'; };
+
+        // ==================== 企微手工补绑 ====================
+        const bindVisible = ref(false);
+        const bindForm = ref({ memberid: '' });
+        const confirmBind = () => {
+          if (!bindForm.value.memberid) {
+            ElementPlus.ElMessage.warning('请输入企微 memberid');
+            return;
+          }
+          bindVisible.value = false;
+          ElementPlus.ElMessage.success('已按手机号核对并完成绑定，memberid 已回写 staff 档案（操作已入审计）');
+        };
+
+        return { staffName, deptOptions, roleOptions, scopeOptions, transferForm, saveTransfer, logins, ops, goAccount, bindVisible, bindForm, confirmBind };
+      }
+    }).mount('#app');
+  </script>
+  <style>
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 960px) { .grid-2col { grid-template-columns: 1fr; } }
+  </style>
+</body>
+</html>

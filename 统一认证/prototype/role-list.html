@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色管理 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- CDN（锁定版本，顺序固定） -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('role', { title: '角色管理' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div>
+          <!-- 统计卡片 -->
+          <div class="grid-4 mb-2">
+            <div class="stat-card" v-for="card in statCards" :key="card.title">
+              <div class="stat-header">
+                <span class="stat-title">{{ card.title }}</span>
+                <div class="stat-icon" :class="card.color">
+                  <el-icon :size="20"><component :is="card.icon" /></el-icon>
+                </div>
+              </div>
+              <div class="stat-value">{{ card.value }}</div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <span class="card-title">角色列表</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                <el-icon><Plus /></el-icon> 新建角色
+              </el-button>
+            </div>
+            <div class="card-body">
+              <div class="filter-bar">
+                <el-input v-model="keyword" placeholder="搜索角色名称" clearable style="width: 200px">
+                  <template #prefix><el-icon><Search /></el-icon></template>
+                </el-input>
+                <el-select v-model="systemFilter" placeholder="覆盖系统" clearable style="width: 140px">
+                  <el-option v-for="s in systems" :key="s" :label="s" :value="s"></el-option>
+                </el-select>
+                <el-select v-model="scopeFilter" placeholder="数据范围" clearable style="width: 150px">
+                  <el-option v-for="s in scopeOptions" :key="s.value" :label="s.label" :value="s.value"></el-option>
+                </el-select>
+              </div>
+
+              <el-table :data="filteredData" style="width: 100%">
+                <el-table-column prop="name" label="角色名称" min-width="140">
+                  <template #default="{ row }">
+                    <a :href="'role-detail.html?role=' + encodeURIComponent(row.name)" style="color:#1890ff;text-decoration:none;">{{ row.name }}</a>
+                  </template>
+                </el-table-column>
+                <el-table-column label="覆盖系统" min-width="200">
+                  <template #default="{ row }">
+                    <el-tag v-for="s in row.systems" :key="s" size="small" effect="plain" style="margin-right:4px;">{{ s }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="数据范围" width="100">
+                  <template #default="{ row }">{{ scopeLabel(row.dataScope) }}</template>
+                </el-table-column>
+                <el-table-column prop="members" label="成员数" width="80"></el-table-column>
+                <el-table-column label="状态" width="90">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+                      {{ row.status === 'active' ? '启用' : '停用' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="170">
+                  <template #default="{ row }">
+                    <el-button link type="primary" @click="goDetail">编辑</el-button>
+                    <el-button link type="primary" @click="handleCopy(row)">复制</el-button>
+                    <el-button link type="danger" @click="handleToggle(row)">{{ row.status === 'active' ? '停用' : '启用' }}</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 新建角色对话框 -->
+          <el-dialog v-model="dialogVisible" title="新建角色" width="480px">
+            <el-form :model="form" label-width="90px">
+              <el-form-item label="角色名称">
+                <el-input v-model="form.name" placeholder="如：SCRM 销售（华东区）"></el-input>
+              </el-form-item>
+            </el-form>
+            <div style="font-size:12px;color:#909399;line-height:1.8;padding:0 0 8px 90px;">
+              创建后进入详情页配置权限点与数据范围；也可以在列表行内「复制」已有角色后微调。
+            </div>
+            <template #footer>
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="createRole">创建并配置权限</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup() {
+        // ==================== Mock 数据 ====================
+        const systems = ['统一认证中心', 'ERP', 'SCRM'];
+
+        const scopeOptions = [
+          { label: '本人', value: 'self' },
+          { label: '本人及下属', value: 'sub' },
+          { label: '本部门', value: 'dept' },
+          { label: '本部门及下级', value: 'depttree' },
+          { label: '全机构', value: 'all' },
+          { label: '自定义部门', value: 'custom' }
+        ];
+
+        const tableData = ref([
+          { id: 1, name: '客服', systems: ['统一认证中心', 'ERP'], dataScope: 'dept', members: 12, status: 'active' },
+          { id: 2, name: '销售主管', systems: ['ERP', 'SCRM'], dataScope: 'depttree', members: 3, status: 'active' },
+          { id: 3, name: '运营', systems: ['统一认证中心', 'ERP'], dataScope: 'all', members: 5, status: 'active' },
+          { id: 4, name: 'SCRM 销售', systems: ['SCRM'], dataScope: 'dept', members: 28, status: 'active' },
+          { id: 5, name: 'SCRM 主管', systems: ['SCRM'], dataScope: 'all', members: 4, status: 'active' },
+          { id: 6, name: '安全管理员', systems: ['统一认证中心'], dataScope: 'all', members: 2, status: 'active' },
+          { id: 7, name: '实习生（只读）', systems: ['ERP'], dataScope: 'self', members: 6, status: 'inactive' }
+        ]);
+
+        const statCards = ref([
+          { title: '角色总数', value: 7, icon: 'User', color: 'blue' },
+          { title: '接入系统', value: 3, icon: 'Grid', color: 'green' },
+          { title: '已授权员工', value: 60, icon: 'UserFilled', color: 'orange' },
+          { title: '本月权限变更', value: 15, icon: 'Edit', color: 'red' }
+        ]);
+
+        // ==================== 筛选 ====================
+        const keyword = ref('');
+        const systemFilter = ref('');
+        const scopeFilter = ref('');
+
+        const filteredData = computed(() => {
+          return tableData.value.filter(item => {
+            const matchKeyword = !keyword.value || item.name.includes(keyword.value);
+            const matchSystem = !systemFilter.value || item.systems.includes(systemFilter.value);
+            const matchScope = !scopeFilter.value || item.dataScope === scopeFilter.value;
+            return matchKeyword && matchSystem && matchScope;
+          });
+        });
+
+        const scopeLabel = (v) => ({
+          self: '本人', sub: '本人及下属', dept: '本部门',
+          depttree: '本部门及下级', all: '全机构', custom: '自定义部门'
+        }[v] || v);
+
+        // ==================== 新建角色 ====================
+        const dialogVisible = ref(false);
+        const form = ref({ name: '' });
+
+        const handleAdd = () => {
+          form.value = { name: '' };
+          dialogVisible.value = true;
+        };
+
+        const createRole = () => {
+          if (!form.value.name) {
+            ElementPlus.ElMessage.warning('请填写角色名称');
+            return;
+          }
+          dialogVisible.value = false;
+          // 原型演示：创建后跳到角色详情页配置权限点
+          window.location.href = 'role-detail.html';
+        };
+
+        const goDetail = () => { window.location.href = 'role-detail.html'; };
+
+        const handleCopy = (row) => {
+          ElementPlus.ElMessage.success(`已复制「${row.name}」，可在此基础上微调`);
+        };
+
+        const handleToggle = (row) => {
+          row.status = row.status === 'active' ? 'inactive' : 'active';
+          ElementPlus.ElMessage.success(row.status === 'active' ? '已启用' : '已停用');
+        };
+
+        return {
+          statCards, tableData, keyword, systemFilter, scopeFilter, systems, scopeOptions,
+          filteredData, scopeLabel,
+          dialogVisible, form,
+          handleAdd, createRole, goDetail, handleCopy, handleToggle
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>授权查询 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('grant', { title: '授权查询' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header"><span class="card-title">授权查询（双向）</span></div>
+          <div class="card-body">
+            <el-tabs v-model="tab">
+              <!-- 按人查角色 -->
+              <el-tab-pane label="按员工查角色" name="byUser">
+                <div class="filter-bar">
+                  <el-select v-model="selectedUser" placeholder="选择员工" filterable style="width: 260px">
+                    <el-option v-for="u in users" :key="u.name" :label="u.name + '（' + u.dept + '）'" :value="u.name"></el-option>
+                  </el-select>
+                </div>
+                <div v-if="currentUser">
+                  <el-descriptions :column="2" border size="small" style="margin-bottom:16px;max-width:720px;">
+                    <el-descriptions-item label="姓名">{{ currentUser.name }}</el-descriptions-item>
+                    <el-descriptions-item label="部门">{{ currentUser.dept }}</el-descriptions-item>
+                    <el-descriptions-item label="角色">
+                      <el-tag v-for="r in currentUser.roles" :key="r" size="small" style="margin-right:4px;">{{ r }}</el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="数据范围基准">{{ currentUser.scope }}</el-descriptions-item>
+                  </el-descriptions>
+                  <div style="font-weight:600;margin-bottom:8px;">权限覆盖（按系统汇总）</div>
+                  <el-table :data="currentUser.coverage" size="small" style="max-width:720px;">
+                    <el-table-column prop="system" label="系统" width="140"></el-table-column>
+                    <el-table-column prop="pages" label="可访问页面" width="120"></el-table-column>
+                    <el-table-column prop="summary" label="摘要"></el-table-column>
+                  </el-table>
+                </div>
+                <div v-else style="color:#909399;text-align:center;padding:32px;">请选择员工</div>
+              </el-tab-pane>
+
+              <!-- 按角色查人 -->
+              <el-tab-pane label="按角色查成员" name="byRole">
+                <div class="filter-bar">
+                  <el-select v-model="selectedRole" placeholder="选择角色" filterable style="width: 260px">
+                    <el-option v-for="r in roles" :key="r" :label="r" :value="r"></el-option>
+                  </el-select>
+                </div>
+                <el-table v-if="selectedRole" :data="roleMembers" size="small">
+                  <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+                  <el-table-column prop="dept" label="部门"></el-table-column>
+                  <el-table-column prop="status" label="在职状态" width="100">
+                    <template #default="{ row }">
+                      <el-tag :type="row.status === '在职' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-else style="color:#909399;text-align:center;padding:32px;">请选择角色</div>
+              </el-tab-pane>
+            </el-tabs>
+          </div>
+        </div>
+      `,
+      setup() {
+        const tab = ref('byUser');
+
+        // ==================== Mock ====================
+        const users = ref([
+          { name: '陈曦', dept: '佛山销售分部 / 容桂店', roles: ['销售顾问'], scope: '本人', coverage: [
+            { system: 'ERP', pages: 4, summary: '销售管理（线索/客户/订单/合同）' },
+            { system: 'SCRM', pages: 2, summary: '线索管理、统计分析' }
+          ]},
+          { name: '刘倩', dept: '佛山销售分部', roles: ['销售顾问', '销售主管'], scope: '本部门及下级', coverage: [
+            { system: 'ERP', pages: 6, summary: '销售管理全量 + 审核中心⧨订单变更' },
+            { system: 'SCRM', pages: 2, summary: '线索管理、统计分析' }
+          ]},
+          { name: '周敏', dept: '运营部 / 月嫂管理组', roles: ['月嫂运营专员'], scope: '全机构', coverage: [
+            { system: 'ERP', pages: 7, summary: '月嫂管理全量' }
+          ]},
+          { name: '吴芳', dept: '运营部 / 月嫂管理组', roles: ['月嫂主管'], scope: '全机构', coverage: [
+            { system: 'ERP', pages: 9, summary: '月嫂管理全量 + 审核中心⧨在户/待岗请假' }
+          ]},
+          { name: '郑凯', dept: '财务部', roles: ['财务专员'], scope: '全机构', coverage: [
+            { system: 'ERP', pages: 7, summary: '财务管理全量' }
+          ]},
+          { name: '何静', dept: '招生业务部 / 招生转化组', roles: ['招生顾问'], scope: '本人', coverage: [
+            { system: 'ERP', pages: 4, summary: '我的线索 / 邀约到店 / 签约入册 / 数据看板' }
+          ]},
+          { name: '罗军', dept: '招生业务部', roles: ['招生主管'], scope: '本部门及下级', coverage: [
+            { system: 'ERP', pages: 12, summary: '招募管理全量 + 押金审核' }
+          ]},
+          { name: '高燕', dept: '运营部 / 培训组', roles: ['培训教务'], scope: '全机构', coverage: [
+            { system: 'ERP', pages: 12, summary: '培训考核全量' }
+          ]},
+          { name: '梁欣', dept: '产康业务 / 佛山产康分部 / 北滘店', roles: ['产康店长'], scope: '本部门', coverage: [
+            { system: 'ERP', pages: 11, summary: '产康报表全量（本门店数据）' }
+          ]},
+          { name: '宋洁', dept: '月嫂销售业务 / 育婴业务组', roles: ['育婴顾问'], scope: '本人及下属', coverage: [
+            { system: 'ERP', pages: 3, summary: '育婴业务全量' }
+          ]},
+          { name: '王芳', dept: '运营部 / 客服组', roles: ['客服'], scope: '本部门', coverage: [
+            { system: '统一认证中心', pages: 2, summary: '账号查询、申诉审核' }
+          ]}
+        ]);
+
+        const roles = ['销售顾问', '销售主管', '月嫂运营专员', '月嫂主管', '财务专员', '招生顾问', '招生主管', '培训教务', '产康店长', '育婴顾问', '客服'];
+
+        const memberMap = {
+          '销售顾问': [
+            { name: '陈曦', dept: '佛山销售分部 / 容桂店', status: '在职' },
+            { name: '刘倩', dept: '佛山销售分部', status: '在职' }
+          ],
+          '销售主管': [{ name: '刘倩', dept: '佛山销售分部', status: '在职' }],
+          '月嫂运营专员': [{ name: '周敏', dept: '运营部 / 月嫂管理组', status: '在职' }],
+          '月嫂主管': [{ name: '吴芳', dept: '运营部 / 月嫂管理组', status: '在职' }],
+          '财务专员': [{ name: '郑凯', dept: '财务部', status: '在职' }],
+          '招生顾问': [{ name: '何静', dept: '招生业务部 / 招生转化组', status: '在职' }],
+          '招生主管': [{ name: '罗军', dept: '招生业务部', status: '在职' }],
+          '培训教务': [{ name: '高燕', dept: '运营部 / 培训组', status: '在职' }],
+          '产康店长': [{ name: '梁欣', dept: '产康业务 / 佛山产康分部 / 北滘店', status: '在职' }],
+          '育婴顾问': [{ name: '宋洁', dept: '月嫂销售业务 / 育婴业务组', status: '已离职' }],
+          '客服': [{ name: '王芳', dept: '运营部 / 客服组', status: '在职' }]
+        };
+
+        const selectedUser = ref('');
+        const selectedRole = ref('');
+
+        const currentUser = computed(() => users.value.find(u => u.name === selectedUser.value));
+        const roleMembers = computed(() => memberMap[selectedRole.value] || []);
+
+        return { tab, users, roles, selectedUser, selectedRole, currentUser, roleMembers };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

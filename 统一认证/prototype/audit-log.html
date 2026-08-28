@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>审计查询 - 统一管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.css">
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.3/dist/locale/zh-cn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <script src="shared-menu.js"></script>
+
+  <script>
+    const { ref, computed } = Vue;
+
+    SharedMenu.initPageLayout('audit', { title: '审计查询' });
+
+    SharedMenu.createVueApp({
+      template: `
+        <div class="content-card">
+          <div class="card-header">
+            <span class="card-title">审计日志（只读）</span>
+            <el-button size="small" @click="exportData"><el-icon><Download /></el-icon> 导出</el-button>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <el-input v-model="operator" placeholder="操作人" clearable style="width: 140px"></el-input>
+              <el-input v-model="target" placeholder="操作对象" clearable style="width: 160px"></el-input>
+              <el-select v-model="type" placeholder="操作类型" clearable style="width: 160px">
+                <el-option v-for="t in typeOptions" :key="t" :label="t" :value="t"></el-option>
+              </el-select>
+              <el-select v-model="channel" placeholder="来源端" clearable style="width: 160px">
+                <el-option v-for="c in channelOptions" :key="c" :label="c" :value="c"></el-option>
+              </el-select>
+              <el-date-picker v-model="range" type="daterange" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px"></el-date-picker>
+              <el-button type="primary" @click="search">查询</el-button>
+            </div>
+
+            <el-table :data="filtered" style="width: 100%">
+              <el-table-column prop="time" label="时间" width="155"></el-table-column>
+              <el-table-column prop="operator" label="操作人" width="110"></el-table-column>
+              <el-table-column prop="type" label="操作类型" width="130">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="tagType(row.type)">{{ row.type }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="target" label="操作对象" width="140"></el-table-column>
+              <el-table-column prop="channel" label="来源端" width="140"></el-table-column>
+              <el-table-column prop="ip" label="IP" width="130"></el-table-column>
+              <el-table-column label="结果" width="90">
+                <template #default="{ row }">
+                  <el-tag size="small" :type="row.result === '成功' ? 'success' : 'danger'">{{ row.result }}</el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="pagination-bar">
+              <el-pagination :page-size="10" :total="filtered.length" layout="total, prev, pager, next" background></el-pagination>
+            </div>
+          </div>
+        </div>
+      `,
+      setup() {
+        const typeOptions = ['登录成功', '登录失败', '禁用账号', '启用账号', '凭证重置', '账号注销', '权限变更', '配置变更', '敏感查询', '审计导出'];
+        const channelOptions = ['统一管理后台', '业务管理后台', '客户端小程序', '月嫂端小程序', 'SCRM'];
+
+        const list = ref([
+          { time: '2026-08-27 11:02:33', operator: '王芳（管理员）', type: '禁用账号', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-27 10:48:12', operator: '王芳（管理员）', type: '敏感查询', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-27 10:24:56', operator: '刘倩（主管）', type: '权限变更', target: '角色·销售顾问', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-27 09:12:05', operator: '刘倩', type: '登录成功', target: 'ACC-10086', channel: '业务管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-27 09:03:47', operator: '王芳（管理员）', type: '配置变更', target: '安全策略·锁定阈值', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-26 22:17:31', operator: '138****2046', type: '登录失败', target: 'ACC-10086', channel: '客户端小程序', ip: '223.104.64.9', result: '失败' },
+          { time: '2026-08-26 18:40:52', operator: '周敏', type: '登录成功', target: 'ACC-10112', channel: '内部员工端小程序', ip: '112.96.33.25', result: '成功' },
+          { time: '2026-08-26 16:40:02', operator: '系统', type: '配置变更', target: 'SCRM 权限点注册', channel: '统一管理后台', ip: '—', result: '成功' },
+          { time: '2026-08-26 15:02:19', operator: '安全管理员', type: '审计导出', target: '1,240 行', channel: '统一管理后台', ip: '112.96.33.20', result: '成功' },
+          { time: '2026-08-26 11:35:44', operator: 'HR', type: '凭证重置', target: 'ACC-10455', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
+          { time: '2026-08-26 10:18:27', operator: '郑凯', type: '登录失败', target: 'ACC-10109', channel: '业务管理后台', ip: '112.96.33.30', result: '失败' },
+          { time: '2026-08-25 18:22:10', operator: '系统', type: '账号注销', target: 'ACC-09912', channel: '客户端小程序', ip: '—', result: '成功' },
+          { time: '2026-08-25 16:44:38', operator: 'HR', type: '权限变更', target: '员工·林涛（开通）', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
+          { time: '2026-08-25 14:20:15', operator: '王芳（管理员）', type: '启用账号', target: 'ACC-09876', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-25 11:08:59', operator: '张翠花', type: '登录成功', target: 'ACC-10086', channel: '月嫂端小程序', ip: '223.104.64.9', result: '成功' },
+          { time: '2026-08-25 09:31:22', operator: '刘倩（主管）', type: '敏感查询', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
+          { time: '2026-08-24 17:55:03', operator: '系统', type: '登录失败', target: 'ACC-10231', channel: '客户端小程序', ip: '120.229.88.4', result: '失败' },
+          { time: '2026-08-24 15:12:46', operator: 'HR', type: '配置变更', target: '认证源·SCRM 企微扫码', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
+          { time: '2026-08-24 10:40:18', operator: '何静', type: '登录成功', target: 'ACC-10133', channel: 'SCRM', ip: '112.96.33.28', result: '成功' },
+          { time: '2026-08-24 09:02:11', operator: '王芳（管理员）', type: '凭证重置', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' }
+        ]);
+
+        const operator = ref('');
+        const target = ref('');
+        const type = ref('');
+        const channel = ref('');
+        const range = ref(null);
+
+        const filtered = computed(() => list.value.filter(r => {
+          const mo = !operator.value || r.operator.includes(operator.value);
+          const mt = !target.value || r.target.includes(target.value);
+          const my = !type.value || r.type === type.value;
+          const mc = !channel.value || r.channel === channel.value;
+          return mo && mt && my && mc;
+        }));
+
+        const tagType = (t) => {
+          if (t.includes('登录')) return 'primary';
+          if (t.includes('禁用') || t.includes('注销')) return 'danger';
+          if (t.includes('权限') || t.includes('配置')) return 'warning';
+          return 'info';
+        };
+
+        const search = () => {
+          ElementPlus.ElMessage.success(`查询完成：${filtered.value.length} 条（查询行为已入审计）`);
+        };
+
+        const exportData = () => {
+          ElementPlus.ElMessageBox.confirm(
+            `将导出当前筛选条件下的 ${filtered.value.length} 条日志？导出行为本身将写入审计日志。`,
+            '导出确认', { type: 'warning' }
+          ).then(() => ElementPlus.ElMessage.success('导出成功，导出行为已入审计')).catch(() => {});
+        };
+
+        return { typeOptions, channelOptions, list, operator, target, type, channel, range, filtered, tagType, search, exportData };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
