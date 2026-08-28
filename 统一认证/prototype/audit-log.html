@@ -66,8 +66,8 @@
         </div>
       `,
       setup() {
-        const typeOptions = ['登录成功', '登录失败', '禁用账号', '启用账号', '凭证重置', '账号注销', '权限变更', '配置变更', '敏感查询'];
-        const channelOptions = ['统一管理后台', '业务管理后台', '客户端小程序', '月嫂端小程序', 'SCRM'];
+        const typeOptions = ['登录成功', '登录失败', '员工开户', '离职禁用', '换绑手机号', '禁用账号', '启用账号', '凭证重置', '账号注销', '权限变更', '配置变更', '敏感查询'];
+        const channelOptions = ['统一管理后台', '业务管理后台', 'SCRM', '客户端小程序', '客户端 APP', '月嫂端小程序', '月嫂端 APP', '月嫂招聘小程序', '内部员工端小程序'];
 
         const list = ref([
           { time: '2026-08-27 11:02:33', operator: '王芳（管理员）', type: '禁用账号', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
@@ -81,12 +81,12 @@
           { time: '2026-08-26 11:35:44', operator: 'HR', type: '凭证重置', target: 'ACC-10455', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
           { time: '2026-08-26 10:18:27', operator: '郑凯', type: '登录失败', target: 'ACC-10109', channel: '业务管理后台', ip: '112.96.33.30', result: '失败' },
           { time: '2026-08-25 18:22:10', operator: '系统', type: '账号注销', target: 'ACC-09912', channel: '客户端小程序', ip: '—', result: '成功' },
-          { time: '2026-08-25 16:44:38', operator: 'HR', type: '权限变更', target: '员工·林涛（开通）', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
+          { time: '2026-08-25 16:44:38', operator: 'HR', type: '员工开户', target: '员工·林涛（邀请邮件）', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
           { time: '2026-08-25 14:20:15', operator: '王芳（管理员）', type: '启用账号', target: 'ACC-09876', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
           { time: '2026-08-25 11:08:59', operator: '张翠花', type: '登录成功', target: 'ACC-10086', channel: '月嫂端小程序', ip: '223.104.64.9', result: '成功' },
           { time: '2026-08-25 09:31:22', operator: '刘倩（主管）', type: '敏感查询', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' },
           { time: '2026-08-24 17:55:03', operator: '系统', type: '登录失败', target: 'ACC-10231', channel: '客户端小程序', ip: '120.229.88.4', result: '失败' },
-          { time: '2026-08-24 15:12:46', operator: 'HR', type: '配置变更', target: '认证源·SCRM 企微扫码', channel: '统一管理后台', ip: '112.96.33.21', result: '成功' },
+          { time: '2026-08-24 15:12:46', operator: '系统', type: '配置变更', target: '端登记·SCRM（scrm_web）', channel: '统一管理后台', ip: '—', result: '成功' },
           { time: '2026-08-24 10:40:18', operator: '何静', type: '登录成功', target: 'ACC-10133', channel: 'SCRM', ip: '112.96.33.28', result: '成功' },
           { time: '2026-08-24 09:02:11', operator: '王芳（管理员）', type: '凭证重置', target: 'ACC-10231', channel: '统一管理后台', ip: '112.96.33.18', result: '成功' }
         ]);
